@@ -4,7 +4,7 @@ import { createClient } from '../lib/supabase/server';
 
 import type { User as CustomUser, UserRole } from './types';
 import { logger } from './logger';
-import { ROLE_HIERARCHY as roleHierarchy, EFFECTIVE_PERMISSIONS } from './roles';
+import { ROLE_HIERARCHY as roleHierarchy, EFFECTIVE_PERMISSIONS, isAtLeast, normalizeRole } from './roles';
 
 /**
  * Fetches the role for a given user from the database.
@@ -16,8 +16,9 @@ async function getUserRole(user: SupabaseUser | null): Promise<UserRole | null> 
   if (!user) return null;
 
   // First check app_metadata (secure, admin-only editable)
-  if (user.app_metadata?.role) {
-    return user.app_metadata.role as UserRole;
+  const metadataRole = normalizeRole(user.app_metadata?.role);
+  if (metadataRole) {
+    return metadataRole as UserRole;
   }
 
   // Fallback: This function can be called from different server-side contexts,
@@ -40,7 +41,7 @@ async function getUserRole(user: SupabaseUser | null): Promise<UserRole | null> 
     return null;
   }
 
-  return data?.role as UserRole | null;
+  return normalizeRole(data?.role) as UserRole | null;
 }
 
 // Check if user has a specific role or higher
@@ -50,19 +51,19 @@ export async function hasRole(user: SupabaseUser | null, requiredRole: UserRole)
   return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
 }
 
-// Check if user is admin or superadmin
+// Check if user is admin
 export async function isAdmin(user: SupabaseUser | null): Promise<boolean> {
   if (!user) return false;
   
   // First check app_metadata (secure, admin-only editable)
-  const appMetadataRole = user.app_metadata?.role as UserRole | undefined;
-  if (appMetadataRole === 'admin' || appMetadataRole === 'superadmin') {
+  const appMetadataRole = normalizeRole(user.app_metadata?.role) as UserRole | null;
+  if (appMetadataRole && isAtLeast(appMetadataRole, 'admin')) {
     return true;
   }
   
   // Fallback: check profiles table
   const role = await getUserRole(user);
-  return role === 'admin' || role === 'superadmin';
+  return !!role && isAtLeast(role, 'admin');
 }
 
 // Check if user is manager or higher
@@ -87,13 +88,6 @@ export async function isServiceEngineer(user: SupabaseUser | null): Promise<bool
   return role === 'service_engineer';
 }
 
-// Check if user is superadmin
-export async function isSuperAdmin(user: SupabaseUser | null): Promise<boolean> {
-  if (!user) return false;
-  const role = await getUserRole(user);
-  return role === 'superadmin';
-}
-
 // Get user role display name
 // Backwards compatibility wrapper returning string[] of permissions
 export function getRolePermissions(role: UserRole): string[] {
@@ -116,8 +110,6 @@ export function isAccountsClient(user: CustomUser | null): boolean {
 }
 
 export function isServiceEngineerClient(user: CustomUser | null): boolean { return user?.role === 'service_engineer'; }
-
-export function isSuperAdminClient(user: CustomUser | null): boolean { return user?.role === 'superadmin'; }
 
 export function isManagerClient(user: CustomUser | null): boolean {
   if (!user?.role) return false;

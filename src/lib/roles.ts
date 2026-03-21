@@ -7,12 +7,35 @@ export const ROLE_HIERARCHY = {
   service_engineer: 2, // lateral to sales
   accounts: 3,
   manager: 4,
-  admin: 5,
-  superadmin: 6
+  admin: 5
 } as const;
 
 export type UserRole = keyof typeof ROLE_HIERARCHY;
 export const ALL_ROLES: UserRole[] = Object.keys(ROLE_HIERARCHY) as UserRole[];
+
+const ROLE_ALIASES: Readonly<Record<string, UserRole>> = {
+  superadmin: 'admin',
+  super_admin: 'admin',
+  'super-admin': 'admin',
+  'super admin': 'admin'
+};
+
+export function normalizeRole(value: unknown): UserRole | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  if (normalized in ROLE_HIERARCHY) {
+    return normalized as UserRole;
+  }
+
+  return ROLE_ALIASES[normalized] ?? null;
+}
 
 // Master permission catalogue (add granular keys here; keep consistent naming)
 export const PERMS = {
@@ -70,13 +93,10 @@ const BASE_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     PERMS.SETTINGS_MANAGE,
     PERMS.ROLE_MANAGE,
     PERMS.REPORT_VIEW // ensure included even if hierarchy shifts
-  ],
-  superadmin: [
-    PERMS.SYSTEM_CONFIG
   ]
 };
 
-// Compute inherited permissions (customer < sales < accounts < manager < admin < superadmin)
+// Compute inherited permissions (customer < sales < accounts < manager < admin)
 // service_engineer is a lateral branch at level 2, so it inherits customer but not sales' business perms.
 function buildEffectivePermissions(): Record<UserRole, Set<Permission>> {
   const effective: Record<UserRole, Set<Permission>> = {
@@ -85,8 +105,7 @@ function buildEffectivePermissions(): Record<UserRole, Set<Permission>> {
     service_engineer: new Set(),
     accounts: new Set(),
     manager: new Set(),
-    admin: new Set(),
-    superadmin: new Set()
+    admin: new Set()
   };
 
   // Helper to merge
@@ -113,12 +132,6 @@ function buildEffectivePermissions(): Record<UserRole, Set<Permission>> {
   addAll(effective.admin, Array.from(effective.manager));
   addAll(effective.admin, BASE_ROLE_PERMISSIONS.admin);
 
-  // superadmin inherits admin + all remaining including lateral branch unique perms (service engineer specific if not inherited yet)
-  addAll(effective.superadmin, Array.from(effective.admin));
-  addAll(effective.superadmin, BASE_ROLE_PERMISSIONS.superadmin);
-  // ensure superadmin also explicitly gains any service_engineer exclusives if missing
-  addAll(effective.superadmin, Array.from(effective.service_engineer));
-
   return effective;
 }
 
@@ -138,8 +151,7 @@ export const ROLE_DISPLAY_NAME: Record<UserRole, string> = {
   service_engineer: 'Service Engineer',
   accounts: 'Accounts Manager',
   manager: 'Manager',
-  admin: 'Administrator',
-  superadmin: 'Super Administrator'
+  admin: 'Administrator'
 };
 
 export function getDisplayName(role: UserRole) { return ROLE_DISPLAY_NAME[role]; }

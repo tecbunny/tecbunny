@@ -1,18 +1,10 @@
 import type { UserRole } from '../roles';
-import { isAtLeast, ALL_ROLES } from '../roles';
+import { isAtLeast, normalizeRole as normalizeKnownRole } from '../roles';
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../supabase/server';
 import { logger } from '../logger';
 
-const ROLE_SET = new Set<UserRole>(ALL_ROLES);
-
 function normalizeRole(value: unknown): UserRole | null {
-  if (typeof value !== 'string' || !value) return null;
-  if (ROLE_SET.has(value as UserRole)) {
-    return value as UserRole;
-  }
-
-  const lower = value.toLowerCase() as UserRole;
-  return ROLE_SET.has(lower) ? lower : null;
+  return normalizeKnownRole(value);
 }
 
 // Standard server-side role guard returning a discriminated union

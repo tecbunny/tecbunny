@@ -14,7 +14,7 @@ export const metadata: Metadata = createPageMetadata({
   image: '/brand.png',
 });
 
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 export default async function Page() {
   let modes: InnovationMode[] = [];

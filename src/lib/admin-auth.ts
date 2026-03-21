@@ -4,10 +4,12 @@
  */
 
 import { SupabaseClient, User } from '@supabase/supabase-js';
+import { isAtLeast, normalizeRole } from './roles';
 
 export async function isUserAdmin(user: User, supabase: SupabaseClient): Promise<boolean> {
   // First check app_metadata (secure, admin-only editable)
-  if (user.app_metadata?.role === 'admin' || user.app_metadata?.role === 'superadmin') {
+  const metadataRole = normalizeRole(user.app_metadata?.role);
+  if (metadataRole && isAtLeast(metadataRole, 'admin')) {
     return true;
   }
 
@@ -19,7 +21,8 @@ export async function isUserAdmin(user: User, supabase: SupabaseClient): Promise
       .eq('id', user.id)
       .single();
 
-    return profile?.role === 'admin' || profile?.role === 'superadmin';
+    const profileRole = normalizeRole(profile?.role);
+    return !!profileRole && isAtLeast(profileRole, 'admin');
   } catch (error) {
     console.error('Error checking admin role:', error);
     return false;

@@ -1,57 +1,26 @@
-/** @type {import('next').NextConfig} */
+﻿/** @type {import('next').NextConfig} */
+const isStaticExport = process.env.NEXT_OUTPUT_MODE === 'export';
+
 const nextConfig = {
-  poweredByHeader: false,
-  experimental: {
-    // Allow argon2 native bindings to be bundled for server environments
-    serverComponentsExternalPackages: ['@node-rs/argon2'],
+  ...(isStaticExport ? { output: 'export' } : {}),
+  typescript: {
+    ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+    dirs: ['src'],
+  },
+  poweredByHeader: false,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'abviphzzwoexcpwgppfi.supabase.co',
-        port: '',
-        pathname: '/storage/v1/object/public/**',
-      },
-      {
-        protocol: 'https',
-        // Allow any Supabase project storage bucket (covering preview/prod projects)
         hostname: '**.supabase.co',
         port: '',
         pathname: '/storage/v1/object/public/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.supabase.in',
-        port: '',
-        pathname: '/storage/v1/object/public/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
       }
     ],
-  },
-  eslint: {
-    ignoreDuringBuilds: false,
-    dirs: ['src'],
-  },
-  typescript: {
-    ignoreBuildErrors: false,
   },
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,

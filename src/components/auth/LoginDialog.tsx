@@ -30,6 +30,7 @@ import { useAuth } from '../../lib/hooks';
 import { useToast } from '../../hooks/use-toast';
 import { createClient } from '../../lib/supabase/client';
 import { logger } from '../../lib/logger';
+import { normalizeRole } from '../../lib/roles';
 
 const loginSchema = z.object({
   identifier: z.string().min(3, { message: 'Email or mobile is required.' }),
@@ -130,7 +131,7 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
             .eq('id', userId)
             .single();
           
-          const userRole = profile?.role || 'customer';
+          const userRole = normalizeRole(profile?.role) ?? 'customer';
           
           // Wait a bit longer for AuthProvider state to update
           await new Promise(resolve => setTimeout(resolve, 500));
@@ -143,6 +144,7 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
               break;
             case 'sales':
             case 'manager':
+            case 'service_engineer':
               redirectUrl = '/management/sales';
               break;
             case 'accounts':
@@ -228,6 +230,7 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
                 break;
             case 'sales':
             case 'manager':
+            case 'service_engineer':
                 router.push('/management/sales');
                 break;
             case 'accounts':

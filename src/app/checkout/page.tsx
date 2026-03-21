@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import CheckoutPage from '../../components/checkout/CheckoutPage';
 
 // Force dynamic rendering for checkout page
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Checkout | Complete Your Purchase',

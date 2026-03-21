@@ -1,4 +1,4 @@
-import { promises as fs } from 'node:fs';
+﻿import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 import type { Metadata } from 'next';
@@ -10,11 +10,11 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { deserializeOrder } from '@/lib/orders/normalizers';
 import { logger } from '@/lib/logger';
 
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 interface InvoicePageProps {
   params: Promise<{ orderId: string }>;
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Record<string, string | string[] | undefined>;
 }
 
 const COMPANY_INFO_PATH = path.join(process.cwd(), 'public', 'company-info.json');
@@ -180,7 +180,7 @@ export async function generateMetadata({ params }: InvoicePageProps): Promise<Me
 
 export default async function OrderInvoicePage({ params, searchParams }: InvoicePageProps) {
   const { orderId } = await params;
-  const resolvedSearchParams = await searchParams;
+  const resolvedSearchParams = searchParams;
   const order = await loadOrder(orderId);
 
   if (!order) {
@@ -201,3 +201,8 @@ export default async function OrderInvoicePage({ params, searchParams }: Invoice
     </div>
   );
 }
+
+export async function generateStaticParams() {
+  return [{ orderId: '1' }]
+}
+

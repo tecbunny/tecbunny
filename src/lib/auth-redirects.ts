@@ -6,7 +6,6 @@ import type { UserRole } from './types';
 export function getRoleDashboardUrl(role: UserRole): string {
   switch (role) {
     case 'admin':
-    case 'superadmin':
       return '/management/admin';
     case 'sales':
     case 'manager':

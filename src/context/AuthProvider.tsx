@@ -9,24 +9,10 @@ import { createClient } from '../lib/supabase/client';
 import { logger } from '../lib/logger';
 import { SessionManager, SESSION_EXPIRED_EVENT } from '../lib/session-manager';
 import { useAnalytics } from '../hooks/use-analytics';
-
-const ROLE_SET: ReadonlySet<UserRole> = new Set([
-  'customer',
-  'sales',
-  'service_engineer',
-  'accounts',
-  'manager',
-  'admin',
-  'superadmin'
-]);
+import { normalizeRole } from '../lib/roles';
 
 const parseRole = (value: unknown): UserRole | null => {
-  if (typeof value !== 'string' || !value) {
-    return null;
-  }
-
-  const normalized = value.trim().toLowerCase() as UserRole;
-  return ROLE_SET.has(normalized) ? normalized : null;
+  return normalizeRole(value) as UserRole | null;
 };
 
 const METADATA_ROLE_KEYS = ['role', 'default_role', 'app_role', 'user_role'] as const;

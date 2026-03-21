@@ -34,7 +34,6 @@ export default function ManagementDashboard() {
       
       switch (user.role) {
         case 'admin':
-        case 'superadmin':
           redirectPath = '/management/admin';
           break;
         case 'sales':

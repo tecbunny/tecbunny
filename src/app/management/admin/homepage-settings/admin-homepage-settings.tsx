@@ -104,8 +104,20 @@ export default function HomepageSettingsPage() {
 
   React.useEffect(() => {
     const fetchData = async () => {
-        const { data: products } = await supabase.from('products').select('*');
-        const normalizedProducts = (products || []).map(product => {
+      try {
+        const productsController = new AbortController();
+        const productsTimeout = window.setTimeout(() => productsController.abort(), 12000);
+
+        const productsResponse = await fetch('/api/admin/products?includeInactive=true&limit=250', {
+          cache: 'no-store',
+          signal: productsController.signal,
+        });
+        window.clearTimeout(productsTimeout);
+
+        const productsPayload = await productsResponse.json().catch(() => null);
+        const products = Array.isArray(productsPayload?.products) ? productsPayload.products : [];
+
+        const normalizedProducts = (products || []).map((product: any) => {
           const resolvedTitle = [product.title, product.name]
             .map((value) => (typeof value === 'string' ? value.trim() : ''))
             .find((value) => value.length > 0) || 'Product';
@@ -116,23 +128,49 @@ export default function HomepageSettingsPage() {
           } as Product;
         });
         setAllProducts(normalizedProducts);
-        
-        const { data: settings } = await supabase.from('settings').select('*');
-        
-        const settingsMap = new Map(settings?.map(s => [s.key, s.value]));
+
+        let settingsRows: Array<{ key: string; value: string }> = [];
+
+        const settingsResponse = await fetch('/api/settings', {
+          cache: 'no-store',
+          credentials: 'include',
+          headers: { Accept: 'application/json' },
+        });
+
+        const settingsPayload = await settingsResponse.json().catch(() => null);
+        if (settingsResponse.ok && Array.isArray(settingsPayload)) {
+          settingsRows = settingsPayload as Array<{ key: string; value: string }>;
+        } else {
+          const { data: fallbackSettings } = await supabase.from('settings').select('*');
+          settingsRows = (fallbackSettings || []) as Array<{ key: string; value: string }>;
+        }
+
+        const settingsMap = new Map(settingsRows?.map((s) => [s.key, s.value]));
 
         const loadIds = (key: string): Set<string> => {
-            const storedIds = settingsMap.get(key);
-            return storedIds ? new Set(JSON.parse(storedIds)) : new Set();
-        }
+          const storedIds = settingsMap.get(key);
+          if (!storedIds) return new Set();
+          try {
+            return new Set(JSON.parse(storedIds));
+          } catch {
+            return new Set();
+          }
+        };
 
         setFeaturedProductIds(loadIds('featuredProductIds'));
         setNewArrivalProductIds(loadIds('newArrivalProductIds'));
         setTrendingProductIds(loadIds('trendingProductIds'));
         setDealProductIds(loadIds('dealProductIds'));
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Failed to load homepage data',
+          description: error instanceof Error ? error.message : 'Please try again later.',
+        });
+      }
     };
     fetchData();
-  }, [supabase]);
+  }, [supabase, toast]);
 
   const createToggleHandler = (setter: React.Dispatch<React.SetStateAction<Set<string>>>) => (productId: string) => {
     setter(prev => {

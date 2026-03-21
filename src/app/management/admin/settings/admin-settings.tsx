@@ -144,6 +144,21 @@ const createDefaultSettings = (): SettingsFormValues => ({
   categoryGstRates: { ...DEFAULT_CATEGORY_GST_RATES },
 });
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 export default function SiteSettingsPage() {
   const { toast } = useToast();
   const supabase = React.useMemo(() => createClient(), []);
@@ -165,12 +180,16 @@ export default function SiteSettingsPage() {
     try {
       logger.info('Loading settings and products...');
 
+      const settingsController = new AbortController();
+      const settingsTimeoutId = window.setTimeout(() => settingsController.abort(), 12000);
       const settingsResponse = await fetch('/api/settings', {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
         },
+        signal: settingsController.signal,
       });
+      window.clearTimeout(settingsTimeoutId);
 
       const settingsPayload = await settingsResponse.json().catch(() => null);
 
@@ -271,9 +290,13 @@ export default function SiteSettingsPage() {
       setLogoPreview(formData.logoUrl || '');
       setFaviconPreview(formData.faviconUrl || '');
 
-      const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('id, name, price, image');
+      const { data: productsData, error: productsError } = await withTimeout(
+        supabase
+          .from('products')
+          .select('id, name, price, image'),
+        12000,
+        'Loading products timed out.'
+      );
 
       if (productsError) {
         logger.error('Products error:', { error: productsError });
@@ -281,7 +304,9 @@ export default function SiteSettingsPage() {
         setProducts(productsData || []);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to load settings. Please try again.';
+      const message = error instanceof Error
+        ? error.message
+        : 'Failed to load settings. Please try again.';
       logger.error('Error loading data:', { error: message });
       setLoadError(message);
       toast({

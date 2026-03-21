@@ -126,10 +126,26 @@ interface SocialMediaLink {
   displayName?: string;
 }
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 export default function SocialMediaManager() {
   const { toast } = useToast();
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [socialLinks, setSocialLinks] = useState<SocialMediaLink[]>([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -150,21 +166,27 @@ export default function SocialMediaManager() {
   const loadSocialMediaSettings = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadError(null);
       
-      const { data: settings, error } = await supabase
-        .from('settings')
-        .select('key, value')
-        .in('key', [
-          'facebookUrl', 
-          'twitterUrl', 
-          'instagramUrl', 
-          'linkedinUrl', 
-          'youtubeUrl', 
-          'websiteUrl'
-        ]);
+      const { data: settings, error } = await withTimeout(
+        supabase
+          .from('settings')
+          .select('key, value')
+          .in('key', [
+            'facebookUrl', 
+            'twitterUrl', 
+            'instagramUrl', 
+            'linkedinUrl', 
+            'youtubeUrl', 
+            'websiteUrl'
+          ]),
+        12000,
+        'Loading social media settings timed out.'
+      );
 
       if (error) {
         logger.error('Error loading settings in SocialMediaManager', { error });
+        setLoadError('Failed to load social media settings.');
         toast({
           title: 'Error',
           description: 'Failed to load social media settings',
@@ -199,9 +221,10 @@ export default function SocialMediaManager() {
       setSocialLinks(links);
     } catch (error) {
       logger.error('Error loading social media settings in SocialMediaManager', { error });
+      setLoadError(error instanceof Error ? error.message : 'Failed to load social media settings.');
       toast({
         title: 'Error',
-        description: 'Failed to load social media settings',
+        description: error instanceof Error ? error.message : 'Failed to load social media settings',
         variant: 'destructive',
       });
     } finally {
@@ -340,6 +363,11 @@ export default function SocialMediaManager() {
           </div>
         </CardHeader>
         <CardContent>
+          {loadError && (
+            <div className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+              {loadError}
+            </div>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(saveSocialMediaSettings)} className="space-y-6">
               {/* Current Social Links */}

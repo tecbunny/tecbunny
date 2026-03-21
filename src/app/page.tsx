@@ -6,7 +6,7 @@ import HomePage from '../components/home-page';
 import { createPageMetadata } from '../lib/metadata';
 
 // Force dynamic rendering for homepage as requested
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 // Homepage metadata for SEO
 export const metadata: Metadata = createPageMetadata({

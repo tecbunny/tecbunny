@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import { OTPVerificationContent } from './OTPVerificationContent';
 
 // Force dynamic rendering for auth page
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 export default function VerifyOTPPage() {
   return (

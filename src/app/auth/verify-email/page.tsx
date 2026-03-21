@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import EmailVerificationContent from './EmailVerificationContent';
 
 // Force dynamic rendering for auth page
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 export default function VerifyEmailPage() {
   return (

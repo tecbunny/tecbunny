@@ -2,9 +2,9 @@ import type { User } from '@supabase/supabase-js';
 
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../lib/supabase/server';
 import { logger } from '../../lib/logger';
-import { ROLE_HIERARCHY, type UserRole } from '../../lib/roles';
+import { normalizeRole as normalizeKnownRole, ROLE_HIERARCHY, type UserRole } from '../../lib/roles';
 
-type AdminRole = 'admin' | 'manager' | 'superadmin';
+type AdminRole = 'admin' | 'manager';
 
 export class AdminAuthError extends Error {
   status: number;
@@ -22,19 +22,14 @@ export interface AdminContext {
 }
 
 function isAdminRole(role: unknown): role is AdminRole {
-  return role === 'admin' || role === 'manager' || role === 'superadmin';
+  return role === 'admin' || role === 'manager';
 }
 
 const METADATA_ROLE_KEYS = ['role', 'default_role', 'app_role', 'user_role'] as const;
 const METADATA_ROLE_ARRAY_KEYS = ['roles', 'app_roles'] as const;
 
 const normalizeRole = (value: unknown): UserRole | null => {
-  if (typeof value !== 'string' || !value) {
-    return null;
-  }
-
-  const normalized = value.trim().toLowerCase() as UserRole;
-  return normalized in ROLE_HIERARCHY ? normalized : null;
+  return normalizeKnownRole(value);
 };
 
 const extractRoleFromMetadata = (metadata: Record<string, unknown> | undefined | null): UserRole | null => {

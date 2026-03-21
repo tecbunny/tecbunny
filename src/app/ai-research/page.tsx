@@ -42,16 +42,33 @@ export default function AiResearchPage() {
     }
   ]);
   const [isLoading, setIsLoading] = React.useState(false);
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const messagesContainerRef = React.useRef<HTMLDivElement>(null);
+  const isUserNearBottomRef = React.useRef(true);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior });
+  };
+
+  const handleMessagesScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const distanceFromBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
+    isUserNearBottomRef.current = distanceFromBottom < 120;
   };
 
   React.useEffect(() => {
     const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.role === 'user' || lastMessage?.isLoading) {
-      scrollToBottom();
+    if (!lastMessage) return;
+
+    // Avoid jumpy UX: do not force-scroll immediately on user submit/loading.
+    if (lastMessage.role === 'user' || lastMessage.isLoading) return;
+
+    if (isUserNearBottomRef.current) {
+      scrollToBottom('smooth');
     }
   }, [messages]);
 
@@ -75,19 +92,36 @@ export default function AiResearchPage() {
       { id: loadingMessageId, role: 'assistant', isLoading: true },
     ]);
 
+    let timeoutId: ReturnType<typeof window.setTimeout> | undefined;
+
     try {
+      const controller = new AbortController();
+      timeoutId = window.setTimeout(() => controller.abort(), 65000);
+
       const response = await fetch('/api/ai/research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: userMessage.content }),
+        signal: controller.signal,
       });
 
-      const data = await response.json();
+      const raw = await response.text();
+      let data: any = null;
+
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        data = null;
+      }
 
       setMessages((prev) => prev.filter(m => m.id !== loadingMessageId));
 
       if (!response.ok) {
-        throw new Error(data?.error || 'Failed to generate AI research.');
+        throw new Error(data?.error || `Failed to generate AI research. (${response.status})`);
+      }
+
+      if (!data || typeof data !== 'object') {
+        throw new Error('AI service returned an empty response. Please try again.');
       }
 
       const result: ResearchResult = data;
@@ -102,15 +136,23 @@ export default function AiResearchPage() {
 
     } catch (err: any) {
       setMessages((prev) => prev.filter(m => m.id !== loadingMessageId));
+
+      const errorMessage = err?.name === 'AbortError'
+        ? 'Request timed out. Please try again.'
+        : err?.message || 'Something went wrong. Please try again.';
+
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
           role: 'assistant',
-          error: err?.message || 'Something went wrong. Please try again.',
+          error: errorMessage,
         },
       ]);
     } finally {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
       setIsLoading(false);
     }
   };
@@ -127,13 +169,17 @@ export default function AiResearchPage() {
           </div>
           <div>
             <h1 className="text-lg font-semibold text-white">AI Research Assistant</h1>
-            <p className="text-xs text-slate-400">Powered by Gemini 1.5</p>
+            <p className="text-xs text-slate-400">Powered by Gemini 2.5 Flash Lite</p>
           </div>
         </div>
       </header>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleMessagesScroll}
+        className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth"
+      >
         <div className="mx-auto max-w-4xl space-y-6">
           {messages.map((message) => (
             <div
@@ -206,7 +252,7 @@ export default function AiResearchPage() {
               )}
             </div>
           ))}
-          <div ref={messagesEndRef} />
+          <div />
         </div>
       </div>
 

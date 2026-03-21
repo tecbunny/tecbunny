@@ -7,7 +7,7 @@ import { useAuth } from '../../../lib/hooks';
 import { SalesSidebar } from '../../../components/sales/SalesSidebar';
 import { Toaster } from '../../../components/ui/toaster';
 
-const SALES_ROLES = new Set(['sales', 'manager', 'admin', 'superadmin']);
+const SALES_ROLES = new Set(['sales', 'manager', 'admin']);
 
 interface SalesLayoutClientProps {
   children: React.ReactNode;

@@ -7,9 +7,10 @@ import { useSearchParams } from 'next/navigation';
 import { Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 
 import { createClient } from '../../../lib/supabase/client';
+import { normalizeRole } from '../../../lib/roles';
 
 // Force dynamic rendering for auth page
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
@@ -101,7 +102,7 @@ function SignInForm() {
         .single();
 
       // Redirect based on user role
-      const userRole = profile?.role || 'customer';
+      const userRole = normalizeRole(profile?.role) ?? 'customer';
       let redirectUrl: string;
 
       switch (userRole) {
@@ -110,6 +111,7 @@ function SignInForm() {
           break;
         case 'sales':
         case 'manager':
+        case 'service_engineer':
           redirectUrl = '/management/sales';
           break;
         case 'accounts':
@@ -214,7 +216,7 @@ function SignInForm() {
             .eq('id', data.user.id)
             .single();
 
-          const userRole = profile?.role || 'customer';
+          const userRole = normalizeRole(profile?.role) ?? 'customer';
           let redirectUrl: string;
 
           switch (userRole) {
@@ -223,6 +225,7 @@ function SignInForm() {
               break;
             case 'sales':
             case 'manager':
+            case 'service_engineer':
               redirectUrl = '/management/sales';
               break;
             case 'accounts':
@@ -294,7 +297,7 @@ function SignInForm() {
             .eq('id', data.user.id)
             .single();
 
-          const userRole = profile?.role || 'customer';
+          const userRole = normalizeRole(profile?.role) ?? 'customer';
           let redirectUrl: string;
 
           switch (userRole) {
@@ -303,6 +306,7 @@ function SignInForm() {
               break;
             case 'sales':
             case 'manager':
+            case 'service_engineer':
               redirectUrl = '/management/sales';
               break;
             case 'accounts':

@@ -1,19 +1,9 @@
 import type { NextRequest } from 'next/server';
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
-import type { UserRole } from '../types';
+import { normalizeRole as normalizeKnownRole, type UserRole } from '../roles';
 import { createClient as createServerClient, createServiceClient, isSupabaseServiceConfigured } from '../supabase/server';
 import { logger } from '../logger';
-
-const VALID_ROLES: ReadonlySet<UserRole> = new Set([
-  'customer',
-  'sales',
-  'service_engineer',
-  'accounts',
-  'manager',
-  'admin',
-  'superadmin'
-]);
 
 const ROLE_KEYS = ['role', 'default_role', 'app_role', 'user_role'] as const;
 const ROLE_ARRAY_KEYS = ['roles', 'app_roles'] as const;
@@ -21,9 +11,7 @@ const ROLE_ARRAY_KEYS = ['roles', 'app_roles'] as const;
 type MetadataRecord = Record<string, unknown> | null | undefined;
 
 const parseRole = (value: unknown): UserRole | null => {
-  if (typeof value !== 'string' || !value) return null;
-  const normalized = value.trim().toLowerCase() as UserRole;
-  return VALID_ROLES.has(normalized) ? normalized : null;
+  return normalizeKnownRole(value);
 };
 
 const extractRoleFromMetadata = (metadata: MetadataRecord): UserRole | null => {

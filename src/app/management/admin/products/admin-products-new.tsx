@@ -59,18 +59,27 @@ export default function AdminProductsPage() {
   const fetchProducts = React.useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 15000);
 
-      if (error) throw error;
-      setProducts(data || []);
+      const response = await fetch('/api/admin/products', {
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      const payload = await response.json().catch(() => null);
+      window.clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(payload?.error || `Failed to fetch products (${response.status})`);
+      }
+
+      const rows = Array.isArray(payload?.products) ? payload.products : [];
+      setProducts(rows as Product[]);
     } catch (error) {
       logger.error('Failed to fetch products', { error });
       toast({
         title: 'Error',
-        description: 'Failed to fetch products',
+        description: error instanceof Error ? error.message : 'Failed to fetch products',
         variant: 'destructive',
       });
     } finally {

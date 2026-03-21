@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import * as fontkit from 'fontkit';
+const fontkit = require('fontkit');
 import { PDFDocument, rgb, StandardFonts, type Color } from 'pdf-lib';
 import { logger } from './logger';
 

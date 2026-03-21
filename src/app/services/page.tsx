@@ -15,7 +15,7 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 // Always fetch fresh data so admin updates appear immediately
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 
 export default async function Page() {
   let services: any[] = [];

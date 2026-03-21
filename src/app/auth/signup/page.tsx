@@ -5,7 +5,7 @@ import NextDynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 
 // Force dynamic rendering for auth page
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic';
 import { Mail, User, Phone, Eye, EyeOff, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react';
 
 import Link from 'next/link';

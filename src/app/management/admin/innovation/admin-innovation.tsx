@@ -82,10 +82,26 @@ const defaultDeviceForm: Omit<InnovationDevice, 'id' | 'created_at'> = {
   updated_at: new Date().toISOString(),
 };
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 export default function AdminInnovationPage() {
   const [modes, setModes] = React.useState<InnovationMode[]>([]);
   const [devices, setDevices] = React.useState<InnovationDevice[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
 
   const [modeDialogOpen, setModeDialogOpen] = React.useState(false);
   const [deviceDialogOpen, setDeviceDialogOpen] = React.useState(false);
@@ -106,11 +122,16 @@ export default function AdminInnovationPage() {
 
   const fetchData = React.useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const [{ data: modeData, error: modeError }, { data: deviceData, error: deviceError }] = await Promise.all([
-        supabase.from('innovation_modes').select('*').order('display_order', { ascending: true }),
-        supabase.from('innovation_devices').select('*').order('display_order', { ascending: true }),
-      ]);
+      const [{ data: modeData, error: modeError }, { data: deviceData, error: deviceError }] = await withTimeout(
+        Promise.all([
+          supabase.from('innovation_modes').select('*').order('display_order', { ascending: true }),
+          supabase.from('innovation_devices').select('*').order('display_order', { ascending: true }),
+        ]),
+        12000,
+        'Loading innovation content timed out.'
+      );
 
       if (modeError) throw modeError;
       if (deviceError) throw deviceError;
@@ -119,9 +140,10 @@ export default function AdminInnovationPage() {
       setDevices(deviceData || []);
     } catch (error) {
       logger.error('Failed to fetch innovation data', { error });
+      setLoadError(error instanceof Error ? error.message : 'Failed to load innovation content');
       toast({
         title: 'Error',
-        description: 'Failed to load innovation content',
+        description: error instanceof Error ? error.message : 'Failed to load innovation content',
         variant: 'destructive',
       });
     } finally {
@@ -324,6 +346,12 @@ export default function AdminInnovationPage() {
         <h1 className="text-3xl font-bold">Innovation Content</h1>
         <p className="text-muted-foreground">Manage the Innovation page modes and new device showcases.</p>
       </div>
+
+      {loadError && (
+        <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+          {loadError}
+        </div>
+      )}
 
       <Tabs defaultValue="modes">
         <TabsList>

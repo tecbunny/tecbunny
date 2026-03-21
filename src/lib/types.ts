@@ -80,7 +80,7 @@ export interface CartItem extends Product {
   serialNumbers?: string[];
 }
 
-export type UserRole = 'customer' | 'sales' | 'manager' | 'accounts' | 'admin' | 'service_engineer' | 'superadmin';
+export type UserRole = 'customer' | 'sales' | 'manager' | 'accounts' | 'admin' | 'service_engineer';
 export type CustomerCategory = 'Normal' | 'Standard' | 'Premium';
 export type CustomerType = 'B2C' | 'B2B';
 export type B2BCategory = 'Bronze' | 'Silver' | 'Gold';

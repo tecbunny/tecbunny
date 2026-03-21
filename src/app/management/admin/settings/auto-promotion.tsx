@@ -179,17 +179,25 @@ export default function AutoPromotionSettingsPage() {
   const runPromotionCheck = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/customer-promotions/check', {
-        method: 'POST'
+      const response = await fetch('/api/customer-promotions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'check-all' })
       });
 
       const result = await response.json();
 
       if (!response.ok) throw new Error(result.message);
 
+      const promotedCount = typeof result?.count === 'number'
+        ? result.count
+        : Array.isArray(result?.promotions)
+          ? result.promotions.length
+          : 0;
+
       toast({
         title: "Promotion Check Complete",
-        description: `${result.promoted} customers were promoted to higher tiers.`,
+        description: `${promotedCount} customers matched promotion checks.`,
       });
 
       loadStats();

@@ -1,21 +1,12 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-import { ALL_ROLES, isAtLeast, ROLE_HIERARCHY, type UserRole } from './roles';
+import { isAtLeast, normalizeRole, ROLE_HIERARCHY, type UserRole } from './roles';
 import { createClient } from './supabase/server';
 
 const DEFAULT_ROLE: UserRole = 'customer';
 
 type NullableRole = UserRole | null;
-
-const normalizeRole = (value: unknown): NullableRole => {
-  if (typeof value !== 'string') {
-    return null;
-  }
-
-  const lower = value.trim().toLowerCase() as UserRole;
-  return ALL_ROLES.includes(lower) ? lower : null;
-};
 
 const pickHighestRole = (...roles: Array<NullableRole | undefined>): UserRole => {
   let best: UserRole = DEFAULT_ROLE;

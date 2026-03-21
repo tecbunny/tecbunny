@@ -147,6 +147,9 @@ export default function HomePage() {
 
         const payload = await response.json();
         const items: DbProduct[] = Array.isArray(payload?.data) ? (payload.data as DbProduct[]) : [];
+        const warningMessage = Array.isArray(payload?.warnings) && payload.warnings.length > 0
+          ? String(payload.warnings[0])
+          : null;
 
         const hasAnyImage = (item: DbProduct) => {
           if (getProductDisplayImage(item)) return true;
@@ -163,6 +166,9 @@ export default function HomePage() {
         const chosen = (itemsWithImages.length ? itemsWithImages : items).slice(0, 4);
 
         if (isMounted) {
+          if (chosen.length === 0 && warningMessage) {
+            setProductsError(warningMessage);
+          }
           setFeaturedProducts(chosen);
         }
       } catch (error) {

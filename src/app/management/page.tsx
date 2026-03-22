@@ -12,7 +12,7 @@ export default async function ManagementPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/auth/signin');
+    redirect('/auth/staff-signin');
   }
 
   return <DashboardClient />;

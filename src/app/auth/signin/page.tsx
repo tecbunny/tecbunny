@@ -416,9 +416,9 @@ function SignInForm() {
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                  <label className="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-white transition-colors">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-600 text-cyan-400 focus:ring-0 bg-transparent" />
-                    Remember Node
+                  <label htmlFor="remember-me" className="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-white transition-colors">
+                    <input id="remember-me" type="checkbox" className="w-4 h-4 rounded border-slate-600 text-cyan-400 focus:ring-0 bg-transparent" />
+                    Remember me
                   </label>
                   <a
                     href="/auth/forgot-password"

@@ -92,7 +92,7 @@ export default function AiResearchPage() {
       { id: loadingMessageId, role: 'assistant', isLoading: true },
     ]);
 
-    let timeoutId: ReturnType<typeof window.setTimeout> | undefined;
+    let timeoutId: number | undefined;
 
     try {
       const controller = new AbortController();
@@ -271,6 +271,7 @@ export default function AiResearchPage() {
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
+              aria-label={isLoading ? 'Sending message' : 'Send message'}
               className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-600 text-white transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-600"
             >
               {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}

@@ -1132,7 +1132,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     <span className="block font-medium">2.4 MP</span>
                     <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Balanced clarity with lower bandwidth</span>
                   </div>
-                  <RadioGroupItem value="2.4mp" id="analog-res-24" />
+                  <RadioGroupItem value="2.4mp" id="analog-res-24" aria-label="Select 2.4 MP analog camera resolution" />
                 </Label>
                 <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', analogSelections.resolution === '5mp' && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
                   htmlFor="analog-res-5">
@@ -1140,7 +1140,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     <span className="block font-medium">5 MP</span>
                     <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Higher detail for wider coverage</span>
                   </div>
-                  <RadioGroupItem value="5mp" id="analog-res-5" />
+                  <RadioGroupItem value="5mp" id="analog-res-5" aria-label="Select 5 MP analog camera resolution" />
                 </Label>
               </RadioGroup>
             </div>
@@ -1157,7 +1157,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     <span className="block font-medium">Standard IR</span>
                     <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Best for typical day/night surveillance</span>
                   </div>
-                  <RadioGroupItem value="no" id="analog-dual-no" />
+                  <RadioGroupItem value="no" id="analog-dual-no" aria-label="Use standard infrared analog cameras" />
                 </Label>
                 <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', analogSelections.dualLight && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
                   htmlFor="analog-dual-yes">
@@ -1165,7 +1165,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     <span className="block font-medium">Dual-light</span>
                     <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Switches between IR & warm light for colour video</span>
                   </div>
-                  <RadioGroupItem value="yes" id="analog-dual-yes" />
+                  <RadioGroupItem value="yes" id="analog-dual-yes" aria-label="Use dual-light analog cameras" />
                 </Label>
               </RadioGroup>
             </div>
@@ -1291,7 +1291,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     <span className="block font-medium">2 MP</span>
                     <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Ideal for compact deployments</span>
                   </div>
-                  <RadioGroupItem value="2mp" id="ip-res-2" />
+                  <RadioGroupItem value="2mp" id="ip-res-2" aria-label="Select 2 MP IP camera resolution" />
                 </Label>
                 <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', ipSelections.resolution === '4mp' && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
                   htmlFor="ip-res-4">
@@ -1299,7 +1299,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     <span className="block font-medium">4 MP</span>
                     <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Sharper detail for analytics</span>
                   </div>
-                  <RadioGroupItem value="4mp" id="ip-res-4" />
+                  <RadioGroupItem value="4mp" id="ip-res-4" aria-label="Select 4 MP IP camera resolution" />
                 </Label>
               </RadioGroup>
             </div>
@@ -1316,7 +1316,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     <span className="block font-medium">Standard IR</span>
                     <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Monochrome at night</span>
                   </div>
-                  <RadioGroupItem value="no" id="ip-dual-no" />
+                  <RadioGroupItem value="no" id="ip-dual-no" aria-label="Use standard infrared IP cameras" />
                 </Label>
                 <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', ipSelections.dualLight && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
                   htmlFor="ip-dual-yes">
@@ -1324,7 +1324,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     <span className="block font-medium">Dual-light</span>
                     <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Colour capture at night</span>
                   </div>
-                  <RadioGroupItem value="yes" id="ip-dual-yes" />
+                  <RadioGroupItem value="yes" id="ip-dual-yes" aria-label="Use dual-light IP cameras" />
                 </Label>
               </RadioGroup>
             </div>
@@ -1376,7 +1376,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                   <span className="block text-lg font-semibold">Analog (DVR)</span>
                   <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Best for coaxial retrofits and budget installations</span>
                 </div>
-                <RadioGroupItem value="analog" id="system-analog" />
+                <RadioGroupItem value="analog" id="system-analog" aria-label="Choose analog DVR system" />
               </Label>
               <Label className={cn('flex cursor-pointer items-center justify-between rounded-lg border p-4', isTech && 'border-white/10 bg-white/5 text-slate-200', system === 'ip' && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
                 htmlFor="system-ip">
@@ -1384,7 +1384,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                   <span className="block text-lg font-semibold">IP (NVR)</span>
                   <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>PoE-based deployments with smart analytics</span>
                 </div>
-                <RadioGroupItem value="ip" id="system-ip" />
+                <RadioGroupItem value="ip" id="system-ip" aria-label="Choose IP NVR system" />
               </Label>
             </RadioGroup>
           </div>
@@ -1438,7 +1438,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className={cn('flex items-start gap-3 rounded-md border p-4', isTech && 'border-white/10 bg-white/5')}>
-              <Checkbox id="monitor-required" checked={monitorIncluded} onCheckedChange={(checked) => setMonitorIncluded(Boolean(checked))} />
+              <Checkbox id="monitor-required" checked={monitorIncluded} onCheckedChange={(checked) => setMonitorIncluded(Boolean(checked))} aria-label="Include surveillance monitor" />
               <div>
                 <Label htmlFor="monitor-required" className="text-base font-semibold">Include surveillance monitor</Label>
                 <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>
@@ -1448,7 +1448,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
               </div>
             </div>
             <div className={cn('flex items-start gap-3 rounded-md border p-4', isTech && 'border-white/10 bg-white/5')}>
-              <Checkbox id="installation-required" checked={installationIncluded} onCheckedChange={(checked) => setInstallationIncluded(Boolean(checked))} />
+              <Checkbox id="installation-required" checked={installationIncluded} onCheckedChange={(checked) => setInstallationIncluded(Boolean(checked))} aria-label="Include installation service" />
               <div>
                 <Label htmlFor="installation-required" className="text-base font-semibold">Include installation service</Label>
                 <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>

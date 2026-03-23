@@ -372,7 +372,7 @@ export default function ContactPage() {
                           <FormLabel className="text-sm text-slate-300">Service Interest</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
                             <FormControl>
-                              <SelectTrigger className="border-white/10 bg-white/5 text-white">
+                              <SelectTrigger className="border-white/10 bg-white/5 text-white" aria-label="Service interest">
                                 <SelectValue placeholder="Select Service Interest" />
                               </SelectTrigger>
                             </FormControl>
@@ -420,6 +420,7 @@ export default function ContactPage() {
                               onCheckedChange={field.onChange}
                               disabled={isSubmitting}
                               className="mt-1"
+                              aria-label="I agree to the privacy policy and contact consent"
                             />
                           </FormControl>
                           <div className="space-y-1 text-sm text-slate-300">

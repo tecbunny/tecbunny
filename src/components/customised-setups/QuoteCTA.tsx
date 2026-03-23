@@ -84,7 +84,7 @@ export function QuoteCTA() {
           />
         </div>
         <label className="flex items-center gap-2 text-sm text-slate-200">
-          <Checkbox checked={gstIncluded} onCheckedChange={(v) => setGstIncluded(Boolean(v))} />
+          <Checkbox checked={gstIncluded} onCheckedChange={(v) => setGstIncluded(Boolean(v))} aria-label="Include GST details on the quote" />
           Include GST details on the quote
         </label>
       </div>

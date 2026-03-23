@@ -12,6 +12,7 @@ export async function middleware(request: NextRequest) {
     '/api/settings',
     '/api/page-content',
     '/api/auto-offers',
+    '/api/offers',
     '/api/coupons',
     '/api/products', // Public product catalog
     '/api/analytics', // Public analytics tracking

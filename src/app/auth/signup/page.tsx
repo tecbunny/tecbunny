@@ -392,6 +392,7 @@ export default function SignUpPage() {
                       onChange={() => handleChannelChange('email')}
                       className="h-4 w-4 accent-purple-400"
                       disabled={!emailValid}
+                      aria-label="Verify via email"
                     />
                   </label>
 
@@ -411,6 +412,7 @@ export default function SignUpPage() {
                       onChange={() => handleChannelChange('whatsapp')}
                       className="h-4 w-4 accent-purple-400"
                       disabled={!mobileSupportsMessaging}
+                      aria-label="Verify via WhatsApp"
                     />
                   </label>
                 </div>

@@ -122,7 +122,8 @@ export default function HomePage() {
   const [productsLoading, setProductsLoading] = React.useState(true);
   const [productsError, setProductsError] = React.useState<string | null>(null);
   const [showLoader, setShowLoader] = React.useState(true);
-  const [typedWord, setTypedWord] = React.useState('');
+  const heroWords = ['Home.', 'Business.', 'Assets.', 'Future.'];
+  const [heroWordIndex, setHeroWordIndex] = React.useState(0);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const tiltRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -191,37 +192,12 @@ export default function HomePage() {
   }, []);
 
   React.useEffect(() => {
-    const words = ['Future.', 'Home.', 'Business.', 'Assets.'];
-    let wordIndex = 0;
-    let charIndex = 0;
-    let deleting = false;
-    let timeoutId: number;
+    const intervalId = window.setInterval(() => {
+      setHeroWordIndex((current) => (current + 1) % heroWords.length);
+    }, 2400);
 
-    const step = () => {
-      const current = words[wordIndex];
-      const nextCharIndex = deleting ? charIndex - 1 : charIndex + 1;
-      setTypedWord(current.slice(0, Math.max(0, nextCharIndex)));
-      charIndex = nextCharIndex;
-
-      if (!deleting && charIndex === current.length) {
-        deleting = true;
-        timeoutId = window.setTimeout(step, 1200);
-        return;
-      }
-
-      if (deleting && charIndex === 0) {
-        deleting = false;
-        wordIndex = (wordIndex + 1) % words.length;
-        timeoutId = window.setTimeout(step, 400);
-        return;
-      }
-
-      timeoutId = window.setTimeout(step, deleting ? 80 : 120);
-    };
-
-    step();
-    return () => window.clearTimeout(timeoutId);
-  }, []);
+    return () => window.clearInterval(intervalId);
+  }, [heroWords.length]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -331,13 +307,24 @@ export default function HomePage() {
                 OPERATIONAL IN GOA
               </div>
 
-              <h1 className="text-5xl font-bold leading-tight text-white md:text-7xl font-tech">
+              <h1 className="text-5xl font-bold leading-tight text-white md:text-7xl font-tech" aria-label="Secure Your Home">
                 <span className="glitch-text" data-text="Secure Your">Secure Your</span>
                 <br />
-                <span className="typewriter-cursor bg-gradient-to-r from-[#06b6d4] via-blue-500 to-[#8b5cf6] bg-clip-text text-transparent">
-                  {typedWord}
+                <span className="bg-gradient-to-r from-[#06b6d4] via-blue-500 to-[#8b5cf6] bg-clip-text text-transparent">
+                  Home
                 </span>
               </h1>
+
+              <div className="hero-rotator text-sm font-semibold uppercase tracking-[0.35em] text-cyan-300" aria-hidden="true">
+                {heroWords.map((word, index) => (
+                  <span
+                    key={word}
+                    className={index === heroWordIndex ? 'hero-rotator__word hero-rotator__word--active' : 'hero-rotator__word'}
+                  >
+                    {word}
+                  </span>
+                ))}
+              </div>
 
               <p className="max-w-lg text-lg leading-relaxed text-slate-400">
                 We blend enterprise-grade security with local affordability. From retrofit CCTV to zero-downtime IT infrastructure.

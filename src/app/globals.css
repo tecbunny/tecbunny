@@ -561,6 +561,25 @@
     animation: glitch-anim 2.5s infinite linear alternate-reverse;
   }
 
+  .hero-rotator {
+    position: relative;
+    min-height: 1.5rem;
+  }
+
+  .hero-rotator__word {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    transform: translateY(0.35rem);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  .hero-rotator__word--active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   @keyframes blink {
     50% {
       opacity: 0;

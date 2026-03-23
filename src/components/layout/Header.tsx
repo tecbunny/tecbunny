@@ -59,6 +59,7 @@ export function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [mobileSubmenuOpen, setMobileSubmenuOpen] = React.useState<string | null>(null);
+  const [desktopSubmenuOpen, setDesktopSubmenuOpen] = React.useState<string | null>(null);
   const [topInfo, setTopInfo] = React.useState({
     location: 'Goa',
     phone: '+91 96041 36010',
@@ -132,6 +133,7 @@ export function Header() {
   React.useEffect(() => {
     setMobileMenuOpen(false);
     setMobileSubmenuOpen(null);
+    setDesktopSubmenuOpen(null);
   }, [pathname]);
 
   const isActive = (href: string) => {
@@ -218,7 +220,19 @@ export function Header() {
             <nav className="flex items-center gap-0.5 xl:gap-1 rounded-full border border-white/5 bg-white/5 p-1.5 backdrop-blur-md shadow-lg shadow-black/20">
               {navLinks.map((item) => (
                 item.children ? (
-                  <div key={item.name} className="relative group">
+                  <div
+                    key={item.name}
+                    className="relative group"
+                    onMouseEnter={() => setDesktopSubmenuOpen(item.name)}
+                    onMouseLeave={() => setDesktopSubmenuOpen((current) => (current === item.name ? null : current))}
+                    onFocusCapture={() => setDesktopSubmenuOpen(item.name)}
+                    onBlurCapture={(event) => {
+                      const nextTarget = event.relatedTarget as Node | null;
+                      if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
+                        setDesktopSubmenuOpen((current) => (current === item.name ? null : current));
+                      }
+                    }}
+                  >
                     <Link
                       href={item.href}
                       className={`relative rounded-full px-3 xl:px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-300 inline-flex items-center gap-1
@@ -233,11 +247,15 @@ export function Header() {
                         <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4]" />
                       )}
                     </Link>
-                    <div className="invisible absolute left-1/2 top-full z-50 mt-3 w-56 -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/95 p-2 opacity-0 shadow-2xl backdrop-blur-xl transition-all duration-200 group-hover:visible group-hover:opacity-100 before:absolute before:-top-3 before:left-0 before:h-3 before:w-full">
+                    <div
+                      className={`absolute left-1/2 top-full z-50 mt-3 w-56 -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-950/95 p-2 shadow-2xl backdrop-blur-xl transition-all duration-200 before:absolute before:-top-3 before:left-0 before:h-3 before:w-full ${desktopSubmenuOpen === item.name ? 'visible opacity-100' : 'invisible opacity-0 pointer-events-none'}`}
+                      aria-hidden={desktopSubmenuOpen === item.name ? 'false' : 'true'}
+                    >
                       {item.children.map((child) => (
                         <Link
                           key={child.name}
                           href={child.href}
+                          tabIndex={desktopSubmenuOpen === item.name ? 0 : -1}
                           className="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
                         >
                           {child.name}

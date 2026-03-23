@@ -135,6 +135,11 @@ export function DynamicTitle() {
         const fallback = primary || (await fetchKey('site_branding'));
 
         if (fallback && isMounted && typeof window !== 'undefined') {
+          const currentTitle = document.title.trim();
+          if (currentTitle && currentTitle !== defaultTitle) {
+            return;
+          }
+
           const normalized = fallback.trim();
           const title = normalized.length < 12
             ? defaultTitle

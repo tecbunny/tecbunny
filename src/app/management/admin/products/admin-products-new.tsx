@@ -85,7 +85,7 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [supabase, toast]);
+  }, [toast]);
 
   React.useEffect(() => {
     fetchProducts();

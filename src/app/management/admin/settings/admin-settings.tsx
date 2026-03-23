@@ -144,7 +144,7 @@ const createDefaultSettings = (): SettingsFormValues => ({
   categoryGstRates: { ...DEFAULT_CATEGORY_GST_RATES },
 });
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+async function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number, message: string): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);

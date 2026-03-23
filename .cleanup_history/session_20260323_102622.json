@@ -1,0 +1,33 @@
+﻿{
+    "session_id": "cleanup_20260323_102622",
+    "timestamp": "2026-03-23T04:56:22.0000000Z",
+    "deleted_files": [
+        {
+            "original_path": "c:\\Users\\Tecbunny Solutions\\Desktop\\DESKTOP\\tecbunny-master1-main\\tecbunny-master\\android\\app\\build",
+            "size_bytes": 18265170,
+            "category": "SAFE",
+            "reason": "Android app build artifacts older than one hour"
+        },
+        {
+            "original_path": "c:\\Users\\Tecbunny Solutions\\Desktop\\DESKTOP\\tecbunny-master1-main\\tecbunny-master\\android\\build",
+            "size_bytes": 125829,
+            "category": "SAFE",
+            "reason": "Android root build artifacts older than one hour"
+        },
+        {
+            "original_path": "c:\\Users\\Tecbunny Solutions\\Desktop\\DESKTOP\\tecbunny-master1-main\\tecbunny-master\\android\\capacitor-cordova-android-plugins\\build",
+            "size_bytes": 10486,
+            "category": "SAFE",
+            "reason": "Cordova Android plugin build artifacts older than one hour"
+        },
+        {
+            "original_path": "c:\\Users\\Tecbunny Solutions\\Desktop\\DESKTOP\\tecbunny-master1-main\\tecbunny-master\\.vercel",
+            "size_bytes": 0,
+            "category": "SAFE",
+            "reason": "Local Vercel metadata older than one hour"
+        }
+    ],
+    "total_size_freed_bytes": 18401485,
+    "total_size_freed": "17.55 MB",
+    "undo_available_until": "2026-03-24T04:56:22.0000000Z"
+}

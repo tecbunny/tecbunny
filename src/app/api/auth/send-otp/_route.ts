@@ -4,6 +4,16 @@ import MultiChannelOTPManager from '../../../../lib/multi-channel-otp-manager';
 import { logger } from '../../../../lib/logger';
 import { apiError, apiSuccess } from '../../../../lib/errors';
 import { verifyCaptcha } from '../../../../lib/captcha/captcha-service';
+import { rateLimit } from '../../../../lib/rate-limit';
+
+const SEND_OTP_IP_LIMIT = { limit: 5, windowMs: 15 * 60 * 1000 };
+const SEND_OTP_IDENTIFIER_LIMIT = { limit: 3, windowMs: 15 * 60 * 1000 };
+
+function getClientIp(request: NextRequest) {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')?.trim()
+    || 'unknown';
+}
 
 export async function POST(request: NextRequest) {
   const correlationId = request.headers.get('x-correlation-id');
@@ -23,8 +33,21 @@ export async function POST(request: NextRequest) {
       return apiError('VALIDATION_ERROR', { overrideMessage: 'Invalid OTP type. Must be either "signup" or "recovery"', correlationId });
     }
 
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : undefined;
+    const normalizedMobile = mobile ? String(mobile).replace(/\D/g, '') : undefined;
+    const ip = getClientIp(request);
+
+    if (!rateLimit(ip, 'auth_send_otp_ip', SEND_OTP_IP_LIMIT)) {
+      return apiError('RATE_LIMITED', { overrideMessage: 'Too many OTP requests. Please try again later.', correlationId });
+    }
+    if (normalizedEmail && !rateLimit(`email:${normalizedEmail}`, 'auth_send_otp_identifier', SEND_OTP_IDENTIFIER_LIMIT)) {
+      return apiError('RATE_LIMITED', { overrideMessage: 'Too many OTP requests for this email. Please try again later.', correlationId });
+    }
+    if (normalizedMobile && !rateLimit(`mobile:${normalizedMobile}`, 'auth_send_otp_identifier', SEND_OTP_IDENTIFIER_LIMIT)) {
+      return apiError('RATE_LIMITED', { overrideMessage: 'Too many OTP requests for this mobile number. Please try again later.', correlationId });
+    }
+
     // CAPTCHA verification (if configured). Allow runtime bypass via header in non-production
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
     const bypassHeader = request.headers.get('x-bypass-captcha');
     const isBypassed = process.env.NODE_ENV !== 'production' && bypassHeader === '1';
     if (!isBypassed) {
@@ -36,9 +59,6 @@ export async function POST(request: NextRequest) {
     } else {
       logger.debug('send_otp_captcha_bypassed', { correlationId, identifier: email || mobile, ip });
     }
-
-    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : undefined;
-    const normalizedMobile = mobile ? String(mobile).replace(/\D/g, '') : undefined;
 
     const purpose = type === 'recovery' ? 'password_reset' : 'registration';
 

@@ -14,6 +14,7 @@ import type { Product } from '../../lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { AddToCartButton } from '../../components/cart/AddToCartButton';
+import { OptimizedImage } from '../../components/ui/optimized-image';
 
 import { StarRating } from './StarRating';
 import { useAnalytics } from '../../hooks/use-analytics';
@@ -201,11 +202,13 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
             <div className="aspect-square md:aspect-[4/3] w-full relative bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
               {
                 !hasImageError && displayImage ? (
-                  <img
+                  <OptimizedImage
                     src={displayImage}
                     alt={displayName}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 256px, 320px"
                     className="w-full h-full object-contain p-4"
-                    loading="lazy"
+                    transformation={{ width: 640, height: 480, quality: 75 }}
                     onError={() => setHasImageError(true)}
                   />
                 ) : (
@@ -380,13 +383,13 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
         <div className="block">
           <div className="h-[280px] w-full relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
             {!hasImageError && displayImage ? (
-              <img
+              <OptimizedImage
                 src={displayImage}
                 alt={displayName}
-                width={800}
-                height={560}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 320px"
                 className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
-                loading="lazy"
+                transformation={{ width: 800, height: 560, quality: 75 }}
                 onError={() => setHasImageError(true)}
               />
             ) : (

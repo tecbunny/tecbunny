@@ -16,6 +16,7 @@ import type { Product, AutoOffer } from '../../lib/types';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Input } from '../../components/ui/input';
 import { useCart } from '../../lib/hooks';
+import { useRevealSections } from '../../hooks/use-reveal-sections';
 import HeroCarousel from '../HeroCarousel';
 
 const DEFAULT_CUSTOMER_CATEGORY = 'Normal';
@@ -168,6 +169,47 @@ function applyAutoOffersToProducts(products: Product[], offers: AutoOffer[]): Pr
   });
 }
 
+function ProductGridImage({
+  src,
+  alt,
+  fallbackText,
+}: {
+  src: string | null | undefined;
+  alt: string;
+  fallbackText: string;
+}) {
+  const [hasImageError, setHasImageError] = React.useState(false);
+  const initial = fallbackText.trim().charAt(0).toUpperCase() || 'P';
+
+  if (!src || hasImageError) {
+    return (
+      <div className="flex h-full w-full items-center justify-center rounded-[18px] border border-dashed border-white/10 bg-slate-950/60 text-center text-slate-500">
+        <div className="px-4">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/5 text-lg font-semibold text-slate-300">
+            {initial}
+          </div>
+          <p className="text-sm font-medium text-slate-300">Image unavailable</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full w-full items-center justify-center rounded-[18px] border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_rgba(15,23,42,0.92)_62%)] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-white p-3">
+        <img
+          src={src}
+          alt={alt}
+          className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+          decoding="async"
+          onError={() => setHasImageError(true)}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ShopPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -188,6 +230,7 @@ export function ShopPageContent() {
   const [maxPrice, setMaxPrice] = React.useState(100000);
   const [localSearchQuery, setLocalSearchQuery] = React.useState(searchQuery);
   const { addToCart } = useCart();
+  useRevealSections();
   
   // Update URL parameters
   const updateUrlParams = React.useCallback((params: Record<string, string>) => {
@@ -421,8 +464,8 @@ export function ShopPageContent() {
 
       <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-0 sm:px-6 lg:px-8 sm:pt-0">
         <div className="flex flex-col gap-10">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div>
+          <div className="reveal-section flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between" data-reveal-id="products-hero">
+            <div className="reveal-item" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">
                 Catalog
               </div>
@@ -434,7 +477,7 @@ export function ShopPageContent() {
               </p>
             </div>
 
-            <form onSubmit={handleSearch} className="w-full max-w-md">
+            <form onSubmit={handleSearch} className="reveal-item w-full max-w-md" style={{ '--reveal-delay': '90ms' } as React.CSSProperties}>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                 <Input
@@ -450,15 +493,16 @@ export function ShopPageContent() {
           </div>
 
           {categories.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="reveal-section flex flex-wrap gap-2" data-reveal-id="products-filters">
               <button
                 type="button"
                 onClick={() => updateUrlParams({ category: '' })}
-                className={`rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                className={`reveal-item rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
                   hasActiveCategory
                     ? 'border-white/10 text-slate-400 hover:border-cyan-400/40 hover:text-white'
                     : 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300'
                 }`}
+                style={{ '--reveal-delay': '0ms' } as React.CSSProperties}
               >
                 All Items
               </button>
@@ -467,11 +511,12 @@ export function ShopPageContent() {
                   key={category}
                   type="button"
                   onClick={() => updateUrlParams({ category })}
-                  className={`rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                  className={`reveal-item rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
                     categoryFilter === category
                       ? 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300'
                       : 'border-white/10 text-slate-400 hover:border-cyan-400/40 hover:text-white'
                   }`}
+                  style={{ '--reveal-delay': '70ms' } as React.CSSProperties}
                 >
                   {category}
                 </button>
@@ -480,7 +525,8 @@ export function ShopPageContent() {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400 transition-colors hover:border-cyan-400/40 hover:text-white"
+                  className="reveal-item rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400 transition-colors hover:border-cyan-400/40 hover:text-white"
+                  style={{ '--reveal-delay': '140ms' } as React.CSSProperties}
                 >
                   Clear Filters
                 </button>
@@ -489,7 +535,7 @@ export function ShopPageContent() {
           )}
         </div>
 
-        <div className="mt-12">
+        <div className="reveal-section mt-12" data-reveal-id="products-grid">
           {loading ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -502,7 +548,7 @@ export function ShopPageContent() {
             </div>
           ) : filteredProducts.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {filteredProducts.map((product) => {
+              {filteredProducts.map((product, index) => {
                 const displayName = product.title || product.name || 'Product';
                 const imageUrl = getProductDisplayImage(product, {
                   fallbackText: displayName,
@@ -516,22 +562,16 @@ export function ShopPageContent() {
                 return (
                   <div
                     key={product.id}
-                    className="group flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-4 transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-400/30"
+                    className="reveal-item group flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-4 transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-400/30"
+                    style={{ '--reveal-delay': `${Math.min(index, 11) * 70}ms` } as React.CSSProperties}
                   >
                     <Link href={`/products/${product.id}`} className="block">
-                      <div className="relative mb-4 flex h-48 items-center justify-center overflow-hidden rounded-xl bg-black/40 p-3">
-                        {imageUrl ? (
-                          <img
-                            src={imageUrl}
-                            alt={displayName}
-                            className="h-full w-full object-contain opacity-90 transition-transform duration-500 group-hover:scale-105"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
-                            No Image
-                          </div>
-                        )}
+                      <div className="relative mb-4 h-48 overflow-hidden rounded-xl">
+                        <ProductGridImage
+                          src={imageUrl}
+                          alt={displayName}
+                          fallbackText={displayName}
+                        />
                       </div>
                       <div className="flex items-start justify-between gap-3">
                         <h3 className="text-base font-semibold text-white">{displayName}</h3>

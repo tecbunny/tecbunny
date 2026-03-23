@@ -1,4 +1,5 @@
 import type {Metadata, Viewport} from 'next';
+import dynamic from 'next/dynamic';
 import Script from 'next/script';
 import { Inter, Poppins } from 'next/font/google';
 import { Suspense } from 'react';
@@ -8,7 +9,6 @@ import './globals.css';
 import {Header} from '../components/layout/Header';
 import {Footer} from '../components/layout/Footer';
 import {TechShell} from '../components/layout/TechShell';
-import { FloatingAIAssistant } from '../components/layout/FloatingAIAssistant';
 import {AppProvider} from '../context/AppProvider';
 import {OrderProvider} from '../context/OrderProvider';
 import {Toaster} from '../components/ui/toaster';
@@ -16,23 +16,31 @@ import {ThemeProvider} from '../components/providers/ThemeProvider';
 import {DynamicFavicon, DynamicTitle} from '../components/ui/dynamic-head';
 import {AuthStateManager} from '../components/auth/AuthStateManager';
 
+const FloatingAIAssistant = dynamic(
+  () => import('../components/layout/FloatingAIAssistant').then((module) => module.FloatingAIAssistant),
+  { ssr: false }
+);
+
+const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.tecbunny.com'),
   title: {
-    default: 'TecBunny Solutions | CCTV, Computers & AMC Services in Goa',
+    default: 'TecBunny Solutions | CCTV, IT Services, Home Automation & AMC in Goa & Maharashtra',
     template: '%s | TecBunny Solutions',
   },
   description:
-    'TecBunny Solutions provides CCTV installation, computer hardware, AMC services, and custom tech setups across Goa. Trusted installation, maintenance, and support.',
+    'TecBunny Solutions provides CCTV installation, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.',
   applicationName: 'TecBunny Solutions',
   keywords: [
-    'CCTV Goa',
-    'computer hardware Goa',
-    'AMC services',
-    'security systems',
-    'tech services',
-    'networking',
-    'biometric systems',
+    'CCTV installation Goa',
+    'IT services Goa',
+    'AMC services Goa',
+    'home automation Goa',
+    'RFID lock system Goa',
+    'computer networking Goa',
+    'CCTV Maharashtra',
+    'smart security systems',
     'TecBunny',
   ],
   authors: [{ name: 'TecBunny Solutions' }],
@@ -43,9 +51,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: 'https://www.tecbunny.com',
-    title: 'TecBunny Solutions | CCTV, Computers & AMC Services in Goa',
+    title: 'TecBunny Solutions | CCTV, IT Services, Home Automation & AMC in Goa & Maharashtra',
     description:
-      'CCTV installation, computer hardware, AMC services, and custom tech setups across Goa. Trusted installation, maintenance, and support.',
+      'CCTV installation, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.',
     siteName: 'TecBunny Solutions',
     images: [
       {
@@ -58,9 +66,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'TecBunny Solutions | CCTV, Computers & AMC Services in Goa',
+    title: 'TecBunny Solutions | CCTV, IT Services, Home Automation & AMC in Goa & Maharashtra',
     description:
-      'CCTV installation, computer hardware, AMC services, and custom tech setups across Goa. Trusted installation, maintenance, and support.',
+      'CCTV installation, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.',
     images: ['/brand.png'],
   },
   robots: {
@@ -74,6 +82,11 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
     },
   },
+  verification: googleSiteVerification
+    ? {
+        google: googleSiteVerification,
+      }
+    : undefined,
   icons: {
     icon: [
       {
@@ -110,20 +123,63 @@ const structuredData = {
   '@graph': [
     {
       '@type': 'Organization',
+      '@id': 'https://www.tecbunny.com/#organization',
       name: 'TecBunny Solutions',
       url: 'https://www.tecbunny.com',
       logo: 'https://www.tecbunny.com/brand.png',
       description:
-        'TecBunny Solutions offers CCTV, computer hardware, AMC services, and custom tech setups across Goa.',
+        'TecBunny Solutions offers CCTV, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.',
+      sameAs: [
+        'https://www.facebook.com/profile.php?id=61578165368064',
+        'https://www.instagram.com/tecbunny_solutions/',
+      ],
+      contactPoint: [
+        {
+          '@type': 'ContactPoint',
+          telephone: '+91-9604136010',
+          contactType: 'customer support',
+          areaServed: ['IN-GA', 'IN-MH'],
+          email: 'support@tecbunny.com',
+        },
+      ],
     },
     {
       '@type': ['LocalBusiness', 'ITService', 'SecurityService'],
+      '@id': 'https://www.tecbunny.com/#localbusiness',
       name: 'TecBunny Solutions',
       url: 'https://www.tecbunny.com',
       image: 'https://www.tecbunny.com/brand.png',
       description:
-        'CCTV installation, computer hardware, AMC services, networking, and custom tech setups in Goa.',
-      areaServed: 'Goa, India',
+        'CCTV installation, IT services, AMC support, networking, home automation, and RFID lock systems in Goa and Maharashtra.',
+      telephone: '+91-9604136010',
+      email: 'support@tecbunny.com',
+      priceRange: 'INR',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'H No 11 Nhayginwada, Parse, Parxem',
+        addressLocality: 'Pernem',
+        addressRegion: 'Goa',
+        postalCode: '403512',
+        addressCountry: 'IN',
+      },
+      areaServed: [
+        {
+          '@type': 'State',
+          name: 'Goa',
+        },
+        {
+          '@type': 'State',
+          name: 'Maharashtra',
+        },
+      ],
+      serviceType: [
+        'CCTV installation',
+        'IT services',
+        'AMC support',
+        'Home automation',
+        'RFID lock systems',
+        'Computer networking',
+      ],
     },
   ],
 };
@@ -172,7 +228,7 @@ _iub.csConfiguration = {"siteId":4401650,"cookiePolicyId":81350062,"lang":"en","
                 />
                 <Script
                   src="https://cdn.iubenda.com/cs/gpp/stub.js"
-                  strategy="beforeInteractive"
+                  strategy="afterInteractive"
                 />
                 <Script
                   src="https://cdn.iubenda.com/cs/iubenda_cs.js"
@@ -195,7 +251,7 @@ _iub.csConfiguration = {"siteId":4401650,"cookiePolicyId":81350062,"lang":"en","
               <Script
                 src="https://static.cloudflareinsights.com/beacon.min.js"
                 data-cf-beacon='{"token": "47dd7f9fc88a419790b0682afbad1861"}'
-                strategy="afterInteractive"
+                strategy="lazyOnload"
               />
               {/* End Cloudflare Web Analytics */}
               {gaId ? (
@@ -217,7 +273,7 @@ _iub.csConfiguration = {"siteId":4401650,"cookiePolicyId":81350062,"lang":"en","
                     {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);} 
 gtag('js', new Date());
-gtag('config', '${gaId}', { anonymize_ip: true });`}
+gtag('config', '${gaId}', { anonymize_ip: true, send_page_view: false });`}
                   </Script>
                 </>
               ) : null}

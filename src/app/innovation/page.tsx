@@ -7,9 +7,9 @@ import { createClient, createServiceClient, isSupabaseServiceConfigured } from '
 import type { InnovationDevice, InnovationMode } from '../../lib/types';
 
 export const metadata: Metadata = createPageMetadata({
-  title: 'Innovation - TecBunny Store',
-  description: 'Explore next-generation automation and smart ecosystem experiences curated by TecBunny.',
-  keywords: ['innovation', 'automation', 'smart home', 'TecBunny', 'technology'],
+  title: 'Home Automation & Smart Security in Goa & Maharashtra',
+  description: 'Explore TecBunny home automation, smart security, and connected-space solutions for homes, offices, hotels, and managed properties in Goa and Maharashtra.',
+  keywords: ['home automation Goa', 'smart security Goa', 'automation Maharashtra', 'smart home solutions Goa', 'TecBunny innovation'],
   path: '/innovation',
   image: '/brand.png',
 });

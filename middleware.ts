@@ -4,11 +4,27 @@ import { createServerClient } from '@supabase/ssr'
 // Staff roles that are permitted to access the CRM subdomain
 const CRM_STAFF_ROLES = new Set(['admin', 'manager', 'sales', 'service_engineer', 'accounts'])
 
+const SHARED_CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cs.iubenda.com https://cdn.iubenda.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://region1.analytics.google.com https://cloudflareinsights.com https://static.cloudflareinsights.com https://challenges.cloudflare.com",
+  "frame-src 'self' https://challenges.cloudflare.com https://www.google.com",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'self'",
+].join('; ')
+
 export async function middleware(request: NextRequest) {
   // Define public API routes that don't require authentication
   // Note: Maintain this list carefully. All other /api/* routes will be protected by default (Fail-Closed).
   const publicApiRoutes = [
     '/api/auth',     // Auth endpoints (signin, callback, etc)
+    '/api/health',
     '/api/settings',
     '/api/page-content',
     '/api/auto-offers',
@@ -154,69 +170,7 @@ export async function middleware(request: NextRequest) {
     response.headers.set('X-Content-Type-Options', 'nosniff')
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
     response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-    // Minimal CSP (can be expanded later)
-    const csp = [
-      "default-src 'self'",
-      "img-src 'self' data: https:",
-      // Allow Cloudflare Turnstile scripts and analytics beacon
-      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://*.cloudflareinsights.com https://static.cloudflareinsights.com",
-      "style-src 'self' 'unsafe-inline'",
-      // Allow API calls to any https, Turnstile verification, and analytics beacon uploads
-      "connect-src 'self' https: https://*.cloudflareinsights.com https://static.cloudflareinsights.com",
-      "font-src 'self' data:",
-      // Permit Turnstile widget iframe
-      "frame-src 'self' https://challenges.cloudflare.com",
-      "frame-ancestors 'self'",
-      "object-src 'none'",
-    ].join('; ')
-    response.headers.set('Content-Security-Policy', csp)
-    response.headers.set('X-Correlation-Id', correlationId)
-
-    return response
-  }
-
-  return applySharedHeaders()
-}
-
-  const applySharedHeaders = () => {
-    // Add cache-control headers to prevent caching of auth-related pages
-    if (pathname.startsWith('/management') || pathname.startsWith('/auth')) {
-      response.headers.set('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
-      response.headers.set('Pragma', 'no-cache')
-      response.headers.set('Expires', '0')
-    }
-
-    if (
-      pathname.startsWith('/management') ||
-      pathname.startsWith('/auth') ||
-      pathname.startsWith('/checkout') ||
-      pathname.startsWith('/cart') ||
-      pathname.startsWith('/profile')
-    ) {
-      response.headers.set('X-Robots-Tag', 'noindex, nofollow')
-    }
-
-    // Global security headers (basic hardening)
-    response.headers.set('X-Frame-Options', 'DENY')
-    response.headers.set('X-Content-Type-Options', 'nosniff')
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-    // Minimal CSP (can be expanded later)
-    const csp = [
-      "default-src 'self'",
-      "img-src 'self' data: https:",
-      // Allow Cloudflare Turnstile scripts and analytics beacon
-      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://*.cloudflareinsights.com https://static.cloudflareinsights.com",
-      "style-src 'self' 'unsafe-inline'",
-      // Allow API calls to any https, Turnstile verification, and analytics beacon uploads
-      "connect-src 'self' https: https://*.cloudflareinsights.com https://static.cloudflareinsights.com",
-      "font-src 'self' data:",
-      // Permit Turnstile widget iframe
-      "frame-src 'self' https://challenges.cloudflare.com",
-      "frame-ancestors 'self'",
-      "object-src 'none'",
-    ].join('; ')
-    response.headers.set('Content-Security-Policy', csp)
+    response.headers.set('Content-Security-Policy', SHARED_CONTENT_SECURITY_POLICY)
     response.headers.set('X-Correlation-Id', correlationId)
 
     return response

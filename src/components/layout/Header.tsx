@@ -235,14 +235,15 @@ export function Header() {
                   >
                     <Link
                       href={item.href}
-                      className={`relative rounded-full px-3 xl:px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-300 inline-flex items-center gap-1
+                      className={`nav-pill relative rounded-full px-3 xl:px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-300 inline-flex items-center gap-1
                         ${isActive(item.href)
-                          ? 'bg-white/10 text-white border border-white/5 shadow-inner'
+                          ? 'nav-pill--active bg-white/10 text-white border border-white/5 shadow-inner'
                           : 'text-slate-400 hover:text-white hover:bg-white/5'
                         }
                       `}
                     >
                       {item.name}
+                      <span className="nav-pill__indicator" aria-hidden="true" />
                       {isActive(item.href) && (
                         <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4]" />
                       )}
@@ -268,14 +269,15 @@ export function Header() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`relative inline-flex items-center whitespace-nowrap rounded-full px-3 xl:px-4 py-2 text-sm font-medium transition-all duration-300
+                    className={`nav-pill relative inline-flex items-center whitespace-nowrap rounded-full px-3 xl:px-4 py-2 text-sm font-medium transition-all duration-300
                       ${isActive(item.href)
-                        ? 'bg-white/10 text-white border border-white/5 shadow-inner'
+                        ? 'nav-pill--active bg-white/10 text-white border border-white/5 shadow-inner'
                         : 'text-slate-400 hover:text-white hover:bg-white/5'
                       }
                     `}
                   >
                     {item.name}
+                    <span className="nav-pill__indicator" aria-hidden="true" />
                     {isActive(item.href) && (
                       <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4]" />
                     )}

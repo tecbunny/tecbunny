@@ -6,6 +6,8 @@ const MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-VCCMTMSVP4';
 const GA_API_SECRET = process.env.GA_API_SECRET;
 const GA_ENDPOINT = 'https://www.google-analytics.com/mp/collect';
 
+type AnalyticsMetadata = Record<string, string | number | boolean | null>;
+
 function isFetchFailure(err: unknown) {
   if (!err || typeof err !== 'object') return false;
   const message = String((err as { message?: string }).message || '').toLowerCase();
@@ -32,6 +34,45 @@ function getClientId(request: NextRequest, sessionId?: string | null) {
   return `${Date.now()}.${Math.floor(Math.random() * 1e9)}`;
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function toAnalyticsMetadata(value: unknown): AnalyticsMetadata {
+  if (!isPlainObject(value)) {
+    return {};
+  }
+
+  return Object.entries(value).reduce<AnalyticsMetadata>((accumulator, [key, entry]) => {
+    if (
+      typeof entry === 'string' ||
+      typeof entry === 'number' ||
+      typeof entry === 'boolean' ||
+      entry === null
+    ) {
+      accumulator[key] = entry;
+    }
+    return accumulator;
+  }, {});
+}
+
+function resolveResourceId(resourceId: unknown, metadata: AnalyticsMetadata) {
+  const candidates = [
+    resourceId,
+    metadata.resourceId,
+    metadata.productId,
+    metadata.serviceId,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim().length > 0) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
 async function sendGaEvent(params: {
   clientId: string;
   userId?: string | null;
@@ -39,6 +80,7 @@ async function sendGaEvent(params: {
   pageUrl?: string | null;
   resourceId?: string | null;
   sessionId?: string | null;
+  metadata?: AnalyticsMetadata;
 }) {
   if (!GA_API_SECRET) {
     return;
@@ -48,6 +90,7 @@ async function sendGaEvent(params: {
     page_location: params.pageUrl ?? undefined,
     resource_id: params.resourceId ?? undefined,
     session_id: params.sessionId ?? undefined,
+    ...params.metadata,
   };
 
   const payload = {
@@ -90,9 +133,28 @@ export async function POST(request: NextRequest) {
        return NextResponse.json({ success: true, skipped: 'Empty or invalid body' });
     }
 
-    const { eventType, pageUrl, resourceId, metadata, sessionId } = body;
+    const {
+      eventType,
+      pageUrl,
+      resourceId,
+      metadata,
+      sessionId,
+      ...extraFields
+    } = body as Record<string, unknown>;
 
-    const clientId = getClientId(request, sessionId);
+    if (typeof eventType !== 'string' || !eventType.trim()) {
+      return NextResponse.json({ error: 'eventType is required' }, { status: 400 });
+    }
+
+    const eventMetadata = {
+      ...toAnalyticsMetadata(metadata),
+      ...toAnalyticsMetadata(extraFields),
+    };
+    const normalizedResourceId = resolveResourceId(resourceId, eventMetadata);
+    const normalizedPageUrl = typeof pageUrl === 'string' ? pageUrl : null;
+    const normalizedSessionId = typeof sessionId === 'string' ? sessionId : null;
+
+    const clientId = getClientId(request, normalizedSessionId);
     let userId: string | null = null;
 
     if (isSupabasePublicConfigured) {
@@ -106,10 +168,10 @@ export async function POST(request: NextRequest) {
             .from('analytics_events')
             .insert({
               event_type: eventType,
-              page_url: pageUrl,
-              resource_id: resourceId,
-              metadata,
-              session_id: sessionId,
+              page_url: normalizedPageUrl,
+              resource_id: normalizedResourceId,
+              metadata: Object.keys(eventMetadata).length ? eventMetadata : null,
+              session_id: normalizedSessionId,
               user_id: user.id,
             });
 
@@ -122,7 +184,7 @@ export async function POST(request: NextRequest) {
             const { error: leadError } = await supabase.from('leads').insert({
               user_id: user.id,
               type: leadType,
-              product_id: resourceId,
+              product_id: normalizedResourceId,
               status: 'new',
               customer_email: user.email,
             });
@@ -146,9 +208,10 @@ export async function POST(request: NextRequest) {
       clientId,
       userId,
       eventType,
-      pageUrl,
-      resourceId,
-      sessionId,
+      pageUrl: normalizedPageUrl,
+      resourceId: normalizedResourceId,
+      sessionId: normalizedSessionId,
+      metadata: eventMetadata,
     });
 
     return NextResponse.json({ success: true });

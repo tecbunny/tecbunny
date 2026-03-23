@@ -1,12 +1,32 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
+
+declare global {
+  interface Window {
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
+  }
+}
 
 export const useAnalytics = () => {
   const pathname = usePathname();
   const sessionId = useRef<string>('');
+
+  const sendToGtag = useCallback((eventType: string, data?: Record<string, unknown>) => {
+    if (typeof window === 'undefined' || typeof window.gtag !== 'function') {
+      return;
+    }
+
+    window.gtag('event', eventType, {
+      page_location: typeof window !== 'undefined' ? window.location.href : undefined,
+      page_path: pathname,
+      page_title: typeof document !== 'undefined' ? document.title : undefined,
+      ...data,
+    });
+  }, [pathname]);
 
   useEffect(() => {
     // Initialize session ID
@@ -18,7 +38,9 @@ export const useAnalytics = () => {
     sessionId.current = storedSession;
   }, []);
 
-  const trackEvent = async (eventType: string, data?: any) => {
+  const trackEvent = useCallback(async (eventType: string, data?: Record<string, unknown>) => {
+    sendToGtag(eventType, data);
+
     try {
       await fetch('/api/analytics/track', {
         method: 'POST',
@@ -27,18 +49,18 @@ export const useAnalytics = () => {
           eventType,
           pageUrl: window.location.href,
           sessionId: sessionId.current,
-          ...data
+          ...data,
         })
       });
     } catch (error) {
       console.error('Failed to track event', error);
     }
-  };
+  }, [sendToGtag]);
 
   // Auto-track page views
   useEffect(() => {
-    trackEvent('page_view');
-  }, [pathname]);
+    void trackEvent('page_view');
+  }, [trackEvent]);
 
   return { trackEvent };
 };

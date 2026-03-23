@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import DOMPurify from 'dompurify';
 
 import { usePageContent } from '../hooks/use-page-content';
+import { usePrefersReducedMotion } from '../hooks/use-prefers-reduced-motion';
 import type { HeroCarouselContent, HeroCarouselItem, HeroCarouselPageKey } from '../lib/types';
 import { cn } from '../lib/utils';
 
@@ -89,6 +90,7 @@ function normalizeSlides(pageKey: HeroCarouselPageKey, raw: unknown): HeroCarous
 
 export default function HeroCarousel({ pageKey, intervalMs = 6000, className }: HeroCarouselProps) {
   const { content, loading } = usePageContent('hero-carousels');
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const slides = React.useMemo(() => {
     if (!content?.content) {
@@ -106,14 +108,14 @@ export default function HeroCarousel({ pageKey, intervalMs = 6000, className }: 
   }, [pageKey, slides.length]);
 
   React.useEffect(() => {
-    if (paused || slides.length <= 1) {
+    if (paused || prefersReducedMotion || slides.length <= 1) {
       return;
     }
     const id = window.setInterval(() => {
       setActiveIndex(prev => (prev + 1) % slides.length);
     }, intervalMs);
     return () => window.clearInterval(id);
-  }, [intervalMs, paused, slides.length]);
+  }, [intervalMs, paused, prefersReducedMotion, slides.length]);
 
   if (loading) {
     return (
@@ -171,7 +173,10 @@ export default function HeroCarousel({ pageKey, intervalMs = 6000, className }: 
                 />
                 {slide.htmlContent ? (
                   <div
-                    className="absolute inset-0 flex h-full w-full flex-col justify-center"
+                    className={cn(
+                      'carousel-overlay absolute inset-0 flex h-full w-full flex-col justify-center',
+                      index === activeIndex ? 'carousel-overlay--active' : ''
+                    )}
                     dangerouslySetInnerHTML={{ __html: typeof window !== 'undefined' ? DOMPurify.sanitize(slide.htmlContent) : '' }}
                   />
                 ) : (
@@ -179,7 +184,7 @@ export default function HeroCarousel({ pageKey, intervalMs = 6000, className }: 
                     <div className="absolute inset-0 bg-black/55" />
                     <div className="absolute inset-0 flex items-center">
                       <div className="px-6 sm:px-12">
-                        <div className="max-w-2xl space-y-4">
+                        <div className={cn('carousel-copy max-w-2xl space-y-4', index === activeIndex ? 'carousel-copy--active' : '')}>
                           {slide.subtitle && (
                             <p className="text-sm font-medium uppercase tracking-[0.3em] text-blue-200">
                               {slide.subtitle}

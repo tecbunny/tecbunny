@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import MultiChannelOTPManager from '../../../../lib/multi-channel-otp-manager';
 import { logger } from '../../../../lib/logger';
 import { apiError, apiSuccess } from '../../../../lib/errors';
+import { rateLimit } from '../../../../lib/rate-limit';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'service-role-placeholder';
@@ -12,6 +13,14 @@ const isSupabaseConfigured = Boolean(
 );
 
 const otpService = new MultiChannelOTPManager();
+const VERIFY_OTP_IP_LIMIT = { limit: 15, windowMs: 15 * 60 * 1000 };
+const VERIFY_OTP_IDENTIFIER_LIMIT = { limit: 10, windowMs: 15 * 60 * 1000 };
+
+function getClientIp(request: NextRequest) {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')?.trim()
+    || 'unknown';
+}
 
 function getSupabaseAdmin() {
   return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -25,6 +34,11 @@ function getSupabaseAdmin() {
 export async function POST(request: NextRequest) {
   const correlationId = request.headers.get('x-correlation-id');
   try {
+    const clientIp = getClientIp(request);
+    if (!rateLimit(clientIp, 'auth_verify_otp_ip', VERIFY_OTP_IP_LIMIT)) {
+      return apiError('RATE_LIMITED', { overrideMessage: 'Too many OTP verification attempts. Please try again later.', correlationId });
+    }
+
     if (!isSupabaseConfigured) {
       logger.error('verify_otp.supabase_config_missing', { correlationId });
       return apiError('SERVER_ERROR', {
@@ -44,6 +58,11 @@ export async function POST(request: NextRequest) {
   // Normalize identifiers
   const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : undefined;
   const normalizedMobile = mobile ? String(mobile).replace(/\D/g, '') : undefined;
+
+  const identifierRateKey = normalizedEmail ? `email:${normalizedEmail}` : normalizedMobile ? `mobile:${normalizedMobile}` : undefined;
+  if (identifierRateKey && !rateLimit(identifierRateKey, 'auth_verify_otp_identifier', VERIFY_OTP_IDENTIFIER_LIMIT)) {
+    return apiError('RATE_LIMITED', { overrideMessage: 'Too many OTP verification attempts for this account. Please try again later.', correlationId });
+  }
 
   // Debug: log incoming body in development for easier tracing
   if (process.env.NODE_ENV !== 'production') {

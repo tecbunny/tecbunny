@@ -18,6 +18,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${baseUrl}/annual-maintenance-contract-goa`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/about/business-info`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/cctv-installation-goa`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/contact`,
       lastModified: now,
       changeFrequency: 'monthly',
@@ -54,6 +72,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${baseUrl}/home-automation-goa`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/ai-research`,
       lastModified: now,
       changeFrequency: 'monthly',
@@ -70,6 +94,48 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/rfid-lock-system-goa`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/info/policies`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/info/policies/privacy`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/info/policies/terms`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/info/policies/shipping`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.2,
+    },
+    {
+      url: `${baseUrl}/info/policies/return`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.2,
+    },
+    {
+      url: `${baseUrl}/info/policies/refund-cancellation`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.2,
     },
   ];
 }

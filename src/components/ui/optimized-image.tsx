@@ -1,13 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
+import Image, { type ImageProps } from 'next/image';
 
 import { cn } from '../../lib/utils';
 
 import { logger } from '../../lib/logger';
 
-interface OptimizedImageProps {
+interface OptimizedImageProps extends Omit<ImageProps, 'src' | 'alt' | 'width' | 'height' | 'fill' | 'quality' | 'placeholder' | 'blurDataURL'> {
   src: string;
   alt: string;
   width?: number;
@@ -19,8 +19,9 @@ interface OptimizedImageProps {
   quality?: number;
   placeholder?: 'blur' | 'empty';
   blurDataURL?: string;
-  transformation?: Record<string, any>;
+  transformation?: Record<string, unknown>;
   fallbackSrc?: string;
+  onError?: React.ReactEventHandler<HTMLImageElement>;
 }
 
 // Check if the image is from Supabase Storage
@@ -32,7 +33,7 @@ const isSupabaseUrl = (url: string): boolean => {
 // Generate Supabase URL with transformations (basic optimization)
 const getOptimizedUrl = (
   src: string, 
-  transformation?: Record<string, any>
+  transformation?: Record<string, unknown>
 ): string => {
   if (!src || typeof src !== 'string') return src || '';
   
@@ -71,6 +72,7 @@ export function OptimizedImage({
   blurDataURL,
   transformation,
   fallbackSrc = 'https://placehold.co/600x400.png',
+  onError,
   ...props
 }: OptimizedImageProps) {
   const [imgSrc, setImgSrc] = React.useState(src);
@@ -82,14 +84,16 @@ export function OptimizedImage({
     setImgSrc(src);
   }, [src]);
 
-  const handleError = React.useCallback(() => {
+  const handleError = React.useCallback((event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    onError?.(event);
+
     if (!hasError) {
       logger.warn('Failed to load image', { imgSrc, context: 'OptimizedImage.handleError' });
       setHasError(true);
       const safeFallback = (imgSrc && imgSrc.startsWith('data:image/svg')) ? 'https://placehold.co/600x400.png' : fallbackSrc;
       setImgSrc(safeFallback);
     }
-  }, [hasError, imgSrc, fallbackSrc]);
+  }, [fallbackSrc, hasError, imgSrc, onError]);
 
   // Get optimized URL
   const optimizedSrc = React.useMemo(() => {

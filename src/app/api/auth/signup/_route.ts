@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 import { verifyCaptcha } from '../../../../lib/captcha/captcha-service';
 import { logger } from '../../../../lib/logger';
+import { rateLimit } from '../../../../lib/rate-limit';
 import MultiChannelOTPManager, { type OTPChannel } from '../../../../lib/multi-channel-otp-manager';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
@@ -10,6 +11,14 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'serv
 const isSupabaseConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+const SIGNUP_IP_LIMIT = { limit: 5, windowMs: 15 * 60 * 1000 };
+const SIGNUP_IDENTIFIER_LIMIT = { limit: 3, windowMs: 30 * 60 * 1000 };
+
+function getClientIp(request: NextRequest) {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')?.trim()
+    || 'unknown';
+}
 
 function getSupabaseAdmin() {
   return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -33,6 +42,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { email, password, name, mobile: _mobile, captchaToken, channel: requestedChannel } = await request.json();
+    const clientIp = getClientIp(request);
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const normalizedMobile = typeof _mobile === 'string' ? _mobile.replace(/\D/g, '') : '';
+
+    if (!rateLimit(clientIp, 'auth_signup_ip', SIGNUP_IP_LIMIT)) {
+      return NextResponse.json({ error: 'Too many signup attempts. Please try again later.' }, { status: 429 });
+    }
+    if (normalizedEmail && !rateLimit(`email:${normalizedEmail}`, 'auth_signup_identifier', SIGNUP_IDENTIFIER_LIMIT)) {
+      return NextResponse.json({ error: 'Too many signup attempts for this email. Please try again later.' }, { status: 429 });
+    }
+    if (normalizedMobile && !rateLimit(`mobile:${normalizedMobile}`, 'auth_signup_identifier', SIGNUP_IDENTIFIER_LIMIT)) {
+      return NextResponse.json({ error: 'Too many signup attempts for this mobile number. Please try again later.' }, { status: 429 });
+    }
+
     const supabaseAdmin = getSupabaseAdmin();
     // Test Supabase admin connection
     try {
@@ -51,17 +75,14 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       );
     }
-    
-  const { email, password, name, mobile: _mobile, captchaToken, channel: requestedChannel } = await request.json();
 
     // CAPTCHA verification (conditional if configured). Allow runtime bypass via header in non-production
     const bypassHeader = request.headers.get('x-bypass-captcha');
     const isBypassed = process.env.NODE_ENV !== 'production' && bypassHeader === '1';
     if (!isBypassed) {
-      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
-      const captcha = await verifyCaptcha(captchaToken, ip);
+      const captcha = await verifyCaptcha(captchaToken, clientIp);
       if (!captcha.success) {
-        logger.warn('signup.captcha_failed', { email, ip });
+        logger.warn('signup.captcha_failed', { email: normalizedEmail || email, ip: clientIp });
         return NextResponse.json(
           { error: 'Captcha verification failed. Please retry.' },
           { status: 400 }
@@ -79,7 +100,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (normalizedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return NextResponse.json(
         { error: 'Please enter a valid email address' },
         { status: 400 }
@@ -102,7 +123,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate mobile if provided
-    let mobile = _mobile;
+    let mobile = normalizedMobile;
     if (!mobile) {
       return NextResponse.json(
         { error: 'Mobile number is required' },
@@ -121,7 +142,7 @@ export async function POST(request: NextRequest) {
     try {
       const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
       const existingUser = existingUsers.users.find((u: any) =>
-        (email && u.email === email) ||
+        (normalizedEmail && u.email === normalizedEmail) ||
         (mobile && (u.phone === mobile || u.user_metadata?.mobile === mobile))
       );
       
@@ -135,30 +156,30 @@ export async function POST(request: NextRequest) {
         );
       }
     } catch (checkError) {
-      logger.error('signup.check_existing_users_failed', { email, error: checkError });
+      logger.error('signup.check_existing_users_failed', { email: normalizedEmail || email, error: checkError });
       // Continue with signup attempt
     }
 
     // DO NOT CREATE USER YET - Only send OTP for verification
     // The user will be created AFTER OTP verification
-    logger.info('signup.sending_otp', { email, mobile: !!mobile });
+    logger.info('signup.sending_otp', { email: normalizedEmail || email, mobile: !!mobile, clientIp });
 
-    const normalizedMobile = mobile || undefined;
+    const otpMobile = mobile || undefined;
     const preferredChannel: OTPChannel = (requestedChannel && ['email', 'sms', 'whatsapp'].includes(requestedChannel)) 
       ? requestedChannel as OTPChannel 
       : 'whatsapp';
     const enforcePreferredChannel = true;
 
     const otpResult = await otpService.generateOTP({
-      email: email || undefined,
-      phone: normalizedMobile,
+      email: normalizedEmail || undefined,
+      phone: otpMobile,
       purpose: 'registration',
       preferredChannel,
       enforcePreferredChannel,
     });
 
     if (!otpResult.success || !otpResult.otpId) {
-      logger.error('signup.otp_generation_failed', { email, mobile: normalizedMobile, message: otpResult.message });
+      logger.error('signup.otp_generation_failed', { email: normalizedEmail || email, mobile: otpMobile, message: otpResult.message });
       return NextResponse.json(
         { error: otpResult.message || 'Failed to send verification code' },
         { status: 500 }
@@ -166,8 +187,8 @@ export async function POST(request: NextRequest) {
     }
 
     logger.info('signup.otp_dispatch_complete', {
-      email,
-      mobile: !!normalizedMobile,
+      email: normalizedEmail || email,
+      mobile: !!otpMobile,
       otpId: otpResult.otpId,
       channel: otpResult.channel,
       fallbackAvailable: otpResult.fallbackAvailable,

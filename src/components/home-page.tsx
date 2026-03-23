@@ -21,6 +21,8 @@ import { getProductDisplayImage } from '../lib/image-utils';
 import { OptimizedImage } from './ui/optimized-image';
 import type { Product } from '../lib/types';
 import { useAnalytics } from '../hooks/use-analytics';
+import { usePrefersReducedMotion } from '../hooks/use-prefers-reduced-motion';
+import { useRevealSections } from '../hooks/use-reveal-sections';
 import HeroCarousel from './HeroCarousel';
 
 type DbProduct = {
@@ -115,9 +117,37 @@ function resetMagneticEffect(event: React.MouseEvent<HTMLElement>) {
   event.currentTarget.style.transform = 'translate(0px, 0px)';
 }
 
+function useFinePointer() {
+  const [hasFinePointer, setHasFinePointer] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return undefined;
+    }
+
+    const mediaQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const updatePreference = () => setHasFinePointer(mediaQuery.matches);
+
+    updatePreference();
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', updatePreference);
+      return () => mediaQuery.removeEventListener('change', updatePreference);
+    }
+
+    mediaQuery.addListener(updatePreference);
+    return () => mediaQuery.removeListener(updatePreference);
+  }, []);
+
+  return hasFinePointer;
+}
+
 export default function HomePage() {
   const router = useRouter();
   const { trackEvent } = useAnalytics();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const hasFinePointer = useFinePointer();
+  useRevealSections();
   const [featuredProducts, setFeaturedProducts] = React.useState<DbProduct[]>([]);
   const [productsLoading, setProductsLoading] = React.useState(true);
   const [productsError, setProductsError] = React.useState<string | null>(null);
@@ -141,7 +171,7 @@ export default function HomePage() {
         setProductsError(null);
 
         // Pull a few extra records so we can choose ones that actually have images
-        const response = await fetch('/api/products?status=active&limit=12', { cache: 'no-store' });
+        const response = await fetch('/api/products?status=active&limit=12');
         if (!response.ok) {
           throw new Error('Failed to load products');
         }
@@ -192,14 +222,23 @@ export default function HomePage() {
   }, []);
 
   React.useEffect(() => {
+    if (prefersReducedMotion) {
+      setHeroWordIndex(0);
+      return undefined;
+    }
+
     const intervalId = window.setInterval(() => {
       setHeroWordIndex((current) => (current + 1) % heroWords.length);
     }, 2400);
 
     return () => window.clearInterval(intervalId);
-  }, [heroWords.length]);
+  }, [heroWords.length, prefersReducedMotion]);
 
   React.useEffect(() => {
+    if (prefersReducedMotion) {
+      return undefined;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -247,10 +286,10 @@ export default function HomePage() {
       window.removeEventListener('resize', resize);
       window.cancelAnimationFrame(animationId);
     };
-  }, []);
+  }, [prefersReducedMotion]);
 
   const handleTiltMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!tiltRef.current) return;
+    if (!tiltRef.current || prefersReducedMotion || !hasFinePointer) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -262,6 +301,15 @@ export default function HomePage() {
   const handleTiltLeave = () => {
     if (!tiltRef.current) return;
     tiltRef.current.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+  };
+
+  const handleMagneticMove = (event: React.MouseEvent<HTMLElement>) => {
+    if (prefersReducedMotion || !hasFinePointer) return;
+    applyMagneticEffect(event);
+  };
+
+  const handleMagneticLeave = (event: React.MouseEvent<HTMLElement>) => {
+    resetMagneticEffect(event);
   };
 
   const handleBrowseCatalog = () => {
@@ -282,7 +330,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.6),_rgba(2,6,23,0.9))]" />
       </div>
       {showLoader && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 transition-opacity">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 transition-opacity duration-500">
           <div className="text-center">
             <div className="mx-auto mb-4 h-12 w-12 rounded-full border-2 border-cyan-400/30 border-t-cyan-400 animate-spin"></div>
             <p className="text-xs font-semibold tracking-[0.4em] text-cyan-300">INITIALIZING</p>
@@ -291,27 +339,27 @@ export default function HomePage() {
       )}
 
       <section className="relative flex items-center overflow-hidden py-20 sm:py-24">
-        <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full opacity-30" />
+        <canvas ref={canvasRef} className={`pointer-events-none absolute inset-0 h-full w-full opacity-30 ${prefersReducedMotion ? 'hidden' : ''}`} aria-hidden="true" />
         <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20 brightness-100 contrast-150" />
-        <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[#06b6d4]/20 blur-[100px]" />
-        <div className="pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-[#8b5cf6]/20 blur-[100px]" />
+        <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[#06b6d4]/20 blur-[100px]" aria-hidden="true" />
+        <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-[#8b5cf6]/20 blur-[100px]" aria-hidden="true" />
 
         <div className="relative z-10 w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8 mx-auto">
           <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
-            <div className="space-y-8">
+            <div className="reveal-section space-y-8 is-revealed" data-reveal-id="hero-copy">
               <div className="inline-flex items-center gap-2 rounded-full border border-[#06b6d4]/30 bg-[#06b6d4]/5 px-3 py-1 text-xs font-bold tracking-wider text-[#06b6d4] font-tech">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#06b6d4] opacity-75"></span>
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-[#06b6d4]"></span>
                 </span>
-                OPERATIONAL IN GOA
+                OPERATIONAL IN GOA & MH
               </div>
 
-              <h1 className="text-5xl font-bold leading-tight text-white md:text-7xl font-tech" aria-label="Secure Your Home">
-                <span className="glitch-text" data-text="Secure Your">Secure Your</span>
+              <h1 className="text-5xl font-bold leading-tight text-white md:text-7xl font-tech" aria-label="CCTV, IT services, and home automation in Goa and Maharashtra">
+                <span className="glitch-text" data-text="CCTV, IT & Automation">CCTV, IT & Automation</span>
                 <br />
                 <span className="bg-gradient-to-r from-[#06b6d4] via-blue-500 to-[#8b5cf6] bg-clip-text text-transparent">
-                  Home
+                  for Goa & MH
                 </span>
               </h1>
 
@@ -327,14 +375,14 @@ export default function HomePage() {
               </div>
 
               <p className="max-w-lg text-lg leading-relaxed text-slate-400">
-                We blend enterprise-grade security with local affordability. From retrofit CCTV to zero-downtime IT infrastructure.
+                TecBunny Solutions installs CCTV systems, manages IT infrastructure, delivers AMC support, and builds home automation and RFID access control setups across Goa and Maharashtra.
               </p>
 
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/contact"
-                  onMouseMove={applyMagneticEffect}
-                  onMouseLeave={resetMagneticEffect}
+                  onMouseMove={handleMagneticMove}
+                  onMouseLeave={handleMagneticLeave}
                   className="magnetic-btn relative inline-flex h-12 overflow-hidden rounded-lg p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
                 >
                   <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]"></span>
@@ -344,8 +392,8 @@ export default function HomePage() {
                 </Link>
                 <Link
                   href="/services"
-                  onMouseMove={applyMagneticEffect}
-                  onMouseLeave={resetMagneticEffect}
+                  onMouseMove={handleMagneticMove}
+                  onMouseLeave={handleMagneticLeave}
                   className="magnetic-btn rounded-lg border border-white/10 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-white/5"
                 >
                   View Services
@@ -364,8 +412,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="relative hidden lg:block" id="hero-visual" onMouseMove={handleTiltMove} onMouseLeave={handleTiltLeave}>
-              <div ref={tiltRef} className="tilt-card relative z-10 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-6 shadow-2xl backdrop-blur-2xl">
+            <div className="reveal-section relative hidden lg:block" data-reveal-id="hero-visual" id="hero-visual" onMouseMove={handleTiltMove} onMouseLeave={handleTiltLeave}>
+              <div ref={tiltRef} className="hero-status-panel tilt-card relative z-10 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-6 shadow-2xl backdrop-blur-2xl">
                 <div className="mb-4 flex items-center gap-2 border-b border-white/10 pb-4">
                   <div className="h-3 w-3 rounded-full bg-red-500"></div>
                   <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
@@ -399,7 +447,7 @@ export default function HomePage() {
 
       <HeroCarousel pageKey="homepage" />
 
-      <section className="bg-slate-950 py-24">
+      <section className="bg-slate-950 py-24 reveal-section" data-reveal-id="pillars">
         <div className="container mx-auto px-6">
           <div className="mb-14 max-w-2xl">
             <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Core pillars</span>
@@ -410,11 +458,12 @@ export default function HomePage() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {FEATURE_PILLARS.map((pillar) => (
+            {FEATURE_PILLARS.map((pillar, index) => (
               <div
                 key={pillar.title}
-                className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 transition-all duration-300 hover:border-cyan-400/40 hover:shadow-xl hover:shadow-cyan-500/10"
+                className="reveal-item relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/40 hover:shadow-xl hover:shadow-cyan-500/10"
                 style={{
+                  '--reveal-delay': `${index * 90}ms`,
                   '--spotlight-x': '0px',
                   '--spotlight-y': '0px',
                   '--spotlight': 'radial-gradient(600px circle at var(--spotlight-x) var(--spotlight-y), rgba(56,189,248,0.18), transparent 42%)',
@@ -446,18 +495,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-black/40 py-24">
+      <section className="bg-black/40 py-24 reveal-section" data-reveal-id="plans">
         <div className="container mx-auto grid gap-12 px-6 lg:grid-cols-2 lg:items-center">
-          <div className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-10">
-            <div className="absolute -left-6 top-10 h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-cyan-500/20 blur-2xl"></div>
-            <div className="absolute -bottom-8 right-6 h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-violet-500/20 blur-2xl"></div>
+          <div className="reveal-item relative rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-10" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
+            <div className="ambient-blob pointer-events-none absolute -left-6 top-10 h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-cyan-500/20 blur-2xl" aria-hidden="true"></div>
+            <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute -bottom-8 right-6 h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-violet-500/20 blur-2xl" aria-hidden="true"></div>
             <h3 className="text-2xl font-semibold text-white sm:text-3xl">Operational clarity, not complexity.</h3>
             <p className="mt-4 text-sm text-slate-400 sm:text-base">
               Build a secure foundation with a service model that keeps technology dependable and aligned with your goals.
             </p>
             <div className="mt-6 grid gap-4">
-              {['Unified monitoring', 'Actionable reporting', 'Hands-on lifecycle support'].map((item) => (
-                <div key={item} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+              {['Unified monitoring', 'Actionable reporting', 'Hands-on lifecycle support'].map((item, index) => (
+                <div key={item} className="reveal-item flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300" style={{ '--reveal-delay': `${100 + index * 70}ms` } as React.CSSProperties}>
                   <Layers size={16} className="text-cyan-300" />
                   {item}
                 </div>
@@ -465,7 +514,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6 reveal-item" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
             <div>
               <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Plans</span>
               <h2 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Service tiers built to scale.</h2>
@@ -474,14 +523,15 @@ export default function HomePage() {
               </p>
             </div>
             <div className="grid gap-4">
-              {PLAN_TIERS.map((plan) => (
+              {PLAN_TIERS.map((plan, index) => (
                 <div
                   key={plan.name}
-                  className={`rounded-2xl border px-6 py-5 ${
+                  className={`reveal-item rounded-2xl border px-6 py-5 transition-transform duration-300 hover:-translate-y-1 ${
                     plan.highlight
                       ? 'border-cyan-400/60 bg-cyan-500/10 shadow-lg shadow-cyan-500/20'
                       : 'border-white/10 bg-white/5'
                   }`}
+                  style={{ '--reveal-delay': `${140 + index * 90}ms` } as React.CSSProperties}
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -505,7 +555,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-slate-950 py-24">
+      <section className="bg-slate-950 py-24 reveal-section" data-reveal-id="hardware">
         <div className="container mx-auto px-6">
           <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -537,7 +587,7 @@ export default function HomePage() {
             )}
 
             {!productsLoading &&
-              featuredProducts.map((product) => {
+              featuredProducts.map((product, index) => {
                 const title = product.title || product.name || 'Product';
                 const price = Number(product.price ?? product.mrp ?? 0);
                 const oldPrice = Number(product.mrp ?? 0);
@@ -563,14 +613,16 @@ export default function HomePage() {
                 } as Product;
 
                 return (
-                  <div key={product.id} className="rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-cyan-400/40">
-                    <div className="mb-4 flex h-32 sm:h-40 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
+                  <div key={product.id} className="reveal-item rounded-2xl border border-white/10 bg-white/5 p-5 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40" style={{ '--reveal-delay': `${index * 90}ms` } as React.CSSProperties}>
+                    <div className="group/product relative mb-4 flex h-32 sm:h-40 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
                       {imageUrl ? (
-                        <img
+                        <OptimizedImage
                           src={imageUrl}
                           alt={title}
-                          loading="lazy"
-                          className="h-full w-full object-cover"
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover/product:scale-105"
+                          transformation={{ width: 480, height: 320, quality: 75 }}
                         />
                       ) : (
                         <Server size={52} className="text-slate-600" />
@@ -595,13 +647,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-black/60 py-24">
+      <section className="bg-black/60 py-24 reveal-section" data-reveal-id="cta">
         <div className="container mx-auto px-6">
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-500/10 via-slate-900 to-violet-500/10 p-10">
-            <div className="absolute -left-20 top-10 h-40 w-40 rounded-full bg-cyan-500/20 blur-3xl"></div>
-            <div className="absolute -bottom-20 right-0 h-40 w-40 rounded-full bg-violet-500/20 blur-3xl"></div>
+            <div className="ambient-blob pointer-events-none absolute -left-20 top-10 h-40 w-40 rounded-full bg-cyan-500/20 blur-3xl" aria-hidden="true"></div>
+            <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute -bottom-20 right-0 h-40 w-40 rounded-full bg-violet-500/20 blur-3xl" aria-hidden="true"></div>
             <div className="relative z-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-              <div>
+              <div className="reveal-item" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
                 <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200">
                   <Sparkles size={14} /> Ready when you are
                 </span>
@@ -610,7 +662,7 @@ export default function HomePage() {
                   Share your requirements and we will map a secure, scalable setup tailored to your environment.
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-6 text-center">
+              <div className="reveal-item rounded-2xl border border-white/10 bg-slate-950/80 p-6 text-center" style={{ '--reveal-delay': '120ms' } as React.CSSProperties}>
                 <p className="text-sm text-slate-400">Talk to an advisor</p>
                 <button
                   type="button"

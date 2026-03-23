@@ -1,1 +1,3 @@
-export { POST, runtime, maxDuration } from './_route';
+export { POST, maxDuration } from './_route';
+
+export const runtime = 'nodejs';

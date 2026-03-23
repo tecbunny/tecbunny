@@ -19,6 +19,8 @@ const PUBLIC_DEFAULTS: Record<string, unknown> = {
   payment_razorpay_public: null,
   feature_flags_public: {},
 };
+const PUBLIC_SETTINGS_CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalidate=1800';
+const PUBLIC_SETTINGS_SELECT = 'key,value,description,updated_at';
 
 function getSupabaseAdmin() {
   return createAdminClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -54,6 +56,15 @@ function isAllowedPublicKey(key: string) {
   return allowList.includes(key);
 }
 
+function jsonWithCache(body: unknown, cacheControl: string, init?: ResponseInit) {
+  const headers = new Headers(init?.headers);
+  headers.set('Cache-Control', cacheControl);
+  return NextResponse.json(body, {
+    ...init,
+    headers,
+  });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -66,13 +77,13 @@ export async function GET(request: NextRequest) {
       logger.warn('settings.get.missing_supabase_config');
       if (keyArray && allPublic) {
         if (key) {
-          return NextResponse.json({ key, value: PUBLIC_DEFAULTS[key] ?? null })
+          return jsonWithCache({ key, value: PUBLIC_DEFAULTS[key] ?? null }, PUBLIC_SETTINGS_CACHE_CONTROL)
         }
         const payload = keyArray.reduce<Record<string, unknown>>((acc, currentKey) => {
           acc[currentKey] = PUBLIC_DEFAULTS[currentKey] ?? null
           return acc
         }, {})
-        return NextResponse.json(payload)
+        return jsonWithCache(payload, PUBLIC_SETTINGS_CACHE_CONTROL)
       }
       return NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
     }
@@ -96,20 +107,22 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
       }
-      const { data, error } = await supabaseAdmin
-        .from('settings')
-        .select('*')
+      const { data, error } = await (supabaseAdmin
+        .from('settings') as any)
+        .select(isAllowedPublicKey(key) ? PUBLIC_SETTINGS_SELECT : '*')
         .eq('key', key)
         .single()
 
       if (error) {
         if (isAllowedPublicKey(key)) {
-          return NextResponse.json({ key, value: PUBLIC_DEFAULTS[key] ?? null })
+          return jsonWithCache({ key, value: PUBLIC_DEFAULTS[key] ?? null }, PUBLIC_SETTINGS_CACHE_CONTROL)
         }
         return NextResponse.json({ error: error.message }, { status: 404 })
       }
 
-      return NextResponse.json(data)
+      return isAllowedPublicKey(key)
+        ? jsonWithCache(data, PUBLIC_SETTINGS_CACHE_CONTROL)
+        : NextResponse.json(data)
     } else if (keys) {
       // Get multiple settings by comma-separated keys
       const keyArray = keys.split(',').map(k => k.trim())
@@ -121,9 +134,9 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: 'Unauthorized for protected keys' }, { status: 401 })
         }
       }
-      const { data, error } = await supabaseAdmin
-        .from('settings')
-        .select('*')
+      const { data, error } = await (supabaseAdmin
+        .from('settings') as any)
+        .select(protectedKeys.length === 0 ? PUBLIC_SETTINGS_SELECT : '*')
         .in('key', keyArray)
 
       if (error) {
@@ -132,13 +145,13 @@ export async function GET(request: NextRequest) {
             acc[currentKey] = PUBLIC_DEFAULTS[currentKey] ?? null
             return acc
           }, {})
-          return NextResponse.json(payload)
+          return jsonWithCache(payload, PUBLIC_SETTINGS_CACHE_CONTROL)
         }
         return NextResponse.json({ error: error.message }, { status: 500 })
       }
 
       // Convert to key-value object
-      const settings = data.reduce((acc, setting) => {
+      const settings = (data as Array<{ key: string; value: unknown }>).reduce<Record<string, unknown>>((acc, setting) => {
         acc[setting.key] = setting.value
         return acc
       }, {})
@@ -151,7 +164,9 @@ export async function GET(request: NextRequest) {
         })
       }
 
-      return NextResponse.json(settings)
+      return protectedKeys.length === 0
+        ? jsonWithCache(settings, PUBLIC_SETTINGS_CACHE_CONTROL)
+        : NextResponse.json(settings)
     } else {
       // Get all settings
       const { data, error } = await supabaseAdmin

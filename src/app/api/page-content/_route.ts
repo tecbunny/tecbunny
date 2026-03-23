@@ -3,6 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 
 import { logger } from '../../../lib/logger';
 
+const PUBLIC_PAGE_CONTENT_CACHE_CONTROL = 'public, s-maxage=600, stale-while-revalidate=3600';
+const PAGE_CONTENT_PUBLIC_SELECTS = {
+  pageKeyStatus: 'id,page_key,title,content,status,meta_description,meta_keywords,created_at,updated_at',
+  keyStatus: 'id,key,title,content,status,meta_description,meta_keywords,created_at,updated_at',
+  keyActive: 'id,key,title,content,is_active,meta_description,meta_keywords,created_at,updated_at',
+  pageKeyMinimal: 'id,page_key,title,content,created_at,updated_at',
+  keyMinimal: 'id,key,title,content,created_at,updated_at',
+};
+
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   // Use service role if available, else anon for read operations (GET)
@@ -48,6 +57,15 @@ function normalizePage(row: any | null) {
     }
   }
   return { ...row, page_key, status, content };
+}
+
+function jsonWithCache(body: unknown, cacheControl: string, init?: ResponseInit) {
+  const headers = new Headers(init?.headers);
+  headers.set('Cache-Control', cacheControl);
+  return NextResponse.json(body, {
+    ...init,
+    headers,
+  });
 }
 
 function parseContentValue(content: unknown) {
@@ -171,15 +189,15 @@ async function getPageByKey(pageKey: string, supabase: any) {
   // Try a sequence of strategies to accommodate different schemas
   const tries: Array<() => PromiseLike<any>> = [
     // Modern: page_key + status
-    () => supabase.from('page_content').select('*').eq('page_key', pageKey).eq('status', 'published').maybeSingle(),
+    () => supabase.from('page_content').select(PAGE_CONTENT_PUBLIC_SELECTS.pageKeyStatus).eq('page_key', pageKey).eq('status', 'published').maybeSingle(),
     // Mixed: key + status
-    () => supabase.from('page_content').select('*').eq('key', pageKey).eq('status', 'published').maybeSingle(),
+    () => supabase.from('page_content').select(PAGE_CONTENT_PUBLIC_SELECTS.keyStatus).eq('key', pageKey).eq('status', 'published').maybeSingle(),
     // Legacy: key + is_active
-    () => supabase.from('page_content').select('*').eq('key', pageKey).eq('is_active', true).maybeSingle(),
+    () => supabase.from('page_content').select(PAGE_CONTENT_PUBLIC_SELECTS.keyActive).eq('key', pageKey).eq('is_active', true).maybeSingle(),
     // Minimal: page_key only
-    () => supabase.from('page_content').select('*').eq('page_key', pageKey).maybeSingle(),
+    () => supabase.from('page_content').select(PAGE_CONTENT_PUBLIC_SELECTS.pageKeyMinimal).eq('page_key', pageKey).maybeSingle(),
     // Minimal legacy: key only
-    () => supabase.from('page_content').select('*').eq('key', pageKey).maybeSingle(),
+    () => supabase.from('page_content').select(PAGE_CONTENT_PUBLIC_SELECTS.keyMinimal).eq('key', pageKey).maybeSingle(),
   ];
 
   for (const run of tries) {
@@ -208,21 +226,21 @@ export async function GET(request: NextRequest) {
 
     if (!supabase) {
       logger.warn('page_content_supabase_not_configured', { pageKey });
-      return NextResponse.json({ success: true, data: null, warning: 'Supabase not configured' });
+      return jsonWithCache({ success: true, data: null, warning: 'Supabase not configured' }, PUBLIC_PAGE_CONTENT_CACHE_CONTROL);
     }
     const { data: pageContent, error } = await getPageByKey(pageKey, supabase);
 
     if (error) {
       if (isFetchFailure(error)) {
         logger.warn('page_content_fetch_failed', { error, pageKey });
-        return NextResponse.json({ success: true, data: null, warning: 'Content service unavailable' });
+        return jsonWithCache({ success: true, data: null, warning: 'Content service unavailable' }, PUBLIC_PAGE_CONTENT_CACHE_CONTROL);
       }
       logger.error('page_content_fetch_failed', { error, pageKey });
       return NextResponse.json({ error: 'Failed to fetch page content' }, { status: 500 });
     }
 
     // Return 200 with null data when not found; normalize field names
-    return NextResponse.json({ success: true, data: normalizePage(pageContent ?? null) });
+    return jsonWithCache({ success: true, data: normalizePage(pageContent ?? null) }, PUBLIC_PAGE_CONTENT_CACHE_CONTROL);
 
   } catch (error) {
   logger.error('page_content_api_error', { error });

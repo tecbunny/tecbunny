@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { useToast } from '../hooks/use-toast';
+import { useAnalytics } from '../hooks/use-analytics';
 
 const SUBJECT_OPTIONS = ['general', 'support', 'sales', 'billing', 'partnership', 'feedback', 'web_development'] as const;
 const SUBJECT_LABELS: Record<(typeof SUBJECT_OPTIONS)[number], string> = {
@@ -67,11 +68,15 @@ type ContactFormValues = z.infer<typeof contactSchema>;
 export default function ContactPage() {
   const searchParams = useSearchParams();
   const subjectParam = searchParams.get('subject');
+  const serviceParam = searchParams.get('service');
+  const intentParam = searchParams.get('intent');
+  const messageParam = searchParams.get('message');
   const defaultSubject = (subjectParam && SUBJECT_OPTIONS.includes(subjectParam as any)) 
     ? (subjectParam as typeof SUBJECT_OPTIONS[number]) 
     : SUBJECT_OPTIONS[0];
 
   const { toast } = useToast();
+  const { trackEvent } = useAnalytics();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [companyInfo, setCompanyInfo] = React.useState<{supportEmail?: string; supportPhone?: string; registeredAddress?: string}>({});
   const [activeFaq, setActiveFaq] = React.useState<number | null>(0);
@@ -106,6 +111,18 @@ export default function ContactPage() {
       privacyConsent: false,
     },
   });
+
+  React.useEffect(() => {
+    if (!messageParam) return;
+    const currentMessage = form.getValues('message');
+    if (currentMessage.trim().length > 0) return;
+
+    form.setValue('message', messageParam, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: true,
+    });
+  }, [form, messageParam]);
 
   const onSubmit = async (values: ContactFormValues) => {
     setIsSubmitting(true);
@@ -147,12 +164,19 @@ export default function ContactPage() {
         description: "Thank you for contacting us. We'll get back to you within 24 hours.",
       });
 
+      void trackEvent('contact_form_submit', {
+        subject: normalizedSubject,
+        service: serviceParam ?? undefined,
+        intent: intentParam ?? undefined,
+      });
+
       form.reset({
         name: '',
         email: '',
         phone: '',
-        subject: SUBJECT_OPTIONS[0],
+        subject: defaultSubject,
         message: '',
+        privacyConsent: false,
       });
     } catch (error) {
       logger.error('contact_message_submit_failed', {
@@ -254,6 +278,12 @@ export default function ContactPage() {
                             href={href}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => {
+                              void trackEvent('contact_channel_click', {
+                                title: info.title,
+                                destination: href,
+                              });
+                            }}
                             className="mt-1 block text-sm text-cyan-300 hover:text-cyan-200"
                           >
                             {text}
@@ -301,7 +331,7 @@ export default function ContactPage() {
               <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-cyan-500/30 via-blue-500/30 to-violet-500/30 blur-xl" />
               <div className="relative rounded-2xl border border-white/10 bg-slate-900/80 p-8">
                 <h3 className="text-2xl font-semibold text-white">Send Transmission</h3>
-                <p className="mt-2 text-sm text-slate-400">We&apos;ll respond within 24 hours.</p>
+                <p className="mt-2 text-sm text-slate-400">We&apos;ll respond within 24 hours. Use this form for quotes, demos, and site-survey requests.</p>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-6">
                     <div className="grid gap-4 md:grid-cols-2">

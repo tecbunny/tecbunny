@@ -7,6 +7,60 @@ import { getSessionWithRole } from '../../../lib/auth/server-role';
 import { logger } from '../../../lib/logger';
 
 const HANDLE_MAX_LENGTH = 60;
+const PUBLIC_PRODUCTS_CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalidate=900';
+const PUBLIC_PRODUCT_COLUMNS = [
+  'id',
+  'handle',
+  'slug',
+  'permalink',
+  'title',
+  'name',
+  'description',
+  'body_html',
+  'details',
+  'vendor',
+  'brand',
+  'brand_logo',
+  'product_type',
+  'category',
+  'collection',
+  'images',
+  'image',
+  'gallery',
+  'seo_title',
+  'meta_title',
+  'seo_description',
+  'meta_description',
+  'hsn_code',
+  'hsncode',
+  'hsn',
+  'hsn_sac',
+  'mrp',
+  'maximum_retail_price',
+  'list_price',
+  'price',
+  'selling_price',
+  'unit_price',
+  'offer_price',
+  'discount_percentage',
+  'discount_source',
+  'has_active_discount',
+  'applied_offer_title',
+  'stock_status',
+  'stock_quantity',
+  'min_stock_level',
+  'max_stock_level',
+  'model_number',
+  'rating',
+  'reviewCount',
+  'review_count',
+  'prioritized',
+  'prioritized_at',
+  'status',
+  'tags',
+  'created_at',
+  'updated_at',
+].join(',');
 
 const COLUMN_ALIASES: Record<string, string[]> = {
   handle: ['handle', 'slug', 'permalink'],
@@ -101,6 +155,15 @@ function buildCatalogFallback(page: number, limit: number) {
   };
 }
 
+function jsonWithCache(body: unknown, cacheControl: string, init?: ResponseInit) {
+  const headers = new Headers(init?.headers);
+  headers.set('Cache-Control', cacheControl);
+  return NextResponse.json(body, {
+    ...init,
+    headers,
+  });
+}
+
 function resolveColumnName(columns: Set<string> | null, key: string): string | undefined {
   const candidates = COLUMN_ALIASES[key];
   if (!columns) {
@@ -115,6 +178,18 @@ function resolveColumnName(columns: Set<string> | null, key: string): string | u
   }
   const match = candidates.find(column => columns.has(column));
   return match ?? undefined;
+}
+
+function buildPublicProductSelect(columns: Set<string> | null) {
+  if (!columns) {
+    return '*';
+  }
+
+  const requestedColumns = PUBLIC_PRODUCT_COLUMNS
+    .split(',')
+    .filter((column) => columns.has(column));
+
+  return requestedColumns.length > 0 ? requestedColumns.join(',') : '*';
 }
 
 async function ensureProductColumns(supabase: any): Promise<Set<string> | null> {
@@ -155,6 +230,8 @@ export async function GET(request: NextRequest) {
     const supabase = role && ADMIN_ROLES.has(role) && isSupabaseServiceConfigured
       ? createServiceClient()
       : authClient ?? await createClient();
+    const productColumns = await ensureProductColumns(supabase);
+    const publicProductSelect = buildPublicProductSelect(productColumns);
 
     if (handle) {
       // Get specific product by handle (use name as fallback)
@@ -162,19 +239,18 @@ export async function GET(request: NextRequest) {
       try {
         const { data, error } = await supabase
           .from('products')
-          .select('*')
+          .select(publicProductSelect)
           .or(`handle.eq.${handle},name.ilike.%${handle}%`)
           .single();
         if (error) throw error;
         product = data;
   } catch (_error: any) {
         // Fallback: check which columns exist and try appropriate fallback
-        const columns = await ensureProductColumns(supabase);
-        let fallbackQuery = supabase.from('products').select('*');
+        let fallbackQuery = supabase.from('products').select(publicProductSelect);
         
-        if (columns?.has('title')) {
+        if (productColumns?.has('title')) {
           fallbackQuery = fallbackQuery.ilike('title', `%${handle}%`);
-        } else if (columns?.has('name')) {
+        } else if (productColumns?.has('name')) {
           fallbackQuery = fallbackQuery.ilike('name', `%${handle}%`);
         } else {
           // Last resort: search by description
@@ -220,10 +296,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({
+      return jsonWithCache({
         success: true,
         data: normalizeProductRecord(product)
-      });
+      }, PUBLIC_PRODUCTS_CACHE_CONTROL);
   } else {
       // Get all products with pagination
       const page = parseInt(searchParams.get('page') || '1');
@@ -234,9 +310,9 @@ export async function GET(request: NextRequest) {
       const sortBy = searchParams.get('sort') || 'created_at';
       const sortOrder = searchParams.get('order') || 'desc'; // Changed to 'desc' so newest products appear first
 
-      let query = supabase
+      let query: any = supabase
         .from('products')
-        .select('*', { count: 'exact' })
+        .select(publicProductSelect, { count: 'exact' })
         .range(offset, offset + limit - 1);
 
       // Apply sorting with prioritized products first
@@ -274,10 +350,9 @@ export async function GET(request: NextRequest) {
       const search = searchParams.get('search');
       if (search) {
         // Check which columns exist and use appropriate search
-        const columns = await ensureProductColumns(supabase);
-        if (columns?.has('title')) {
+        if (productColumns?.has('title')) {
           query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
-        } else if (columns?.has('name')) {
+        } else if (productColumns?.has('name')) {
           query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
         } else {
           // Fallback to description only if neither title nor name exist
@@ -285,19 +360,20 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      const { data: products, error, count } = await query;
+      const { data: rawProducts, error, count } = await query;
+      const products = Array.isArray(rawProducts) ? (rawProducts as any[]) : [];
 
       if (error) {
         if (isSupabaseConnectivityError(error)) {
           logger.warn('products.fetch_failed_connectivity_fallback', { error });
-          return NextResponse.json(buildCatalogFallback(page, limit));
+          return jsonWithCache(buildCatalogFallback(page, limit), PUBLIC_PRODUCTS_CACHE_CONTROL);
         }
         logger.error('products.fetch_failed', { error });
         return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
       }
       // Optionally load options / variants in bulk if requested
       const warnings: string[] = [];
-      if (products && products.length) {
+      if (products.length) {
         const productIds = products.map(p => p.id).filter(Boolean);
         if (include_options && productIds.length) {
           try {
@@ -337,9 +413,9 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({
+      return jsonWithCache({
         success: true,
-        data: Array.isArray(products) ? products.map(normalizeProductRecord) : products,
+        data: products.map(normalizeProductRecord),
         pagination: {
           page,
           limit,
@@ -347,7 +423,7 @@ export async function GET(request: NextRequest) {
           pages: Math.ceil((count || 0) / limit)
         },
         warnings: warnings.length ? warnings : undefined
-      });
+      }, PUBLIC_PRODUCTS_CACHE_CONTROL);
     }
   } catch (error) {
     const { searchParams } = new URL(request.url);
@@ -356,7 +432,7 @@ export async function GET(request: NextRequest) {
       logger.warn('products.api_connectivity_fallback', { error });
       const page = parseInt(searchParams.get('page') || '1');
       const limit = parseInt(searchParams.get('limit') || '20');
-      return NextResponse.json(buildCatalogFallback(page, limit));
+      return jsonWithCache(buildCatalogFallback(page, limit), PUBLIC_PRODUCTS_CACHE_CONTROL);
     }
 
     logger.error('products.api_error', { error });

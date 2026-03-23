@@ -1,1 +1,3 @@
-export { GET, POST, PUT, DELETE, runtime } from './_route';
+export { GET, POST, PUT, DELETE } from './_route';
+
+export const runtime = 'nodejs';

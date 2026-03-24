@@ -200,8 +200,10 @@ export function Header() {
               <Image
                 src="/brand.png"
                 alt="TecBunny Solutions"
-                width={72}
-                height={72}
+                width={56}
+                height={56}
+                sizes="(max-width: 640px) 48px, 56px"
+                quality={60}
                 className="h-14 w-14 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] transition-transform group-hover:scale-110"
                 priority
               />

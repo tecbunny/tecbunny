@@ -68,11 +68,11 @@ const SOCIAL_PLATFORMS = {
     example: 'https://facebook.com/tecbunny'
   },
   twitter: {
-    name: 'Twitter',
+    name: 'X (Twitter)',
     icon: Twitter,
     color: '#1DA1F2',
-    placeholder: 'https://twitter.com/yourusername',
-    example: 'https://twitter.com/tecbunny'
+    placeholder: 'https://x.com/yourusername',
+    example: 'https://x.com/tecbunny'
   },
   instagram: {
     name: 'Instagram',
@@ -109,7 +109,7 @@ type PlatformKey = keyof typeof SOCIAL_PLATFORMS;
 // Schema for social media validation
 const socialMediaSchema = z.object({
   facebookUrl: z.string().url('Invalid Facebook URL').optional().or(z.literal('')),
-  twitterUrl: z.string().url('Invalid Twitter URL').optional().or(z.literal('')),
+  twitterUrl: z.string().url('Invalid X/Twitter URL').optional().or(z.literal('')),
   instagramUrl: z.string().url('Invalid Instagram URL').optional().or(z.literal('')),
   linkedinUrl: z.string().url('Invalid LinkedIn URL').optional().or(z.literal('')),
   youtubeUrl: z.string().url('Invalid YouTube URL').optional().or(z.literal('')),

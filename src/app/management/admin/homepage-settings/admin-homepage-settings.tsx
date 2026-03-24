@@ -102,6 +102,24 @@ export default function HomepageSettingsPage() {
 
   const MAX_SELECTION = 15;
 
+  const normalizeSettingsRows = React.useCallback((payload: unknown): Array<{ key: string; value: string }> => {
+    if (Array.isArray(payload)) {
+      return payload.filter(
+        (item): item is { key: string; value: string } =>
+          typeof item?.key === 'string' && typeof item?.value === 'string'
+      );
+    }
+
+    if (payload && typeof payload === 'object') {
+      return Object.entries(payload as Record<string, unknown>).map(([key, value]) => ({
+        key,
+        value: typeof value === 'string' ? value : JSON.stringify(value ?? null),
+      }));
+    }
+
+    return [];
+  }, []);
+
   React.useEffect(() => {
     const fetchData = async () => {
       try {
@@ -138,8 +156,8 @@ export default function HomepageSettingsPage() {
         });
 
         const settingsPayload = await settingsResponse.json().catch(() => null);
-        if (settingsResponse.ok && Array.isArray(settingsPayload)) {
-          settingsRows = settingsPayload as Array<{ key: string; value: string }>;
+        if (settingsResponse.ok) {
+          settingsRows = normalizeSettingsRows(settingsPayload);
         } else {
           const { data: fallbackSettings } = await supabase.from('settings').select('*');
           settingsRows = (fallbackSettings || []) as Array<{ key: string; value: string }>;
@@ -170,7 +188,7 @@ export default function HomepageSettingsPage() {
       }
     };
     fetchData();
-  }, [supabase, toast]);
+  }, [normalizeSettingsRows, supabase, toast]);
 
   const createToggleHandler = (setter: React.Dispatch<React.SetStateAction<Set<string>>>) => (productId: string) => {
     setter(prev => {

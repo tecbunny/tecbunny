@@ -12,7 +12,7 @@ import { createPageMetadata } from '../lib/metadata';
 export const metadata: Metadata = createPageMetadata({
   title: 'TecBunny Solutions | CCTV, Computers & AMC Services in Goa',
   description:
-    'TecBunny Solutions provides CCTV installation, computer hardware, AMC services, and custom tech setups across Goa. Trusted installation, maintenance, and support.',
+    'CCTV installation, computer hardware, AMC services, and custom tech setups in Goa from TecBunny Solutions. Get trusted support for homes and businesses.',
   keywords: [
     'CCTV Goa',
     'computer hardware Goa',

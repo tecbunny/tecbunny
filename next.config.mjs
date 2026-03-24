@@ -6,6 +6,9 @@ const nextConfig = {
   eslint: {
     dirs: ['src'],
   },
+  experimental: {
+    optimizeCss: true,
+  },
   poweredByHeader: false,
   images: {
     unoptimized: isStaticExport,

@@ -1,82 +1,96 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServiceClient } from '../../../../../../lib/supabase/server';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../../../../../lib/supabase/server';
 import { requireAdmin } from '../../../../../../lib/admin-auth';
+
+async function safeListQuery<T>(query: PromiseLike<{ data: T[] | null; error: { message?: string } | null }>) {
+  const { data, error } = await query;
+  if (error) {
+    console.error('Admin user history query failed:', error.message || error);
+    return [] as T[];
+  }
+  return data || [];
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { isAdmin } = await requireAdmin(user, supabase);
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const adminCheck = await requireAdmin(user, supabase);
 
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+    if (!adminCheck.isAdmin) {
+      return NextResponse.json({ error: adminCheck.error || 'Unauthorized' }, { status: adminCheck.status || 401 });
+    }
 
-  // Use service client to bypass RLS for admin actions
-  const adminDb = createServiceClient();
-  const { id: userId } = await params;
+    const adminDb = isSupabaseServiceConfigured ? createServiceClient() : supabase;
+    const { id: userId } = await params;
 
-  // Fetch User Profile
-  const { data: profile } = await adminDb
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (!profile) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
-  }
-
-  // Fetch Analytics Events
-  const { data: events } = await adminDb
-    .from('analytics_events')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  // Fetch Orders
-  const { data: orders } = await adminDb
-    .from('orders')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  // Fetch Leads/Inquiries
-  const { data: leads } = await adminDb
-    .from('leads')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  // Fetch Contact Messages (by email)
-  let messages: any[] = [];
-  if (profile.email) {
-    const { data: msgs } = await adminDb
-      .from('contact_messages')
+    const { data: profile, error: profileError } = await adminDb
+      .from('profiles')
       .select('*')
-      .eq('email', profile.email)
-      .order('created_at', { ascending: false });
-    messages = msgs || [];
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Admin user history profile lookup failed:', profileError.message || profileError);
+      return NextResponse.json({ error: 'Failed to load user profile' }, { status: 500 });
+    }
+
+    if (!profile) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const [events, orders, leads] = await Promise.all([
+      safeListQuery(
+        adminDb
+          .from('analytics_events')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+      ),
+      safeListQuery(
+        adminDb
+          .from('orders')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+      ),
+      safeListQuery(
+        adminDb
+          .from('leads')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+      ),
+    ]);
+
+    const messages = profile.email
+      ? await safeListQuery(
+          adminDb
+            .from('contact_messages')
+            .select('*')
+            .eq('email', profile.email)
+            .order('created_at', { ascending: false })
+        )
+      : [];
+
+    const timeline = [
+      ...events.map((event: any) => ({ ...event, type: 'event', timestamp: event.created_at })),
+      ...orders.map((order: any) => ({ ...order, type: 'order', timestamp: order.created_at })),
+      ...leads.map((lead: any) => ({ ...lead, type: 'lead', timestamp: lead.created_at })),
+      ...messages.map((message: any) => ({ ...message, type: 'message', timestamp: message.created_at })),
+    ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    return NextResponse.json({ profile, timeline });
+  } catch (error) {
+    console.error('Admin user history request failed:', error);
+    return NextResponse.json({ error: 'Failed to load user history' }, { status: 500 });
   }
-
-  // Combine and Sort Timeline
-  const timeline = [
-    ...(events || []).map(e => ({ ...e, type: 'event', timestamp: e.created_at })),
-    ...(orders || []).map(o => ({ ...o, type: 'order', timestamp: o.created_at })),
-    ...(leads || []).map(l => ({ ...l, type: 'lead', timestamp: l.created_at })),
-    ...messages.map(m => ({ ...m, type: 'message', timestamp: m.created_at })),
-  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-  return NextResponse.json({
-    profile,
-    timeline
-  });
 }
 
-export async function generateStaticParams() {
-  return []
-}
 
 

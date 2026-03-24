@@ -70,6 +70,19 @@
   ],
   "headers": [
     {
+      "source": "/(.*)\\.(png|jpg|jpeg|gif|webp|avif|svg|ico)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, stale-while-revalidate=86400"
+        },
+        {
+          "key": "Expires",
+          "value": "Thu, 23 Apr 2026 00:00:00 GMT"
+        }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         {

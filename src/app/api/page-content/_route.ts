@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 import { logger } from '../../../lib/logger';
 
-const PUBLIC_PAGE_CONTENT_CACHE_CONTROL = 'public, s-maxage=600, stale-while-revalidate=3600';
+const PUBLIC_PAGE_CONTENT_CACHE_CONTROL = 'no-store, max-age=0';
 const PAGE_CONTENT_PUBLIC_SELECTS = {
   pageKeyStatus: 'id,page_key,title,content,status,meta_description,meta_keywords,created_at,updated_at',
   keyStatus: 'id,key,title,content,status,meta_description,meta_keywords,created_at,updated_at',

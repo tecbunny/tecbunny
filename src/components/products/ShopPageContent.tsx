@@ -11,6 +11,7 @@ import {
 
 import { logger } from '../../lib/logger';
 import { getProductDisplayImage } from '../../lib/image-utils';
+import { cn, revealDelayClass } from '../../lib/utils';
 
 import type { Product, AutoOffer } from '../../lib/types';
 import { Skeleton } from '../../components/ui/skeleton';
@@ -465,7 +466,7 @@ export function ShopPageContent() {
       <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-0 sm:px-6 lg:px-8 sm:pt-0">
         <div className="flex flex-col gap-10">
           <div className="reveal-section flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between" data-reveal-id="products-hero">
-            <div className="reveal-item" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
+            <div className={cn('reveal-item', revealDelayClass(0))}>
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">
                 Catalog
               </div>
@@ -477,7 +478,7 @@ export function ShopPageContent() {
               </p>
             </div>
 
-            <form onSubmit={handleSearch} className="reveal-item w-full max-w-md" style={{ '--reveal-delay': '90ms' } as React.CSSProperties}>
+            <form onSubmit={handleSearch} className={cn('reveal-item w-full max-w-md', revealDelayClass(90))}>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                 <Input
@@ -497,12 +498,13 @@ export function ShopPageContent() {
               <button
                 type="button"
                 onClick={() => updateUrlParams({ category: '' })}
-                className={`reveal-item rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                className={cn(
+                  'reveal-item rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors',
                   hasActiveCategory
                     ? 'border-white/10 text-slate-400 hover:border-cyan-400/40 hover:text-white'
-                    : 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300'
-                }`}
-                style={{ '--reveal-delay': '0ms' } as React.CSSProperties}
+                    : 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300',
+                  revealDelayClass(0)
+                )}
               >
                 All Items
               </button>
@@ -511,12 +513,13 @@ export function ShopPageContent() {
                   key={category}
                   type="button"
                   onClick={() => updateUrlParams({ category })}
-                  className={`reveal-item rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                  className={cn(
+                    'reveal-item rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors',
                     categoryFilter === category
                       ? 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300'
-                      : 'border-white/10 text-slate-400 hover:border-cyan-400/40 hover:text-white'
-                  }`}
-                  style={{ '--reveal-delay': '70ms' } as React.CSSProperties}
+                      : 'border-white/10 text-slate-400 hover:border-cyan-400/40 hover:text-white',
+                    revealDelayClass(70)
+                  )}
                 >
                   {category}
                 </button>
@@ -525,8 +528,7 @@ export function ShopPageContent() {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="reveal-item rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400 transition-colors hover:border-cyan-400/40 hover:text-white"
-                  style={{ '--reveal-delay': '140ms' } as React.CSSProperties}
+                  className={cn('reveal-item rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400 transition-colors hover:border-cyan-400/40 hover:text-white', revealDelayClass(140))}
                 >
                   Clear Filters
                 </button>
@@ -562,8 +564,10 @@ export function ShopPageContent() {
                 return (
                   <div
                     key={product.id}
-                    className="reveal-item group flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-4 transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-400/30"
-                    style={{ '--reveal-delay': `${Math.min(index, 11) * 70}ms` } as React.CSSProperties}
+                    className={cn(
+                      'reveal-item group flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-4 transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-400/30',
+                      revealDelayClass(Math.min(index, 11) * 70)
+                    )}
                   >
                     <Link href={`/products/${product.id}`} className="block">
                       <div className="relative mb-4 h-48 overflow-hidden rounded-xl">

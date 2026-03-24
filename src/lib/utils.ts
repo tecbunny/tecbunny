@@ -9,6 +9,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function revealDelayClass(delayMs: number): string {
+  const normalizedDelay = Math.max(0, Math.min(1000, Math.round(delayMs / 10) * 10));
+  return `reveal-delay-${normalizedDelay}`;
+}
+
 /**
  * Formats a number as currency (Indian Rupees)
  */

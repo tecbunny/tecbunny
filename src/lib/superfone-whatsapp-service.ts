@@ -325,22 +325,26 @@ export async function sendWelcomeTemplate(
  */
 export async function sendAccountCreationConfirmationTemplate(
   phoneNumber: string,
-  customerName?: string
+  customerName?: string,
+  loginUrl?: string
 ): Promise<WhatsAppResponse> {
+  const parameters = [customerName, loginUrl]
+    .map((value) => (typeof value === 'string' ? value.trim() : ''))
+    .filter(Boolean)
+    .map((text) => ({
+      type: 'text',
+      text,
+    }));
+
   return sendWhatsAppTemplate({
     templateName: 'account_creation_confirmation_3',
     language: 'en',
     recipient: phoneNumber,
-    components: customerName
+    components: parameters.length > 0
       ? [
           {
             type: 'text',
-            parameters: [
-              {
-                type: 'text',
-                text: customerName
-              }
-            ]
+            parameters,
           }
         ]
       : undefined

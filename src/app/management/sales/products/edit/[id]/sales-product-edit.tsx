@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Sparkles } from 'lucide-react';
 
 import { Button } from '../../../../../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../../../components/ui/card';
@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '../../../../../../components/ui/form';
 import { Label } from '../../../../../../components/ui/label';
 import { useToast } from '../../../../../../hooks/use-toast';
+import { fetchAiProductDetails, formatAiSpecifications } from '../../../../../../lib/ai/product-details';
 import type { Product } from '../../../../../../lib/types';
 import { createClient } from '../../../../../../lib/supabase/client';
 
@@ -55,6 +56,7 @@ export default function EditProductPage() {
   const [imagePreview, setImagePreview] = React.useState<string>('');
   const [additionalImages, setAdditionalImages] = React.useState<string[]>([]);
   const [uploading, setUploading] = React.useState(false);
+  const [isFetchingAiDetails, setIsFetchingAiDetails] = React.useState(false);
 
   const form = useForm<ProductFormInput, any, ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -123,6 +125,68 @@ export default function EditProductPage() {
       });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleFetchProductDetails = async () => {
+    const productUrl = form.getValues('product_url')?.trim();
+    if (!productUrl) {
+      toast({
+        variant: 'destructive',
+        title: 'Product URL required',
+        description: 'Enter a product URL before fetching details.',
+      });
+      return;
+    }
+
+    setIsFetchingAiDetails(true);
+    try {
+      const details = await fetchAiProductDetails({
+        productUrl,
+        existingData: {
+          title: form.getValues('name'),
+          vendor: form.getValues('brand'),
+          category: form.getValues('category'),
+          description: form.getValues('description'),
+          price: Number(form.getValues('price')) || 0,
+          mrp: Number(form.getValues('mrp')) || 0,
+          hsnCode: form.getValues('hsnCode'),
+          warranty: form.getValues('warranty'),
+          modelNumber: form.getValues('model_number'),
+          barcode: form.getValues('barcode'),
+          installationApplicable: form.getValues('installation_applicable'),
+          installationCharge: Number(form.getValues('installation_charge')) || 0,
+        },
+      });
+
+      if (details.title) form.setValue('name', details.title, { shouldDirty: true });
+      if (details.vendor || details.brand) form.setValue('brand', details.vendor || details.brand || '', { shouldDirty: true });
+      if (details.category || details.productType) form.setValue('category', details.category || details.productType || '', { shouldDirty: true });
+      if (details.description) form.setValue('description', details.description, { shouldDirty: true });
+      if (typeof details.price === 'number') form.setValue('price', details.price, { shouldDirty: true });
+      if (typeof details.mrp === 'number') form.setValue('mrp', details.mrp, { shouldDirty: true });
+      if (details.hsnCode) form.setValue('hsnCode', details.hsnCode, { shouldDirty: true });
+      if (details.gstRate) form.setValue('gstRate', details.gstRate, { shouldDirty: true });
+      if (details.warranty) form.setValue('warranty', details.warranty, { shouldDirty: true });
+      if (details.modelNumber) form.setValue('model_number', details.modelNumber, { shouldDirty: true });
+      if (details.barcode) form.setValue('barcode', details.barcode, { shouldDirty: true });
+      if (details.specifications) form.setValue('specifications', formatAiSpecifications(details.specifications), { shouldDirty: true });
+      if (typeof details.installationApplicable === 'boolean') form.setValue('installation_applicable', details.installationApplicable, { shouldDirty: true });
+      if (typeof details.installationCharge === 'number') form.setValue('installation_charge', details.installationCharge, { shouldDirty: true });
+      if (!imagePreview && details.imageUrl) setImagePreview(details.imageUrl);
+
+      toast({
+        title: 'Product details fetched',
+        description: 'AI-filled fields have been applied to the form.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'AI fetch failed',
+        description: error instanceof Error ? error.message : 'Failed to fetch product details',
+      });
+    } finally {
+      setIsFetchingAiDetails(false);
     }
   };
   
@@ -291,7 +355,28 @@ export default function EditProductPage() {
                           </div>
                           <FormField control={form.control} name="product_url" render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Product URL</FormLabel>
+                              <div className="flex items-center justify-between gap-2">
+                                <FormLabel>Product URL</FormLabel>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleFetchProductDetails}
+                                  disabled={isFetchingAiDetails || !form.watch('product_url')?.trim()}
+                                >
+                                  {isFetchingAiDetails ? (
+                                    <>
+                                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                                      Fetching
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="mr-2 h-4 w-4" />
+                                      Fetch With AI
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
                               <FormControl><Input placeholder="https://example.com/product-page" {...field} /></FormControl>
                               <FormDescription>Optional: Direct link to product page, manufacturer website, or product details</FormDescription>
                               <FormMessage />

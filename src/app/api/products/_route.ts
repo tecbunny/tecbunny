@@ -51,6 +51,7 @@ const PUBLIC_PRODUCT_COLUMNS = [
   'min_stock_level',
   'max_stock_level',
   'model_number',
+  'product_url',
   'rating',
   'reviewCount',
   'review_count',
@@ -73,6 +74,7 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   seo_title: ['seo_title', 'meta_title'],
   seo_description: ['seo_description', 'meta_description'],
   hsnCode: ['hsn_code', 'hsncode'],
+  product_url: ['product_url'],
   mrp: ['mrp', 'maximum_retail_price', 'list_price'],
   price: ['price', 'selling_price', 'unit_price'],
 };
@@ -474,6 +476,7 @@ export async function POST(request: NextRequest) {
       variants,
       mrp,
       price,
+      product_url,
       hsnCode,
       stock_quantity,
       min_stock_level,
@@ -523,6 +526,7 @@ export async function POST(request: NextRequest) {
       images: normalizedImages,
       seo_title,
       seo_description,
+      product_url,
       created_by: user.id,
       updated_by: user.id,
     };
@@ -584,7 +588,7 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    ['handle', 'title', 'description', 'vendor', 'product_type', 'category', 'images', 'seo_title', 'seo_description', 'mrp', 'price'].forEach((key) => applyAlias(key));
+    ['handle', 'title', 'description', 'vendor', 'product_type', 'category', 'images', 'seo_title', 'seo_description', 'mrp', 'price', 'product_url'].forEach((key) => applyAlias(key));
     applyAlias('hsnCode', 'hsn_code');
 
     if (cols) {

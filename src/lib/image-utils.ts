@@ -61,7 +61,9 @@ export function isValidImageUrl(url: any): url is string {
       trimmed.includes('placeholder.com') ||
       trimmed.includes('via.placeholder.com') ||
       trimmed.includes('placeholder') ||
-      trimmed.includes('example.com')) {
+      trimmed.includes('example.com') ||
+      trimmed.includes('your-domain.com') ||
+      trimmed.includes('cdn.your-domain.com')) {
     return false;
   }
   

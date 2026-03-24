@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { v4 as uuidv4 } from 'uuid';
 
 declare global {
   interface Window {
@@ -11,7 +10,35 @@ declare global {
   }
 }
 
-export const useAnalytics = () => {
+interface UseAnalyticsOptions {
+  autoTrackPageView?: boolean;
+}
+
+const PAGE_VIEW_STORAGE_KEY = 'analytics_last_page_view_path';
+
+function createSessionId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `session_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function scheduleWhenIdle(callback: () => void, timeout = 1200) {
+  if (typeof window === 'undefined') {
+    return () => undefined;
+  }
+
+  if (typeof window.requestIdleCallback === 'function') {
+    const id = window.requestIdleCallback(() => callback(), { timeout });
+    return () => window.cancelIdleCallback(id);
+  }
+
+  const timeoutId = window.setTimeout(callback, timeout);
+  return () => window.clearTimeout(timeoutId);
+}
+
+export const useAnalytics = ({ autoTrackPageView = false }: UseAnalyticsOptions = {}) => {
   const pathname = usePathname();
   const sessionId = useRef<string>('');
 
@@ -32,7 +59,7 @@ export const useAnalytics = () => {
     // Initialize session ID
     let storedSession = sessionStorage.getItem('analytics_session_id');
     if (!storedSession) {
-      storedSession = uuidv4();
+      storedSession = createSessionId();
       sessionStorage.setItem('analytics_session_id', storedSession);
     }
     sessionId.current = storedSession;
@@ -57,10 +84,22 @@ export const useAnalytics = () => {
     }
   }, [sendToGtag]);
 
-  // Auto-track page views
   useEffect(() => {
-    void trackEvent('page_view');
-  }, [trackEvent]);
+    if (!autoTrackPageView || !pathname || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const previousPath = sessionStorage.getItem(PAGE_VIEW_STORAGE_KEY);
+    if (previousPath === pathname) {
+      return undefined;
+    }
+
+    sessionStorage.setItem(PAGE_VIEW_STORAGE_KEY, pathname);
+
+    return scheduleWhenIdle(() => {
+      void trackEvent('page_view');
+    });
+  }, [autoTrackPageView, pathname, trackEvent]);
 
   return { trackEvent };
 };

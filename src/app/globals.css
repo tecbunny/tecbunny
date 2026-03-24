@@ -176,7 +176,7 @@
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-headline), system-ui, sans-serif;
+    font-family: var(--font-body), system-ui, sans-serif;
     font-weight: 600;
     line-height: 1.2;
     letter-spacing: -0.025em;
@@ -490,6 +490,12 @@
   .spotlight-card {
     position: relative;
     overflow: hidden;
+    isolation: isolate;
+  }
+
+  .spotlight-card > * {
+    position: relative;
+    z-index: 1;
   }
 
   .spotlight-card::before {
@@ -505,6 +511,10 @@
 
   .spotlight-card:hover::before {
     opacity: 1;
+  }
+
+  .spotlight-card--cyan::before {
+    background: radial-gradient(600px circle at 50% 50%, rgba(56, 189, 248, 0.18), transparent 42%);
   }
 
   .config-tab.active {
@@ -526,6 +536,65 @@
     transition-delay: var(--reveal-delay, 0ms);
     will-change: transform, opacity;
   }
+
+  .reveal-delay-0 { transition-delay: 0ms; }
+  .reveal-delay-70 { transition-delay: 70ms; }
+  .reveal-delay-80 { transition-delay: 80ms; }
+  .reveal-delay-90 { transition-delay: 90ms; }
+  .reveal-delay-100 { transition-delay: 100ms; }
+  .reveal-delay-110 { transition-delay: 110ms; }
+  .reveal-delay-120 { transition-delay: 120ms; }
+  .reveal-delay-140 { transition-delay: 140ms; }
+  .reveal-delay-150 { transition-delay: 150ms; }
+  .reveal-delay-160 { transition-delay: 160ms; }
+  .reveal-delay-170 { transition-delay: 170ms; }
+  .reveal-delay-180 { transition-delay: 180ms; }
+  .reveal-delay-190 { transition-delay: 190ms; }
+  .reveal-delay-200 { transition-delay: 200ms; }
+  .reveal-delay-210 { transition-delay: 210ms; }
+  .reveal-delay-230 { transition-delay: 230ms; }
+  .reveal-delay-240 { transition-delay: 240ms; }
+  .reveal-delay-250 { transition-delay: 250ms; }
+  .reveal-delay-260 { transition-delay: 260ms; }
+  .reveal-delay-270 { transition-delay: 270ms; }
+  .reveal-delay-280 { transition-delay: 280ms; }
+  .reveal-delay-300 { transition-delay: 300ms; }
+  .reveal-delay-320 { transition-delay: 320ms; }
+  .reveal-delay-340 { transition-delay: 340ms; }
+  .reveal-delay-360 { transition-delay: 360ms; }
+  .reveal-delay-380 { transition-delay: 380ms; }
+  .reveal-delay-400 { transition-delay: 400ms; }
+  .reveal-delay-420 { transition-delay: 420ms; }
+  .reveal-delay-440 { transition-delay: 440ms; }
+  .reveal-delay-460 { transition-delay: 460ms; }
+  .reveal-delay-480 { transition-delay: 480ms; }
+  .reveal-delay-500 { transition-delay: 500ms; }
+  .reveal-delay-520 { transition-delay: 520ms; }
+  .reveal-delay-540 { transition-delay: 540ms; }
+  .reveal-delay-560 { transition-delay: 560ms; }
+  .reveal-delay-580 { transition-delay: 580ms; }
+  .reveal-delay-600 { transition-delay: 600ms; }
+  .reveal-delay-620 { transition-delay: 620ms; }
+  .reveal-delay-640 { transition-delay: 640ms; }
+  .reveal-delay-660 { transition-delay: 660ms; }
+  .reveal-delay-680 { transition-delay: 680ms; }
+  .reveal-delay-700 { transition-delay: 700ms; }
+  .reveal-delay-720 { transition-delay: 720ms; }
+  .reveal-delay-740 { transition-delay: 740ms; }
+  .reveal-delay-760 { transition-delay: 760ms; }
+  .reveal-delay-770 { transition-delay: 770ms; }
+  .reveal-delay-780 { transition-delay: 780ms; }
+  .reveal-delay-800 { transition-delay: 800ms; }
+  .reveal-delay-820 { transition-delay: 820ms; }
+  .reveal-delay-840 { transition-delay: 840ms; }
+  .reveal-delay-860 { transition-delay: 860ms; }
+  .reveal-delay-880 { transition-delay: 880ms; }
+  .reveal-delay-900 { transition-delay: 900ms; }
+  .reveal-delay-920 { transition-delay: 920ms; }
+  .reveal-delay-940 { transition-delay: 940ms; }
+  .reveal-delay-960 { transition-delay: 960ms; }
+  .reveal-delay-980 { transition-delay: 980ms; }
+  .reveal-delay-1000 { transition-delay: 1000ms; }
 
   .reveal-section.is-revealed .reveal-item,
   .reveal-item.is-revealed,
@@ -592,7 +661,7 @@
   }
 
   .font-tech {
-    font-family: var(--font-headline), system-ui, sans-serif;
+    font-family: var(--font-body), system-ui, sans-serif;
     letter-spacing: 0.02em;
   }
 

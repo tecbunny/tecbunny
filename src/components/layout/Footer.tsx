@@ -24,8 +24,20 @@ function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
     );
 }
 
+const DEFAULT_COMPANY_INFO = {
+  supportEmail: 'support@tecbunny.com',
+  supportPhone: '+91 96041 36010',
+  registeredAddress: 'H NO 11 NHAYGINWADA, PARSE, Parxem, Pernem, North Goa - 403512, Goa',
+};
+
+const FALLBACK_SOCIAL_LINKS = {
+  facebookUrl: 'https://www.facebook.com/profile.php?id=61578165368064',
+  instagramUrl: 'https://www.instagram.com/tecbunny_solutions/',
+  twitterUrl: process.env.NEXT_PUBLIC_X_URL || '',
+};
+
 export function Footer() {
-  const [companyInfo, setCompanyInfo] = React.useState<{supportEmail?: string; supportPhone?: string; registeredAddress?: string}>({});
+  const [companyInfo, setCompanyInfo] = React.useState<{supportEmail?: string; supportPhone?: string; registeredAddress?: string}>(DEFAULT_COMPANY_INFO);
   const [socialLinks, setSocialLinks] = React.useState<Record<string, string>>({});
   const [subscribeEmail, setSubscribeEmail] = React.useState('');
   const [subscribeStatus, setSubscribeStatus] = React.useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -143,7 +155,10 @@ export function Footer() {
           }
         });
 
-        setSocialLinks(links);
+        setSocialLinks({
+          ...FALLBACK_SOCIAL_LINKS,
+          ...links,
+        });
       } catch (error) {
         logger.error('Footer: unexpected error while loading social media links', { error });
       }
@@ -152,15 +167,15 @@ export function Footer() {
     loadSocialLinks();
   }, [supabase]);
 
-  const supportEmail = companyInfo.supportEmail || 'support@tecbunny.com';
-  const supportPhone = companyInfo.supportPhone || '+1234567890';
-  const address = companyInfo.registeredAddress || undefined;
+  const supportEmail = companyInfo.supportEmail || DEFAULT_COMPANY_INFO.supportEmail;
+  const supportPhone = companyInfo.supportPhone || DEFAULT_COMPANY_INFO.supportPhone;
+  const address = companyInfo.registeredAddress || DEFAULT_COMPANY_INFO.registeredAddress;
 
   const socialPlatforms = React.useMemo(
     () => [
       { key: 'facebookUrl', icon: Facebook, label: 'Facebook' },
       { key: 'instagramUrl', icon: Instagram, label: 'Instagram' },
-      { key: 'twitterUrl', icon: Twitter, label: 'Twitter' },
+      { key: 'twitterUrl', icon: Twitter, label: 'X' },
       { key: 'linkedinUrl', icon: Linkedin, label: 'LinkedIn' },
       { key: 'youtubeUrl', icon: Youtube, label: 'YouTube' },
       { key: 'websiteUrl', icon: Globe, label: 'Website' },
@@ -183,6 +198,8 @@ export function Footer() {
                   alt="TecBunny Solutions"
                   width={56}
                   height={56}
+                  sizes="48px"
+                  quality={60}
                   className="h-12 w-12 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] transition-transform group-hover:scale-105"
                 />
               </div>
@@ -285,7 +302,7 @@ export function Footer() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
               <div>
                 <span className="block text-xs text-slate-500 uppercase mb-1">Location</span>
-                <p className="text-slate-300">{address || 'Goa, India'}</p>
+                <address className="text-slate-300 not-italic leading-relaxed">{address}</address>
               </div>
               <div>
                 <span className="block text-xs text-slate-500 uppercase mb-1">Comms</span>

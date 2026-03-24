@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 import { logger } from '../../../../lib/logger';
-import { sendAccountCreationConfirmationTemplate } from '../../../../lib/superfone-whatsapp-service';
+import { sendAccountCreationConfirmationTemplate, sendWhatsAppText } from '../../../../lib/superfone-whatsapp-service';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid request payload' }, { status: 400 });
     }
 
-    const { userId, phone, name } = body || {};
+    const { userId, phone, name, loginUrl } = body || {};
 
     if (!userId) {
       return NextResponse.json({ success: false, error: 'userId is required' }, { status: 400 });
@@ -87,7 +87,31 @@ export async function POST(request: NextRequest) {
 
     const customerName = (name || profile.name || '').trim() || 'there';
 
-    const sendResult = await sendAccountCreationConfirmationTemplate(targetPhone, customerName);
+    let sendResult = await sendAccountCreationConfirmationTemplate(targetPhone, customerName, typeof loginUrl === 'string' ? loginUrl : undefined);
+
+    if (!sendResult.success) {
+      const textFallback = [
+        `Hi ${customerName}, your TecBunny account is ready.`,
+        typeof loginUrl === 'string' && loginUrl.trim() ? `Login here: ${loginUrl.trim()}` : null,
+        'If you need help, reply to this message or contact TecBunny support.',
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+      const textResult = await sendWhatsAppText({
+        recipient: targetPhone,
+        message: textFallback,
+      });
+
+      if (textResult.success) {
+        logger.info('first_login_whatsapp.text_fallback_sent', {
+          userId,
+          phone: targetPhone,
+          messageId: textResult.messageId,
+        });
+        sendResult = textResult;
+      }
+    }
 
     if (!sendResult.success) {
       logger.error('first_login_whatsapp.delivery_failed', {

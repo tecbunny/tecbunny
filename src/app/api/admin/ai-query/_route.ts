@@ -5,11 +5,86 @@ import { logger } from '../../../../lib/logger';
 import { generateGeminiText } from '../../../../lib/ai/gemini-service';
 
 const ADMIN_REPORT_HINT = `You are the TecBunny admin assistant. Provide concise, factual responses. If data is missing, say so.`;
+const AI_RESPONSE_TIMEOUT_MS = 8000;
 
 const isQueryMatch = (query: string, patterns: Array<string | RegExp>) =>
   patterns.some((pattern) =>
     typeof pattern === 'string' ? query.includes(pattern) : pattern.test(query)
   );
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(value || 0);
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+    promise
+      .then((value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
+
+function buildFallbackAnswer(rawQuery: string, contextData: Record<string, unknown>) {
+  const parts: string[] = [];
+  const orders = contextData.orders as { totalOrders?: number; revenue30d?: number; recentOrders?: Array<{ id: string; status?: string; total?: number }> } | undefined;
+  const customers = contextData.customers as { totalCustomers?: number } | undefined;
+  const products = contextData.products as { totalProducts?: number; lowStock?: Array<{ title?: string; stock_quantity?: number }> } | undefined;
+  const services = contextData.services as { totalServices?: number } | undefined;
+  const analytics = contextData.analytics as { pageViews?: number; productViews?: number; recentLeads?: Array<unknown> } | undefined;
+  const relatedProducts = contextData.relatedProducts as Array<{ title?: string }> | undefined;
+
+  if (orders) {
+    parts.push(`Orders: ${orders.totalOrders ?? 0} total, ${formatCurrency(orders.revenue30d ?? 0)} revenue in the last 30 days.`);
+    if ((orders.recentOrders || []).length > 0) {
+      const recent = orders.recentOrders!.slice(0, 3).map((order) => `${order.id.slice(0, 8)} (${order.status || 'unknown'})`).join(', ');
+      parts.push(`Recent orders: ${recent}.`);
+    }
+  }
+
+  if (customers) {
+    parts.push(`Customers: ${customers.totalCustomers ?? 0} profiles.`);
+  }
+
+  if (products) {
+    parts.push(`Products: ${products.totalProducts ?? 0} catalog items.`);
+    if ((products.lowStock || []).length > 0) {
+      const lowStockItems = products.lowStock!.slice(0, 3).map((item) => `${item.title || 'Unknown'} (${item.stock_quantity ?? 0})`).join(', ');
+      parts.push(`Low stock: ${lowStockItems}.`);
+    }
+  }
+
+  if (services) {
+    parts.push(`Services: ${services.totalServices ?? 0} configured services.`);
+  }
+
+  if (analytics) {
+    parts.push(`Analytics: ${analytics.pageViews ?? 0} page views and ${analytics.productViews ?? 0} product views in the last 7 days.`);
+    if ((analytics.recentLeads || []).length > 0) {
+      parts.push(`Recent leads: ${(analytics.recentLeads || []).length}.`);
+    }
+  }
+
+  if ((relatedProducts || []).length > 0) {
+    parts.push(`Related products: ${relatedProducts!.map((item) => item.title || 'Unknown').join(', ')}.`);
+  }
+
+  if (parts.length === 0) {
+    return `I could not gather enough data to answer: "${rawQuery}".`;
+  }
+
+  return parts.join(' ');
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -212,13 +287,18 @@ export async function POST(request: NextRequest) {
 
     try {
       const prompt = `${ADMIN_REPORT_HINT}\n\nUser query: ${rawQuery}\n\nData:\n${JSON.stringify(contextData, null, 2)}\n\nProvide a short response using only the data above.`;
-      const answer = await generateGeminiText({ prompt, temperature: 0.3, maxOutputTokens: 350 });
+      const answer = await withTimeout(
+        generateGeminiText({ prompt, temperature: 0.3, maxOutputTokens: 350 }),
+        AI_RESPONSE_TIMEOUT_MS,
+        'AI response timeout'
+      );
       return NextResponse.json({ answer, data: dataPayload });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       logger.error('Gemini AI Service Error', { error: message });
+      const fallbackAnswer = buildFallbackAnswer(rawQuery, contextData);
       return NextResponse.json({
-        answer: 'AI service is temporarily unavailable. Please try again later.',
+        answer: fallbackAnswer,
         data: dataPayload,
         error: message,
       });

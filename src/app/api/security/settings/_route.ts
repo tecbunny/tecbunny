@@ -54,6 +54,95 @@ const DEFAULT_SECURITY_SETTINGS: Record<string, { value: string; description: st
   }
 };
 
+const SECURITY_SETTING_KEYS = Object.keys(DEFAULT_SECURITY_SETTINGS);
+
+function isMissingSecuritySettingsTable(error: { code?: string; message?: string } | null | undefined) {
+  return !!error && (
+    error.code === 'PGRST116' ||
+    (typeof error.message === 'string' && /security_settings/i.test(error.message) && /does not exist/i.test(error.message))
+  );
+}
+
+function normalizeSettingsRows(
+  rows: Array<{ key: string; value: unknown; description?: string | null }> | null | undefined
+) {
+  const settingsObject = (rows || []).reduce((acc, setting) => {
+    acc[String(setting.key)] = {
+      value: typeof setting.value === 'string' ? setting.value : String(setting.value ?? ''),
+      description: setting.description ?? DEFAULT_SECURITY_SETTINGS[String(setting.key)]?.description ?? null,
+    };
+    return acc;
+  }, {} as Record<string, { value: string; description: string | null }>);
+
+  return SECURITY_SETTING_KEYS.reduce((acc, key) => {
+    acc[key] = settingsObject[key] ?? DEFAULT_SECURITY_SETTINGS[key];
+    return acc;
+  }, {} as Record<string, { value: string; description: string | null }>);
+}
+
+async function loadSettingsTableFallback(serviceSupabase: Awaited<ReturnType<typeof requireAdminContext>>['serviceSupabase']) {
+  const { data, error } = await serviceSupabase
+    .from('settings')
+    .select('key, value, description')
+    .in('key', SECURITY_SETTING_KEYS)
+    .order('key');
+
+  if (error) {
+    throw error;
+  }
+
+  if ((data || []).length > 0) {
+    return {
+      settings: normalizeSettingsRows(data as Array<{ key: string; value: unknown; description?: string | null }>),
+      seeded: false,
+    };
+  }
+
+  const seedRows = SECURITY_SETTING_KEYS.map((key) => ({
+    key,
+    value: DEFAULT_SECURITY_SETTINGS[key].value,
+    description: DEFAULT_SECURITY_SETTINGS[key].description,
+  }));
+
+  const { error: seedError } = await serviceSupabase
+    .from('settings')
+    .upsert(seedRows, { onConflict: 'key' });
+
+  if (seedError) {
+    throw seedError;
+  }
+
+  return {
+    settings: { ...DEFAULT_SECURITY_SETTINGS },
+    seeded: true,
+  };
+}
+
+async function persistSettingsTableFallback(
+  serviceSupabase: Awaited<ReturnType<typeof requireAdminContext>>['serviceSupabase'],
+  settingKey: string,
+  settingValue: string,
+  description: string | null | undefined,
+) {
+  const { data, error } = await serviceSupabase
+    .from('settings')
+    .upsert({
+      key: settingKey,
+      value: settingValue,
+      description: description ?? DEFAULT_SECURITY_SETTINGS[settingKey]?.description ?? null,
+    }, {
+      onConflict: 'key'
+    })
+    .select('key, value, description')
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 export async function GET(_: NextRequest) {
   try {
     const { serviceSupabase } = await requireAdminContext();
@@ -66,35 +155,39 @@ export async function GET(_: NextRequest) {
       .order('setting_key');
 
     if (error) {
-      const missingTable =
-        error.code === 'PGRST116' ||
-        (typeof error.message === 'string' && /security_settings/i.test(error.message) && /does not exist/i.test(error.message));
-
-      if (missingTable) {
-        logger.warn('security_settings table missing; returning defaults');
+      if (isMissingSecuritySettingsTable(error)) {
+        logger.warn('security_settings table missing; using settings table fallback');
+        const fallback = await loadSettingsTableFallback(serviceSupabase);
         return NextResponse.json({
           success: true,
-          settings: DEFAULT_SECURITY_SETTINGS,
-          fallback: true
+          settings: fallback.settings,
+          fallback: false,
+          storage: 'settings',
+          seeded: fallback.seeded,
         });
       }
 
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Transform array to object for easier access
-    const settingsObject = (settings || []).reduce((acc: Record<string, { value: any; description: string | null }>, setting: any) => {
+    const settingsObject = (settings || []).reduce((acc: Record<string, { value: string; description: string | null }>, setting: any) => {
       acc[String(setting.setting_key)] = {
-        value: setting.setting_value,
+        value: typeof setting.setting_value === 'string' ? setting.setting_value : String(setting.setting_value ?? ''),
         description: setting.description ?? null,
       };
       return acc;
-    }, {} as Record<string, { value: any; description: string | null }>);
+    }, {} as Record<string, { value: string; description: string | null }>);
+
+    const mergedSettings = SECURITY_SETTING_KEYS.reduce((acc, key) => {
+      acc[key] = settingsObject[key] ?? DEFAULT_SECURITY_SETTINGS[key];
+      return acc;
+    }, {} as Record<string, { value: string; description: string | null }>);
 
     return NextResponse.json({
       success: true,
-      settings: Object.keys(settingsObject).length > 0 ? settingsObject : DEFAULT_SECURITY_SETTINGS,
-      fallback: Object.keys(settingsObject).length === 0
+      settings: mergedSettings,
+      fallback: false,
+      storage: 'security_settings'
     });
 
   } catch (error) {
@@ -123,8 +216,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update or insert security setting
-    const { data, error } = await serviceSupabase
+    let data: { setting_key?: string; key?: string; setting_value?: string; value?: string; description?: string | null } | null = null;
+
+    const { data: primaryData, error } = await serviceSupabase
       .from('security_settings')
       .upsert({
         setting_key,
@@ -138,19 +232,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      const missingTable =
-        error.code === 'PGRST116' ||
-        (typeof error.message === 'string' && /security_settings/i.test(error.message) && /does not exist/i.test(error.message));
-
-      if (missingTable) {
-        logger.warn('security_settings table missing on update attempt');
-        return NextResponse.json({
-          error: 'Security settings storage is not configured. Please run the security schema migration.',
-          fallback: true
-        }, { status: 501 });
+      if (isMissingSecuritySettingsTable(error)) {
+        logger.warn('security_settings table missing on update attempt; writing to settings table instead');
+        data = await persistSettingsTableFallback(serviceSupabase, setting_key, setting_value, description);
+      } else {
+        return NextResponse.json({ error: error.message }, { status: 500 });
       }
-
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    } else {
+      data = primaryData;
     }
 
     // Log the security setting change
@@ -170,7 +259,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      setting: data
+      setting: data,
+      fallback: false,
+      storage: error ? 'settings' : 'security_settings'
     });
 
   } catch (error) {

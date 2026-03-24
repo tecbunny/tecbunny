@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { cn, revealDelayClass } from '@/lib/utils';
 import { useCart } from '../lib/hooks';
 import { useAnalytics } from '../hooks/use-analytics';
 import { usePermissions } from '../hooks/use-permissions';
@@ -350,20 +351,20 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
       <div className="relative mx-auto flex max-w-7xl flex-col gap-16 px-4 pb-20 pt-0 sm:px-6 lg:px-8 sm:pt-0">
         <section className="reveal-section text-center" data-reveal-id="services-hero">
-          <div className="reveal-item inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-violet-300" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
+          <div className={cn('reveal-item inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-violet-300', revealDelayClass(0))}>
             End-to-end Solutions
           </div>
-          <h1 className="reveal-item mt-6 text-4xl font-semibold text-white sm:text-5xl lg:text-6xl" style={{ '--reveal-delay': '70ms' } as React.CSSProperties}>
+          <h1 className={cn('reveal-item mt-6 text-4xl font-semibold text-white sm:text-5xl lg:text-6xl', revealDelayClass(70))}>
             Engineering{' '}
             <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-transparent">
               Sanctuary
             </span>
           </h1>
-          <p className="reveal-item mx-auto mt-4 max-w-2xl text-base text-slate-400 sm:text-lg" style={{ '--reveal-delay': '140ms' } as React.CSSProperties}>
+          <p className={cn('reveal-item mx-auto mt-4 max-w-2xl text-base text-slate-400 sm:text-lg', revealDelayClass(140))}>
             From secure perimeters to smart automation, we deliver professional installation, maintenance, and service care across Goa.
           </p>
           {canManageServices && (
-            <div className="reveal-item mt-6 flex justify-center" style={{ '--reveal-delay': '210ms' } as React.CSSProperties}>
+            <div className={cn('reveal-item mt-6 flex justify-center', revealDelayClass(210))}>
               <Link
                 href="/management/admin/services"
                 className="inline-flex items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-cyan-200 transition-colors hover:border-cyan-400/60"
@@ -375,7 +376,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
         </section>
 
         <section className="reveal-section grid gap-4 md:grid-cols-2" data-reveal-id="services-quick-cta">
-          <div className="reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
+          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(0))}>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-cyan-500/10 text-cyan-300 flex items-center justify-center">
                 <Cctv className="h-5 w-5" />
@@ -397,7 +398,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
             </Button>
           </div>
 
-          <div className="reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
+          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(80))}>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-300 flex items-center justify-center">
                 <Cpu className="h-5 w-5" />
@@ -419,7 +420,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
             </Button>
           </div>
 
-          <div className="reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md" style={{ '--reveal-delay': '160ms' } as React.CSSProperties}>
+          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(160))}>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-300 flex items-center justify-center">
                 <Shield className="h-5 w-5" />
@@ -441,7 +442,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
             </Button>
           </div>
 
-          <div className="reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md" style={{ '--reveal-delay': '240ms' } as React.CSSProperties}>
+          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(240))}>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-violet-500/10 text-violet-300 flex items-center justify-center">
                 <Shield className="h-5 w-5" />
@@ -498,7 +499,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
             {serviceSections.map((section) => (
               <div key={section.key} className="reveal-section space-y-6" data-reveal-id={`services-group-${slugify(section.key)}`}>
-                <div className="reveal-item flex items-center gap-3" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
+                <div className={cn('reveal-item flex items-center gap-3', revealDelayClass(0))}>
                   <div className="h-8 w-1 rounded-full bg-cyan-400" />
                   <div>
                     <h2 className="text-2xl font-semibold text-white">{section.key}</h2>
@@ -511,8 +512,10 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
                     return (
                       <div
                         key={service.id}
-                        className="reveal-item group flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/30"
-                        style={{ '--reveal-delay': `${80 + index * 80}ms` } as React.CSSProperties}
+                        className={cn(
+                          'reveal-item group flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/30',
+                          revealDelayClass(80 + index * 80)
+                        )}
                       >
                         <div className="flex items-center gap-3">
                           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300 transition-transform duration-300 group-hover:scale-110">
@@ -561,7 +564,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
         <section className="reveal-section rounded-3xl border border-white/5 bg-black/20 p-6 sm:p-10" data-reveal-id="services-pricing">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="reveal-item" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
+            <div className={cn('reveal-item', revealDelayClass(0))}>
               <h2 className="text-3xl font-semibold text-white">Service Rates & AMC Plans</h2>
               <p className="mt-2 max-w-2xl text-sm text-slate-400">
                 Transparent pricing tiers across CCTV and computer services. Final quotations include on-site assessment, travel, and consumables.
@@ -569,8 +572,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
             </div>
             <Link
               href="/contact?subject=sales&intent=service_quote&message=I%20need%20a%20service%20quote.%20Please%20contact%20me%20about%20the%20right%20next%20step."
-              className="reveal-item inline-flex items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 transition-colors hover:border-cyan-400/60"
-              style={{ '--reveal-delay': '90ms' } as React.CSSProperties}
+              className={cn('reveal-item inline-flex items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 transition-colors hover:border-cyan-400/60', revealDelayClass(90))}
             >
               Request Service Quote
             </Link>
@@ -578,7 +580,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
             {servicePricing.map((category, categoryIndex) => (
-              <div key={category.category} className="reveal-item rounded-2xl border border-white/5 bg-slate-900/60 p-6" style={{ '--reveal-delay': `${120 + categoryIndex * 90}ms` } as React.CSSProperties}>
+              <div key={category.category} className={cn('reveal-item rounded-2xl border border-white/5 bg-slate-900/60 p-6', revealDelayClass(120 + categoryIndex * 90))}>
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-1 rounded-full bg-cyan-400" />
                   <div>
@@ -588,7 +590,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
                 </div>
                 <div className="mt-6 space-y-4">
                   {category.plans.map((plan, planIndex) => (
-                    <div key={plan.name} className="reveal-item rounded-xl border border-white/5 bg-black/30 p-4" style={{ '--reveal-delay': `${160 + planIndex * 70}ms` } as React.CSSProperties}>
+                    <div key={plan.name} className={cn('reveal-item rounded-xl border border-white/5 bg-black/30 p-4', revealDelayClass(160 + planIndex * 70))}>
                       <div className="flex flex-col gap-1">
                         <p className="text-sm font-semibold text-white">{plan.name}</p>
                         <p className="text-xs text-slate-500">{plan.summary}</p>
@@ -600,8 +602,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
                           return (
                             <div
                               key={tier.label}
-                              className="reveal-item flex flex-col gap-2 rounded-lg border border-white/5 bg-slate-950/60 p-4"
-                              style={{ '--reveal-delay': `${200 + tierIndex * 60}ms` } as React.CSSProperties}
+                              className={cn('reveal-item flex flex-col gap-2 rounded-lg border border-white/5 bg-slate-950/60 p-4', revealDelayClass(200 + tierIndex * 60))}
                             >
                               <div className="flex items-center justify-between">
                                 <p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">{tier.label}</p>
@@ -632,7 +633,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
         </section>
 
         <section className="reveal-section rounded-3xl border border-white/5 bg-slate-900/40 p-6 sm:p-10" data-reveal-id="services-amc">
-          <div className="reveal-item flex items-center gap-3" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
+          <div className={cn('reveal-item flex items-center gap-3', revealDelayClass(0))}>
             <div className="h-8 w-1 rounded-full bg-violet-400" />
             <div>
               <h2 className="text-2xl font-semibold text-white">Annual Maintenance Contract (AMC) Terms</h2>
@@ -641,27 +642,27 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2 text-sm text-slate-300">
-            <div className="reveal-item" style={{ '--reveal-delay': '70ms' } as React.CSSProperties}>
+            <div className={cn('reveal-item', revealDelayClass(70))}>
               <p className="text-xs uppercase tracking-widest text-slate-500">Company</p>
               <p className="font-semibold text-white">{companyInfo.name}</p>
             </div>
-            <div className="reveal-item" style={{ '--reveal-delay': '110ms' } as React.CSSProperties}>
+            <div className={cn('reveal-item', revealDelayClass(110))}>
               <p className="text-xs uppercase tracking-widest text-slate-500">CIN</p>
               <p>{companyInfo.cin}</p>
             </div>
-            <div className="reveal-item" style={{ '--reveal-delay': '150ms' } as React.CSSProperties}>
+            <div className={cn('reveal-item', revealDelayClass(150))}>
               <p className="text-xs uppercase tracking-widest text-slate-500">Udyam</p>
               <p>{companyInfo.udyam}</p>
             </div>
-            <div className="reveal-item" style={{ '--reveal-delay': '190ms' } as React.CSSProperties}>
+            <div className={cn('reveal-item', revealDelayClass(190))}>
               <p className="text-xs uppercase tracking-widest text-slate-500">GSTIN</p>
               <p>{companyInfo.gstin}</p>
             </div>
-            <div className="reveal-item" style={{ '--reveal-delay': '230ms' } as React.CSSProperties}>
+            <div className={cn('reveal-item', revealDelayClass(230))}>
               <p className="text-xs uppercase tracking-widest text-slate-500">CEO</p>
               <p>{companyInfo.ceo}</p>
             </div>
-            <div className="reveal-item" style={{ '--reveal-delay': '270ms' } as React.CSSProperties}>
+            <div className={cn('reveal-item', revealDelayClass(270))}>
               <p className="text-xs uppercase tracking-widest text-slate-500">Website</p>
               <a href={companyInfo.website} target="_blank" rel="noopener noreferrer" className="text-cyan-300 hover:text-cyan-200">
                 {companyInfo.website.replace('https://', '')}
@@ -671,7 +672,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
           <div className="mt-8 grid gap-4">
             {amcTerms.map((term, index) => (
-              <div key={term.title} className="reveal-item rounded-2xl border border-white/5 bg-slate-950/60 p-5" style={{ '--reveal-delay': `${120 + index * 70}ms` } as React.CSSProperties}>
+              <div key={term.title} className={cn('reveal-item rounded-2xl border border-white/5 bg-slate-950/60 p-5', revealDelayClass(120 + index * 70))}>
                 <h3 className="text-lg font-semibold text-white">{term.title}</h3>
                 {term.description && <p className="mt-1 text-sm text-slate-400">{term.description}</p>}
                 {term.bullets && (
@@ -702,14 +703,13 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
         </section>
 
         <section className="reveal-section rounded-2xl border border-white/10 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-violet-500/10 p-8 text-center" data-reveal-id="services-closing-cta">
-          <h2 className="reveal-item text-2xl font-semibold text-white" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>Need Custom Solutions?</h2>
-          <p className="reveal-item mx-auto mt-3 max-w-md text-sm text-slate-400" style={{ '--reveal-delay': '70ms' } as React.CSSProperties}>
+          <h2 className={cn('reveal-item text-2xl font-semibold text-white', revealDelayClass(0))}>Need Custom Solutions?</h2>
+          <p className={cn('reveal-item mx-auto mt-3 max-w-md text-sm text-slate-400', revealDelayClass(70))}>
             Share your requirements and our team will craft a tailored setup for your space.
           </p>
           <Link
             href="/contact?subject=sales&intent=custom_solution&message=I%20need%20a%20custom%20solution%20quote.%20Please%20help%20me%20plan%20the%20right%20setup."
-            className="reveal-item mt-6 inline-flex items-center justify-center rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-200 transition-colors hover:border-cyan-400/70"
-            style={{ '--reveal-delay': '140ms' } as React.CSSProperties}
+            className={cn('reveal-item mt-6 inline-flex items-center justify-center rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-200 transition-colors hover:border-cyan-400/70', revealDelayClass(140))}
           >
             Request Custom Solution Quote
           </Link>

@@ -149,72 +149,63 @@ export default function HeroCarousel({ pageKey, intervalMs = 6000, className }: 
           onMouseLeave={() => setPaused(false)}
         >
           <div className="relative h-[340px] sm:h-[420px]">
-            {slides.map((slide, index) => (
-              <article
-                key={slide.id}
-                className={cn(
-                  'absolute inset-0 transition-opacity duration-700 ease-in-out',
-                  index === activeIndex ? 'opacity-100' : 'opacity-0'
-                )}
-                aria-hidden={index === activeIndex ? undefined : true}
-              >
-                <Image
-                  src={slide.imageUrl}
-                  alt={slide.title || 'Hero banner image'}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 80vw, 1200px"
-                  priority={index === activeIndex}
-                  className="h-full w-full object-cover"
-                  onError={event => {
-                    const target = event.currentTarget as HTMLImageElement;
-                    target.onerror = null;
-                    target.src = 'https://placehold.co/1200x600?text=Hero+Banner';
-                  }}
+            <article
+              key={currentSlide.id}
+              className="absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100"
+            >
+              <Image
+                src={currentSlide.imageUrl}
+                alt={currentSlide.title || 'Hero banner image'}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 80vw, 1200px"
+                priority
+                className="h-full w-full object-cover"
+                onError={event => {
+                  const target = event.currentTarget as HTMLImageElement;
+                  target.onerror = null;
+                  target.src = 'https://placehold.co/1200x600?text=Hero+Banner';
+                }}
+              />
+              {currentSlide.htmlContent ? (
+                <div
+                  className="carousel-overlay carousel-overlay--active absolute inset-0 flex h-full w-full flex-col justify-center"
+                  dangerouslySetInnerHTML={{ __html: typeof window !== 'undefined' ? DOMPurify.sanitize(currentSlide.htmlContent) : '' }}
                 />
-                {slide.htmlContent ? (
-                  <div
-                    className={cn(
-                      'carousel-overlay absolute inset-0 flex h-full w-full flex-col justify-center',
-                      index === activeIndex ? 'carousel-overlay--active' : ''
-                    )}
-                    dangerouslySetInnerHTML={{ __html: typeof window !== 'undefined' ? DOMPurify.sanitize(slide.htmlContent) : '' }}
-                  />
-                ) : (
-                  <>
-                    <div className="absolute inset-0 bg-black/55" />
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="px-6 sm:px-12">
-                        <div className={cn('carousel-copy max-w-2xl space-y-4', index === activeIndex ? 'carousel-copy--active' : '')}>
-                          {slide.subtitle && (
-                            <p className="text-sm font-medium uppercase tracking-[0.3em] text-blue-200">
-                              {slide.subtitle}
-                            </p>
-                          )}
-                          {slide.title && (
-                            <h2 className="text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
-                              {slide.title}
-                            </h2>
-                          )}
-                          {slide.description && (
-                            <p className="text-base text-blue-100 sm:text-lg">
-                              {slide.description}
-                            </p>
-                          )}
-                          {slide.ctaText && slide.ctaLink && (
-                            <Link
-                              href={slide.ctaLink}
-                              className="inline-flex items-center rounded-full bg-white px-6 py-2 text-sm font-semibold text-gray-900 shadow-lg transition hover:bg-gray-200"
-                            >
-                              {slide.ctaText}
-                            </Link>
-                          )}
-                        </div>
+              ) : (
+                <>
+                  <div className="absolute inset-0 bg-black/55" />
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="px-6 sm:px-12">
+                      <div className="carousel-copy carousel-copy--active max-w-2xl space-y-4">
+                        {currentSlide.subtitle && (
+                          <p className="text-sm font-medium uppercase tracking-[0.3em] text-blue-200">
+                            {currentSlide.subtitle}
+                          </p>
+                        )}
+                        {currentSlide.title && (
+                          <h2 className="text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+                            {currentSlide.title}
+                          </h2>
+                        )}
+                        {currentSlide.description && (
+                          <p className="text-base text-blue-100 sm:text-lg">
+                            {currentSlide.description}
+                          </p>
+                        )}
+                        {currentSlide.ctaText && currentSlide.ctaLink && (
+                          <Link
+                            href={currentSlide.ctaLink}
+                            className="inline-flex items-center rounded-full bg-white px-6 py-2 text-sm font-semibold text-gray-900 shadow-lg transition hover:bg-gray-200"
+                          >
+                            {currentSlide.ctaText}
+                          </Link>
+                        )}
                       </div>
                     </div>
-                  </>
-                )}
-              </article>
-            ))}
+                  </div>
+                </>
+              )}
+            </article>
           </div>
 
           {slides.length > 1 ? (

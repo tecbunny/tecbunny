@@ -131,7 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         userId: profile.id,
         phone: profile.mobile,
         name: profile.name,
-        loginUrl: typeof window !== 'undefined' ? `${window.location.origin}/auth/login` : undefined
+        loginUrl: typeof window !== 'undefined' ? `${window.location.origin}/auth/signin` : undefined
       };
 
       const response = await fetch('/api/auth/first-login-whatsapp', {
@@ -520,7 +520,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (typeof window === 'undefined') return;
 
     const handleSessionExpired = () => {
-      logout({ redirectTo: '/auth/login?session=expired', silent: true });
+      logout({ redirectTo: '/auth/signin?session=expired', silent: true });
     };
 
     window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);

@@ -25,7 +25,9 @@ export function usePageContent(pageKey: string) {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/page-content?key=${pageKey}`);
+        const response = await fetch(`/api/page-content?key=${pageKey}`, {
+          cache: 'no-store',
+        });
         const result = await response.json();
 
         if (!response.ok) {

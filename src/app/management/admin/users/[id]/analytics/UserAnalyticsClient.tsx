@@ -29,18 +29,51 @@ export default function UserAnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (params.id) {
-      fetch(`/api/admin/users/${params.id}/history`)
-        .then(res => res.json())
-        .then(data => {
-          setData(data);
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error(err);
-          setLoading(false);
-        });
+      const loadHistory = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch(`/api/admin/users/${params.id}/history`, {
+            credentials: 'include',
+            headers: { Accept: 'application/json' },
+          });
+
+          const raw = await response.text();
+          let payload: any = null;
+
+          try {
+            payload = raw ? JSON.parse(raw) : null;
+          } catch {
+            payload = { error: raw || `Unexpected response from server (${response.status})` };
+          }
+
+          if (!response.ok) {
+            throw new Error(payload?.error || `Failed to load user history (${response.status})`);
+          }
+
+          if (!cancelled) {
+            setData(payload);
+          }
+        } catch (error) {
+          console.error(error);
+          if (!cancelled) {
+            setData({ error: error instanceof Error ? error.message : 'Failed to load user history' });
+          }
+        } finally {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        }
+      };
+
+      void loadHistory();
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [params.id]);
 
   if (loading) return <div className="p-8">Loading user history...</div>;

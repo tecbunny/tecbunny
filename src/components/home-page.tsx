@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
   ChevronRight,
@@ -16,14 +16,28 @@ import {
   Lock,
 } from 'lucide-react';
 
-import { AddToCartButton } from '../components/cart/AddToCartButton';
 import { getProductDisplayImage } from '../lib/image-utils';
+import { cn, revealDelayClass } from '../lib/utils';
 import { OptimizedImage } from './ui/optimized-image';
 import type { Product } from '../lib/types';
-import { useAnalytics } from '../hooks/use-analytics';
+import { useNearViewport } from '../hooks/use-near-viewport';
 import { usePrefersReducedMotion } from '../hooks/use-prefers-reduced-motion';
-import { useRevealSections } from '../hooks/use-reveal-sections';
-import HeroCarousel from './HeroCarousel';
+
+const AddToCartButton = dynamic(
+  () => import('../components/cart/AddToCartButton').then((module) => module.AddToCartButton),
+  { ssr: false }
+);
+
+const HeroCarousel = dynamic(() => import('./HeroCarousel'), {
+  ssr: false,
+  loading: () => (
+    <section className="py-6" aria-hidden="true">
+      <div className="container mx-auto px-4">
+        <div className="h-48 w-full rounded-2xl bg-slate-900/60" />
+      </div>
+    </section>
+  ),
+});
 
 type DbProduct = {
   id: string;
@@ -117,6 +131,20 @@ function resetMagneticEffect(event: React.MouseEvent<HTMLElement>) {
   event.currentTarget.style.transform = 'translate(0px, 0px)';
 }
 
+function scheduleWhenIdle(callback: () => void, timeout = 1600) {
+  if (typeof window === 'undefined') {
+    return () => undefined;
+  }
+
+  if (typeof window.requestIdleCallback === 'function') {
+    const id = window.requestIdleCallback(() => callback(), { timeout });
+    return () => window.cancelIdleCallback(id);
+  }
+
+  const timeoutId = window.setTimeout(callback, timeout);
+  return () => window.clearTimeout(timeoutId);
+}
+
 function useFinePointer() {
   const [hasFinePointer, setHasFinePointer] = React.useState(false);
 
@@ -143,34 +171,39 @@ function useFinePointer() {
 }
 
 export default function HomePage() {
-  const router = useRouter();
-  const { trackEvent } = useAnalytics();
   const prefersReducedMotion = usePrefersReducedMotion();
   const hasFinePointer = useFinePointer();
-  useRevealSections();
   const [featuredProducts, setFeaturedProducts] = React.useState<DbProduct[]>([]);
   const [productsLoading, setProductsLoading] = React.useState(true);
   const [productsError, setProductsError] = React.useState<string | null>(null);
-  const [showLoader, setShowLoader] = React.useState(true);
+  const [enableAmbientEffects, setEnableAmbientEffects] = React.useState(false);
   const heroWords = ['Home.', 'Business.', 'Assets.', 'Future.'];
   const [heroWordIndex, setHeroWordIndex] = React.useState(0);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const tiltRef = React.useRef<HTMLDivElement | null>(null);
+  const [carouselRef, shouldLoadCarousel] = useNearViewport<HTMLDivElement>('200px');
+  const [hardwareRef, shouldLoadHardware] = useNearViewport<HTMLElement>('280px');
 
   React.useEffect(() => {
-    const timer = window.setTimeout(() => setShowLoader(false), 900);
-    return () => window.clearTimeout(timer);
-  }, []);
+    if (prefersReducedMotion) {
+      return undefined;
+    }
+
+    return scheduleWhenIdle(() => setEnableAmbientEffects(true), 2200);
+  }, [prefersReducedMotion]);
 
   React.useEffect(() => {
+    if (!shouldLoadHardware) {
+      return undefined;
+    }
+
     let isMounted = true;
 
-    const loadProducts = async () => {
+    const runLoad = async () => {
       try {
         setProductsLoading(true);
         setProductsError(null);
 
-        // Pull a few extra records so we can choose ones that actually have images
         const response = await fetch('/api/products?status=active&limit=12');
         if (!response.ok) {
           throw new Error('Failed to load products');
@@ -214,12 +247,15 @@ export default function HomePage() {
       }
     };
 
-    loadProducts();
+    const cancelIdleLoad = scheduleWhenIdle(() => {
+      void runLoad();
+    }, 1800);
 
     return () => {
       isMounted = false;
+      cancelIdleLoad();
     };
-  }, []);
+  }, [shouldLoadHardware]);
 
   React.useEffect(() => {
     if (prefersReducedMotion) {
@@ -236,6 +272,10 @@ export default function HomePage() {
 
   React.useEffect(() => {
     if (prefersReducedMotion) {
+      return undefined;
+    }
+
+    if (!enableAmbientEffects) {
       return undefined;
     }
 
@@ -286,7 +326,7 @@ export default function HomePage() {
       window.removeEventListener('resize', resize);
       window.cancelAnimationFrame(animationId);
     };
-  }, [prefersReducedMotion]);
+  }, [enableAmbientEffects, prefersReducedMotion]);
 
   const handleTiltMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!tiltRef.current || prefersReducedMotion || !hasFinePointer) return;
@@ -312,16 +352,6 @@ export default function HomePage() {
     resetMagneticEffect(event);
   };
 
-  const handleBrowseCatalog = () => {
-    trackEvent('browse_catalog_click');
-    router.push('/products');
-  };
-
-  const handleConsultationRequest = () => {
-    trackEvent('consultation_request_click');
-    router.push('/contact');
-  };
-
   return (
     <div className="relative overflow-hidden bg-slate-950 text-slate-200 selection:bg-cyan-500/40 selection:text-white">
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -329,17 +359,11 @@ export default function HomePage() {
         <div className="absolute -right-40 top-1/3 h-[46rem] w-[46rem] rounded-full bg-violet-500/10 blur-[180px]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.6),_rgba(2,6,23,0.9))]" />
       </div>
-      {showLoader && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 transition-opacity duration-500">
-          <div className="text-center">
-            <div className="mx-auto mb-4 h-12 w-12 rounded-full border-2 border-cyan-400/30 border-t-cyan-400 animate-spin"></div>
-            <p className="text-xs font-semibold tracking-[0.4em] text-cyan-300">INITIALIZING</p>
-          </div>
-        </div>
-      )}
 
       <section className="relative flex items-center overflow-hidden py-20 sm:py-24">
-        <canvas ref={canvasRef} className={`pointer-events-none absolute inset-0 h-full w-full opacity-30 ${prefersReducedMotion ? 'hidden' : ''}`} aria-hidden="true" />
+        {enableAmbientEffects ? (
+          <canvas ref={canvasRef} className={`pointer-events-none absolute inset-0 h-full w-full opacity-30 ${prefersReducedMotion ? 'hidden' : ''}`} aria-hidden="true" />
+        ) : null}
         <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20 brightness-100 contrast-150" />
         <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[#06b6d4]/20 blur-[100px]" aria-hidden="true" />
         <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-[#8b5cf6]/20 blur-[100px]" aria-hidden="true" />
@@ -412,7 +436,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="reveal-section relative hidden lg:block" data-reveal-id="hero-visual" id="hero-visual" onMouseMove={handleTiltMove} onMouseLeave={handleTiltLeave}>
+            <div className="reveal-section is-revealed relative hidden lg:block" data-reveal-id="hero-visual" id="hero-visual" onMouseMove={handleTiltMove} onMouseLeave={handleTiltLeave}>
               <div ref={tiltRef} className="hero-status-panel tilt-card relative z-10 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-6 shadow-2xl backdrop-blur-2xl">
                 <div className="mb-4 flex items-center gap-2 border-b border-white/10 pb-4">
                   <div className="h-3 w-3 rounded-full bg-red-500"></div>
@@ -445,9 +469,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      <HeroCarousel pageKey="homepage" />
+      <div ref={carouselRef}>
+        {shouldLoadCarousel ? (
+          <HeroCarousel pageKey="homepage" />
+        ) : (
+          <section className="py-6" aria-hidden="true">
+            <div className="container mx-auto px-4">
+              <div className="h-[340px] w-full rounded-3xl bg-slate-900/40 sm:h-[420px]" />
+            </div>
+          </section>
+        )}
+      </div>
 
-      <section className="bg-slate-950 py-24 reveal-section" data-reveal-id="pillars">
+      <section className="bg-slate-950 py-24 reveal-section is-revealed" data-reveal-id="pillars">
         <div className="container mx-auto px-6">
           <div className="mb-14 max-w-2xl">
             <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Core pillars</span>
@@ -461,23 +495,11 @@ export default function HomePage() {
             {FEATURE_PILLARS.map((pillar, index) => (
               <div
                 key={pillar.title}
-                className="reveal-item relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/40 hover:shadow-xl hover:shadow-cyan-500/10"
-                style={{
-                  '--reveal-delay': `${index * 90}ms`,
-                  '--spotlight-x': '0px',
-                  '--spotlight-y': '0px',
-                  '--spotlight': 'radial-gradient(600px circle at var(--spotlight-x) var(--spotlight-y), rgba(56,189,248,0.18), transparent 42%)',
-                } as React.CSSProperties}
-                onMouseMove={(event) => {
-                  const rect = event.currentTarget.getBoundingClientRect();
-                  const x = event.clientX - rect.left;
-                  const y = event.clientY - rect.top;
-                  event.currentTarget.style.setProperty('--spotlight-x', `${x}px`);
-                  event.currentTarget.style.setProperty('--spotlight-y', `${y}px`);
-                  event.currentTarget.style.setProperty('--spotlight', `radial-gradient(600px circle at ${x}px ${y}px, rgba(56,189,248,0.18), transparent 42%)`);
-                }}
+                className={cn(
+                  'reveal-item spotlight-card spotlight-card--cyan rounded-2xl border border-white/10 bg-white/5 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/40 hover:shadow-xl hover:shadow-cyan-500/10',
+                  revealDelayClass(index * 90)
+                )}
               >
-                <div className="absolute inset-0 -z-10" style={{ background: 'var(--spotlight)' }} />
                 <div className={`mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${pillar.accent}`}>
                   <pillar.icon size={22} className="text-white" />
                 </div>
@@ -495,9 +517,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-black/40 py-24 reveal-section" data-reveal-id="plans">
+      <section className="bg-black/40 py-24 reveal-section is-revealed" data-reveal-id="plans">
         <div className="container mx-auto grid gap-12 px-6 lg:grid-cols-2 lg:items-center">
-          <div className="reveal-item relative rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-10" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
+          <div className={cn('reveal-item relative rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-10', revealDelayClass(0))}>
             <div className="ambient-blob pointer-events-none absolute -left-6 top-10 h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-cyan-500/20 blur-2xl" aria-hidden="true"></div>
             <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute -bottom-8 right-6 h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-violet-500/20 blur-2xl" aria-hidden="true"></div>
             <h3 className="text-2xl font-semibold text-white sm:text-3xl">Operational clarity, not complexity.</h3>
@@ -506,7 +528,7 @@ export default function HomePage() {
             </p>
             <div className="mt-6 grid gap-4">
               {['Unified monitoring', 'Actionable reporting', 'Hands-on lifecycle support'].map((item, index) => (
-                <div key={item} className="reveal-item flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300" style={{ '--reveal-delay': `${100 + index * 70}ms` } as React.CSSProperties}>
+                <div key={item} className={cn('reveal-item flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300', revealDelayClass(100 + index * 70))}>
                   <Layers size={16} className="text-cyan-300" />
                   {item}
                 </div>
@@ -514,7 +536,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="space-y-6 reveal-item" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
+          <div className={cn('space-y-6 reveal-item', revealDelayClass(80))}>
             <div>
               <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Plans</span>
               <h2 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">Service tiers built to scale.</h2>
@@ -526,12 +548,13 @@ export default function HomePage() {
               {PLAN_TIERS.map((plan, index) => (
                 <div
                   key={plan.name}
-                  className={`reveal-item rounded-2xl border px-6 py-5 transition-transform duration-300 hover:-translate-y-1 ${
+                  className={cn(
+                    'reveal-item rounded-2xl border px-6 py-5 transition-transform duration-300 hover:-translate-y-1',
                     plan.highlight
                       ? 'border-cyan-400/60 bg-cyan-500/10 shadow-lg shadow-cyan-500/20'
-                      : 'border-white/10 bg-white/5'
-                  }`}
-                  style={{ '--reveal-delay': `${140 + index * 90}ms` } as React.CSSProperties}
+                      : 'border-white/10 bg-white/5',
+                    revealDelayClass(140 + index * 90)
+                  )}
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -555,20 +578,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-slate-950 py-24 reveal-section" data-reveal-id="hardware">
+      <section ref={hardwareRef} className="bg-slate-950 py-24 reveal-section is-revealed" data-reveal-id="hardware">
         <div className="container mx-auto px-6">
           <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Storefront</span>
               <h2 className="mt-3 text-3xl font-semibold text-white">Featured hardware</h2>
             </div>
-            <button
-              type="button"
-              onClick={handleBrowseCatalog}
+            <Link
+              href="/products"
               className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-200 hover:text-cyan-100"
             >
               Browse catalog <ArrowRight size={16} />
-            </button>
+            </Link>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -613,7 +635,7 @@ export default function HomePage() {
                 } as Product;
 
                 return (
-                  <div key={product.id} className="reveal-item rounded-2xl border border-white/10 bg-white/5 p-5 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40" style={{ '--reveal-delay': `${index * 90}ms` } as React.CSSProperties}>
+                  <div key={product.id} className={cn('reveal-item rounded-2xl border border-white/10 bg-white/5 p-5 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40', revealDelayClass(index * 90))}>
                     <div className="group/product relative mb-4 flex h-32 sm:h-40 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
                       {imageUrl ? (
                         <OptimizedImage
@@ -647,13 +669,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-black/60 py-24 reveal-section" data-reveal-id="cta">
+      <section className="bg-black/60 py-24 reveal-section is-revealed" data-reveal-id="cta">
         <div className="container mx-auto px-6">
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-500/10 via-slate-900 to-violet-500/10 p-10">
             <div className="ambient-blob pointer-events-none absolute -left-20 top-10 h-40 w-40 rounded-full bg-cyan-500/20 blur-3xl" aria-hidden="true"></div>
             <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute -bottom-20 right-0 h-40 w-40 rounded-full bg-violet-500/20 blur-3xl" aria-hidden="true"></div>
             <div className="relative z-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-              <div className="reveal-item" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
+              <div className={cn('reveal-item', revealDelayClass(0))}>
                 <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200">
                   <Sparkles size={14} /> Ready when you are
                 </span>
@@ -662,15 +684,14 @@ export default function HomePage() {
                   Share your requirements and we will map a secure, scalable setup tailored to your environment.
                 </p>
               </div>
-              <div className="reveal-item rounded-2xl border border-white/10 bg-slate-950/80 p-6 text-center" style={{ '--reveal-delay': '120ms' } as React.CSSProperties}>
+              <div className={cn('reveal-item rounded-2xl border border-white/10 bg-slate-950/80 p-6 text-center', revealDelayClass(120))}>
                 <p className="text-sm text-slate-400">Talk to an advisor</p>
-                <button
-                  type="button"
-                  onClick={handleConsultationRequest}
-                  className="mt-4 w-full rounded-lg bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950"
+                <Link
+                  href="/contact"
+                  className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950"
                 >
                   Request a consultation
-                </button>
+                </Link>
                 <p className="mt-3 text-xs text-slate-500">Response window: same business day</p>
               </div>
             </div>

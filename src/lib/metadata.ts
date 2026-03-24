@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 
 const siteUrl = 'https://www.tecbunny.com';
 const defaultOgImage = `${siteUrl}/brand.png`;
+const xHandle = process.env.NEXT_PUBLIC_X_HANDLE;
 
 interface PageMetaInput {
   title: string;
@@ -48,6 +49,8 @@ export function createPageMetadata({
       title,
       description,
       images: [resolvedImage],
+      site: xHandle,
+      creator: xHandle,
     },
   };
 }

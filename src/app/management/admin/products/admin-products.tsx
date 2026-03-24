@@ -39,6 +39,7 @@ import {
 import { useToast } from '../../../../hooks/use-toast';
 import CSVImportDialog from '../../../../components/admin/csv-import-dialog';
 import { useDebounce } from '../../../../hooks/use-debounce';
+import { fetchAiProductDetails } from '../../../../lib/ai/product-details';
 
 interface Product {
   id: string;
@@ -47,6 +48,7 @@ interface Product {
   description?: string;
   vendor?: string;
   product_type?: string;
+  product_url?: string;
   tags?: string[];
   status: 'active' | 'archived' | 'draft';
   images?: any[];
@@ -87,6 +89,7 @@ interface ProductFormData {
   description: string;
   vendor: string;
   product_type: string;
+  product_url: string;
   tags: string;
   status: 'active' | 'archived' | 'draft';
   mrp: number;
@@ -124,6 +127,16 @@ const deriveStockStatus = (
   return 'in_stock';
 };
 
+const deriveHandleSuggestion = (value: string) => {
+  return value
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+};
+
 export default function AdminProductCatalogPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -147,6 +160,7 @@ export default function AdminProductCatalogPage() {
     description: '',
     vendor: '',
     product_type: '',
+    product_url: '',
     tags: '',
     status: 'active',
     mrp: 0,
@@ -162,6 +176,7 @@ export default function AdminProductCatalogPage() {
   });
   const [isCleaningImages, setIsCleaningImages] = useState(false);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [isFetchingAiDetails, setIsFetchingAiDetails] = useState(false);
 
   const { toast } = useToast();
 
@@ -190,6 +205,59 @@ export default function AdminProductCatalogPage() {
       toast({ title: 'AI generation failed', description: error?.message || 'Please try again.', variant: 'destructive' });
     } finally {
       setIsGeneratingDescription(false);
+    }
+  };
+
+  const handleFetchProductDetails = async () => {
+    if (!formData.product_url.trim()) {
+      toast({ title: 'Product URL required', description: 'Add a product URL first.', variant: 'destructive' });
+      return;
+    }
+
+    setIsFetchingAiDetails(true);
+    try {
+      const details = await fetchAiProductDetails({
+        productUrl: formData.product_url.trim(),
+        existingData: {
+          title: formData.title,
+          vendor: formData.vendor,
+          productType: formData.product_type,
+          tags: formData.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
+          description: formData.description,
+          price: formData.price,
+          mrp: formData.mrp,
+          hsnCode: formData.hsnCode,
+        },
+      });
+
+      setFormData((prev) => {
+        const nextTitle = details.title || prev.title;
+        const nextHandle = prev.handle || details.handleSuggestion || (nextTitle ? deriveHandleSuggestion(nextTitle) : prev.handle);
+        const nextImages = details.imageUrl && !(prev.images || []).some((image) => image.url === details.imageUrl)
+          ? [...(prev.images || []), { url: details.imageUrl }]
+          : prev.images;
+
+        return {
+          ...prev,
+          handle: nextHandle,
+          title: nextTitle,
+          description: details.description || prev.description,
+          vendor: details.vendor || details.brand || prev.vendor,
+          product_type: details.productType || details.category || prev.product_type,
+          product_url: details.productUrl || prev.product_url,
+          tags: details.tags?.length ? details.tags.join(', ') : prev.tags,
+          price: typeof details.price === 'number' ? details.price : prev.price,
+          mrp: typeof details.mrp === 'number' ? details.mrp : prev.mrp,
+          hsnCode: details.hsnCode || prev.hsnCode,
+          images: nextImages,
+        };
+      });
+
+      toast({ title: 'Product details fetched', description: 'AI-filled fields have been applied to the form.' });
+    } catch (error: any) {
+      toast({ title: 'AI fetch failed', description: error?.message || 'Please try again.', variant: 'destructive' });
+    } finally {
+      setIsFetchingAiDetails(false);
     }
   };
 
@@ -296,6 +364,7 @@ export default function AdminProductCatalogPage() {
         description: formData.description,
         vendor: formData.vendor,
         product_type: formData.product_type,
+        product_url: formData.product_url.trim() || null,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
         status: formData.status,
         mrp: formData.mrp,
@@ -366,6 +435,7 @@ export default function AdminProductCatalogPage() {
       description: '',
       vendor: '',
       product_type: '',
+      product_url: '',
       tags: '',
       status: 'active',
       mrp: 0,
@@ -403,6 +473,7 @@ export default function AdminProductCatalogPage() {
         description: p.description || '',
         vendor: p.vendor || '',
         product_type: p.product_type || '',
+        product_url: (p as any).product_url || '',
         tags: Array.isArray(p.tags) ? p.tags.join(', ') : (typeof p.tags === 'string' ? p.tags : ''),
         status: (p.status as any) || 'active',
         mrp: typeof p.mrp === 'number' ? p.mrp : 0,
@@ -1121,6 +1192,39 @@ export default function AdminProductCatalogPage() {
                         onChange={(e) => setFormData({...formData, tags: e.target.value})}
                         placeholder="e.g., mouse, gaming, wireless"
                       />
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label htmlFor="product_url">Product URL</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleFetchProductDetails}
+                          disabled={isFetchingAiDetails || !formData.product_url.trim()}
+                        >
+                          {isFetchingAiDetails ? (
+                            <>
+                              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                              Fetching
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="mr-2 h-4 w-4" />
+                              Fetch With AI
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      <Input
+                        id="product_url"
+                        value={formData.product_url}
+                        onChange={(e) => setFormData({ ...formData, product_url: e.target.value })}
+                        placeholder="https://example.com/product-page"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Paste a manufacturer or marketplace URL to pull title, pricing, description, and tags into the form.
+                      </p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="status">Status</Label>

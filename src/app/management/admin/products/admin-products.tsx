@@ -1719,7 +1719,8 @@ export default function AdminProductCatalogPage() {
                   </TableHeader>
                   <TableBody>
                     {products.map((product, index) => (
-                      <TableRow key={product.id}>
+                      <React.Fragment key={product.id}>
+                      <TableRow>
                         <TableCell>
                           <div className="flex flex-col items-center gap-1">
                             <span className="text-lg font-semibold text-cyan-300">
@@ -1873,6 +1874,7 @@ export default function AdminProductCatalogPage() {
                           </TableCell>
                         </TableRow>
                       )}
+                      </React.Fragment>
                     ))}
                   </TableBody>
                 </Table>

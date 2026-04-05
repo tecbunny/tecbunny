@@ -23,6 +23,7 @@ const sameAsLinks = [
 ].filter((value): value is string => Boolean(value));
 
 export const metadata: Metadata = {
+  manifest: '/manifest.webmanifest',
   metadataBase: new URL('https://www.tecbunny.com'),
   title: {
     default: 'TecBunny Solutions | CCTV, IT Services, Home Automation & AMC in Goa & Maharashtra',

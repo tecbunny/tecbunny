@@ -1,7 +1,7 @@
-import type { MetadataRoute } from 'next';
+import { NextResponse } from 'next/server';
 
-export default function manifest(): MetadataRoute.Manifest {
-  return {
+export function GET() {
+  const manifest = {
     id: '/',
     name: 'TecBunny Solutions',
     short_name: 'TecBunny',
@@ -22,4 +22,10 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
   };
+
+  return NextResponse.json(manifest, {
+    headers: {
+      'Content-Type': 'application/manifest+json',
+    },
+  });
 }

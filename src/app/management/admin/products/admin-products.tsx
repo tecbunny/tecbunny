@@ -18,7 +18,8 @@ import {
   Eye,
   X,
   Search,
-  Sparkles
+  Sparkles,
+  IndianRupee
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
@@ -53,6 +54,8 @@ interface Product {
   status: 'active' | 'archived' | 'draft';
   images?: any[];
   hsnCode?: string;
+  mrp?: number;
+  price?: number;
   stock_quantity?: number;
   min_stock_level?: number;
   max_stock_level?: number;
@@ -177,6 +180,9 @@ export default function AdminProductCatalogPage() {
   const [isCleaningImages, setIsCleaningImages] = useState(false);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const [isFetchingAiDetails, setIsFetchingAiDetails] = useState(false);
+  const [quickPriceEditId, setQuickPriceEditId] = useState<string | null>(null);
+  const [quickPriceValues, setQuickPriceValues] = useState<{ mrp: number; price: number }>({ mrp: 0, price: 0 });
+  const [isSavingQuickPrice, setIsSavingQuickPrice] = useState(false);
 
   const { toast } = useToast();
 
@@ -603,6 +609,33 @@ export default function AdminProductCatalogPage() {
         description: error?.message || 'Failed to update product priority',
         variant: 'destructive',
       });
+    }
+  };
+
+  const openQuickPriceEdit = (product: Product) => {
+    setQuickPriceEditId(product.id);
+    setQuickPriceValues({ mrp: product.mrp ?? 0, price: product.price ?? 0 });
+  };
+
+  const handleQuickPriceSave = async (productId: string) => {
+    setIsSavingQuickPrice(true);
+    try {
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mrp: quickPriceValues.mrp, price: quickPriceValues.price }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || 'Update failed');
+      toast({ title: 'Price updated', description: 'Prices saved successfully.' });
+      setQuickPriceEditId(null);
+      setProducts(prev =>
+        prev.map(p => p.id === productId ? { ...p, mrp: quickPriceValues.mrp, price: quickPriceValues.price } : p)
+      );
+    } catch (err: any) {
+      toast({ title: 'Error', description: err?.message || 'Failed to update price', variant: 'destructive' });
+    } finally {
+      setIsSavingQuickPrice(false);
     }
   };
 
@@ -1678,6 +1711,7 @@ export default function AdminProductCatalogPage() {
                       <TableHead>Vendor</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Price</TableHead>
                       <TableHead>Variants</TableHead>
                       <TableHead>Options</TableHead>
                       <TableHead>Actions</TableHead>
@@ -1730,6 +1764,18 @@ export default function AdminProductCatalogPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
+                          <div className="text-sm">
+                            {product.mrp ? (
+                              <div className="space-y-0.5">
+                                <div className="text-slate-400 line-through text-xs">₹{product.mrp}</div>
+                                <div className="text-green-400 font-medium">₹{product.price ?? product.mrp}</div>
+                              </div>
+                            ) : (
+                              <span className="text-slate-500">—</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <Badge variant="outline">
                             {product.variants?.length || 0} variants
                           </Badge>
@@ -1748,6 +1794,15 @@ export default function AdminProductCatalogPage() {
                             <Button size="sm" variant="outline">
                               <Eye className="h-4 w-4" />
                             </Button>
+                            <Button
+                              size="sm"
+                              variant={quickPriceEditId === product.id ? 'default' : 'outline'}
+                              title="Quick price update"
+                              onClick={() => quickPriceEditId === product.id ? setQuickPriceEditId(null) : openQuickPriceEdit(product)}
+                              className={quickPriceEditId === product.id ? 'bg-emerald-600 hover:bg-emerald-500' : ''}
+                            >
+                              <IndianRupee className="h-4 w-4" />
+                            </Button>
                             <Button size="sm" variant="outline" onClick={() => handleEdit(product)}>
                               <Edit2 className="h-4 w-4" />
                             </Button>
@@ -1761,6 +1816,63 @@ export default function AdminProductCatalogPage() {
                           </div>
                         </TableCell>
                       </TableRow>
+                      {quickPriceEditId === product.id && (
+                        <TableRow className="bg-emerald-950/30 border-emerald-800/40">
+                          <TableCell colSpan={12} className="py-3 px-6">
+                            <div className="flex items-center gap-4 flex-wrap">
+                              <span className="text-sm font-medium text-emerald-300 flex items-center gap-1.5">
+                                <IndianRupee className="h-4 w-4" />
+                                Quick Price Update
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <Label htmlFor={`qp-mrp-${product.id}`} className="text-xs text-slate-400 whitespace-nowrap">MRP (₹)</Label>
+                                <Input
+                                  id={`qp-mrp-${product.id}`}
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={quickPriceValues.mrp}
+                                  onChange={(e) => setQuickPriceValues(prev => ({ ...prev, mrp: parseFloat(e.target.value) || 0 }))}
+                                  className="w-32 h-8 text-sm"
+                                />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Label htmlFor={`qp-price-${product.id}`} className="text-xs text-slate-400 whitespace-nowrap">Sale Price (₹)</Label>
+                                <Input
+                                  id={`qp-price-${product.id}`}
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={quickPriceValues.price}
+                                  onChange={(e) => setQuickPriceValues(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                                  className="w-32 h-8 text-sm"
+                                  onKeyDown={(e) => { if (e.key === 'Enter') handleQuickPriceSave(product.id); }}
+                                />
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => handleQuickPriceSave(product.id)}
+                                disabled={isSavingQuickPrice}
+                                className="h-8 bg-emerald-600 hover:bg-emerald-500"
+                              >
+                                {isSavingQuickPrice ? (
+                                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <><Save className="h-3.5 w-3.5 mr-1" />Save</>
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setQuickPriceEditId(null)}
+                                className="h-8"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
                     ))}
                   </TableBody>
                 </Table>

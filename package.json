@@ -207,7 +207,7 @@
     "node-domexception": false
   },
   "engines": {
-    "node": "20.x || 22.x || 24.x",
+    "node": "20.x || 22.x",
     "npm": ">=10.2.0"
   }
 }

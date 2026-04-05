@@ -193,10 +193,6 @@ function PayuPaymentContent() {
             payloadEntries[key] = value;
           }
         });
-        // Log using logger instead of console.debug to align with lint rules
-        // Use logger instead of console for structured logs
-        // eslint-disable-next-line no-console
-        // (logger may be used, but keeping console with eslint disable to avoid noisy builds)
         try { logger.info('payu_payment.payload', payloadEntries); } catch {};
       }
       formElement.submit();

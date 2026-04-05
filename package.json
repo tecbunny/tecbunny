@@ -24,7 +24,7 @@
     "typecheck:watch": "tsc --noEmit --watch",
     "clean": "rm -rf .next out",
     "clean:win": "rmdir /s /q .next out",
-    "deploy:vercel": "vercel --prod",
+    "deploy:vercel": "npx vercel --prod",
     "audit:fix": "npm audit fix --force",
     "deps:check": "npm outdated",
     "deps:update": "npm update --save"
@@ -136,7 +136,6 @@
     "supabase": "2.84.10",
     "tailwindcss": "4.1.13",
     "typescript": "5.9.2",
-    "vercel": "^32.3.0",
     "vitest": "4.0.14"
   },
   "optionalDependencies": {

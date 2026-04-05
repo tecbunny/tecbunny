@@ -1,2 +1,0 @@
-# TecBunny Solutions does not sell ads.
-# This file is intentionally present to satisfy ads.txt validation checks.

@@ -14,7 +14,7 @@ import { logger } from '@/lib/logger';
 
 interface InvoicePageProps {
   params: Promise<{ orderId: string }>;
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 const COMPANY_INFO_PATH = path.join(process.cwd(), 'public', 'company-info.json');
@@ -180,7 +180,7 @@ export async function generateMetadata({ params }: InvoicePageProps): Promise<Me
 
 export default async function OrderInvoicePage({ params, searchParams }: InvoicePageProps) {
   const { orderId } = await params;
-  const resolvedSearchParams = searchParams;
+  const resolvedSearchParams = (await searchParams) ?? {};
   const order = await loadOrder(orderId);
 
   if (!order) {

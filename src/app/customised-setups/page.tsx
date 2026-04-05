@@ -27,9 +27,10 @@ export const revalidate = 0; // Force no caching
 export default async function CustomisedSetupsPage({
   searchParams,
 }: {
-  searchParams: { refresh?: string };
+  searchParams: Promise<{ refresh?: string }>;
 }) {
-  const refreshKey = searchParams?.refresh ?? 'default';
+  const { refresh } = await searchParams;
+  const refreshKey = refresh ?? 'default';
   let blueprint = null;
   try {
     blueprint = await getCustomSetupBlueprintSummary(DEFAULT_CUSTOM_SETUP_TEMPLATE_SLUG);

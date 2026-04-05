@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { Mail, Phone, Lock, Eye, EyeOff, KeyRound, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
 
 import { Input } from '../../../components/ui/input';
@@ -22,6 +23,7 @@ function ForgotPasswordForm() {
   const [otpId, setOtpId] = useState('');
   const [channel, setChannel] = useState('');
   const { toast } = useToast();
+  const router = useRouter();
 
   const isEmail = identifier.includes('@');
 
@@ -132,7 +134,7 @@ function ForgotPasswordForm() {
         description: 'Your password has been updated. You can now sign in.',
       });
 
-      window.location.href = '/auth/signin';
+      router.push('/auth/signin');
     } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
@@ -338,7 +340,7 @@ function ForgotPasswordForm() {
             Remembered your password?{' '}
             <button
               type="button"
-              onClick={() => window.location.href = '/auth/signin'}
+              onClick={() => router.push('/auth/signin')}
               className="text-cyan-300 font-semibold hover:underline"
             >
               Sign In

@@ -294,7 +294,7 @@ export function Header() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/auth/signin"
-                  className="rounded-full px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-white hover:bg-white/5"
+                  className="rounded-full border border-slate-400/40 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-slate-400/70 hover:bg-white/10 hover:shadow-[0_0_12px_rgba(255,255,255,0.1)]"
                 >
                   Login
                 </Link>
@@ -497,7 +497,7 @@ export function Header() {
               <Link
                 href="/auth/signin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex min-h-[40px] items-center justify-between rounded-lg px-4 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+                className="flex min-h-[40px] items-center justify-between rounded-lg border border-slate-400/40 bg-white/5 px-4 py-2 text-sm text-white hover:border-slate-400/70 hover:bg-white/10 transition-colors"
               >
                 Login
                 <ChevronRight size={16} className="text-slate-500" />

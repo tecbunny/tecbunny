@@ -14,7 +14,7 @@ const requestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const authCheck = await requireRole(['admin', 'manager', 'service_engineer']);
+    const authCheck = await requireRole('manager');
     if (authCheck.error) {
       return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
     }

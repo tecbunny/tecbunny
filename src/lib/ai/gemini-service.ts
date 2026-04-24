@@ -180,23 +180,28 @@ export async function generateGeminiText({
     },
   };
 
-  const streamUrl = `${GEMINI_BASE_URL}/${model}:streamGenerateContent?key=${encodeURIComponent(apiKey)}`;
+  const streamUrl = `${GEMINI_FALLBACK_BASE_URL}/${model}:streamGenerateContent?key=${encodeURIComponent(apiKey)}`;
   const streamResult = await requestGemini(streamUrl, payload, 'stream');
 
   if (streamResult.ok) {
     return streamResult.text;
   }
 
-  if (isApiKeyUnsupportedError(streamResult.status, streamResult.rawBody)) {
-    const fallbackUrl = `${GEMINI_FALLBACK_BASE_URL}/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-    const fallbackResult = await requestGemini(fallbackUrl, payload, 'json');
+  // If the initial stream attempt fails or reports API key unsupported,
+  // try the fallback URL with a non-streaming request.
+  const fallbackUrl = `${GEMINI_FALLBACK_BASE_URL}/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const fallbackResult = await requestGemini(fallbackUrl, payload, 'json');
 
-    if (fallbackResult.ok) {
-      return fallbackResult.text;
-    }
-
-    throw new Error(extractApiErrorMessage(fallbackResult.rawBody, fallbackResult.status));
+  if (fallbackResult.ok) {
+    return fallbackResult.text;
   }
+
+  // If both streaming and fallback fail, throw an error with the most relevant message.
+  const errorMessage = extractApiErrorMessage(
+    streamResult.rawBody || fallbackResult.rawBody,
+    streamResult.status || fallbackResult.status
+  );
+  throw new Error(errorMessage);
 
   throw new Error(extractApiErrorMessage(streamResult.rawBody, streamResult.status));
 }

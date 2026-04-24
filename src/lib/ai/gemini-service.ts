@@ -197,11 +197,10 @@ export async function generateGeminiText({
   }
 
   // If both streaming and fallback fail, throw an error with the most relevant message.
-  const errorMessage = extractApiErrorMessage(
-    streamResult.rawBody || fallbackResult.rawBody,
-    streamResult.status || fallbackResult.status
-  );
-  throw new Error(errorMessage);
+  if (!streamResult.ok) {
+    throw new Error(extractApiErrorMessage(streamResult.rawBody, streamResult.status));
+  }
 
-  throw new Error(extractApiErrorMessage(streamResult.rawBody, streamResult.status));
+  // At this point streamResult was ok, so fallbackResult must have failed.
+  throw new Error(extractApiErrorMessage(fallbackResult.rawBody, fallbackResult.status));
 }

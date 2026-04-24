@@ -11,6 +11,7 @@ import {OrderProvider} from '../context/OrderProvider';
 import {ThemeProvider} from '../components/providers/ThemeProvider';
 import {DeferredFloatingAIAssistant} from '../components/layout/DeferredFloatingAIAssistant';
 import {DeferredRuntimeServices} from '../components/layout/DeferredRuntimeServices';
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;
 const xHandle = process.env.NEXT_PUBLIC_X_HANDLE;
@@ -219,6 +220,7 @@ export default function RootLayout({
               </TechShell>
               <DeferredFloatingAIAssistant />
               <DeferredRuntimeServices gaId={gaId} metaPixelId={metaPixelId} />
+              <SpeedInsights />
             </OrderProvider>
           </AppProvider>
         </ThemeProvider>

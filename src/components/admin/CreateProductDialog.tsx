@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
-import { X } from 'lucide-react';
+import { X, Sparkles, Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -71,6 +71,7 @@ const CATEGORIES = [
 export function CreateProductDialog({ open, onOpenChange, onProductCreated }: CreateProductDialogProps) {
   const supabase = createClient();
   const { toast } = useToast();
+  const [isGenerating, setIsGenerating] = React.useState(false);
 
   const form = useForm<ProductFormInput, any, ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -85,6 +86,55 @@ export function CreateProductDialog({ open, onOpenChange, onProductCreated }: Cr
       status: 'active',
     },
   });
+
+  const handleGenerateDescription = async () => {
+    const title = form.getValues('title');
+    const category = form.getValues('category');
+    const brand = form.getValues('brand');
+
+    if (!title) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a product title first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/ai/generate-description', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, category, brand }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate description');
+      }
+
+      form.setValue('description', data.description, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+
+      toast({
+        title: 'Success',
+        description: 'Description generated successfully',
+      });
+    } catch (error: any) {
+      logger.error('Failed to generate description', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate description',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const onSubmit = async (values: ProductFormValues) => {
     try {
@@ -163,7 +213,24 @@ export function CreateProductDialog({ open, onOpenChange, onProductCreated }: Cr
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Description</FormLabel>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-muted-foreground hover:text-primary"
+                      onClick={handleGenerateDescription}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="mr-2 h-4 w-4 text-cyan-500" />
+                      )}
+                      AI Generate
+                    </Button>
+                  </div>
                   <FormControl>
                     <Textarea 
                       placeholder="Detailed product description..." 

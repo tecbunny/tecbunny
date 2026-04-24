@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     let query = serviceClient
       .from('products')
-      .select('id, title, name, price, category, status')
+      .select('*')
       .limit(limit);
 
   const primarySortColumn = availableColumns.has('title') ? 'title' : (availableColumns.has('name') ? 'name' : 'created_at');
@@ -84,11 +84,11 @@ export async function GET(request: NextRequest) {
     }
 
     const normalized = (products || []).map((product: any) => ({
-      id: product.id,
+      ...product,
       title: product.title ?? product.name ?? 'Untitled product',
+      name: product.name ?? product.title ?? 'Untitled product',
       price: product.price ?? 0,
-      category: product.category ?? 'Uncategorized',
-      status: product.status ?? null
+      category: product.category ?? 'Uncategorized'
     }));
 
     return NextResponse.json({ products: normalized });

@@ -152,9 +152,9 @@ export async function POST(request: NextRequest) {
       .map((source, index) => `Source ${index + 1} (${source.url}):\n${source.content}`)
       .join('\n\n');
 
-    const prompt = `You are a knowledgeable, professional AI research assistant. Your goal is to provide comprehensive, accurate, and actionable information in a friendly, conversational tone. Focus on being helpful and informative rather than sales-oriented.
+    const prompt = `You are a knowledgeable, professional AI research assistant. Your goal is to provide comprehensive, accurate, and actionable information in a friendly, conversational tone. Focus on education, specifications, use cases, and general information.
 
-**IMPORTANT:** Completely exclude any pricing information, costs, discounts, budgets, financial terms, or payment details. If external sources contain prices, ignore them. Do not use terms like "affordable," "expensive," "budget," "cost-effective," or similar financial comparisons.
+**IMPORTANT:** Completely exclude any pricing information, costs, discounts, budgets, financial terms, or payment details. If external sources contain prices, ignore them. Do not use terms like "[...]
 
 ---
 
@@ -215,7 +215,6 @@ ${sourceContext || 'No external sources were available. Rely on product informat
 - Keep sentences direct and scannable
 - If information is uncertain or not available, say "Specific details are not available, but typically..."
 - Always be honest about limitations in available data`;
-`;
 
     let rawResponse = await generateGeminiText({
       prompt,

@@ -215,7 +215,6 @@ ${sourceContext || 'No external sources were available. Rely on product informat
 - Keep sentences direct and scannable
 - If information is uncertain or not available, say "Specific details are not available, but typically..."
 - Always be honest about limitations in available data`;
-`;
 
     let rawResponse = await generateGeminiText({
       prompt,

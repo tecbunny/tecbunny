@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { createClient, createServiceClient , isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/permissions';
@@ -7,7 +7,7 @@ import { isAdmin } from '@/lib/permissions';
 
 // PATCH /api/admin/sales-agents/[id]
 // Updates the status of a sales agent application (approve or reject).
-async function PATCH(
+export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -32,7 +32,7 @@ async function PATCH(
     }
 
     // 3. Use service client to bypass RLS for admin operations
-    const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
+    const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     
     // 4. Update the application status in the database
     const { data, error } = await serviceClient

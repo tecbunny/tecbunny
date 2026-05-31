@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
 
@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     
     const searchParams = new URL(request.url).searchParams;
     const search = searchParams.get('search')?.trim();

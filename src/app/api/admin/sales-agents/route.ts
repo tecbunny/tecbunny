@@ -22,7 +22,7 @@ export async function GET(_request: Request) {
 
   try {
     // 2. Create service role client for admin operations
-    const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
+    const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     
     // 3. Fetch all applications using service role to bypass RLS
     const { data: salesAgents, error } = await serviceClient

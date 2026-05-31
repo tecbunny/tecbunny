@@ -183,7 +183,8 @@ export default function AdminProductsPage() {
                 <TableRow>
                   <TableHead>Title</TableHead>
                   <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
+                  <TableHead>MRP</TableHead>
+                  <TableHead>Sale Price</TableHead>
                   <TableHead>Stock</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -204,9 +205,29 @@ export default function AdminProductsPage() {
                         <Badge variant="outline">{product.category}</Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-1 w-24">
+                      <div className="flex flex-col gap-1 w-28">
                         <Input
                           type="number"
+                          placeholder="MRP"
+                          className="h-8 text-sm"
+                          defaultValue={product.mrp ?? 0}
+                          onBlur={(e) => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val) && val !== (product.mrp ?? 0)) {
+                              handleInlineUpdate(product.id, 'mrp', val);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                          }}
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1 w-28">
+                        <Input
+                          type="number"
+                          placeholder="Sale Price"
                           className="h-8 text-sm"
                           defaultValue={product.price ?? 0}
                           onBlur={(e) => {

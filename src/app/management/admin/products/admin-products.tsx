@@ -267,6 +267,22 @@ export default function AdminProductCatalogPage() {
     }
   };
 
+  const handleInlineUpdate = async (productId: string, field: string, value: number) => {
+    try {
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || 'Update failed');
+      toast({ title: 'Updated', description: `Product updated successfully.`, duration: 2000 });
+      setProducts(prev => prev.map(p => p.id === productId ? { ...p, [field]: value } : p));
+    } catch (err: any) {
+      toast({ title: 'Error', description: err?.message || 'Update failed', variant: 'destructive' });
+    }
+  };
+
   const fetchProducts = useCallback(async () => {
     // Ensure only the most recent query updates the grid
     fetchControllerRef.current?.abort();
@@ -1712,6 +1728,7 @@ export default function AdminProductCatalogPage() {
                       <TableHead>Type</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Price</TableHead>
+                      <TableHead>Stock</TableHead>
                       <TableHead>Variants</TableHead>
                       <TableHead>Options</TableHead>
                       <TableHead>Actions</TableHead>
@@ -1765,15 +1782,40 @@ export default function AdminProductCatalogPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm">
-                            {product.mrp ? (
-                              <div className="space-y-0.5">
-                                <div className="text-slate-400 line-through text-xs">₹{product.mrp}</div>
-                                <div className="text-green-400 font-medium">₹{product.price ?? product.mrp}</div>
-                              </div>
-                            ) : (
-                              <span className="text-slate-500">—</span>
-                            )}
+                          <div className="flex flex-col gap-1 w-24">
+                            <Input
+                              type="number"
+                              className="h-8 text-sm"
+                              defaultValue={product.price ?? product.mrp ?? 0}
+                              onBlur={(e) => {
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val) && val !== (product.price ?? product.mrp ?? 0)) {
+                                  handleInlineUpdate(product.id, 'price', val);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') e.currentTarget.blur();
+                              }}
+                            />
+                            {product.mrp && <div className="text-slate-400 line-through text-xs px-1">₹{product.mrp}</div>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1 w-20">
+                            <Input
+                              type="number"
+                              className="h-8 text-sm"
+                              defaultValue={product.stock_quantity ?? 0}
+                              onBlur={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                if (!isNaN(val) && val !== (product.stock_quantity ?? 0)) {
+                                  handleInlineUpdate(product.id, 'stock_quantity', val);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') e.currentTarget.blur();
+                              }}
+                            />
                           </div>
                         </TableCell>
                         <TableCell>

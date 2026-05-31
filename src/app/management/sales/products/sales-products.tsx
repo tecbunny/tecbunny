@@ -19,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from '../../../../components/ui/card';
+import { Input } from '../../../../components/ui/input';
 import {
   Table,
   TableBody,
@@ -71,6 +72,21 @@ export default function ProductManagementPage() {
         setProductList(normalized);
     }
   }, [supabase, toast]);
+
+  const handleInlineUpdate = async (productId: string, field: string, value: number) => {
+    try {
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (!res.ok) throw new Error('Update failed');
+      toast({ title: 'Updated', description: `Product updated successfully.`, duration: 2000 });
+      setProductList(prev => prev.map(p => p.id === productId ? { ...p, [field]: value } : p));
+    } catch (err: any) {
+      toast({ title: 'Error', description: err?.message || 'Update failed', variant: 'destructive' });
+    }
+  };
 
   React.useEffect(() => {
     setIsClient(true);
@@ -284,6 +300,7 @@ export default function ProductManagementPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
+                <TableHead>Stock</TableHead>
                 <TableHead>Popularity</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -304,7 +321,41 @@ export default function ProductManagementPage() {
                   <TableCell>
                     <Badge variant="outline">{product.category}</Badge>
                   </TableCell>
-                  <TableCell>₹{Number(product.price ?? 0).toFixed(2)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <span className="text-slate-400 mr-1">₹</span>
+                      <Input
+                        type="number"
+                        className="w-24 h-8 text-sm"
+                        defaultValue={Number(product.price ?? 0)}
+                        onBlur={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val) && val !== Number(product.price ?? 0)) {
+                            handleInlineUpdate(product.id, 'price', val);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') e.currentTarget.blur();
+                        }}
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      className="w-20 h-8 text-sm"
+                      defaultValue={(product as any).stock_quantity ?? 0}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (!isNaN(val) && val !== ((product as any).stock_quantity ?? 0)) {
+                          handleInlineUpdate(product.id, 'stock_quantity', val);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') e.currentTarget.blur();
+                      }}
+                    />
+                  </TableCell>
                   <TableCell>{product.popularity}</TableCell>
                   <TableCell>
                     <DropdownMenu>

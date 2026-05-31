@@ -279,38 +279,36 @@ export const CartProvider: React.FC<{
     }
 
     try {
-      const pricingData = await offerDiscountService.calculateCartPricing(
-        cartItems,
-        customerCategory,
-        appliedCoupon || undefined
-      );
+      // ONE API CALL to calculation endpoint
+      const res = await fetch('/api/checkout/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          items: cartItems,
+          customerCategory: customerCategory,
+          couponCode: appliedCoupon?.code
+        })
+      });
 
-      const grossSubtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+      if (!res.ok) {
+        throw new Error('Failed to calculate checkout totals via API');
+      }
 
-      // Calculate GST on final amount
-      const gstAmount = cartItems.reduce((total, item) => {
-        const gstRate = typeof item.gstRate === 'number' ? item.gstRate : 18;
-        const itemTotal = item.price * item.quantity;
-        const basePrice = itemTotal / (1 + (gstRate / 100));
-        return total + (itemTotal - basePrice);
-      }, 0);
-
-      const safeOfferDiscount = Math.min(pricingData.offerDiscount || 0, grossSubtotal);
-      const safeCouponDiscount = Math.min(pricingData.couponDiscount || 0, grossSubtotal);
-      const safeTotalDiscount = Math.min(pricingData.totalDiscount || 0, grossSubtotal);
-      const safeFinalTotal = Math.max(0, grossSubtotal - safeTotalDiscount);
+      const pricingData = await res.json();
 
       setPricing({
-        subtotal: Math.max(0, grossSubtotal - gstAmount),
+        subtotal: pricingData.subtotal,
         autoOffer: pricingData.bestOffer,
-        autoOfferDiscount: safeOfferDiscount,
+        autoOfferDiscount: pricingData.autoOfferDiscount,
         appliedCoupon,
-        couponDiscount: safeCouponDiscount,
-        totalDiscount: safeTotalDiscount,
-        gstAmount,
-        finalTotal: safeFinalTotal,
-        availableCoupons: pricingData.availableCoupons,
-        canCombineDiscounts: pricingData.canCombine,
+        couponDiscount: pricingData.couponDiscount,
+        totalDiscount: pricingData.totalDiscount,
+        gstAmount: pricingData.gstAmount,
+        finalTotal: pricingData.finalTotal,
+        availableCoupons: pricingData.availableCoupons || [],
+        canCombineDiscounts: pricingData.canCombineDiscounts,
       });
 
     } catch (error) {

@@ -10,6 +10,8 @@ interface PageMetaInput {
   path: string;
   image?: string;
   keywords?: string[];
+  openGraph?: Metadata['openGraph'];
+  twitter?: Metadata['twitter'];
 }
 
 export function createPageMetadata({
@@ -18,6 +20,8 @@ export function createPageMetadata({
   path,
   image = defaultOgImage,
   keywords = [],
+  openGraph,
+  twitter,
 }: PageMetaInput): Metadata {
   const resolvedImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
   const canonical = path.startsWith('http') ? path : `${siteUrl}${path}`;
@@ -43,6 +47,7 @@ export function createPageMetadata({
           alt: title,
         },
       ],
+      ...openGraph,
     },
     twitter: {
       card: 'summary_large_image',
@@ -51,6 +56,7 @@ export function createPageMetadata({
       images: [resolvedImage],
       site: xHandle,
       creator: xHandle,
+      ...twitter,
     },
   };
 }

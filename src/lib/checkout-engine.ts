@@ -99,7 +99,7 @@ export class CheckoutEngine {
 
       // 4. GST Calculation based on post-discount subtotal
       let gstAmount = 0;
-      let totalDiscountApplied = discountResult.totalDiscount;
+      const totalDiscountApplied = discountResult.totalDiscount;
       
       // Proportionally apply discount to calculate accurate GST per item
       const discountRatio = grossSubtotal > 0 ? (totalDiscountApplied / grossSubtotal) : 0;

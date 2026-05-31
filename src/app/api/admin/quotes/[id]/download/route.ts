@@ -7,9 +7,9 @@ import { buildPdf, loadCompanyInfo } from '@/lib/pdf-generator';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const quoteId = params.id;
+  const quoteId = (await params).id;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { isAdmin } = await requireAdmin(user, supabase);

@@ -1,4 +1,4 @@
-import WalkInOrderManagement from '../../../../components/sales/WalkInOrderManagement';
+import WalkInOrderManagement from '@/components/sales/WalkInOrderManagement';
 
 // Force dynamic rendering for walk-in order management
 // export const dynamic = 'force-dynamic';

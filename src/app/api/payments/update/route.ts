@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '../../../../lib/supabase/server';
-import { sendWhatsAppTemplate } from '../../../../lib/superfone-whatsapp-service';
-import { logger } from '../../../../lib/logger';
-import { apiError, apiSuccess } from '../../../../lib/errors';
-import { rateLimit } from '../../../../lib/rate-limit';
+import { createClient } from '@/lib/supabase/server';
+import { sendWhatsAppTemplate } from '@/lib/superfone-whatsapp-service';
+import { logger } from '@/lib/logger';
+import { apiError, apiSuccess } from '@/lib/errors';
+import { rateLimit } from '@/lib/rate-limit';
 
 interface PaymentUpdateData {
   order_id: string;

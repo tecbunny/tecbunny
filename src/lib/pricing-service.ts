@@ -3,8 +3,8 @@
  * Handles dual pricing, customer type detection, and pricing calculations
  */
 
-import { createClient } from '../lib/supabase/server';
-import type { Product, CustomerType, CustomerCategory, B2BCategory } from '../lib/types';
+import { createClient } from '@/lib/supabase/server';
+import type { Product, CustomerType, CustomerCategory, B2BCategory } from '@/lib/types';
 
 export interface PricingContext {
   customer_type: CustomerType;

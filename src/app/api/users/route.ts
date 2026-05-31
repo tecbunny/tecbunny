@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-import { resolveSiteUrl } from '../../../lib/site-url';
-import { createClient as createServerClient } from '../../../lib/supabase/server';
-import { getEffectiveUserRole } from '../../../lib/auth/server-role';
-import { logger } from '../../../lib/logger';
+import { resolveSiteUrl } from '@/lib/site-url';
+import { createClient as createServerClient } from '@/lib/supabase/server';
+import { getEffectiveUserRole } from '@/lib/auth/server-role';
+import { logger } from '@/lib/logger';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.local';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';
@@ -319,7 +319,7 @@ export async function POST(request: NextRequest) {
 
     // Send credentials via email (no verification required)
     try {
-      const improvedEmailService = (await import('../../../lib/improved-email-service')).default;
+      const improvedEmailService = (await import('@/lib/improved-email-service')).default;
   const siteUrl = resolveSiteUrl(request.headers.get('host') || undefined);
       const subject = 'Your Account Has Been Created - TecBunny Store';
       const html = `

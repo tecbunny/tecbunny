@@ -7,17 +7,17 @@ import Image from 'next/image';
 
 import { Plus, Minus, Package, AlertTriangle } from 'lucide-react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../../components/ui/table';
-import { Button } from '../../../../components/ui/button';
-import { Input } from '../../../../components/ui/input';
-import { Badge } from '../../../../components/ui/badge';
-import type { Product } from '../../../../lib/types';
-import { ViewSerialsDialog } from '../../../../components/sales/ViewSerialsDialog';
-import { Skeleton } from '../../../../components/ui/skeleton';
-import { createClient } from '../../../../lib/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import type { Product } from '@/lib/types';
+import { ViewSerialsDialog } from '@/components/sales/ViewSerialsDialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { createClient } from '@/lib/supabase/client';
 import { useToast } from '../../../../hooks/use-toast';
-import { logger } from '../../../../lib/logger';
+import { logger } from '@/lib/logger';
 
 interface ProductWithStock extends Product {
     stock_quantity: number;

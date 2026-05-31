@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient as createServerClient, createServiceClient } from '../../../../lib/supabase/server';
-import { logger } from '../../../../lib/logger';
-import { isAtLeast } from '../../../../lib/roles';
-import type { UserRole } from '../../../../lib/types';
+import { createClient as createServerClient, createServiceClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+import { isAtLeast } from '@/lib/roles';
+import type { UserRole } from '@/lib/types';
 
 // export const dynamic = 'force-dynamic';
 
@@ -45,7 +45,7 @@ export async function POST(_request: NextRequest) {
       }
     }
 
-    const serviceClient = createServiceClient();
+    const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     const cutoffIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
     const { data: staleOrders, error: fetchError } = await serviceClient

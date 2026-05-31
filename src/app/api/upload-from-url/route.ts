@@ -2,12 +2,12 @@ import dns from 'dns/promises';
 
 import { NextRequest } from 'next/server';
 
-import { apiSuccess, apiError } from '../../../lib/errors';
-import { uploadProductImage, uploadToSupabase } from '../../../lib/supabase-storage';
-import { uploadHeroBanner, isS3Configured } from '../../../lib/s3-storage';
-import { logger } from '../../../lib/logger';
-import { createClient } from '../../../lib/supabase/server';
-import { requireAdmin } from '../../../lib/admin-auth';
+import { apiSuccess, apiError } from '@/lib/errors';
+import { uploadProductImage, uploadToSupabase } from '@/lib/supabase-storage';
+import { uploadHeroBanner, isS3Configured } from '@/lib/s3-storage';
+import { logger } from '@/lib/logger';
+import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/admin-auth';
 
 export async function POST(request: NextRequest) {
   const correlationId = `upload-url-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

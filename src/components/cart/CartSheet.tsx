@@ -4,11 +4,11 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { LoginDialog } from '../../components/auth/LoginDialog';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { ScrollArea } from '../../components/ui/scroll-area';
-import { Separator } from '../../components/ui/separator';
+import { LoginDialog } from '@/components/auth/LoginDialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import {
   Sheet,
   SheetContent,
@@ -16,11 +16,11 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '../../components/ui/sheet';
+} from '@/components/ui/sheet';
 import { useToast } from '../../hooks/use-toast';
-import { logger } from '../../lib/logger';
-import { useAuth, useCart } from '../../lib/hooks';
-import type { Coupon } from '../../lib/types';
+import { logger } from '@/lib/logger';
+import { useAuth, useCart } from '@/lib/hooks';
+import type { Coupon } from '@/lib/types';
 
 import { CartItemCard } from './CartItemCard';
 

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import MultiChannelOTPManager, { type OTPVerification } from '../../../../lib/multi-channel-otp-manager';
-import { logger } from '../../../../lib/logger';
-import { createServiceClient, isSupabaseServiceConfigured } from '../../../../lib/supabase/server';
+import MultiChannelOTPManager, { type OTPVerification } from '@/lib/multi-channel-otp-manager';
+import { logger } from '@/lib/logger';
+import { createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 
 const otpManager = new MultiChannelOTPManager();
 
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
           customerPhone
         });
       } else {
-        const supabase = createServiceClient();
+        const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
         const { data: otpRecord } = await supabase
           .from('otp_verifications')
           .select('id')
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      const supabase = createServiceClient();
+      const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
 
       const { data: otpRecord } = await supabase
         .from('otp_verifications')

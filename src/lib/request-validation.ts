@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { rateLimit } from '../lib/rate-limit';
-import { ValidationError, APIErrorHandler } from '../lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
+import { ValidationError, APIErrorHandler } from '@/lib/api-error-handler';
 
 export interface RequestValidationOptions {
   requireAuth?: boolean;

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../../../lib/supabase/server';
-import { isAtLeast } from '../../../../lib/roles';
-import { logger } from '../../../../lib/logger';
-import { generateGeminiText } from '../../../../lib/ai/gemini-service';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { isAtLeast } from '@/lib/roles';
+import { logger } from '@/lib/logger';
+import { generateGeminiText } from '@/lib/ai/gemini-service';
 
 const ADMIN_REPORT_HINT = `You are the TecBunny admin assistant. Provide concise, factual responses. If data is missing, say so.`;
 const AI_RESPONSE_TIMEOUT_MS = 8000;
@@ -122,6 +122,10 @@ export async function POST(request: NextRequest) {
     let dataPayload: any = null;
 
     const adminClient = isSupabaseServiceConfigured ? createServiceClient() : supabase;
+
+    if (!adminClient) {
+      return NextResponse.json({ error: 'Supabase client could not be initialized' }, { status: 500 });
+    }
 
     try {
       if (wantsOrders) {

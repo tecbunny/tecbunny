@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { sendWhatsAppNotification } from '../../../../lib/whatsapp-service';
-import { logger } from '../../../../lib/logger';
-import { rateLimit } from '../../../../lib/rate-limit';
+import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
+import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 const LIMIT = 10; // higher allowance for internal notifications
 const WINDOW_MS = 10 * 60 * 1000;

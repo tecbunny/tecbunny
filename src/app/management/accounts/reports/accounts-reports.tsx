@@ -5,11 +5,11 @@ import * as React from 'react';
 
 import { Download } from 'lucide-react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/button';
-import type { Order, Product, Expense } from '../../../../lib/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import type { Order, Product, Expense } from '@/lib/types';
 import { useToast } from '../../../../hooks/use-toast';
-import { createClient } from '../../../../lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 export default function BillingReportsPage() {
     const { toast } = useToast();

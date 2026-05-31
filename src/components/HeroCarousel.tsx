@@ -8,8 +8,8 @@ import DOMPurify from 'dompurify';
 
 import { usePageContent } from '../hooks/use-page-content';
 import { usePrefersReducedMotion } from '../hooks/use-prefers-reduced-motion';
-import type { HeroCarouselContent, HeroCarouselItem, HeroCarouselPageKey } from '../lib/types';
-import { cn } from '../lib/utils';
+import type { HeroCarouselContent, HeroCarouselItem, HeroCarouselPageKey } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface HeroCarouselProps {
   pageKey: HeroCarouselPageKey;

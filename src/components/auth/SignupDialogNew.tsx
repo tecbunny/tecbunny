@@ -8,7 +8,7 @@ import * as z from 'zod';
 import { Mail, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
-import { Button } from '../../components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../../components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -24,13 +24,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../../components/ui/form';
-import { Input } from '../../components/ui/input';
-import { Separator } from '../../components/ui/separator';
-import { useAuth } from '../../lib/hooks';
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/lib/hooks';
 import { useToast } from '../../hooks/use-toast';
-import { logger } from '../../lib/logger';
-import { Checkbox } from '../../components/ui/checkbox';
+import { logger } from '@/lib/logger';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type OTPChannel = 'email' | 'sms' | 'whatsapp';
 type PreferredChannel = 'email' | 'whatsapp';

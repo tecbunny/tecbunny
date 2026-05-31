@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import { captchaService } from '../../../../lib/captcha/captcha-service';
-import { logger } from '../../../../lib/logger';
+import { captchaService } from '@/lib/captcha/captcha-service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/captcha/config

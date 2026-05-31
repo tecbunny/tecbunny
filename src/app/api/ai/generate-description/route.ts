@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { z } from 'zod';
 
-import { generateGeminiText } from '../../../../lib/ai/gemini-service';
-import { requireRole } from '../../../../lib/auth/guard';
-import { logger } from '../../../../lib/logger';
-import { getRedis } from '../../../../lib/redis';
+import { generateGeminiText } from '@/lib/ai/gemini-service';
+import { requireRole } from '@/lib/auth/guard';
+import { logger } from '@/lib/logger';
+import { getRedis } from '@/lib/redis';
 
 const requestSchema = z.object({
   title: z.string().min(1, 'Title is required'),

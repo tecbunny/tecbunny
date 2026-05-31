@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createServiceClient } from '../../../../lib/supabase/server';
-import { logger } from '../../../../lib/logger';
+import { createServiceClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 // Helper function to properly escape CSV values
 function escapeCsvValue(value: any): string {
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const supabase = createServiceClient();
+    const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     const columns = await fetchProductColumns(supabase);
 
     let query = supabase.from('products').select('*');
@@ -304,7 +304,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-  const supabase = createServiceClient();
+  const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     
     let updated = 0;
     let created = 0;

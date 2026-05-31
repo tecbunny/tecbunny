@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import { requireAdminContext } from '../../../../lib/auth/admin-guard';
-import { logger } from '../../../../lib/logger';
+import { requireAdminContext } from '@/lib/auth/admin-guard';
+import { logger } from '@/lib/logger';
 
 // export const dynamic = 'force-dynamic';
 export const revalidate = 0;

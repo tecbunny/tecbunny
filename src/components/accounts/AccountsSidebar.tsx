@@ -12,9 +12,9 @@ import {
 } from 'lucide-react';
 
 import { Logo } from '../ui/logo';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
-import { useAuth } from '../../lib/hooks';
+import { useAuth } from '@/lib/hooks';
 
 const navItems = [
   { href: '/management/accounts', label: 'Dashboard', icon: LayoutDashboard },

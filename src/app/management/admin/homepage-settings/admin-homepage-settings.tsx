@@ -11,14 +11,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/button';
-import type { Product } from '../../../../lib/types';
-import { Checkbox } from '../../../../components/ui/checkbox';
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import type { Product } from '@/lib/types';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '../../../../hooks/use-toast';
-import { ScrollArea } from '../../../../components/ui/scroll-area';
-import { createClient } from '../../../../lib/supabase/client';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../../../../components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { createClient } from '@/lib/supabase/client';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface ProductSelectorProps {
   title: string;

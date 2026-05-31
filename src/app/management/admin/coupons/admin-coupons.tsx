@@ -11,7 +11,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../../components/ui/card';
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -19,13 +19,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../../components/ui/table';
-import { Button } from '../../../../components/ui/button';
-import type { Coupon } from '../../../../lib/types';
-import { Badge } from '../../../../components/ui/badge';
-import { createClient } from '../../../../lib/supabase/client';
-import { CreateDiscountDialog } from '../../../../components/admin/CreateDiscountDialog';
-import type { Discount } from '../../../../lib/types';
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import type { Coupon } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import { createClient } from '@/lib/supabase/client';
+import { CreateDiscountDialog } from '@/components/admin/CreateDiscountDialog';
+import type { Discount } from '@/lib/types';
 import { useToast } from '../../../../hooks/use-toast';
 import {
   DropdownMenu,
@@ -34,7 +34,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../../../../components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 
 export default function CouponManagementPage() {
   const [coupons, setCoupons] = React.useState<Coupon[]>([]);

@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
-import { Button } from '../../components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from '../../components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -23,18 +23,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../../components/ui/form';
-import { Input } from '../../components/ui/input';
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
-import type { Coupon, Product, Discount } from '../../lib/types';
-import { createClient } from '../../lib/supabase/client';
-import { logger } from '../../lib/logger';
+} from '@/components/ui/select';
+import type { Coupon, Product, Discount } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
 import { useToast } from '../../hooks/use-toast';
 
 // Coupon schema (requires code)

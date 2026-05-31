@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { createServiceClient } from '../../../../../lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 // export const dynamic = 'force-dynamic'
 
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   const { redemption_id } = await request.json().catch(() => ({}))
   if (!redemption_id) return NextResponse.json({ error: 'redemption_id required' }, { status: 400 })
 
-  const supabase = createServiceClient()
+  const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient()
   const { error } = await supabase
     .from('agent_redemption_requests')
     .update({ status: 'approved' })

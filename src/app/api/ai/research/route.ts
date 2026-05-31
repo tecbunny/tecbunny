@@ -1,10 +1,10 @@
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '../../../../lib/supabase/server';
-import { generateGeminiText } from '../../../../lib/ai/gemini-service';
-import { getProductDisplayImage } from '../../../../lib/image-utils';
-import { getRedis } from '../../../../lib/redis';
+import { createClient } from '@/lib/supabase/server';
+import { generateGeminiText } from '@/lib/ai/gemini-service';
+import { getProductDisplayImage } from '@/lib/image-utils';
+import { getRedis } from '@/lib/redis';
 
 const MAX_SOURCES = 3;
 const MAX_SOURCE_CHARS = 3500;

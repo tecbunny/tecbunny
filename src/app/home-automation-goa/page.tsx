@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import LocalServiceLandingPage from '@/components/LocalServiceLandingPage';
-import { createPageMetadata } from '../../lib/metadata';
+import { createPageMetadata } from '@/lib/metadata';
 
 export const metadata: Metadata = createPageMetadata({
   title: 'Home Automation in Goa',

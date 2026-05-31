@@ -12,7 +12,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card';
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -20,11 +20,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../components/ui/table';
-import { Button } from '../../components/ui/button';
-import { Badge, type BadgeProps } from '../../components/ui/badge';
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { useToast } from '../../hooks/use-toast';
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 
 // Define the structure of an application, including the joined user details
 type Application = {

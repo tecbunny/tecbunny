@@ -1,6 +1,6 @@
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
-import { createClient } from '../lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 import type { User as CustomUser, UserRole } from './types';
 import { logger } from './logger';

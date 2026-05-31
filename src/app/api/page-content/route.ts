@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-import { logger } from '../../../lib/logger';
+import { logger } from '@/lib/logger';
 
 const PUBLIC_PAGE_CONTENT_CACHE_CONTROL = 'no-store, max-age=0';
 const PAGE_CONTENT_PUBLIC_SELECTS = {

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { createClient } from '../lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.tecbunny.com';

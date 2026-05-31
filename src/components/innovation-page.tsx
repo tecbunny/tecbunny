@@ -16,7 +16,7 @@ import {
   Speaker,
 } from 'lucide-react';
 
-import type { InnovationDevice, InnovationMode } from '../lib/types';
+import type { InnovationDevice, InnovationMode } from '@/lib/types';
 import HeroCarousel from './HeroCarousel';
 
 const iconMap = {

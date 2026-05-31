@@ -2,10 +2,10 @@ import crypto from 'crypto';
 
 import { NextRequest } from 'next/server';
 
-import { createClient } from '../../../../../lib/supabase/server';
-import { logger } from '../../../../../lib/logger';
-import { apiError, apiSuccess } from '../../../../../lib/errors';
-import { SuperfoneWebhookPayload } from '../../../../../lib/types/superfone';
+import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+import { apiError, apiSuccess } from '@/lib/errors';
+import { SuperfoneWebhookPayload } from '@/lib/types/superfone';
 
 // export const dynamic = 'force-dynamic';
 

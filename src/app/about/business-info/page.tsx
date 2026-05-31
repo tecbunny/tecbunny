@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { Building, MapPin, Phone, Mail, FileText, Shield, Award } from 'lucide-react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata: Metadata = {
   title: 'Business Information - TecBunny Store',

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '../../../../lib/supabase/client';
-import { logger } from '../../../../lib/logger';
+import { createClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
 
 export async function DELETE(_request: NextRequest) {
   try {

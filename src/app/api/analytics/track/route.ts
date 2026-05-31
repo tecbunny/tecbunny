@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, isSupabasePublicConfigured } from '../../../../lib/supabase/server';
-import { logger } from '../../../../lib/logger';
+import { createClient, isSupabasePublicConfigured } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 const MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-VCCMTMSVP4';
 const GA_API_SECRET = process.env.GA_API_SECRET;

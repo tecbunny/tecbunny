@@ -3,8 +3,8 @@
  * Handles OTP generation, validation, and management
  */
 
-import { createServiceClient } from '../lib/supabase/server';
-import type { OtpType } from '../lib/types';
+import { createServiceClient } from '@/lib/supabase/server';
+import type { OtpType } from '@/lib/types';
 import { emailClient } from './email/client';
 
 import { logger } from './logger';

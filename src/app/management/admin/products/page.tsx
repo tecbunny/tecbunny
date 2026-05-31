@@ -1,7 +1,7 @@
 "use client";
 import dynamic from 'next/dynamic';
 
-import { uiText } from '../../../../lib/strings';
+import { uiText } from '@/lib/strings';
 
 const AdminProductCatalogPage = dynamic(() => import('./admin-products-new'), {
   ssr: false,

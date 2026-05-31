@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
 
-import ContactPage from '../../components/contact-page';
-import { createPageMetadata } from '../../lib/metadata';
+import ContactPage from '@/components/contact-page';
+import { createPageMetadata } from '@/lib/metadata';
 
 // Static metadata for better SEO and performance
 export const metadata: Metadata = createPageMetadata({

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 
-import { logger } from '../lib/logger';
+import { logger } from '@/lib/logger';
 
 interface UseResendAuthReturn {
   sendOTP: (email: string, type?: 'signup' | 'recovery', captchaToken?: string | null) => Promise<{ success: boolean; error?: string }>;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { enhancedCommissionService } from '../../../../lib/enhanced-commission-service';
+import { enhancedCommissionService } from '@/lib/enhanced-commission-service';
 
 /**
  * Process commission payments

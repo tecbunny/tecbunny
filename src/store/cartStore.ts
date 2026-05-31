@@ -1,8 +1,8 @@
 import { create } from 'zustand';
-import type { Product, CartItem, CustomerCategory, AutoOffer, Coupon } from '../lib/types';
+import type { Product, CartItem, CustomerCategory, AutoOffer, Coupon } from '@/lib/types';
 import { toast } from '../hooks/use-toast';
-import { offerDiscountService } from '../lib/offer-discount-service';
-import { logger } from '../lib/logger';
+import { offerDiscountService } from '@/lib/offer-discount-service';
+import { logger } from '@/lib/logger';
 
 export interface CartPricing {
   subtotal: number;
@@ -150,7 +150,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       const storedCoupon = localStorage.getItem(couponKey);
       
       let newCartItems: CartItem[] = [];
-      let newPricing = { ...get().pricing };
+      const newPricing = { ...get().pricing };
 
       if (storedCart) {
         const parsedCart = JSON.parse(storedCart);

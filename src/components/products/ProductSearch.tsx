@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
 
-import { Input } from '../../components/ui/input';
+import { Input } from '@/components/ui/input';
 import { useDebounce } from '../../hooks/use-debounce';
 
 export function ProductSearch() {

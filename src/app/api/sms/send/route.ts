@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { sendSms } from '../../../../lib/sms/twofactor'
-import { rateLimit } from '../../../../lib/rate-limit'
+import { sendSms } from '@/lib/sms/twofactor'
+import { rateLimit } from '@/lib/rate-limit'
 
 // export const dynamic = 'force-dynamic'
 

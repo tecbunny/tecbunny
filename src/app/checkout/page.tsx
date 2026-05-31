@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 
-import CheckoutPage from '../../components/checkout/CheckoutPage';
+import CheckoutPage from '@/components/checkout/CheckoutPage';
 
 // Force dynamic rendering for checkout page
 // export const dynamic = 'force-dynamic';

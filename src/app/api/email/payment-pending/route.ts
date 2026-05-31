@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
-import { emailHelpers } from '../../../../lib/email';
-import { handleEmailPost } from '../../../../lib/api-email-route';
+import { emailHelpers } from '@/lib/email';
+import { handleEmailPost } from '@/lib/api-email-route';
 
 interface PaymentPendingPayload { to: string; orderData: any; paymentData?: any }
 

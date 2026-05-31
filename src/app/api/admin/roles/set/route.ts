@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
-import { requireRole } from '../../../../../lib/auth/guard';
-import { UserRole } from '../../../../../lib/roles';
-import { createServiceClient } from '../../../../../lib/supabase/server';
+import { requireRole } from '@/lib/auth/guard';
+import { UserRole } from '@/lib/roles';
+import { createServiceClient } from '@/lib/supabase/server';
 
 interface Body {
   userId: string;
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Self role change not permitted' }, { status: 400 });
     }
 
-    const service = createServiceClient();
+    const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     const { data: targetProfile } = await service.from('profiles').select('role').eq('id', userId).maybeSingle();
     if (!targetProfile) {
       return NextResponse.json({ error: 'Target user profile not found' }, { status: 404 });

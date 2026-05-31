@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient as createServerClient, createServiceClient } from '../../../../../../lib/supabase/server';
-import { logger } from '../../../../../../lib/logger';
-import { isAtLeast } from '../../../../../../lib/roles';
-import type { UserRole } from '../../../../../../lib/types';
-import { computeAutoFill } from '../../../../../../lib/homepage-auto-fill';
+import { createClient as createServerClient, createServiceClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+import { isAtLeast } from '@/lib/roles';
+import type { UserRole } from '@/lib/types';
+import { computeAutoFill } from '@/lib/homepage-auto-fill';
 
 // export const dynamic = 'force-dynamic';
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const limit = Math.max(1, Math.min(50, Number(body?.limit ?? 15)));
     const days = Math.max(1, Math.min(365, Number(body?.days ?? 30)));
 
-    const service = createServiceClient();
+    
 
     // Fetch active products and recent orders similarly to auto-fill route
     const { data: products } = await service.from('products').select('id, title, name, images, price, offer_price, popularity, rating, review_count, created_at, prioritized, product_type').eq('status', 'active');

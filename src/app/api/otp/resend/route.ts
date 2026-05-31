@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import MultiChannelOTPManager from '../../../../lib/multi-channel-otp-manager';
+import MultiChannelOTPManager from '@/lib/multi-channel-otp-manager';
 
 const otpManager = new MultiChannelOTPManager();
 

@@ -10,11 +10,11 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from '../../components/ui/dialog';
-import { Button } from '../../components/ui/button';
-import { Label } from '../../components/ui/label';
-import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
-import type { Coupon } from '../../lib/types';
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import type { Coupon } from '@/lib/types';
 
 import { ScrollArea } from '../ui/scroll-area';
 

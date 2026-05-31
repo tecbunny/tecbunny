@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../../../../lib/supabase/server';
-import { logger } from '../../../../../lib/logger';
-import { requireAdminContext } from '../../../../../lib/auth/admin-guard';
-import { generateGeminiText } from '../../../../../lib/ai/gemini-service';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+import { requireAdminContext } from '@/lib/auth/admin-guard';
+import { generateGeminiText } from '@/lib/ai/gemini-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +19,10 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
+
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase client could not be initialized' }, { status: 500 });
+    }
 
     const { data: product, error } = await supabase
       .from('products')

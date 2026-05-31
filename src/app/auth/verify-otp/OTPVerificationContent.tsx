@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { toast } from 'react-hot-toast';
 
-import { logger } from '../../../lib/logger';
+import { logger } from '@/lib/logger';
 
 type OTPChannel = 'whatsapp' | 'email';
 type ChannelOption = {

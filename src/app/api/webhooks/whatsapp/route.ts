@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { sendWhatsAppNotification } from '../../../../lib/whatsapp-service';
-import { createClient } from '../../../../lib/supabase/server';
+import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
+import { createClient } from '@/lib/supabase/server';
 
 // Handle WhatsApp webhook verification and message events
 export async function GET(request: NextRequest) {

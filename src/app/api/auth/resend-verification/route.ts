@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 
-import { rateLimit } from '../../../../lib/rate-limit';
-import { apiError, apiSuccess } from '../../../../lib/errors';
-import { logger } from '../../../../lib/logger';
-import MultiChannelOTPManager, { type OTPChannel } from '../../../../lib/multi-channel-otp-manager';
+import { rateLimit } from '@/lib/rate-limit';
+import { apiError, apiSuccess } from '@/lib/errors';
+import { logger } from '@/lib/logger';
+import MultiChannelOTPManager, { type OTPChannel } from '@/lib/multi-channel-otp-manager';
 
 const LIMIT = 3; // 3 per 5 minutes
 const WINDOW_MS = 5 * 60 * 1000;

@@ -3,10 +3,10 @@
 import * as React from 'react';
 import { Heart } from 'lucide-react';
 
-import { Button } from '../../components/ui/button';
-import { useWishlist } from '../../lib/hooks';
-import type { Product } from '../../lib/types';
-import { cn } from '../../lib/utils';
+import { Button } from '@/components/ui/button';
+import { useWishlist } from '@/lib/hooks';
+import type { Product } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface WishlistButtonProps {
   product: Product;

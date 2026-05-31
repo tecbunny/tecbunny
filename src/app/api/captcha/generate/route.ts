@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { generateSimpleCaptcha, generateImageCaptcha } from '../../../../lib/captcha/captcha-service';
+import { generateSimpleCaptcha, generateImageCaptcha } from '@/lib/captcha/captcha-service';
 
 /**
  * POST /api/captcha/generate

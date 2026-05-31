@@ -4,8 +4,8 @@ import path from 'path';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '../../../../lib/supabase/client';
-import { logger } from '../../../../lib/logger';
+import { createClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
 
 // Parse CSV function
 function parseCSVLine(line: string): string[] {

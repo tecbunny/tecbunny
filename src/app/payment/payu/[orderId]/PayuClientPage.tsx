@@ -5,14 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 
 import { ArrowLeft, CreditCard, Loader2, ShieldCheck } from 'lucide-react';
 
-import { createClient } from '../../../../lib/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/button';
-import { Badge } from '../../../../components/ui/badge';
-import { Separator } from '../../../../components/ui/separator';
+import { createClient } from '@/lib/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '../../../../hooks/use-toast';
-import { formatOrderNumber } from '../../../../lib/order-utils';
-import { logger } from '../../../../lib/logger';
+import { formatOrderNumber } from '@/lib/order-utils';
+import { logger } from '@/lib/logger';
 
 interface OrderRow {
   id: string;

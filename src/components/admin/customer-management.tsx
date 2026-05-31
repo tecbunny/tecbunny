@@ -10,13 +10,13 @@ import {
   Send
 } from 'lucide-react';
 
-import { createClient } from '../../lib/supabase/client';
-import { logger } from '../../lib/logger';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
-import { Input } from '../../components/ui/input';
-import { Textarea } from '../../components/ui/textarea';
+import { createClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Customer {
   id: string;

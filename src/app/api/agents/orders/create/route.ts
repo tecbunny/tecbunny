@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { createClient, createServiceClient } from '../../../../../lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 // export const dynamic = 'force-dynamic'
 
@@ -39,7 +39,7 @@ function round2(n: number) { return Math.round(n * 100) / 100 }
 // Body: { customer: { email|mobile, name? }, items: OrderItem[], notes?, type? }
 export async function POST(request: Request) {
   const anon = await createClient()
-  const svc = createServiceClient()
+  const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient()
 
   const { data: { user } } = await anon.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })

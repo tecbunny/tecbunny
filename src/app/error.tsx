@@ -1,6 +1,6 @@
 'use client';
 
-import { PublicRouteError } from '../components/shared/PublicRouteError';
+import { PublicRouteError } from '@/components/shared/PublicRouteError';
 import { useEffect } from 'react';
 
 export default function RootError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {

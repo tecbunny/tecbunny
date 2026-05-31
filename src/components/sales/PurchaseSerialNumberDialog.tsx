@@ -3,10 +3,10 @@
 
 import * as React from 'react';
 
-import type { Product } from '../../lib/types';
+import type { Product } from '@/lib/types';
 
-import { Button } from '../../components/ui/button';
-import { Textarea } from '../../components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '../../hooks/use-toast';
 
 import Modal from '../ui/modal';

@@ -16,15 +16,15 @@ import {
   Lock,
 } from 'lucide-react';
 
-import { getProductDisplayImage } from '../lib/image-utils';
-import { cn, revealDelayClass } from '../lib/utils';
+import { getProductDisplayImage } from '@/lib/image-utils';
+import { cn, revealDelayClass } from '@/lib/utils';
 import { OptimizedImage } from './ui/optimized-image';
-import type { Product } from '../lib/types';
+import type { Product } from '@/lib/types';
 import { useNearViewport } from '../hooks/use-near-viewport';
 import { usePrefersReducedMotion } from '../hooks/use-prefers-reduced-motion';
 
 const AddToCartButton = dynamic(
-  () => import('../components/cart/AddToCartButton').then((module) => module.AddToCartButton),
+  () => import('@/components/cart/AddToCartButton').then((module) => module.AddToCartButton),
   { ssr: false }
 );
 

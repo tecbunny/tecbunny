@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
-import AboutPage from '../../components/about-page';
-import { createPageMetadata } from '../../lib/metadata';
+import AboutPage from '@/components/about-page';
+import { createPageMetadata } from '@/lib/metadata';
 
 // Static metadata for better SEO and performance
 export const metadata: Metadata = createPageMetadata({

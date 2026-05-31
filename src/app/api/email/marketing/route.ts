@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { emailHelpers } from '../../../../lib/email';
-import { rateLimit } from '../../../../lib/rate-limit';
-import { createClient as createServerClient } from '../../../../lib/supabase/server';
+import { emailHelpers } from '@/lib/email';
+import { rateLimit } from '@/lib/rate-limit';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 // Marketing emails: stricter (2 per 30m) due to bulk nature
 const LIMIT = 2;

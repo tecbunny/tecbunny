@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import improvedEmailService from '../../../../lib/improved-email-service';
+import improvedEmailService from '@/lib/improved-email-service';
 
 export async function GET() {
   try {

@@ -1,10 +1,10 @@
 import { Metadata } from 'next';
 
-import ServicesPage from '../../components/services-page';
-import { logger } from '../../lib/logger';
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../lib/supabase/server';
-import { createPageMetadata } from '../../lib/metadata';
-import type { Service } from '../../lib/types';
+import ServicesPage from '@/components/services-page';
+import { logger } from '@/lib/logger';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { createPageMetadata } from '@/lib/metadata';
+import type { Service } from '@/lib/types';
 
 // Static metadata for better SEO and performance
 export const metadata: Metadata = createPageMetadata({

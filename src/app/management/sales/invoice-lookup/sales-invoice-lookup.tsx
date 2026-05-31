@@ -5,13 +5,13 @@ import * as React from 'react';
 
 import { Search } from 'lucide-react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/button';
-import { Input } from '../../../../components/ui/input';
-import type { Order } from '../../../../lib/types';
-import { InvoiceTemplate, type CompanySettings } from '../../../../components/invoices/InvoiceTemplate';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import type { Order } from '@/lib/types';
+import { InvoiceTemplate, type CompanySettings } from '@/components/invoices/InvoiceTemplate';
 import { useToast } from '../../../../hooks/use-toast';
-import { createClient } from '../../../../lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 
 // In a real app, this would be fetched from a database

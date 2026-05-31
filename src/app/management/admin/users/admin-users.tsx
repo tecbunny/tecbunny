@@ -12,7 +12,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../../components/ui/card';
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -20,16 +20,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../../components/ui/table';
-import { Button } from '../../../../components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../../components/ui/tabs';
-import type { User, CustomerCategory } from '../../../../lib/types';
-import { Badge } from '../../../../components/ui/badge';
-import { AddUserDialog } from '../../../../components/admin/AddUserDialog';
-import { EditUserDialog } from '../../../../components/admin/EditUserDialog';
-import { DiscountOffersDialog } from '../../../../components/admin/DiscountOffersDialog';
-import { UniversalSearch, SearchFilter, SortOption } from '../../../../components/shared/UniversalSearch';
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { User, CustomerCategory } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import { AddUserDialog } from '@/components/admin/AddUserDialog';
+import { EditUserDialog } from '@/components/admin/EditUserDialog';
+import { DiscountOffersDialog } from '@/components/admin/DiscountOffersDialog';
+import { UniversalSearch, SearchFilter, SortOption } from '@/components/shared/UniversalSearch';
 import { useToast } from '../../../../hooks/use-toast';
 import { useDebounce } from '../../../../hooks/use-debounce';
 

@@ -2,8 +2,8 @@ import { Suspense } from 'react';
 
 import type { Metadata } from 'next';
 
-import { ShopPageContent } from '../../components/products/ShopPageContent';
-import { createPageMetadata } from '../../lib/metadata';
+import { ShopPageContent } from '@/components/products/ShopPageContent';
+import { createPageMetadata } from '@/lib/metadata';
 
 export const metadata: Metadata = createPageMetadata({
   title: 'Shop Products - TecBunny Store',

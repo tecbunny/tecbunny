@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../../lib/supabase/server';
-import { logger } from '../../../lib/logger';
-import { apiError, apiSuccess } from '../../../lib/errors';
-import { getSessionWithRole } from '../../../lib/auth/server-role';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+import { apiError, apiSuccess } from '@/lib/errors';
+import { getSessionWithRole } from '@/lib/auth/server-role';
 
 const ADMIN_ROLES = new Set(['admin', 'manager']);
 

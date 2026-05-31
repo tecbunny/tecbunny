@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { nanoid } from 'nanoid';
 
-import { createClient } from '../../../../lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 // export const dynamic = 'force-dynamic';
 

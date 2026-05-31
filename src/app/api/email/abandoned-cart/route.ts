@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { sendWhatsAppNotification } from '../../../../lib/whatsapp-service';
-import { logger } from '../../../../lib/logger';
-import { rateLimit } from '../../../../lib/rate-limit';
-import { createClient as createServerClient } from '../../../../lib/supabase/server';
+import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
+import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 // Abandoned cart reminders: 3 per 12h per user/IP
 const LIMIT = 3;

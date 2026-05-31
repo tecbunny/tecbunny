@@ -2,7 +2,7 @@
 
 import { lazy, Suspense } from 'react';
 
-import { Skeleton } from '../../components/ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy load heavy components
 export const LazyProductRecommendations = lazy(() => 

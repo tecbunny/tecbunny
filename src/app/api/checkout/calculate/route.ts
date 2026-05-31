@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkoutEngine } from '../../../../lib/checkout-engine';
-import { createClient } from '../../../../lib/supabase/server';
-import { logger } from '../../../../lib/logger';
+import { checkoutEngine } from '@/lib/checkout-engine';
+import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
   try {

@@ -3,12 +3,12 @@
 
 import * as React from 'react';
 
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 
-import type { Product } from '../../lib/types';
+import type { Product } from '@/lib/types';
 
-import { Skeleton } from '../../components/ui/skeleton';
-import { createClient } from '../../lib/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
+import { createClient } from '@/lib/supabase/client';
 
 import { ProductCard } from './ProductCard';
 

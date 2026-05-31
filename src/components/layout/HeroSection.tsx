@@ -7,11 +7,11 @@ import Image from 'next/image';
 
 import { ArrowRight } from 'lucide-react';
 
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 
-import { Button } from '../../components/ui/button';
-import type { Product } from '../../lib/types';
-import { createClient } from '../../lib/supabase/client';
+import { Button } from '@/components/ui/button';
+import type { Product } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
 
 export function HeroSection() {
   const [featuredProduct, setFeaturedProduct] = React.useState<Product | null>(null);

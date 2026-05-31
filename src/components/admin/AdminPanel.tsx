@@ -4,11 +4,11 @@ import React from 'react';
 
 import { Users, Settings, ShoppingBag, BarChart3, Shield } from 'lucide-react';
 
-import { useAuth } from '../../lib/hooks';
-import { isAdminClient, getRoleDisplayName } from '../../lib/permissions-client';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
+import { useAuth } from '@/lib/hooks';
+import { isAdminClient, getRoleDisplayName } from '@/lib/permissions-client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export function AdminPanel() {
   const { user } = useAuth();

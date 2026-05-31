@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bot, X, Sparkles, ArrowRight } from 'lucide-react';
 
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 
 const EXCLUDED_PREFIXES = ['/auth', '/management', '/checkout'];
 

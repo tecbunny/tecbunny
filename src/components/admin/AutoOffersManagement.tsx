@@ -10,7 +10,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card';
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -18,13 +18,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../components/ui/table';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import type { AutoOffer } from '../../lib/types';
-import { createClient } from '../../lib/supabase/client';
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import type { AutoOffer } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
 
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 import { useToast } from '../../hooks/use-toast';
 
 import { CreateOfferDialog } from './CreateOfferDialog';

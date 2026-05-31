@@ -4,17 +4,17 @@ import React, { useEffect, useState } from 'react';
 
 import { Package, Search, Calendar, MapPin, CreditCard, Eye } from 'lucide-react';
 
-import { formatOrderNumber } from '../../lib/order-utils';
+import { formatOrderNumber } from '@/lib/order-utils';
 
-import { ORDER_STATUS_FLOW, SERVICE_ORDER_STATUS_FLOW } from '../../lib/data';
+import { ORDER_STATUS_FLOW, SERVICE_ORDER_STATUS_FLOW } from '@/lib/data';
 
 import { useOrder } from '../../context/OrderProvider';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import { Input } from '../../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import type { Order, OrderStatus } from '../../lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { Order, OrderStatus } from '@/lib/types';
 
 export default function OrdersListPage() {
   const { orders, getOrders, cancelOrder } = useOrder();

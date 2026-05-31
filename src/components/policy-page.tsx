@@ -4,7 +4,7 @@ import * as React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-import sanitizeHtml from '../lib/sanitize-html';
+import sanitizeHtml from '@/lib/sanitize-html';
 import { usePageContent } from '../hooks/use-page-content';
 
 

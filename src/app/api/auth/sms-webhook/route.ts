@@ -2,9 +2,9 @@ import { timingSafeEqual } from 'crypto';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { logger } from '../../../../lib/logger';
-import { createServiceClient, isSupabaseServiceConfigured } from '../../../../lib/supabase/server';
-import { sendSms } from '../../../../lib/sms/twofactor';
+import { logger } from '@/lib/logger';
+import { createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { sendSms } from '@/lib/sms/twofactor';
 
 function extractBearerToken(authorization: string | null): string | null {
   if (!authorization) return null;

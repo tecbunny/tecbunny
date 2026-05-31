@@ -5,7 +5,7 @@ import * as React from 'react';
 
 import { MoreHorizontal, Printer } from 'lucide-react';
 
-import { formatInvoiceDate, formatOrderNumber } from '../../../../lib/order-utils';
+import { formatInvoiceDate, formatOrderNumber } from '@/lib/order-utils';
 
 import {
   Card,
@@ -13,7 +13,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../../components/ui/card';
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -21,19 +21,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../../components/ui/table';
-import { Button } from '../../../../components/ui/button';
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from '../../../../components/ui/dropdown-menu';
-import type { Order, OrderStatus } from '../../../../lib/types';
-import { Badge } from '../../../../components/ui/badge';
-import { Skeleton } from '../../../../components/ui/skeleton';
-import { createClient } from '../../../../lib/supabase/client';
+} from '@/components/ui/dropdown-menu';
+import type { Order, OrderStatus } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { createClient } from '@/lib/supabase/client';
 
 export default function InvoicesPage() {
   const [orders, setOrders] = React.useState<Order[]>([]);

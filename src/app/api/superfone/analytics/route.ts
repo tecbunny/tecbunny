@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 
-import { superfoneAPI } from '../../../../lib/superfone-enterprise-api';
-import { logger } from '../../../../lib/logger';
-import { apiError, apiSuccess } from '../../../../lib/errors';
-import { createClient } from '../../../../lib/supabase/server';
+import { superfoneAPI } from '@/lib/superfone-enterprise-api';
+import { logger } from '@/lib/logger';
+import { apiError, apiSuccess } from '@/lib/errors';
+import { createClient } from '@/lib/supabase/server';
 
 // export const dynamic = 'force-dynamic';
 

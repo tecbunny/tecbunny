@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 
-import HeroCarouselManager from '../../../../components/admin/HeroCarouselManager';
+import HeroCarouselManager from '@/components/admin/HeroCarouselManager';
 
 export const metadata: Metadata = {
   title: 'Hero Banners | Admin Management',

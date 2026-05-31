@@ -3,9 +3,9 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 
-import { useAuth } from '../../../lib/hooks';
-import { AccountsSidebar } from '../../../components/accounts/AccountsSidebar';
-import { Toaster } from '../../../components/ui/toaster';
+import { useAuth } from '@/lib/hooks';
+import { AccountsSidebar } from '@/components/accounts/AccountsSidebar';
+import { Toaster } from '@/components/ui/toaster';
 
 const ACCOUNT_ROLES = new Set(['accounts', 'manager', 'admin']);
 

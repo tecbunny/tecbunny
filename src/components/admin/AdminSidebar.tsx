@@ -29,10 +29,10 @@ import {
   Lightbulb,
 } from 'lucide-react';
 
-import { Logo } from '../../components/ui/logo';
-import { cn } from '../../lib/utils';
-import { Button } from '../../components/ui/button';
-import { useAuth } from '../../lib/hooks';
+import { Logo } from '@/components/ui/logo';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/hooks';
 
 import { Separator } from '../ui/separator';
 

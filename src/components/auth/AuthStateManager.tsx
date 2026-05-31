@@ -2,8 +2,8 @@
 
 import { useEffect } from 'react';
 
-import { useAuth } from '../../lib/hooks';
-import { logger } from '../../lib/logger';
+import { useAuth } from '@/lib/hooks';
+import { logger } from '@/lib/logger';
 
 export function AuthStateManager() {
   const { user, loading } = useAuth();

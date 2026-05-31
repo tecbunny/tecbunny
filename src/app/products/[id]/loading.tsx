@@ -1,4 +1,4 @@
-import { uiText } from '../../../lib/strings';
+import { uiText } from '@/lib/strings';
 
 export default function Loading() {
   return (

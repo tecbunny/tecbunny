@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../../../../../lib/supabase/server';
-import { requireAdmin } from '../../../../../../lib/admin-auth';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/admin-auth';
 
 async function safeListQuery<T>(query: PromiseLike<{ data: T[] | null; error: { message?: string } | null }>) {
   const { data, error } = await query;

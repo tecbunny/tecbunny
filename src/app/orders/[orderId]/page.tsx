@@ -1,4 +1,4 @@
-﻿import OrderConfirmationPage from '../../../components/orders/OrderConfirmationPage';
+﻿import OrderConfirmationPage from '@/components/orders/OrderConfirmationPage';
 
 // Force dynamic rendering for order detail pages
 // export const dynamic = 'force-dynamic';

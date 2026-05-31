@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 
 type SettingsPayload = {
   value?: unknown;

@@ -4,17 +4,17 @@ import * as React from 'react';
 
 import { RefreshCw } from 'lucide-react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Skeleton } from '../../components/ui/skeleton';
-import type { Order, OrderType, OrderStatus } from '../../lib/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { Order, OrderType, OrderStatus } from '@/lib/types';
 import { useToast } from '../../hooks/use-toast';
 import { OrderActions } from '../sales/OrderActions';
-import { formatOrderNumber } from '../../lib/order-utils';
-import { createClient } from '../../lib/supabase/client';
+import { formatOrderNumber } from '@/lib/order-utils';
+import { createClient } from '@/lib/supabase/client';
 
 const STATUS_VARIANT: Record<OrderStatus, 'default' | 'destructive' | 'outline' | 'secondary'> = {
   'Pending': 'outline',

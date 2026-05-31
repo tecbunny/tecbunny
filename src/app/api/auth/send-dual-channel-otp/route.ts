@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { dualChannelOTPManager, OTPChannel, OTPPurpose } from '../../../../lib/dual-channel-otp-manager';
-import { logger } from '../../../../lib/logger';
-import { rateLimit } from '../../../../lib/rate-limit';
+import { dualChannelOTPManager, OTPChannel, OTPPurpose } from '@/lib/dual-channel-otp-manager';
+import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 interface OTPRequest {
   channel: OTPChannel;

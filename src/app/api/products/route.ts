@@ -2,9 +2,9 @@ import crypto from 'crypto';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../../lib/supabase/server';
-import { getSessionWithRole } from '../../../lib/auth/server-role';
-import { logger } from '../../../lib/logger';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { getSessionWithRole } from '@/lib/auth/server-role';
+import { logger } from '@/lib/logger';
 
 const HANDLE_MAX_LENGTH = 60;
 const PUBLIC_PRODUCTS_CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalidate=900';

@@ -1,4 +1,4 @@
-import { PageLoader } from '../components/shared/LoadingSpinner';
+import { PageLoader } from '@/components/shared/LoadingSpinner';
 
 export default function RootLoading() {
   return (

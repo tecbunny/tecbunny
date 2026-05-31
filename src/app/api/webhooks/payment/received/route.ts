@@ -2,9 +2,9 @@ import crypto from 'crypto';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '../../../../../lib/supabase/server';
-import { sendWhatsAppNotification } from '../../../../../lib/whatsapp-service';
-import { logger } from '../../../../../lib/logger';
+import { createClient } from '@/lib/supabase/server';
+import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
+import { logger } from '@/lib/logger';
 
 // Generic payment received webhook handler
 export async function POST(request: NextRequest) {

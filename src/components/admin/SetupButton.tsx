@@ -4,9 +4,9 @@ import { useState } from 'react';
 
 import { Loader2, CheckCircle } from 'lucide-react';
 
-import { Button } from '../../components/ui/button';
+import { Button } from '@/components/ui/button';
 import { useToast } from '../../hooks/use-toast';
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 
 export function SetupButton() {
   const [isSettingUp, setIsSettingUp] = useState(false);

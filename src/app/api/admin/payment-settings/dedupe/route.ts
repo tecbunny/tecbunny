@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createSupabaseServiceClient } from '../../../../../lib/supabase-server';
+import { createSupabaseServiceClient } from '@/lib/supabase-server';
 
 // Simple admin guard via header token (set in Vercel env)
 function isAuthorized(req: NextRequest) {

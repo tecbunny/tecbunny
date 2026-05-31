@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
 
-import MultiChannelOTPManager from '../../../../lib/multi-channel-otp-manager';
-import { logger } from '../../../../lib/logger';
-import { apiError, apiSuccess } from '../../../../lib/errors';
-import { verifyCaptcha } from '../../../../lib/captcha/captcha-service';
-import { rateLimit } from '../../../../lib/rate-limit';
+import MultiChannelOTPManager from '@/lib/multi-channel-otp-manager';
+import { logger } from '@/lib/logger';
+import { apiError, apiSuccess } from '@/lib/errors';
+import { verifyCaptcha } from '@/lib/captcha/captcha-service';
+import { rateLimit } from '@/lib/rate-limit';
 
 const SEND_OTP_IP_LIMIT = { limit: 5, windowMs: 15 * 60 * 1000 };
 const SEND_OTP_IDENTIFIER_LIMIT = { limit: 3, windowMs: 15 * 60 * 1000 };

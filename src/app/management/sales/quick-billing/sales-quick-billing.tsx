@@ -7,21 +7,21 @@ import { Search, ShoppingCart, CreditCard, Minus, Plus } from 'lucide-react';
 
 import Image from 'next/image';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/button';
-import { Input } from '../../../../components/ui/input';
-import { Separator } from '../../../../components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 
 
-import type { Product, CartItem, Order, User as CustomerType } from '../../../../lib/types';
+import type { Product, CartItem, Order, User as CustomerType } from '@/lib/types';
 import { useToast } from '../../../../hooks/use-toast';
-import { CreateCustomerDialog } from '../../../../components/sales/CreateCustomerDialog';
-import { Label } from '../../../../components/ui/label';
-import { InvoiceTemplate, type CompanySettings } from '../../../../components/invoices/InvoiceTemplate';
-import { SerialNumberDialog } from '../../../../components/sales/SerialNumberDialog';
-import { useAuth } from '../../../../lib/hooks';
-import { createClient } from '../../../../lib/supabase/client';
-import { getGstRateForProduct, type CategoryGstRates } from '../../../../lib/utils';
+import { CreateCustomerDialog } from '@/components/sales/CreateCustomerDialog';
+import { Label } from '@/components/ui/label';
+import { InvoiceTemplate, type CompanySettings } from '@/components/invoices/InvoiceTemplate';
+import { SerialNumberDialog } from '@/components/sales/SerialNumberDialog';
+import { useAuth } from '@/lib/hooks';
+import { createClient } from '@/lib/supabase/client';
+import { getGstRateForProduct, type CategoryGstRates } from '@/lib/utils';
 
 
 const defaultCompanySettings: CompanySettings = {

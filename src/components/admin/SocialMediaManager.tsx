@@ -27,8 +27,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -36,12 +36,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../../components/ui/form';
-import { Input } from '../../components/ui/input';
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { useToast } from '../../hooks/use-toast';
-import { createClient } from '../../lib/supabase/client';
-import { logger } from '../../lib/logger';
-import { Label } from '../../components/ui/label';
+import { createClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -49,14 +49,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../../components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
+} from '@/components/ui/select';
 
 // Define available social media platforms with their icons and colors
 const SOCIAL_PLATFORMS = {

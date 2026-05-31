@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../../../../lib/supabase/server';
-import { requireAdminContext } from '../../../../../lib/auth/admin-guard';
-import { logger } from '../../../../../lib/logger';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { requireAdminContext } from '@/lib/auth/admin-guard';
+import { logger } from '@/lib/logger';
 
 const tokenize = (text: string) =>
   text
@@ -46,6 +46,10 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
+
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase client could not be initialized' }, { status: 500 });
+    }
 
     const { data, error } = await supabase
       .from('products')

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-import { logger } from '../../../lib/logger';
-import { requireApiRole, type RoleCheckOptions } from '../../../lib/server-role-guard';
+import { logger } from '@/lib/logger';
+import { requireApiRole, type RoleCheckOptions } from '@/lib/server-role-guard';
 
 const WALK_IN_ACCESS: RoleCheckOptions = {
   allowedRoles: ['sales', 'manager'],

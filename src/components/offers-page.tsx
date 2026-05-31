@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import DOMPurify from 'dompurify';
 
-import { logger } from '../lib/logger';
+import { logger } from '@/lib/logger';
 
 import { useToast } from '../hooks/use-toast';
 import HeroCarousel from './HeroCarousel';

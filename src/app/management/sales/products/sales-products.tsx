@@ -18,8 +18,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../../components/ui/card';
-import { Input } from '../../../../components/ui/input';
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -27,8 +27,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../../components/ui/table';
-import { Button } from '../../../../components/ui/button';
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,17 +36,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../../../../components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 
-import type { Product } from '../../../../lib/types';
-import { Badge } from '../../../../components/ui/badge';
+import type { Product } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
 
 
 import { useToast } from '../../../../hooks/use-toast';
-import { ConfirmDialog } from '../../../../components/shared/ConfirmDialog';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 
 
-import { createClient } from '../../../../lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 export default function ProductManagementPage() {
   const [productList, setProductList] = React.useState<Product[]>([]);

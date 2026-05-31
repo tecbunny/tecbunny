@@ -3,17 +3,17 @@ import { NextRequest } from 'next/server';
 import {
   createClient as createServerClient,
   isSupabaseServiceConfigured
-} from '../../../lib/supabase/server';
-import { logger } from '../../../lib/logger';
-import { apiError, apiSuccess } from '../../../lib/errors';
-import { requireAdmin } from '../../../lib/admin-auth';
+} from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+import { apiError, apiSuccess } from '@/lib/errors';
+import { requireAdmin } from '@/lib/admin-auth';
 
 // Ensure Node.js runtime for streaming uploads
 export const runtime = 'nodejs';
 // Allow more time for larger uploads on serverless
 export const maxDuration = 60;
-import { uploadToSupabase, uploadFavicon, uploadLogo, uploadProductImage } from '../../../lib/supabase-storage';
-import { uploadHeroBanner, isS3Configured } from '../../../lib/s3-storage';
+import { uploadToSupabase, uploadFavicon, uploadLogo, uploadProductImage } from '@/lib/supabase-storage';
+import { uploadHeroBanner, isS3Configured } from '@/lib/s3-storage';
 
 export async function POST(request: NextRequest) {
   const correlationId = request.headers.get('x-correlation-id');

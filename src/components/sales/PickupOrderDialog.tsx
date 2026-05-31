@@ -3,13 +3,13 @@
 
 import * as React from 'react';
 
-import type { Order, OrderStatus } from '../../lib/types';
-import { Button } from '../../components/ui/button';
+import type { Order, OrderStatus } from '@/lib/types';
+import { Button } from '@/components/ui/button';
 
-import { Badge } from '../../components/ui/badge';
-import { Separator } from '../../components/ui/separator';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { InvoiceTemplate, type CompanySettings } from '../../components/invoices/InvoiceTemplate';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { InvoiceTemplate, type CompanySettings } from '@/components/invoices/InvoiceTemplate';
 
 import Modal from '../ui/modal';
 

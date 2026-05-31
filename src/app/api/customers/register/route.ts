@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '../../../../lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { 
   sendWelcomeTemplate,
   sendWhatsAppTemplate
-} from '../../../../lib/superfone-whatsapp-service';
-import { logger } from '../../../../lib/logger';
-import { apiError, apiSuccess } from '../../../../lib/errors';
-import { rateLimit } from '../../../../lib/rate-limit';
+} from '@/lib/superfone-whatsapp-service';
+import { logger } from '@/lib/logger';
+import { apiError, apiSuccess } from '@/lib/errors';
+import { rateLimit } from '@/lib/rate-limit';
 
 interface CustomerRegistrationData {
   name: string;

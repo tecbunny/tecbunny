@@ -3,14 +3,14 @@
  * Handles service engineer assignments, ticket management, and service billing
  */
 
-import { createServiceClient } from '../lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import type { 
   ServiceTicket, 
   ServiceEngineer, 
   ServiceTicketStatus, 
   ServiceTicketPriority,
   ServiceEngineerSkillLevel
-} from '../lib/types';
+} from '@/lib/types';
 
 import { logger } from './logger';
 

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
-import { MarkdownRenderer } from '../../components/ui/markdown-renderer';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 
 type ProductResult = {
   id: string;

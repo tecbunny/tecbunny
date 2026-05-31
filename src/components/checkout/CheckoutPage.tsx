@@ -5,14 +5,14 @@ import Link from 'next/link';
 
 import { ShoppingCart, CreditCard, MapPin, User, Wallet, Banknote, QrCode, Tag, Sparkles, ArrowLeft, CheckCircle, Shield, ChevronDown } from 'lucide-react';
 
-import { useCart, useAuth } from '../../lib/hooks';
+import { useCart, useAuth } from '@/lib/hooks';
 import { useOrder } from '../../context/OrderProvider';
 import { usePaymentMethods } from '../../hooks/use-payment-methods';
-import { logger } from '../../lib/logger';
-import { Button } from '../../components/ui/button';
-import { LoginDialog } from '../../components/auth/LoginDialog';
+import { logger } from '@/lib/logger';
+import { Button } from '@/components/ui/button';
+import { LoginDialog } from '@/components/auth/LoginDialog';
 import { Badge } from '../ui/badge';
-import type { OrderStatus, OrderType } from '../../lib/types';
+import type { OrderStatus, OrderType } from '@/lib/types';
 
 const PICKUP_STORES = [
   {

@@ -19,12 +19,12 @@ import {
   PackageSearch,
 } from 'lucide-react';
 
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 
-import { Logo } from '../../components/ui/logo';
-import { cn } from '../../lib/utils';
-import { Button } from '../../components/ui/button';
-import { useAuth } from '../../lib/hooks';
+import { Logo } from '@/components/ui/logo';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/hooks';
 
 const navItems = [
   { href: '/management/sales', label: 'Dashboard', icon: LayoutDashboard, roles: ['sales', 'manager'], exact: true },

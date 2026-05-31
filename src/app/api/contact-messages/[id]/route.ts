@@ -66,7 +66,7 @@ async function PATCH(request: NextRequest, context: RouteContext) {
       updateData.resolved_at = parsed.data.status === 'Resolved' ? new Date().toISOString() : null;
     }
 
-    const serviceSupabase = createServiceClient();
+    
     const { data, error } = await serviceSupabase
       .from('contact_messages')
       .update(updateData)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { logger } from '../../../../lib/logger';
-import { AdminAuthError, requireAdminContext } from '../../../../lib/auth/admin-guard';
+import { logger } from '@/lib/logger';
+import { AdminAuthError, requireAdminContext } from '@/lib/auth/admin-guard';
 
 export async function GET(request: NextRequest) {
   try {

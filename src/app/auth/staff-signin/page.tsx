@@ -6,12 +6,12 @@ import { useSearchParams } from 'next/navigation';
 
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ShieldCheck, Users } from 'lucide-react';
 
-import { createClient } from '../../../lib/supabase/client';
-import { normalizeRole } from '../../../lib/roles';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+import { createClient } from '@/lib/supabase/client';
+import { normalizeRole } from '@/lib/roles';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '../../../hooks/use-toast';
-import { TwoFactorVerification } from '../../../components/auth/TwoFactorVerification';
+import { TwoFactorVerification } from '@/components/auth/TwoFactorVerification';
 
 // Staff roles permitted to access the CRM
 const STAFF_ROLES = new Set(['admin', 'manager', 'sales', 'service_engineer', 'accounts']);

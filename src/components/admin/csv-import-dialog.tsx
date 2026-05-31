@@ -11,13 +11,13 @@ import {
   Clock
 } from 'lucide-react';
 
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '../../hooks/use-toast';
 
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 
 interface ImportDialogProps {
   isOpen: boolean;

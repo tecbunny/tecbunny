@@ -4,14 +4,14 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { CheckCircle, Package, MapPin, Phone, Mail, Calendar, Hash } from 'lucide-react';
 
-import { formatOrderNumber } from '../../lib/order-utils';
+import { formatOrderNumber } from '@/lib/order-utils';
 
 import { useOrder } from '../../context/OrderProvider';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import { Separator } from '../../components/ui/separator';
-import type { Order } from '../../lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import type { Order } from '@/lib/types';
 
 interface OrderConfirmationPageProps {
   orderId: string;

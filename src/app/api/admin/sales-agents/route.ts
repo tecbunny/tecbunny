@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
-import { createClient, createServiceClient } from '../../../../lib/supabase/server';
-import { isAdmin } from '../../../../lib/permissions';
-import { logger } from '../../../../lib/logger';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isAdmin } from '@/lib/permissions';
+import { logger } from '@/lib/logger';
 
 // export const dynamic = 'force-dynamic';
 
@@ -22,7 +22,7 @@ export async function GET(_request: Request) {
 
   try {
     // 2. Create service role client for admin operations
-    const serviceClient = createServiceClient();
+    const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     
     // 3. Fetch all applications using service role to bypass RLS
     const { data: salesAgents, error } = await serviceClient

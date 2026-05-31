@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { emailHelpers } from '../../../../lib/email';
-import { rateLimit } from '../../../../lib/rate-limit';
-import { createClient as createServerClient } from '../../../../lib/supabase/server';
+import { emailHelpers } from '@/lib/email';
+import { rateLimit } from '@/lib/rate-limit';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 const LIMIT = 5; // 5 emails per 10 minutes
 const WINDOW_MS = 10 * 60 * 1000;

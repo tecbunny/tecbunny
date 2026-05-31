@@ -14,15 +14,15 @@ import {
   CheckCircle
 } from 'lucide-react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Label } from '../../components/ui/label';
-import { Switch } from '../../components/ui/switch';
-import { Button } from '../../components/ui/button';
-import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
-import { Input } from '../../components/ui/input';
-import { Separator } from '../../components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '../../hooks/use-toast';
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 
 export type OTPChannel = 'sms' | 'email';
 

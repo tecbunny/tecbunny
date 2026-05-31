@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import { createClient } from '../../../../lib/supabase/server';
-import { enhancedCommissionService } from '../../../../lib/enhanced-commission-service';
+import { createClient } from '@/lib/supabase/server';
+import { enhancedCommissionService } from '@/lib/enhanced-commission-service';
 
 // export const dynamic = 'force-dynamic';
 

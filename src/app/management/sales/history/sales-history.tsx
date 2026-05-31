@@ -5,14 +5,14 @@ import * as React from 'react';
 
 import { Printer } from 'lucide-react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../../components/ui/table';
-import { Button } from '../../../../components/ui/button';
-import { Badge } from '../../../../components/ui/badge';
-import { useAuth } from '../../../../lib/hooks';
-import type { Order } from '../../../../lib/types';
-import { Skeleton } from '../../../../components/ui/skeleton';
-import { createClient } from '../../../../lib/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/lib/hooks';
+import type { Order } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { createClient } from '@/lib/supabase/client';
 
 export default function BillingHistoryPage() {
   const { user } = useAuth();

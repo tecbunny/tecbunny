@@ -12,10 +12,10 @@ import {
   Lock
 } from 'lucide-react';
 
-import { useAuth } from '../../lib/hooks';
-import { isAtLeast } from '../../lib/roles';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
+import { useAuth } from '@/lib/hooks';
+import { isAtLeast } from '@/lib/roles';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export default function ManagementDashboard() {
   const { user, loading } = useAuth();

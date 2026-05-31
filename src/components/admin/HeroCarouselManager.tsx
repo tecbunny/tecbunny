@@ -13,7 +13,7 @@ import {
 
 import { usePageContent } from '../../hooks/use-page-content';
 import { useToast } from '../../hooks/use-toast';
-import type { HeroCarouselContent, HeroCarouselItem, HeroCarouselPageKey } from '../../lib/types';
+import type { HeroCarouselContent, HeroCarouselItem, HeroCarouselPageKey } from '@/lib/types';
 
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';

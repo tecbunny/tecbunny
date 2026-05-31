@@ -1,6 +1,6 @@
 "use client";
 
-import { uiText } from '../../../lib/strings';
+import { uiText } from '@/lib/strings';
 
 interface ErrorProps {
   error: Error & { digest?: string };

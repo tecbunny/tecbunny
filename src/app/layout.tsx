@@ -3,14 +3,14 @@ import { Inter } from 'next/font/google';
 import { Suspense } from 'react';
 
 import './globals.css';
-import {Header} from '../components/layout/Header';
-import {Footer} from '../components/layout/Footer';
-import {TechShell} from '../components/layout/TechShell';
+import {Header} from '@/components/layout/Header';
+import {Footer} from '@/components/layout/Footer';
+import {TechShell} from '@/components/layout/TechShell';
 import {AppProvider} from '../context/AppProvider';
 import {OrderProvider} from '../context/OrderProvider';
-import {ThemeProvider} from '../components/providers/ThemeProvider';
-import {DeferredFloatingAIAssistant} from '../components/layout/DeferredFloatingAIAssistant';
-import {DeferredRuntimeServices} from '../components/layout/DeferredRuntimeServices';
+import {ThemeProvider} from '@/components/providers/ThemeProvider';
+import {DeferredFloatingAIAssistant} from '@/components/layout/DeferredFloatingAIAssistant';
+import {DeferredRuntimeServices} from '@/components/layout/DeferredRuntimeServices';
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;

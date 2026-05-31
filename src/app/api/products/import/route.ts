@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '../../../../lib/supabase/server';
-import { ProductImportRow } from '../../../../lib/types/products';
-import { logger } from '../../../../lib/logger';
-import sanitizeHtml from '../../../../lib/sanitize-html';
+import { createClient } from '@/lib/supabase/server';
+import { ProductImportRow } from '@/lib/types/products';
+import { logger } from '@/lib/logger';
+import sanitizeHtml from '@/lib/sanitize-html';
 
 async function ensureProductColumns(supabase: any) {
   try {

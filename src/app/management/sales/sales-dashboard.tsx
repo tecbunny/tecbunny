@@ -5,13 +5,13 @@ import * as React from 'react';
 
 import { TrendingUp, Users, Package, ShoppingBag } from 'lucide-react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Badge } from '../../../components/ui/badge';
-import { Skeleton } from '../../../components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '../../../hooks/use-toast';
-import { useAuth } from '../../../lib/hooks';
-import { createClient } from '../../../lib/supabase/client';
-import type { Order, OrderStatus } from '../../../lib/types';
+import { useAuth } from '@/lib/hooks';
+import { createClient } from '@/lib/supabase/client';
+import type { Order, OrderStatus } from '@/lib/types';
 
 const COMPLETED_STATUSES: OrderStatus[] = ['Completed', 'Delivered', 'Payment Confirmed'];
 const PENDING_DELIVERY_STATUSES: OrderStatus[] = ['Processing', 'Ready to Ship', 'Shipped'];

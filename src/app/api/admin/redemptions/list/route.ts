@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { createServiceClient } from '../../../../../lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 // export const dynamic = 'force-dynamic'
 
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url)
   const status = url.searchParams.get('status') || undefined
-  const supabase = createServiceClient()
+  const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient()
   let query = supabase.from('agent_redemption_requests').select('*')
   if (status) query = query.eq('status', status)
   const { data, error } = await query.order('requested_at', { ascending: false })

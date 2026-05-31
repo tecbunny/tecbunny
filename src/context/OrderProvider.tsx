@@ -2,14 +2,14 @@
 
 import React, { createContext, useState, useCallback, useContext } from 'react';
 
-import type { CartItem, Order, OrderItem, OrderStatus } from '../lib/types';
-import { createClient } from '../lib/supabase/client';
+import type { CartItem, Order, OrderItem, OrderStatus } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
 import { useToast } from '../hooks/use-toast';
-import { useCart } from '../lib/hooks';
-import { useAuth } from '../lib/hooks';
-import { logger } from '../lib/logger';
-import { deserializeOrder, normalizeOrderStatus } from '../lib/orders/normalizers';
-import { formatOrderNumber } from '../lib/order-utils';
+import { useCart } from '@/lib/hooks';
+import { useAuth } from '@/lib/hooks';
+import { logger } from '@/lib/logger';
+import { deserializeOrder, normalizeOrderStatus } from '@/lib/orders/normalizers';
+import { formatOrderNumber } from '@/lib/order-utils';
 
 interface OrderContextType {
   orders: Order[];

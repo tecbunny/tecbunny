@@ -22,13 +22,13 @@ import {
   IndianRupee
 } from 'lucide-react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/button';
-import { Input } from '../../../../components/ui/input';
-import { Label } from '../../../../components/ui/label';
-import { Textarea } from '../../../../components/ui/textarea';
-import { Badge } from '../../../../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../../components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -36,11 +36,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../../components/ui/table';
+} from '@/components/ui/table';
 import { useToast } from '../../../../hooks/use-toast';
-import CSVImportDialog from '../../../../components/admin/csv-import-dialog';
+import CSVImportDialog from '@/components/admin/csv-import-dialog';
 import { useDebounce } from '../../../../hooks/use-debounce';
-import { fetchAiProductDetails } from '../../../../lib/ai/product-details';
+import { fetchAiProductDetails } from '@/lib/ai/product-details';
 
 interface Product {
   id: string;
@@ -115,7 +115,7 @@ interface ProductFormData {
   }[];
 }
 
-import { logger } from '../../../../lib/logger';
+import { logger } from '@/lib/logger';
 
 const deriveStockStatus = (
   quantity: number,

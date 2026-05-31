@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import NextDynamic from 'next/dynamic';
 
-import { Button } from '../../components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../../components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -24,13 +24,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../../components/ui/form';
-import { Input } from '../../components/ui/input';
-import { useAuth } from '../../lib/hooks';
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useAuth } from '@/lib/hooks';
 import { useToast } from '../../hooks/use-toast';
-import { createClient } from '../../lib/supabase/client';
-import { logger } from '../../lib/logger';
-import { normalizeRole } from '../../lib/roles';
+import { createClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
+import { normalizeRole } from '@/lib/roles';
 
 const loginSchema = z.object({
   identifier: z.string().min(3, { message: 'Email or mobile is required.' }),

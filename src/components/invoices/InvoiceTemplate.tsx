@@ -7,13 +7,13 @@ import { Printer } from 'lucide-react';
 
 import DOMPurify from 'dompurify';
 
-import type { Order } from '../../lib/types';
-import { Card, CardContent, CardFooter, CardHeader } from '../../components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { Separator } from '../../components/ui/separator';
-import { Button } from '../../components/ui/button';
-import { Logo } from '../../components/ui/logo';
-import { formatInvoiceDate, formatOrderNumber } from '../../lib/order-utils';
+import type { Order } from '@/lib/types';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/ui/logo';
+import { formatInvoiceDate, formatOrderNumber } from '@/lib/order-utils';
 
 export interface CompanySettings {
     name: string;

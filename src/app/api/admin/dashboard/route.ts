@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { logger } from '../../../../lib/logger';
-import { AdminAuthError, requireAdminContext } from '../../../../lib/auth/admin-guard';
-import { isSupabaseServiceConfigured } from '../../../../lib/supabase/server';
-import { formatOrderNumber } from '../../../../lib/order-utils';
+import { logger } from '@/lib/logger';
+import { AdminAuthError, requireAdminContext } from '@/lib/auth/admin-guard';
+import { isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { formatOrderNumber } from '@/lib/order-utils';
 
 // Disable caching for this route
 // export const dynamic = 'force-dynamic';

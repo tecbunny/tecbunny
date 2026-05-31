@@ -15,11 +15,11 @@ import {
   Eye
 } from 'lucide-react';
 
-import { logger } from '../../lib/logger';
-import { formatOrderNumber } from '../../lib/order-utils';
+import { logger } from '@/lib/logger';
+import { formatOrderNumber } from '@/lib/order-utils';
 
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +27,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -35,14 +35,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../components/ui/dialog';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
-import { Input } from '../../components/ui/input';
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { useToast } from '../../hooks/use-toast';
-import { useAuth } from '../../lib/hooks';
-import { isManagerClient, isSalesClient } from '../../lib/permissions-client';
-import type { Order, OrderStatus } from '../../lib/types';
+import { useAuth } from '@/lib/hooks';
+import { isManagerClient, isSalesClient } from '@/lib/permissions-client';
+import type { Order, OrderStatus } from '@/lib/types';
 
 const SERVICE_TYPE_SET = new Set(['Service', 'Repair', 'Installation', 'Setup']);
 

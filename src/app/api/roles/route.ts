@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '../../../lib/supabase/server';
-import { logger } from '../../../lib/logger';
+import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 // Create client for current user authentication
 async function createAuthenticatedClient(_: NextRequest) {

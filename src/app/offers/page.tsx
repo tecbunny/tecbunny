@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 
-import OffersPage from '../../components/offers-page';
+import OffersPage from '@/components/offers-page';
 
 // Static metadata for better SEO and performance
 export const metadata: Metadata = {

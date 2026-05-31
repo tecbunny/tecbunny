@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { emailHelpers } from '../../../../lib/email';
-import { rateLimit } from '../../../../lib/rate-limit';
-import { createClient as createServerClient } from '../../../../lib/supabase/server';
+import { emailHelpers } from '@/lib/email';
+import { rateLimit } from '@/lib/rate-limit';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 // Email verification OTP: 5 per 30 minutes
 const LIMIT = 5;

@@ -1,4 +1,4 @@
-import SocialMediaManager from '../../../../components/admin/SocialMediaManager';
+import SocialMediaManager from '@/components/admin/SocialMediaManager';
 
 export default function SocialMediaPage() {
   return (

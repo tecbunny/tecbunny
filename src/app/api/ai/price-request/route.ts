@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../../../lib/supabase/server';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Service unavailable.' }, { status: 500 });
     }
 
-    const service = createServiceClient();
+    const service = isSupabaseServiceConfigured ? createServiceClient() : null;
     const { error } = await service
       .from('leads')
       .insert({

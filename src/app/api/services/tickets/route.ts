@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { serviceManagementService } from '../../../../lib/service-management';
-import { logger } from '../../../../lib/logger';
+import { serviceManagementService } from '@/lib/service-management';
+import { logger } from '@/lib/logger';
 
 /**
  * Create a new service ticket

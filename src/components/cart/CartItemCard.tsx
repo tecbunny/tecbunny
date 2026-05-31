@@ -4,8 +4,8 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Trash2, Plus, Minus } from 'lucide-react';
-import { useCart } from '../../lib/hooks';
-import type { CartItem } from '../../lib/types';
+import { useCart } from '@/lib/hooks';
+import type { CartItem } from '@/lib/types';
 
 interface CartItemCardProps {
   item: CartItem;

@@ -5,7 +5,7 @@ import * as React from 'react';
 
 import { FileText, Receipt, TrendingUp } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AccountsDashboard() {
     return (

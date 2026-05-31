@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 
-import OrdersListPage from '../../components/orders/OrdersListPage';
+import OrdersListPage from '@/components/orders/OrdersListPage';
 
 // Force dynamic rendering for order pages
 // export const dynamic = 'force-dynamic';

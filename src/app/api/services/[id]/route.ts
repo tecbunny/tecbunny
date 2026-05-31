@@ -1,8 +1,8 @@
 ﻿import { NextRequest } from 'next/server';
 
-import { createClient } from '../../../../lib/supabase/server';
-import { logger } from '../../../../lib/logger';
-import { apiError, apiSuccess } from '../../../../lib/errors';
+import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+import { apiError, apiSuccess } from '@/lib/errors';
 
 // export const dynamic = 'force-dynamic';
 

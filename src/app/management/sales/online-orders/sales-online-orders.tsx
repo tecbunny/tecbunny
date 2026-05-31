@@ -3,17 +3,17 @@
 
 import * as React from 'react';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../../components/ui/table';
-import { Badge } from '../../../../components/ui/badge';
-import type { Order } from '../../../../lib/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import type { Order } from '@/lib/types';
 import { useToast } from '../../../../hooks/use-toast';
-import { Skeleton } from '../../../../components/ui/skeleton';
-import { createClient } from '../../../../lib/supabase/client';
-import { useAuth } from '../../../../lib/hooks';
-import { isManagerClient } from '../../../../lib/permissions-client';
-import { OrderActions } from '../../../../components/sales/OrderActions';
-import { formatOrderNumber } from '../../../../lib/order-utils';
+import { Skeleton } from '@/components/ui/skeleton';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/lib/hooks';
+import { isManagerClient } from '@/lib/permissions-client';
+import { OrderActions } from '@/components/sales/OrderActions';
+import { formatOrderNumber } from '@/lib/order-utils';
 
 export default function OnlineOrdersPage() {
   const [orders, setOrders] = React.useState<Order[]>([]);

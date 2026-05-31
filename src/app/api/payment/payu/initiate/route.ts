@@ -3,12 +3,12 @@ import crypto from 'crypto';
 import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-import { rateLimit } from '../../../../../lib/rate-limit';
-import { createClient as createServerClient } from '../../../../../lib/supabase/server';
-import { apiError, apiSuccess } from '../../../../../lib/errors';
-import { logger } from '../../../../../lib/logger';
-import { resolveSiteUrl } from '../../../../../lib/site-url';
-import { generatePayuHash, getPayuPaymentUrl, normalisePayuEnvironment, type PayuConfig, type PayuRequestPayload, type PayuEnvironment } from '../../../../../lib/payu-service';
+import { rateLimit } from '@/lib/rate-limit';
+import { createClient as createServerClient } from '@/lib/supabase/server';
+import { apiError, apiSuccess } from '@/lib/errors';
+import { logger } from '@/lib/logger';
+import { resolveSiteUrl } from '@/lib/site-url';
+import { generatePayuHash, getPayuPaymentUrl, normalisePayuEnvironment, type PayuConfig, type PayuRequestPayload, type PayuEnvironment } from '@/lib/payu-service';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.local';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';

@@ -7,14 +7,14 @@ import { useRouter } from 'next/navigation';
 
 import { Eye, Tag, Truck } from 'lucide-react';
 
-import { logger } from '../../lib/logger';
-import { getProductDisplayImage } from '../../lib/image-utils';
+import { logger } from '@/lib/logger';
+import { getProductDisplayImage } from '@/lib/image-utils';
 
-import type { Product } from '../../lib/types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { AddToCartButton } from '../../components/cart/AddToCartButton';
-import { OptimizedImage } from '../../components/ui/optimized-image';
+import type { Product } from '@/lib/types';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { AddToCartButton } from '@/components/cart/AddToCartButton';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 
 import { StarRating } from './StarRating';
 import { useAnalytics } from '../../hooks/use-analytics';

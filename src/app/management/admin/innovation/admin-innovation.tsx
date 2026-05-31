@@ -4,16 +4,16 @@ import * as React from 'react';
 
 import { Plus, Trash2, Pencil } from 'lucide-react';
 
-import { createClient } from '../../../../lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { useToast } from '../../../../hooks/use-toast';
-import { logger } from '../../../../lib/logger';
-import type { InnovationDevice, InnovationMode, InnovationModeItem } from '../../../../lib/types';
+import { logger } from '@/lib/logger';
+import type { InnovationDevice, InnovationMode, InnovationModeItem } from '@/lib/types';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/button';
-import { Input } from '../../../../components/ui/input';
-import { Textarea } from '../../../../components/ui/textarea';
-import { Switch } from '../../../../components/ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Table,
   TableBody,
@@ -21,28 +21,28 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../../components/ui/table';
+} from '@/components/ui/table';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../../../components/ui/tabs';
+} from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '../../../../components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../../components/ui/select';
-import { Badge } from '../../../../components/ui/badge';
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 const ICON_OPTIONS = [
   'Shield',

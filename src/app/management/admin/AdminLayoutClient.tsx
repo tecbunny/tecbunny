@@ -3,10 +3,10 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 
-import { useAuth } from '../../../lib/hooks';
-import { isAtLeast } from '../../../lib/roles';
-import { AdminSidebar } from '../../../components/admin/AdminSidebar';
-import { Toaster } from '../../../components/ui/toaster';
+import { useAuth } from '@/lib/hooks';
+import { isAtLeast } from '@/lib/roles';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { Toaster } from '@/components/ui/toaster';
 
 interface AdminLayoutClientProps {
   children: React.ReactNode;

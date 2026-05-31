@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 
-import { logger } from '../lib/logger';
+import { logger } from '@/lib/logger';
 
-import { createClient } from '../lib/supabase/client';
-import type { CustomerCategory } from '../lib/types';
+import { createClient } from '@/lib/supabase/client';
+import type { CustomerCategory } from '@/lib/types';
 
 interface Discount {
   type: 'category' | 'offer';

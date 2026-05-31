@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '../../../../lib/supabase/server';
-import { requireAdmin } from '../../../../lib/admin-auth';
-import { logger } from '../../../../lib/logger';
-import { imageJobsQueue } from '../../../../lib/queue/image-jobs';
+import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/admin-auth';
+import { logger } from '@/lib/logger';
+import { imageJobsQueue } from '@/lib/queue/image-jobs';
 
 export async function POST(request: NextRequest) {
   try {

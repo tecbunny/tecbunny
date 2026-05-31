@@ -1,18 +1,18 @@
 import { NextRequest } from 'next/server';
 
-import { createClient as createServerClient, createServiceClient } from '../../../lib/supabase/server';
-import { rateLimit } from '../../../lib/rate-limit';
-import { resolveSiteUrl } from '../../../lib/site-url';
-import { apiError, apiSuccess } from '../../../lib/errors';
-import { logger } from '../../../lib/logger';
+import { createClient as createServerClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
+import { resolveSiteUrl } from '@/lib/site-url';
+import { apiError, apiSuccess } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 import { 
   sendOrderConfirmationTemplate,
   sendWhatsAppTemplate
-} from '../../../lib/superfone-whatsapp-service';
-import { otpService } from '../../../lib/otp-service';
-import { enhancedCommissionService } from '../../../lib/enhanced-commission-service';
-import { emailHelpers } from '../../../lib/email';
-import { GST_RATE } from '../../../lib/constants';
+} from '@/lib/superfone-whatsapp-service';
+import { otpService } from '@/lib/otp-service';
+import { enhancedCommissionService } from '@/lib/enhanced-commission-service';
+import { emailHelpers } from '@/lib/email';
+import { GST_RATE } from '@/lib/constants';
 
 const RATE_LIMIT = 5; // 5 orders
 const RATE_WINDOW_MS = 60 * 1000; // per minute
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   try {
     const correlationId = request.headers.get('x-correlation-id') || null;
   const supabase = await createServerClient();
-  const serviceSupabase = createServiceClient();
+  const serviceSupabase = isSupabaseServiceConfigured ? createServiceClient() : await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return apiError('UNAUTHORIZED', { correlationId, overrideMessage: 'Authentication required' });

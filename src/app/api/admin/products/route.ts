@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient, createServiceClient } from '../../../../lib/supabase/server';
-import { isAdmin } from '../../../../lib/permissions';
-import { logger } from '../../../../lib/logger';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isAdmin } from '@/lib/permissions';
+import { logger } from '@/lib/logger';
 
 // export const dynamic = 'force-dynamic';
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const serviceClient = createServiceClient();
+    
     const searchParams = new URL(request.url).searchParams;
     const search = searchParams.get('search')?.trim();
     const includeInactive = searchParams.get('includeInactive') === 'true';

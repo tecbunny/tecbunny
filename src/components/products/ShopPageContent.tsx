@@ -9,14 +9,14 @@ import {
   Search
 } from 'lucide-react';
 
-import { logger } from '../../lib/logger';
-import { getProductDisplayImage } from '../../lib/image-utils';
-import { cn, revealDelayClass } from '../../lib/utils';
+import { logger } from '@/lib/logger';
+import { getProductDisplayImage } from '@/lib/image-utils';
+import { cn, revealDelayClass } from '@/lib/utils';
 
-import type { Product, AutoOffer } from '../../lib/types';
-import { Skeleton } from '../../components/ui/skeleton';
-import { Input } from '../../components/ui/input';
-import { useCart } from '../../lib/hooks';
+import type { Product, AutoOffer } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { useCart } from '@/lib/hooks';
 import { useRevealSections } from '../../hooks/use-reveal-sections';
 import HeroCarousel from '../HeroCarousel';
 

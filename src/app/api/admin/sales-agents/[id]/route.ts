@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from 'next/server';
 
-import { createClient, createServiceClient } from '../../../../../lib/supabase/server';
-import { isAdmin } from '../../../../../lib/permissions';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isAdmin } from '@/lib/permissions';
 
 // export const dynamic = 'force-dynamic';
 
@@ -32,7 +32,7 @@ async function PATCH(
     }
 
     // 3. Use service client to bypass RLS for admin operations
-    const serviceClient = createServiceClient();
+    const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     
     // 4. Update the application status in the database
     const { data, error } = await serviceClient

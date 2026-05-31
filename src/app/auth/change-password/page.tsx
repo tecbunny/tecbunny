@@ -8,7 +8,7 @@ import * as z from 'zod';
 import { Eye, EyeOff, Lock, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -16,11 +16,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../../../components/ui/form';
-import { Input } from '../../../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '../../../hooks/use-toast';
-import { useAuth } from '../../../lib/hooks';
+import { useAuth } from '@/lib/hooks';
 
 // Validation schema
 const changePasswordSchema = z.object({

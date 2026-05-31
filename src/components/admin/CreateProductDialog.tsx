@@ -13,10 +13,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '../../components/ui/dialog';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Textarea } from '../../components/ui/textarea';
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
@@ -25,17 +25,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../../components/ui/form';
+} from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
-import { createClient } from '../../lib/supabase/client';
+} from '@/components/ui/select';
+import { createClient } from '@/lib/supabase/client';
 import { useToast } from '../../hooks/use-toast';
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 
 const productSchema = z.object({
   title: z.string().min(3, 'Title is required'),

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { RefreshCw, Shield, AlertCircle } from 'lucide-react';
 
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 
 export interface CaptchaProps {
   onVerify: (token: string) => void;

@@ -6,17 +6,17 @@ import { useSearchParams } from 'next/navigation';
 
 import { Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 
-import { createClient } from '../../../lib/supabase/client';
-import { normalizeRole } from '../../../lib/roles';
+import { createClient } from '@/lib/supabase/client';
+import { normalizeRole } from '@/lib/roles';
 
 // Force dynamic rendering for auth page
 // export const dynamic = 'force-dynamic';
 
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 import { useToast } from '../../../hooks/use-toast';
-import { TwoFactorVerification } from '../../../components/auth/TwoFactorVerification';
+import { TwoFactorVerification } from '@/components/auth/TwoFactorVerification';
 
 function SignInForm() {
   const [identifier, setIdentifier] = useState('');

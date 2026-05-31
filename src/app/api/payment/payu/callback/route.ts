@@ -3,10 +3,10 @@ import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-import { apiError } from '../../../../../lib/errors';
-import { logger } from '../../../../../lib/logger';
-import { resolveSiteUrl } from '../../../../../lib/site-url';
-import { normalisePayuEnvironment, verifyPayuHash, type PayuConfig, type PayuEnvironment } from '../../../../../lib/payu-service';
+import { apiError } from '@/lib/errors';
+import { logger } from '@/lib/logger';
+import { resolveSiteUrl } from '@/lib/site-url';
+import { normalisePayuEnvironment, verifyPayuHash, type PayuConfig, type PayuEnvironment } from '@/lib/payu-service';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.local';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';

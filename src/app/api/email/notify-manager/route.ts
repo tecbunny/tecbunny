@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import * as z from 'zod';
 
-import { emailHelpers } from '../../../../lib/email';
-import { createClient } from '../../../../lib/supabase/server';
-import { isAtLeast } from '../../../../lib/roles';
+import { emailHelpers } from '@/lib/email';
+import { createClient } from '@/lib/supabase/server';
+import { isAtLeast } from '@/lib/roles';
 
 // Simple in-memory dedupe to avoid duplicate sends in quick succession (best-effort only)
 const recentSends = new Map<string, number>();

@@ -13,11 +13,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '../../components/ui/dialog';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Textarea } from '../../components/ui/textarea';
-import { Switch } from '../../components/ui/switch';
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Form,
   FormControl,
@@ -26,18 +26,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../../components/ui/form';
+} from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
-import { createClient } from '../../lib/supabase/client';
+} from '@/components/ui/select';
+import { createClient } from '@/lib/supabase/client';
 import { useToast } from '../../hooks/use-toast';
-import { logger } from '../../lib/logger';
-import { Badge } from '../../components/ui/badge';
+import { logger } from '@/lib/logger';
+import { Badge } from '@/components/ui/badge';
 
 const serviceSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),

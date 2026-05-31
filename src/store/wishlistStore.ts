@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Product } from '../lib/types';
+import type { Product } from '@/lib/types';
 import { toast } from '../hooks/use-toast';
 
 export interface WishlistState {

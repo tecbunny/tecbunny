@@ -2,12 +2,12 @@
 
 import * as React from 'react'
 
-import { Input } from '../../../../components/ui/input'
-import { Button } from '../../../../components/ui/button'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../../components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { useToast } from '../../../../hooks/use-toast'
-import { createClient } from '../../../../lib/supabase/client'
-import type { Product, CartItem } from '../../../../lib/types'
+import { createClient } from '@/lib/supabase/client'
+import type { Product, CartItem } from '@/lib/types'
 
 export default function AgentOrderPage() {
   const supabase = createClient()

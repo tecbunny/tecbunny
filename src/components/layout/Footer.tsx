@@ -6,8 +6,8 @@ import Image from 'next/image';
 
 import { Facebook, Twitter, Instagram, Linkedin, Youtube, Globe, FileText, Shield } from 'lucide-react';
 
-import { createClient } from '../../lib/supabase/client';
-import { logger } from '../../lib/logger';
+import { createClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
 import { useAnalytics } from '../../hooks/use-analytics';
 
 function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {

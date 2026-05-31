@@ -4,13 +4,13 @@ import React, { useState, useEffect } from 'react';
 
 import { Smartphone, Mail, Shield, CheckCircle, AlertCircle, MessageCircle, Loader2 } from 'lucide-react';
 
-import { Button } from '../../components/ui/button';
-import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
-import { Label } from '../../components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
-import { cn } from '../../lib/utils';
-import { ErrorBoundary, CommunicationErrorFallback } from '../../components/shared/ErrorBoundary';
+import { Button } from '@/components/ui/button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { ErrorBoundary, CommunicationErrorFallback } from '@/components/shared/ErrorBoundary';
 
 export type OTPChannel = 'sms' | 'email' | 'whatsapp';
 export type OTPPurpose = 'signup' | 'recovery' | 'login_2fa' | 'agent_order';

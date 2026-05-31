@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient as createServerClient, createServiceClient } from '../../../../../lib/supabase/server';
-import { logger } from '../../../../../lib/logger';
-import { isAtLeast } from '../../../../../lib/roles';
-import type { UserRole } from '../../../../../lib/types';
+import { createClient as createServerClient, createServiceClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+import { isAtLeast } from '@/lib/roles';
+import type { UserRole } from '@/lib/types';
 // computeAutoFill is not used in this route; we compute inline for return.
 
 // export const dynamic = 'force-dynamic';
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const limit = Math.max(1, Math.min(50, Number(body?.limit ?? 15)));
     const days = Math.max(1, Math.min(365, Number(body?.days ?? 30)));
 
-    const service = createServiceClient();
+    
 
     // 1) Fetch active products with relevant fields
     const { data: products } = await service

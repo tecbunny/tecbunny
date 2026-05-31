@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 
 import { useAnalytics } from '../../hooks/use-analytics';
-import { useAuth, useCart } from '../../lib/hooks';
-import { hasRoleClient } from '../../lib/permissions-client';
+import { useAuth, useCart } from '@/lib/hooks';
+import { hasRoleClient } from '@/lib/permissions-client';
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient } from '../../../../lib/supabase/server';
-import { sendOrderNotification, sendOrderStatusUpdate, sendPaymentReminder } from '../../../../lib/whatsapp-service';
-import { logger } from '../../../../lib/logger';
+import { createClient } from '@/lib/supabase/server';
+import { sendOrderNotification, sendOrderStatusUpdate, sendPaymentReminder } from '@/lib/whatsapp-service';
+import { logger } from '@/lib/logger';
 
 // Customer signup integration with phone contact and WhatsApp notifications
 export async function POST(request: NextRequest) {
@@ -197,6 +197,6 @@ Thank you for joining our tech community! 🚀
 Happy shopping! 😊
   `.trim();
 
-  const { sendWhatsAppNotification } = await import('../../../../lib/whatsapp-service');
+  const { sendWhatsAppNotification } = await import('@/lib/whatsapp-service');
   return sendWhatsAppNotification(phone, welcomeMessage);
 }

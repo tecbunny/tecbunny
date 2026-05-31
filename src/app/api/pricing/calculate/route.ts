@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { pricingService } from '../../../../lib/pricing-service';
-import { logger } from '../../../../lib/logger';
+import { pricingService } from '@/lib/pricing-service';
+import { logger } from '@/lib/logger';
 
 // export const dynamic = 'force-dynamic';
 

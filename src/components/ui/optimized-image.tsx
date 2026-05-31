@@ -3,9 +3,9 @@
 import * as React from 'react';
 import Image, { type ImageProps } from 'next/image';
 
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 
-import { logger } from '../../lib/logger';
+import { logger } from '@/lib/logger';
 
 interface OptimizedImageProps extends Omit<ImageProps, 'src' | 'alt' | 'width' | 'height' | 'fill' | 'quality' | 'placeholder' | 'blurDataURL'> {
   src: string;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { requireApiRole, type RoleCheckOptions } from '../../../lib/server-role-guard';
+import { requireApiRole, type RoleCheckOptions } from '@/lib/server-role-guard';
 
 const INVENTORY_ACCESS: RoleCheckOptions = {
   allowedRoles: ['sales', 'manager'],

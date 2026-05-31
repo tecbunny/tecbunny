@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 import { TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/components/ui/button';
 
 interface DashboardStats {
     totalUsers: number;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient, createServiceClient } from '../../../../lib/supabase/server';
-import { isAdmin } from '../../../../lib/permissions';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isAdmin } from '@/lib/permissions';
 
 // export const dynamic = 'force-dynamic';
 
@@ -24,7 +24,7 @@ export async function GET(_request: NextRequest) {
     }
 
     // Use service client for admin operations
-    const serviceClient = createServiceClient();
+    
 
     // Fetch pricing rules with product information
     const { data: rules, error } = await serviceClient
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use service client for insert
-    const serviceClient = createServiceClient();
+    
 
     // Insert the pricing rule
     const { data: newRule, error } = await serviceClient

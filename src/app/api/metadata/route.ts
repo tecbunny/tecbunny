@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 
-import { createServiceClient } from '../../../lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 
 export async function GET() {
   try {
     // Use service client to bypass RLS
-    const supabase = createServiceClient();
+    const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     
     // Get site settings
     const { data: settings, error } = await supabase

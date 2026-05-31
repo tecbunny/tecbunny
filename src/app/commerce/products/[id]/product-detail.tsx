@@ -3,15 +3,15 @@ import * as React from 'react';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 
-import type { Product, Review } from '../../../../lib/types';
-import { Card, CardContent, CardHeader } from '../../../../components/ui/card';
-import { Separator } from '../../../../components/ui/separator';
-import { StarRating } from '../../../../components/products/StarRating';
-import { AddToCartButton } from '../../../../components/cart/AddToCartButton';
-import { WishlistButton } from '../../../../components/wishlist/WishlistButton';
-import { ProductRecommendations } from '../../../../components/products/ProductRecommendations';
-import { Badge } from '../../../../components/ui/badge';
-import { createClient } from '../../../../lib/supabase/client';
+import type { Product, Review } from '@/lib/types';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { StarRating } from '@/components/products/StarRating';
+import { AddToCartButton } from '@/components/cart/AddToCartButton';
+import { WishlistButton } from '@/components/wishlist/WishlistButton';
+import { ProductRecommendations } from '@/components/products/ProductRecommendations';
+import { Badge } from '@/components/ui/badge';
+import { createClient } from '@/lib/supabase/client';
 
 async function getProduct(id: string) {
   const supabase = createClient();

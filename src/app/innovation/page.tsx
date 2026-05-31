@@ -1,10 +1,10 @@
 import { Metadata } from 'next';
 
-import InnovationPage from '../../components/innovation-page';
-import { createPageMetadata } from '../../lib/metadata';
-import { logger } from '../../lib/logger';
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../lib/supabase/server';
-import type { InnovationDevice, InnovationMode } from '../../lib/types';
+import InnovationPage from '@/components/innovation-page';
+import { createPageMetadata } from '@/lib/metadata';
+import { logger } from '@/lib/logger';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import type { InnovationDevice, InnovationMode } from '@/lib/types';
 
 export const metadata: Metadata = createPageMetadata({
   title: 'Home Automation & Smart Security in Goa & Maharashtra',

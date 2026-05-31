@@ -34,7 +34,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../../components/ui/card';
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -42,14 +42,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../../components/ui/table';
-import { Button } from '../../../../components/ui/button';
-import { Badge } from '../../../../components/ui/badge';
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
-import { createClient } from '../../../../lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { useToast } from '../../../../hooks/use-toast';
-import type { Service, ServiceRequest } from '../../../../lib/types';
-import { Skeleton } from '../../../../components/ui/skeleton';
+import type { Service, ServiceRequest } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,12 +57,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../../../../components/ui/dropdown-menu';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../../components/ui/tabs';
-import { CreateServiceDialog } from '../../../../components/admin/CreateServiceDialog';
-import { EditServiceDialog } from '../../../../components/admin/EditServiceDialog';
+} from '@/components/ui/dropdown-menu';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CreateServiceDialog } from '@/components/admin/CreateServiceDialog';
+import { EditServiceDialog } from '@/components/admin/EditServiceDialog';
 
-import { logger } from '../../../../lib/logger';
+import { logger } from '@/lib/logger';
 
 export default function AdminServicesPage() {
   const [services, setServices] = React.useState<Service[]>([]);

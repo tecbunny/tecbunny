@@ -4,9 +4,9 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
-import UserProfile from '../../components/profile/UserProfile';
-import { useAuth } from '../../lib/hooks';
-import { logger } from '../../lib/logger';
+import UserProfile from '@/components/profile/UserProfile';
+import { useAuth } from '@/lib/hooks';
+import { logger } from '@/lib/logger';
 
 export default function ProfilePage() {
   const { supabase, loading: authLoading } = useAuth();

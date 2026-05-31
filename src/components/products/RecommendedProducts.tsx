@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Product } from '../../lib/types';
+import { Product } from '@/lib/types';
 import { ProductCard } from './ProductCard';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '../ui/carousel';
 

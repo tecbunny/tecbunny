@@ -10,17 +10,17 @@ import * as z from 'zod';
 
 import { ArrowLeft, RefreshCw, Sparkles } from 'lucide-react';
 
-import { Button } from '../../../../../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../../components/ui/card';
-import { Input } from '../../../../../components/ui/input';
-import { Textarea } from '../../../../../components/ui/textarea';
-import { Switch } from '../../../../../components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../../../components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '../../../../../components/ui/form';
-import { Label } from '../../../../../components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 import { useToast } from '../../../../../hooks/use-toast';
-import { fetchAiProductDetails, formatAiSpecifications } from '../../../../../lib/ai/product-details';
-import { createClient } from '../../../../../lib/supabase/client';
+import { fetchAiProductDetails, formatAiSpecifications } from '@/lib/ai/product-details';
+import { createClient } from '@/lib/supabase/client';
 
 const productSchema = z.object({
   name: z.string().min(3, { message: "Product name must be at least 3 characters." }),

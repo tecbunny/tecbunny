@@ -1,8 +1,8 @@
 import type { User } from '@supabase/supabase-js';
 
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../lib/supabase/server';
-import { logger } from '../../lib/logger';
-import { normalizeRole as normalizeKnownRole, ROLE_HIERARCHY, type UserRole } from '../../lib/roles';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
+import { normalizeRole as normalizeKnownRole, ROLE_HIERARCHY, type UserRole } from '@/lib/roles';
 
 type AdminRole = 'admin' | 'manager';
 

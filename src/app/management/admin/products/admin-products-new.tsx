@@ -2,10 +2,10 @@
 
 import * as React from 'react';
 import { Pencil, Plus, Trash2, MoreHorizontal, Loader2 } from 'lucide-react';
-import { createClient } from '../../../../lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { useToast } from '../../../../hooks/use-toast';
-import { logger } from '../../../../lib/logger';
-import type { Product } from '../../../../lib/types';
+import { logger } from '@/lib/logger';
+import type { Product } from '@/lib/types';
 
 import {
   Card,
@@ -13,9 +13,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/button';
-import { Input } from '../../../../components/ui/input';
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -23,7 +23,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../../components/ui/table';
+} from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +31,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../../../../components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,10 +41,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../../../components/ui/alert-dialog';
-import { Badge } from '../../../../components/ui/badge';
-import { CreateProductDialog } from '../../../../components/admin/CreateProductDialog';
-import { EditProductDialog } from '../../../../components/admin/EditProductDialog';
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { CreateProductDialog } from '@/components/admin/CreateProductDialog';
+import { EditProductDialog } from '@/components/admin/EditProductDialog';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = React.useState<Product[]>([]);

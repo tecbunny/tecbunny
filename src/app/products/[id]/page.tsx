@@ -1,7 +1,7 @@
-﻿import { ProductDetailPage } from '../../../components/products/ProductDetailPage';
+﻿import { ProductDetailPage } from '@/components/products/ProductDetailPage';
 import { Metadata } from 'next';
-import { createPageMetadata } from '../../../lib/metadata';
-import { createClient } from '../../../lib/supabase/server';
+import { createPageMetadata } from '@/lib/metadata';
+import { createClient } from '@/lib/supabase/server';
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;

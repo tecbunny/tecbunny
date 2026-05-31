@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const serviceSupabase = createServiceClient();
+    
     const payload = {
       name: parsed.data.name.trim(),
       email: parsed.data.email.trim().toLowerCase(),
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid query parameters' }, { status: 400 });
     }
 
-    const serviceSupabase = createServiceClient();
+    
     let query = serviceSupabase
       .from('contact_messages')
       .select('*')

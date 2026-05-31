@@ -4,9 +4,9 @@ import * as React from 'react';
 
 import { Crown, Star, User, Percent } from 'lucide-react';
 
-import { Badge } from '../../components/ui/badge';
-import { Card, CardContent } from '../../components/ui/card';
-import type { CustomerCategory } from '../../lib/types';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import type { CustomerCategory } from '@/lib/types';
 
 interface CustomerCategoryBadgeProps {
   category: CustomerCategory | undefined;

@@ -22,11 +22,11 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { cn, revealDelayClass } from '@/lib/utils';
-import { useCart } from '../lib/hooks';
+import { useCart } from '@/lib/hooks';
 import { useAnalytics } from '../hooks/use-analytics';
 import { usePermissions } from '../hooks/use-permissions';
 import { useRevealSections } from '../hooks/use-reveal-sections';
-import type { Product, Service } from '../lib/types';
+import type { Product, Service } from '@/lib/types';
 import HeroCarousel from './HeroCarousel';
 
 

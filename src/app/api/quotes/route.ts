@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
-import { buildPdf, loadCompanyInfo } from '../../../lib/pdf-generator';
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '../../../lib/supabase/server';
-import { logger } from '../../../lib/logger';
+import { buildPdf, loadCompanyInfo } from '@/lib/pdf-generator';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Prefer service role for DB writes; fall back to user client if service env is absent.
-    const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : null;
+    const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
 
     let company: Record<string, any> = {};
     try {

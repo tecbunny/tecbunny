@@ -2,8 +2,8 @@ import { Suspense } from 'react';
 
 import type { Metadata } from 'next';
 
-import HomePage from '../components/home-page';
-import { createPageMetadata } from '../lib/metadata';
+import HomePage from '@/components/home-page';
+import { createPageMetadata } from '@/lib/metadata';
 
 // Force dynamic rendering for homepage as requested
 // export const dynamic = 'force-dynamic';

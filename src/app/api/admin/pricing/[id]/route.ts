@@ -1,7 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient, createServiceClient } from '../../../../../lib/supabase/server';
-import { isAdmin } from '../../../../../lib/permissions';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isAdmin } from '@/lib/permissions';
 
 // export const dynamic = 'force-dynamic';
 
@@ -41,7 +41,7 @@ export async function PUT(
     } = body;
 
     // Use service client for update
-    const serviceClient = createServiceClient();
+    
 
     // Update the pricing rule
     const { data: updatedRule, error } = await serviceClient
@@ -102,7 +102,7 @@ export async function DELETE(
     }
 
     // Use service client for delete
-    const serviceClient = createServiceClient();
+    
 
     // Delete the pricing rule
     const { error } = await serviceClient

@@ -4,12 +4,12 @@ import React, { createContext, useState, useEffect, useCallback, useMemo, useRef
 
 import type { SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
 
-import type { User, UserRole } from '../lib/types';
-import { createClient } from '../lib/supabase/client';
-import { logger } from '../lib/logger';
-import { SessionManager, SESSION_EXPIRED_EVENT } from '../lib/session-manager';
+import type { User, UserRole } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
+import { SessionManager, SESSION_EXPIRED_EVENT } from '@/lib/session-manager';
 import { useAnalytics } from '../hooks/use-analytics';
-import { normalizeRole } from '../lib/roles';
+import { normalizeRole } from '@/lib/roles';
 
 const parseRole = (value: unknown): UserRole | null => {
   return normalizeRole(value) as UserRole | null;

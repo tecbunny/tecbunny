@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServiceClient } from '../../../../lib/supabase/server';
-import { requireAdmin } from '../../../../lib/admin-auth';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/admin-auth';
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Use service client for admin data fetching to bypass RLS
-  const adminDb = createServiceClient();
+  
 
   const { searchParams } = new URL(request.url);
   const range = searchParams.get('range') || '7d'; // 7d, 30d, all

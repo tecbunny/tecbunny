@@ -12,16 +12,16 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetFooter,
-} from '../../components/ui/sheet';
-import { Button } from '../../components/ui/button';
-import { ScrollArea } from '../../components/ui/scroll-area';
-import { Separator } from '../../components/ui/separator';
-import { Badge } from '../../components/ui/badge';
-import { useCart } from '../../lib/hooks';
-import { logger } from '../../lib/logger';
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { useCart } from '@/lib/hooks';
+import { logger } from '@/lib/logger';
 
-import type { Coupon } from '../../lib/types';
-import { Input } from '../../components/ui/input';
+import type { Coupon } from '@/lib/types';
+import { Input } from '@/components/ui/input';
 import { useToast } from '../../hooks/use-toast';
 
 import { CartItemCard } from './CartItemCard';

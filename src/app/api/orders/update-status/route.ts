@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient as createServerClient, createServiceClient } from '../../../../lib/supabase/server';
-import { logger } from '../../../../lib/logger';
+import { createClient as createServerClient, createServiceClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 import { 
   sendWhatsAppNotification, 
   sendOutForDeliveryNotification, 
@@ -12,10 +12,10 @@ import {
   sendOrderPickupReady,
   sendPaymentActionRequired,
   sendDeliveryConfirmation
-} from '../../../../lib/whatsapp-service';
-import { otpService } from '../../../../lib/otp-service';
-import { isAtLeast } from '../../../../lib/roles';
-import type { OrderStatus, UserRole } from '../../../../lib/types';
+} from '@/lib/whatsapp-service';
+import { otpService } from '@/lib/otp-service';
+import { isAtLeast } from '@/lib/roles';
+import type { OrderStatus, UserRole } from '@/lib/types';
 
 const STATUS_NORMALIZATION: Record<string, OrderStatus> = {
   pending: 'Pending',
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
       ?? ((user.app_metadata as Record<string, unknown> | undefined)?.role as UserRole | undefined)
       ?? 'customer';
 
-    const serviceClient = createServiceClient();
+    
     const { data: orderRecord, error: fetchError } = await serviceClient
       .from('orders')
       .select('id, type, payment_status, payment_method, status, customer_phone, customer_name, total, customer_id')
@@ -302,7 +302,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function sendOrderStatusUpdateWhatsApp(phoneNumber: string, data: any) {
-  const supabase = createServiceClient();
+  
   try {
     let message = '';
     const { orderId, status, customerName, amount, currency, cancelReason } = data;

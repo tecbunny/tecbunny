@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import AutoOffersManagement from '../../../../components/admin/AutoOffersManagement';
+import AutoOffersManagement from '@/components/admin/AutoOffersManagement';
 
 export const metadata: Metadata = {
    title: 'Auto-Offers Management - Admin Panel | Techbunny Solutions',

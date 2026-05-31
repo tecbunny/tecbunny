@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
 import {
   Table,
   TableBody,
@@ -130,6 +131,21 @@ export default function AdminProductsPage() {
     setDeleteDialogOpen(true);
   };
 
+  const handleInlineUpdate = async (productId: string, field: string, value: number) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ [field]: value })
+        .eq('id', productId);
+
+      if (error) throw error;
+      toast({ title: 'Updated', description: `Product updated successfully.`, duration: 2000 });
+      setProducts(prev => prev.map(p => p.id === productId ? { ...p, [field]: value } : p));
+    } catch (err: any) {
+      toast({ title: 'Error', description: err?.message || 'Update failed', variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -188,7 +204,22 @@ export default function AdminProductsPage() {
                         <Badge variant="outline">{product.category}</Badge>
                     </TableCell>
                     <TableCell>
-                      {product.price ? `₹${product.price}` : 'Free'}
+                      <div className="flex flex-col gap-1 w-24">
+                        <Input
+                          type="number"
+                          className="h-8 text-sm"
+                          defaultValue={product.price ?? 0}
+                          onBlur={(e) => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val) && val !== (product.price ?? 0)) {
+                              handleInlineUpdate(product.id, 'price', val);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                          }}
+                        />
+                      </div>
                     </TableCell>
                     <TableCell>
                         {product.stock_quantity ?? 'N/A'}

@@ -53,6 +53,8 @@ export default function AdminProductsPage() {
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
+  const [editedPrices, setEditedPrices] = React.useState<Record<string, { mrp: number; price: number }>>({});
+  const [savingProductId, setSavingProductId] = React.useState<string | null>(null);
 
   const supabase = createClient();
   const { toast } = useToast();
@@ -131,18 +133,39 @@ export default function AdminProductsPage() {
     setDeleteDialogOpen(true);
   };
 
-  const handleInlineUpdate = async (productId: string, field: string, value: number) => {
+  const handlePriceChange = (productId: string, field: 'mrp' | 'price', value: number) => {
+    setEditedPrices(prev => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSavePrices = async (productId: string) => {
+    const edited = editedPrices[productId];
+    if (!edited) return;
+
+    setSavingProductId(productId);
     try {
       const { error } = await supabase
         .from('products')
-        .update({ [field]: value })
+        .update({ mrp: edited.mrp, price: edited.price })
         .eq('id', productId);
 
       if (error) throw error;
-      toast({ title: 'Updated', description: `Product updated successfully.`, duration: 2000 });
-      setProducts(prev => prev.map(p => p.id === productId ? { ...p, [field]: value } : p));
+      toast({ title: 'Success', description: 'Prices updated successfully.', duration: 2000 });
+      setProducts(prev => prev.map(p => p.id === productId ? { ...p, mrp: edited.mrp, price: edited.price } : p));
+      setEditedPrices(prev => {
+        const newState = { ...prev };
+        delete newState[productId];
+        return newState;
+      });
     } catch (err: any) {
       toast({ title: 'Error', description: err?.message || 'Update failed', variant: 'destructive' });
+    } finally {
+      setSavingProductId(null);
     }
   };
 
@@ -210,16 +233,8 @@ export default function AdminProductsPage() {
                           type="number"
                           placeholder="MRP"
                           className="h-8 text-sm"
-                          defaultValue={product.mrp ?? 0}
-                          onBlur={(e) => {
-                            const val = parseFloat(e.target.value);
-                            if (!isNaN(val) && val !== (product.mrp ?? 0)) {
-                              handleInlineUpdate(product.id, 'mrp', val);
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') e.currentTarget.blur();
-                          }}
+                          value={editedPrices[product.id]?.mrp ?? product.mrp ?? 0}
+                          onChange={(e) => handlePriceChange(product.id, 'mrp', parseFloat(e.target.value) || 0)}
                         />
                       </div>
                     </TableCell>
@@ -229,16 +244,8 @@ export default function AdminProductsPage() {
                           type="number"
                           placeholder="Sale Price"
                           className="h-8 text-sm"
-                          defaultValue={product.price ?? 0}
-                          onBlur={(e) => {
-                            const val = parseFloat(e.target.value);
-                            if (!isNaN(val) && val !== (product.price ?? 0)) {
-                              handleInlineUpdate(product.id, 'price', val);
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') e.currentTarget.blur();
-                          }}
+                          value={editedPrices[product.id]?.price ?? product.price ?? 0}
+                          onChange={(e) => handlePriceChange(product.id, 'price', parseFloat(e.target.value) || 0)}
                         />
                       </div>
                     </TableCell>
@@ -251,29 +258,42 @@ export default function AdminProductsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleEditClick(product)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteClick(product)}
-                            className="text-red-600 focus:text-red-600"
+                      <div className="flex gap-2 justify-end">
+                        {editedPrices[product.id] && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-8 text-xs"
+                            onClick={() => handleSavePrices(product.id)}
+                            disabled={savingProductId === product.id}
                           >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            {savingProductId === product.id ? 'Saving...' : 'Save'}
+                          </Button>
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleEditClick(product)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteClick(product)}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

@@ -1,8 +1,10 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient } from '../../../../lib/supabase/server';
 import { generateGeminiText } from '../../../../lib/ai/gemini-service';
 import { getProductDisplayImage } from '../../../../lib/image-utils';
+import { getRedis } from '../../../../lib/redis';
 
 const MAX_SOURCES = 3;
 const MAX_SOURCE_CHARS = 3500;
@@ -89,6 +91,19 @@ export async function POST(request: NextRequest) {
 
     if (!query) {
       return NextResponse.json({ error: 'Query is required.' }, { status: 400 });
+    }
+
+    const cacheKey = `ai:research:${crypto.createHash('sha256').update(JSON.stringify({ query, urls })).digest('hex')}`;
+    const redis = getRedis();
+    if (redis) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          return NextResponse.json(JSON.parse(cached));
+        }
+      } catch (err) {
+        // ignore cache read errors
+      }
     }
 
     const supabase = await createClient();
@@ -236,11 +251,21 @@ The previous response was too brief. Expand each section with 2-4 sentences and 
       summary = redactPrices(rawResponse);
     }
 
-    return NextResponse.json({
+    const responseData = {
       summary,
       products: safeProducts,
       sources: sources.map((source) => source.url),
-    });
+    };
+
+    if (redis) {
+      try {
+        await redis.set(cacheKey, JSON.stringify(responseData), 'EX', 86400);
+      } catch (err) {
+        // ignore cache write errors
+      }
+    }
+
+    return NextResponse.json(responseData);
   } catch (error: any) {
     return NextResponse.json(
       { error: error?.message || 'Failed to generate AI research.' },

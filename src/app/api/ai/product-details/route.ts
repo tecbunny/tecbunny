@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { z } from 'zod';
@@ -5,6 +6,7 @@ import { z } from 'zod';
 import { generateGeminiText } from '../../../../lib/ai/gemini-service';
 import { requireRole } from '../../../../lib/auth/guard';
 import { logger } from '../../../../lib/logger';
+import { getRedis } from '../../../../lib/redis';
 
 const requestSchema = z.object({
   productUrl: z.string().url(),
@@ -221,6 +223,20 @@ export async function POST(request: NextRequest) {
     }
 
     const { productUrl, existingData } = parsedRequest.data;
+
+    const cacheKey = `ai:product-details:${crypto.createHash('sha256').update(JSON.stringify(parsedRequest.data)).digest('hex')}`;
+    const redis = getRedis();
+    if (redis) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          return NextResponse.json(JSON.parse(cached));
+        }
+      } catch (err) {
+        // ignore cache read errors
+      }
+    }
+
     const pageContext = await fetchPageContext(productUrl);
 
     const prompt = [
@@ -283,7 +299,16 @@ export async function POST(request: NextRequest) {
       keys: Object.keys(details),
     });
 
-    return NextResponse.json({ success: true, details });
+    const responseData = { success: true, details };
+    if (redis) {
+      try {
+        await redis.set(cacheKey, JSON.stringify(responseData), 'EX', 86400);
+      } catch (err) {
+        // ignore cache write errors
+      }
+    }
+
+    return NextResponse.json(responseData);
   } catch (error) {
     logger.error('ai.product_details.error', { error });
     const message = error instanceof Error ? error.message : 'Internal server error';

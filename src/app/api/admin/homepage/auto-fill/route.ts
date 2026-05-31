@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     
 
     // 1) Fetch active products with relevant fields
-    const { data: products } = await service
+    const { data: products } = await supabase
       .from('products')
       .select('id, title, name, images, price, offer_price, popularity, rating, review_count, created_at, prioritized, product_type')
       .eq('status', 'active');
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // 2) Trending: aggregate sold quantities in last `days` days
     const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-    const { data: recentOrders } = await service
+    const { data: recentOrders } = await supabase
       .from('orders')
       .select('items')
       .gte('created_at', cutoff);

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { requireRole } from '@/lib/auth/guard';
 import { UserRole } from '@/lib/roles';
-import { createServiceClient } from '@/lib/supabase/server';
+import { createServiceClient , isSupabaseServiceConfigured , createClient } from '@/lib/supabase/server';
 
 interface Body {
   userId: string;
@@ -31,13 +31,13 @@ export async function POST(req: Request) {
     }
 
     const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
-    const { data: targetProfile } = await service.from('profiles').select('role').eq('id', userId).maybeSingle();
+    const { data: targetProfile } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle();
     if (!targetProfile) {
       return NextResponse.json({ error: 'Target user profile not found' }, { status: 404 });
     }
 
     // Update profiles.role via RPC for audit (preferred) else fallback
-    const { error: rpcError } = await service.rpc('admin_set_user_role', { p_user_id: userId, p_role: newRole, p_note: note ?? null });
+    const { error: rpcError } = await supabase.rpc('admin_set_user_role', { p_user_id: userId, p_role: newRole, p_note: note ?? null });
     if (rpcError) {
       return NextResponse.json({ error: 'Role update failed', details: rpcError.message }, { status: 500 });
     }

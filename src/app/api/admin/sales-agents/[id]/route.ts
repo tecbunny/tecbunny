@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from 'next/server';
 
-import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient , isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/permissions';
 
 // export const dynamic = 'force-dynamic';

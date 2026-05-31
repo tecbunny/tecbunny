@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import MultiChannelOTPManager, { type OTPVerification } from '@/lib/multi-channel-otp-manager';
 import { logger } from '@/lib/logger';
-import { createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { createServiceClient, isSupabaseServiceConfigured , createClient } from '@/lib/supabase/server';
 
 const otpManager = new MultiChannelOTPManager();
 

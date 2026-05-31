@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient , isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
 

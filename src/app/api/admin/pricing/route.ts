@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/permissions';
 
 // export const dynamic = 'force-dynamic';
@@ -23,8 +23,7 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Use service client for admin operations
-    
+    const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
 
     // Fetch pricing rules with product information
     const { data: rules, error } = await serviceClient
@@ -110,8 +109,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use service client for insert
-    
+    const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
 
     // Insert the pricing rule
     const { data: newRule, error } = await serviceClient

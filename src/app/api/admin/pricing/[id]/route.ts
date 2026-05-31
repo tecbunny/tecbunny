@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/permissions';
 
 // export const dynamic = 'force-dynamic';
@@ -40,8 +40,7 @@ export async function PUT(
       is_active,
     } = body;
 
-    // Use service client for update
-    
+    const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
 
     // Update the pricing rule
     const { data: updatedRule, error } = await serviceClient
@@ -101,8 +100,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Use service client for delete
-    
+    const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
 
     // Delete the pricing rule
     const { error } = await serviceClient

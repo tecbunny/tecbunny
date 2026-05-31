@@ -45,10 +45,10 @@ export async function POST(request: NextRequest) {
     
 
     // Fetch active products and recent orders similarly to auto-fill route
-    const { data: products } = await service.from('products').select('id, title, name, images, price, offer_price, popularity, rating, review_count, created_at, prioritized, product_type').eq('status', 'active');
+    const { data: products } = await supabase.from('products').select('id, title, name, images, price, offer_price, popularity, rating, review_count, created_at, prioritized, product_type').eq('status', 'active');
 
     const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-    const { data: recentOrders } = await service.from('orders').select('items').gte('created_at', cutoff);
+    const { data: recentOrders } = await supabase.from('orders').select('items').gte('created_at', cutoff);
 
     const salesCountMap = new Map<string, number>();
     for (const order of (recentOrders || [])) {
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     // Fetch analytics data for AI scoring
     const analyticsMap = new Map<string, any>();
     try {
-      const { data: analyticsData } = await service.from('product_analytics_view').select('*');
+      const { data: analyticsData } = await supabase.from('product_analytics_view').select('*');
       if (analyticsData) {
         analyticsData.forEach((item: any) => {
           analyticsMap.set(item.id, item);
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     // Persist suggestions to settings
     const serviceUpsert = async (key: string, values: string[]) => {
       try {
-        await service.from('settings').upsert({ key, value: JSON.stringify(values) }, { onConflict: 'key' });
+        await supabase.from('settings').upsert({ key, value: JSON.stringify(values) }, { onConflict: 'key' });
       } catch (err) {
         logger.warn('auto_fill_upsert_failed', { key, err: (err as any)?.message || String(err) });
       }

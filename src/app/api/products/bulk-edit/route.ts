@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createServiceClient } from '@/lib/supabase/server';
+import { createServiceClient , isSupabaseServiceConfigured , createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 
 // Helper function to properly escape CSV values

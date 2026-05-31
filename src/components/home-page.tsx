@@ -189,7 +189,7 @@ export default function HomePage() {
       return undefined;
     }
 
-    return scheduleWhenIdle(() => setEnableAmbientEffects(true), 2200);
+    return scheduleWhenIdle(() => setEnableAmbientEffects(true), 4000);
   }, [prefersReducedMotion]);
 
   React.useEffect(() => {
@@ -263,11 +263,17 @@ export default function HomePage() {
       return undefined;
     }
 
-    const intervalId = window.setInterval(() => {
-      setHeroWordIndex((current) => (current + 1) % heroWords.length);
-    }, 2400);
+    let intervalId: number;
+    const timeoutId = window.setTimeout(() => {
+      intervalId = window.setInterval(() => {
+        setHeroWordIndex((current) => (current + 1) % heroWords.length);
+      }, 2400);
+    }, 2000);
 
-    return () => window.clearInterval(intervalId);
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (intervalId) window.clearInterval(intervalId);
+    };
   }, [heroWords.length, prefersReducedMotion]);
 
   React.useEffect(() => {
@@ -427,11 +433,11 @@ export default function HomePage() {
               <div className="flex gap-8 border-t border-white/5 pt-8">
                 <div>
                   <p className="text-2xl font-bold text-white font-tech">100</p>
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Installations</p>
+                  <p className="text-xs uppercase tracking-wider text-slate-400">Installations</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-white font-tech">24/7</p>
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Support</p>
+                  <p className="text-xs uppercase tracking-wider text-slate-400">Support</p>
                 </div>
               </div>
             </div>
@@ -442,7 +448,7 @@ export default function HomePage() {
                   <div className="h-3 w-3 rounded-full bg-red-500"></div>
                   <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
                   <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                  <div className="ml-auto text-xs font-mono text-slate-500">system_status.log</div>
+                  <div className="ml-auto text-xs font-mono text-slate-400">system_status.log</div>
                 </div>
                 <div className="space-y-3 font-mono text-sm">
                   {LOG_LINES.map((log) => (
@@ -665,6 +671,26 @@ export default function HomePage() {
                   </div>
                 );
               })}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-slate-900/50 py-24 reveal-section is-revealed" data-reveal-id="about">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto text-slate-300 space-y-6 text-sm sm:text-base leading-relaxed">
+            <h2 className="text-3xl font-semibold text-white mb-8">Comprehensive Tech Solutions for Homes and Businesses</h2>
+            <p>
+              At TecBunny Solutions, we understand that reliable technology is the backbone of modern living and seamless business operations. Based in the heart of Goa and extending our services across Maharashtra, we specialize in delivering comprehensive, end-to-end technology solutions designed to meet your unique needs. Whether you are a homeowner looking to secure your property or a business enterprise aiming to streamline your IT infrastructure, our team of seasoned professionals is here to guide you every step of the way. We believe in building long-lasting relationships with our clients by providing not just hardware, but complete ecosystems that work harmoniously to enhance security, productivity, and convenience.
+            </p>
+            <p>
+              Our expertise in Security Systems goes beyond standard CCTV installations. We design layered protection strategies that incorporate the latest high-definition surveillance cameras, intelligent video analytics, and secure cloud storage options. We ensure that you have real-time access to your premises, no matter where you are in the world. From intrusion detection systems to advanced biometric access controls, our tailored security architectures provide peace of mind. We meticulously plan camera placements, network bandwidth, and storage capacities to ensure optimal coverage without blind spots, giving you a robust security posture against any potential threats.
+            </p>
+            <p>
+              When it comes to IT Reliability, we know that downtime is not an option. Our comprehensive IT services cover everything from initial network design and hardware procurement to ongoing maintenance and dedicated support. We specialize in building resilient networks that can handle the rigorous demands of modern digital workflows. Whether you need structured cabling for a new office space, reliable Wi-Fi solutions for a hospitality venue, or enterprise-grade server setups, TecBunny Solutions delivers. Our Annual Maintenance Contracts (AMC) are designed to provide proactive care, preventing issues before they disrupt your operations. Through continuous monitoring, routine health checks, and rapid incident response, we keep your technology infrastructure optimized and running smoothly 24/7.
+            </p>
+            <p>
+              The future belongs to Automation, and we are at the forefront of bringing smart environments to life. Our automation solutions transform ordinary spaces into highly responsive, energy-efficient, and easily manageable ecosystems. Imagine controlling your lighting, climate, security, and entertainment systems from a centralized hub or your smartphone. We integrate disparate systems to communicate with each other, offering intelligent automation that adapts to your daily routines. For commercial setups, this means automated energy management, streamlined facility operations, and enhanced user experiences. We work closely with architects, interior designers, and business owners to seamlessly weave technology into the fabric of your spaces, making them smarter, safer, and more sustainable for the future. Choose TecBunny Solutions—your trusted partner for all technology and security needs.
+            </p>
           </div>
         </div>
       </section>

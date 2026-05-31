@@ -5,7 +5,7 @@ import { logger } from '../logger';
 import { isValidImageUrl } from '../image-utils';
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-const connection = new Redis(redisUrl, { maxRetriesPerRequest: null, enableOfflineQueue: false });
+const connection = new Redis(redisUrl, { maxRetriesPerRequest: null, enableOfflineQueue: false }) as any;
 
 export const imageJobsQueue = new Queue('image-jobs', { connection });
 

@@ -72,14 +72,14 @@ CREATE POLICY "Users can read own orders"
 ON public.orders 
 FOR SELECT 
 TO authenticated 
-USING (user_id = auth.uid());
+USING (customer_id = auth.uid());
 
 -- Users can insert their own orders
 CREATE POLICY "Users can insert own orders" 
 ON public.orders 
 FOR INSERT 
 TO authenticated 
-WITH CHECK (user_id = auth.uid());
+WITH CHECK (customer_id = auth.uid());
 
 -- Admins can do everything on orders
 CREATE POLICY "Admins can manage orders" 

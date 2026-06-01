@@ -55,11 +55,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // CAPTCHA verification (only in production)
-    const bypassHeader = request.headers.get('x-bypass-captcha');
-    const isBypassed = process.env.DISABLE_CAPTCHA === 'true' || bypassHeader === '1';
-    
-    if (process.env.NODE_ENV === 'production' && !isBypassed) {
+    // CAPTCHA verification (conditional if configured)
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (siteKey) {
       const ip = request.headers.get('cf-connecting-ip')?.trim()
         || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
         || request.headers.get('x-real-ip')?.trim()
@@ -69,8 +67,6 @@ export async function POST(request: NextRequest) {
         logger.warn('forgot_password.captcha_failed', { identifier, ip, error: captcha.error || captcha.errorCodes });
         return NextResponse.json({ error: `Captcha verification failed: ${captcha.error || captcha.errorCodes?.join(', ') || 'Please retry.'}` }, { status: 400 });
       }
-    } else {
-      logger.debug('forgot_password.captcha_bypass', { identifier });
     }
 
     // Create admin client for user lookup

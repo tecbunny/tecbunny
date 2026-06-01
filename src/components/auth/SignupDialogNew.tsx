@@ -63,14 +63,7 @@ export function SignupDialog({ children }: { children: React.ReactNode }) {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [preferredChannel, setPreferredChannel] = useState<PreferredChannel>('email');
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim();
-  const captchaDisabled = process.env.NEXT_PUBLIC_DISABLE_CAPTCHA === 'true';
-  
-  // Debug logging
-  logger.debug('CAPTCHA configuration in SignupDialogNew', {
-    turnstileSiteKey: !!turnstileSiteKey,
-    captchaDisabled,
-    shouldShowCaptcha: !!turnstileSiteKey && !captchaDisabled,
-  });
+
   
   const Turnstile = useMemo(
     () => NextDynamic(() => import('react-turnstile').then(m => m.default), { ssr: false }) as unknown as React.ComponentType<any>,
@@ -102,7 +95,7 @@ export function SignupDialog({ children }: { children: React.ReactNode }) {
 
   const onSubmit = async (values: SignupFormValues) => {
     // Check CAPTCHA before proceeding if Turnstile is enabled
-    if (!!turnstileSiteKey && !captchaDisabled && !captchaToken) {
+    if (!!turnstileSiteKey && !captchaToken) {
       toast({
         title: 'Security Verification Required',
         description: 'Please complete the CAPTCHA to continue.',
@@ -352,13 +345,13 @@ export function SignupDialog({ children }: { children: React.ReactNode }) {
             <div className="flex flex-col space-y-4 pt-4">
               <Button 
                 type="submit" 
-                disabled={isSubmitting || (!privacyAccepted) || (!!turnstileSiteKey && !captchaDisabled && !captchaToken)} 
+                disabled={isSubmitting || (!privacyAccepted) || (!!turnstileSiteKey && !captchaToken)} 
                 className="w-full"
               >
                 {isSubmitting ? 'Creating Account...' : 'Create Account'}
               </Button>
 
-              {!!turnstileSiteKey && !captchaDisabled && (
+              {!!turnstileSiteKey && (
                 <div className="mt-3">
                   <Turnstile
                     sitekey={turnstileSiteKey}

@@ -34,57 +34,17 @@ export class CaptchaService {
    */
   async verifyCaptcha(response: string, remoteIp?: string): Promise<CaptchaVerificationResult> {
     try {
-      // Configuration bypass - if CAPTCHA is disabled by environment configuration
-      if (process.env.DISABLE_CAPTCHA === 'true') {
-        logger.warn('CAPTCHA verification bypassed by DISABLE_CAPTCHA=true configuration');
-        return {
-          success: true,
-          error: 'Bypassed by configuration'
-        };
-      }
-
       // Handle null, undefined, or empty responses
       if (!response || response.trim() === '') {
-        // In development, don't block on missing CAPTCHA
-        if (process.env.NODE_ENV === 'development') {
-          logger.warn('No CAPTCHA response provided, allowing in development');
-          return {
-            success: true,
-            error: 'No CAPTCHA response provided (dev bypass)'
-          };
-        }
         return {
           success: false,
           error: 'No CAPTCHA response provided'
         };
       }
 
-      const result = await this.verifyTurnstile(response, remoteIp);
-
-      // In development mode, allow authentication even if CAPTCHA verification fails
-      if (!result.success && process.env.NODE_ENV === 'development') {
-        logger.warn('CAPTCHA verification failed, bypassing in development mode:', {
-          error: result.error,
-          errorCodes: result.errorCodes
-        });
-        return {
-          success: true,
-          error: `CAPTCHA failed but bypassed in development: ${result.error}`
-        };
-      }
-
-      return result;
+      return await this.verifyTurnstile(response, remoteIp);
     } catch (error: any) {
       logger.error('CAPTCHA verification failed with exception:', { error: error.message || error });
-      
-      // In development mode, allow authentication even if CAPTCHA throws an exception
-      if (process.env.NODE_ENV === 'development') {
-        logger.warn('CAPTCHA verification threw exception, allowing in development mode');
-        return {
-          success: true,
-          error: `CAPTCHA failed but bypassed in development: ${error instanceof Error ? error.message : 'CAPTCHA verification failed'}`
-        };
-      }
       
       return {
         success: false,
@@ -189,11 +149,12 @@ const isDev = process.env.NODE_ENV === 'development';
 const defaultDevSiteKey = '0x4AAAAAACXR-JIPYf0PSOt3';
 const defaultDevSecretKey = '0x4AAAAAACXR-AC4lpjtmrjXOPRSlPEE3y4';
 
-const rawSiteKey = (process.env.CAPTCHA_SITE_KEY || process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '').trim();
-const rawSecretKey = (process.env.CAPTCHA_SECRET_KEY || process.env.TURNSTILE_SECRET_KEY || process.env.NEXT_PUBLIC_TURNSTILE_SECRET_KEY || '').trim();
+const rawSiteKey = (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '').trim();
+const rawSecretKey = (process.env.TURNSTILE_SECRET_KEY || '').trim();
 
 const siteKey = rawSiteKey || (isDev ? defaultDevSiteKey : '');
-const secretKey = rawSecretKey || (isDev ? defaultDevSecretKey : '');
+// Only fall back to development secret key if the site key is the default dev site key
+const secretKey = rawSecretKey || (siteKey === defaultDevSiteKey ? defaultDevSecretKey : '');
 
 const captchaConfig = {
   provider: 'turnstile' as const,
@@ -205,7 +166,7 @@ const captchaConfig = {
 
 // Log configuration for debugging (without exposing secret key values)
 const detectedEnvKeys = typeof process !== 'undefined' && process.env 
-  ? Object.keys(process.env).filter(key => key.includes('CAPTCHA') || key.includes('TURNSTILE'))
+  ? Object.keys(process.env).filter(key => key.includes('TURNSTILE'))
   : [];
 
 logger.info('CAPTCHA Configuration loaded', {
@@ -216,7 +177,6 @@ logger.info('CAPTCHA Configuration loaded', {
   theme: captchaConfig.theme,
   size: captchaConfig.size,
   nodeEnv: process.env.NODE_ENV,
-  disableCaptcha: process.env.DISABLE_CAPTCHA,
   context: 'captcha-service.configuration'
 });
 
@@ -237,14 +197,14 @@ export const captchaService = new CaptchaService(captchaConfig);
 
 // Export convenience functions
 export async function verifyCaptcha(response: string | null, remoteIp?: string): Promise<CaptchaVerificationResult> {
-  // If CAPTCHA is not configured, allow verification to pass with a warning
+  // If CAPTCHA is not configured, return success: false (Strict mode, don't bypass anything!)
   if (!captchaConfig.siteKey || !captchaConfig.secretKey) {
     return {
-      success: true,
-      error: 'CAPTCHA not configured'
+      success: false,
+      error: 'CAPTCHA is not configured on the server'
     };
   }
 
-  // Delegate to service (handles dev bypass and empty responses)
+  // Delegate to service (handles empty responses)
   return captchaService.verifyCaptcha(response ?? '', remoteIp);
 }

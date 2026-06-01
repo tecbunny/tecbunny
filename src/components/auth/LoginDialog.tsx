@@ -49,7 +49,7 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
   const [lockoutUntil, setLockoutUntil] = React.useState<number | null>(null);
   const [captchaToken, setCaptchaToken] = React.useState<string | null>(null);
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim();
-  const captchaDisabled = process.env.NEXT_PUBLIC_DISABLE_CAPTCHA === 'true';
+
   
   const Turnstile = React.useMemo(
     () => NextDynamic(() => import('react-turnstile').then(m => m.default), { ssr: false }) as unknown as React.ComponentType<any>,
@@ -86,7 +86,7 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (!!turnstileSiteKey && !captchaDisabled && !captchaToken) {
+    if (!!turnstileSiteKey && !captchaToken) {
       toast({ 
         variant: 'destructive', 
         title: 'Security Verification Required', 
@@ -287,12 +287,12 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isSubmitting || isLockedOut || (!!turnstileSiteKey && !captchaDisabled && !captchaToken)}
+              disabled={isSubmitting || isLockedOut || (!!turnstileSiteKey && !captchaToken)}
             >
                 {isSubmitting ? 'Logging in...' : isLockedOut ? `Locked (${lockoutTimeRemaining}s)` : 'Login'}
             </Button>
 
-            {!!turnstileSiteKey && !captchaDisabled && (
+            {!!turnstileSiteKey && (
               <div className="mt-3">
                 <Turnstile
                   sitekey={turnstileSiteKey}

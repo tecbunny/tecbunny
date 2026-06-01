@@ -35,10 +35,6 @@ export default function SignUpPage() {
   const [dispatchedChannel, setDispatchedChannel] = useState<'email' | 'sms' | 'whatsapp' | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-  const captchaDisabled = process.env.NEXT_PUBLIC_DISABLE_CAPTCHA === 'true';
-  // Allow quick runtime bypass via URL param ?disable_captcha=1 when not in production
-  const runtimeBypass = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('disable_captcha') === '1';
-  const captchaBypassed = captchaDisabled || (process.env.NODE_ENV !== 'production' && runtimeBypass);
   const Turnstile = useMemo(
     () => NextDynamic(() => import('react-turnstile').then(m => m.default), { ssr: false }) as unknown as React.ComponentType<any>,
     []
@@ -66,10 +62,6 @@ export default function SignUpPage() {
   
   const router = useRouter();
   const { toast } = useToast();
-
-  if (captchaDisabled) {
-    logger.debug('Captcha disabled in client (NEXT_PUBLIC_DISABLE_CAPTCHA=true and NODE_ENV!=production)');
-  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -132,7 +124,7 @@ export default function SignUpPage() {
     e.preventDefault();
     
     if (!validateForm()) return;
-  if (!captchaBypassed && turnstileSiteKey && !captchaToken) {
+    if (turnstileSiteKey && !captchaToken) {
       setError('Please complete the captcha.');
       return;
     }
@@ -140,12 +132,11 @@ export default function SignUpPage() {
     setIsLoading(true);
     setError('');
 
-  try {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (captchaBypassed) headers['x-bypass-captcha'] = '1';
-  const response = await fetch('/api/auth/signup', {
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const response = await fetch('/api/auth/signup', {
         method: 'POST',
-    headers,
+        headers,
         body: JSON.stringify({
           name: formData.name,
           email: formData.email.trim() || undefined,
@@ -312,11 +303,7 @@ export default function SignUpPage() {
       <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10" />
       <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-400/10 rounded-full blur-[100px] animate-pulse pointer-events-none" />
 
-      {captchaDisabled && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-amber-500/10 border border-amber-500/30 text-amber-200 px-4 py-2 rounded-md z-50">
-          Captcha is disabled in this development environment
-        </div>
-      )}
+
 
       <div className="relative w-full max-w-2xl">
         <div className="text-center mb-8">
@@ -479,7 +466,7 @@ export default function SignUpPage() {
                 </div>
               )}
 
-              {turnstileSiteKey && !captchaDisabled && (
+              {turnstileSiteKey && (
                 <div className="space-y-2 md:col-span-2">
                   <Label className="text-sm text-slate-400">Security Check</Label>
                   <div className="mt-1">

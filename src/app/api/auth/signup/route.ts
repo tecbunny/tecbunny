@@ -77,10 +77,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // CAPTCHA verification (conditional if configured). Allow runtime bypass via header in non-production
-    const bypassHeader = request.headers.get('x-bypass-captcha');
-    const isBypassed = process.env.DISABLE_CAPTCHA === 'true' || bypassHeader === '1';
-    if (!isBypassed) {
+    // CAPTCHA verification (conditional if configured)
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (siteKey) {
       const captcha = await verifyCaptcha(captchaToken, clientIp);
       if (!captcha.success) {
         logger.warn('signup.captcha_failed', { email: normalizedEmail || email, ip: clientIp, error: captcha.error || captcha.errorCodes });
@@ -89,8 +88,6 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-    } else {
-      logger.debug('signup.captcha_bypassed', { email });
     }
 
     // Validate required fields

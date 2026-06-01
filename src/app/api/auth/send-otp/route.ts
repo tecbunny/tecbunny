@@ -48,17 +48,14 @@ export async function POST(request: NextRequest) {
       return apiError('RATE_LIMITED', { overrideMessage: 'Too many OTP requests for this mobile number. Please try again later.', correlationId });
     }
 
-    // CAPTCHA verification (if configured). Allow runtime bypass via header in non-production
-    const bypassHeader = request.headers.get('x-bypass-captcha');
-    const isBypassed = process.env.DISABLE_CAPTCHA === 'true' || bypassHeader === '1';
-    if (!isBypassed) {
+    // CAPTCHA verification (conditional if configured)
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (siteKey) {
       const captcha = await verifyCaptcha(captchaToken, ip);
       if (!captcha.success) {
         logger.warn('send_otp_captcha_failed', { correlationId, identifier: email || mobile, ip, error: captcha.error || captcha.errorCodes });
         return apiError('VALIDATION_ERROR', { overrideMessage: `Captcha verification failed: ${captcha.error || captcha.errorCodes?.join(', ') || 'Please retry.'}`, correlationId });
       }
-    } else {
-      logger.debug('send_otp_captcha_bypassed', { correlationId, identifier: email || mobile, ip });
     }
 
     const purpose = type === 'recovery' ? 'password_reset' : 'registration';

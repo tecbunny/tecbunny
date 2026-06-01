@@ -404,9 +404,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const normalized = identifier.trim();
       const isEmail = normalized.includes('@');
+      let phone = normalized.replace(/\D/g, '');
+      if (!isEmail && phone.length === 10) {
+        phone = `91${phone}`;
+      }
       const { data, error } = isEmail
         ? await supabase.auth.signInWithPassword({ email: normalized, password })
-        : await supabase.auth.signInWithPassword({ phone: normalized.replace(/\D/g, ''), password });
+        : await supabase.auth.signInWithPassword({ phone, password });
       
       if (error) {
         logger.error('Supabase login error', { error, identifier: normalized });

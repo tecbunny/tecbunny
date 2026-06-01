@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense, useMemo } from 'react';
 import NextDynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 
-import { Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Phone } from 'lucide-react';
 
 import { createClient } from '@/lib/supabase/client';
 import { normalizeRole } from '@/lib/roles';
@@ -175,9 +175,9 @@ function SignInForm() {
           }
 
           if (signInError.message.includes('Invalid login credentials')) {
-            setError(`Invalid email or password. ${5 - newFailedAttempts} attempts remaining.`);
+            setError(`Invalid mobile number or password. ${5 - newFailedAttempts} attempts remaining.`);
           } else if (signInError.message.includes('Email not confirmed')) {
-            setError('Please verify your email address before signing in.');
+            setError('Please verify your mobile number or email address before signing in.');
           } else {
             setError(signInError.message);
           }
@@ -240,7 +240,8 @@ function SignInForm() {
           window.location.href = redirectUrl;
         }
       } else {
-        const phone = normalized.replace(/\D/g, '');
+        const digits = normalized.replace(/\D/g, '');
+        const phone = digits.length === 10 ? `91${digits}` : digits;
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
           phone,
           password,
@@ -382,14 +383,14 @@ function SignInForm() {
                     type="text"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="Email or Mobile"
+                    placeholder="Mobile Number"
                     className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
                     required
                   />
                   <Label htmlFor="identifier" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">
-                    Email or Mobile
+                    Mobile Number
                   </Label>
-                  <Mail className="absolute right-4 top-3.5 h-4 w-4 text-slate-500" />
+                  <Phone className="absolute right-4 top-3.5 h-4 w-4 text-slate-500" />
                 </div>
 
                 <div className="floating-label relative">

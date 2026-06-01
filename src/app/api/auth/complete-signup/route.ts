@@ -73,19 +73,18 @@ export async function POST(request: NextRequest) {
     // Create user account NOW (after OTP verification)
     const userPayload: Record<string, any> = {
       password,
+      phone: normalizedMobile,
+      phone_confirm: true,
       user_metadata: {
         name,
         role: 'customer',
-        ...(mobile && { mobile: normalizedMobile })
+        mobile: normalizedMobile
       }
     };
 
     if (email) {
       userPayload.email = email;
       userPayload.email_confirm = true;
-    } else {
-      userPayload.phone = normalizedMobile;
-      userPayload.phone_confirm = true;
     }
 
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser(userPayload);

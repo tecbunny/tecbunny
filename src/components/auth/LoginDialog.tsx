@@ -33,7 +33,7 @@ import { logger } from '@/lib/logger';
 import { normalizeRole } from '@/lib/roles';
 
 const loginSchema = z.object({
-  identifier: z.string().min(3, { message: 'Email or mobile is required.' }),
+  identifier: z.string().min(10, { message: 'Mobile number must be at least 10 digits.' }),
   password: z.string().min(1, { message: 'Password is required.' }),
 });
 
@@ -189,24 +189,12 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      // Check if it's an email confirmation error
+      // Check if it's an account confirmation error
       if (errorMessage.includes('Email not confirmed') || errorMessage.includes('confirmation link')) {
         toast({
           variant: 'destructive',
-          title: 'Email Not Verified',
-          description: 'Please verify your email with the code sent to your inbox.',
-          action: (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => {
-                setOpen(false);
-                window.location.href = `/auth/verify-otp?email=${encodeURIComponent(data.identifier)}&type=email`;
-              }}
-            >
-              Verify Email
-            </Button>
-          ),
+          title: 'Account Not Verified',
+          description: 'Please verify your account details before signing in.',
         });
       } else {
         toast({
@@ -251,7 +239,7 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
         <DialogHeader>
           <DialogTitle className="text-2xl text-center">Login</DialogTitle>
           <DialogDescription className="text-center">
-            Enter your email or mobile number to login.
+            Enter your mobile number to login.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -261,9 +249,9 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
               name="identifier"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email or Mobile</FormLabel>
+                  <FormLabel>Mobile Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your email or mobile" {...field} disabled={isSubmitting} />
+                    <Input placeholder="Enter your mobile number" {...field} disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -476,7 +476,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = useCallback(async (options?: { redirectTo?: string; silent?: boolean }) => {
-    const redirectTo = options?.redirectTo ?? '/';
+    const redirectTo = options?.redirectTo;
     const silent = Boolean(options?.silent);
 
     if (!silent) {
@@ -516,7 +516,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (typeof window !== 'undefined') {
-      window.location.href = redirectTo;
+      if (redirectTo) {
+        window.location.href = redirectTo;
+      } else {
+        window.location.reload();
+      }
     }
   }, [sessionManager, supabase]);
 

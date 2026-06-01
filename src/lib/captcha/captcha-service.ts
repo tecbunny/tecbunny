@@ -142,19 +142,12 @@ export class CaptchaService {
   }
 }
 
-// Create default CAPTCHA service instance
-// HARDCODED FALLBACKS for development mode only.
-// In production, missing credentials should result in disabled verification.
-const isDev = process.env.NODE_ENV === 'development';
-const defaultDevSiteKey = '0x4AAAAAACXR-JIPYf0PSOt3';
-const defaultDevSecretKey = '0x4AAAAAACXR-AC4lpjtmrjXOPRSlPEE3y4';
-
+// Create default CAPTCHA service instance loaded strictly from the environment.
 const rawSiteKey = (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '').trim();
 const rawSecretKey = (process.env.TURNSTILE_SECRET_KEY || '').trim();
 
-const siteKey = rawSiteKey || (isDev ? defaultDevSiteKey : '');
-// Only fall back to development secret key if the site key is the default dev site key
-const secretKey = rawSecretKey || (siteKey === defaultDevSiteKey ? defaultDevSecretKey : '');
+const siteKey = rawSiteKey;
+const secretKey = rawSecretKey;
 
 const captchaConfig = {
   provider: 'turnstile' as const,
@@ -181,8 +174,8 @@ logger.info('CAPTCHA Configuration loaded', {
 });
 
 // Check for key mismatch
-const isSiteKeyDefault = siteKey === defaultDevSiteKey;
-const isSecretKeyDefault = secretKey === defaultDevSecretKey;
+const isSiteKeyDefault = siteKey === '0x4AAAAAACXR-JIPYf0PSOt3';
+const isSecretKeyDefault = secretKey === '0x4AAAAAACXR-AC4lpjtmrjXOPRSlPEE3y4';
 
 if (siteKey && secretKey) {
   if (isSiteKeyDefault !== isSecretKeyDefault) {

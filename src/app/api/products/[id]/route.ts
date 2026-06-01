@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { getSessionWithRole } from '@/lib/auth/server-role';
@@ -99,9 +99,7 @@ export async function PATCH(
   }
 }
 
-export async function generateStaticParams() {
-  return []
-}
+export const dynamic = 'force-dynamic';
 
 // Get individual product (GET)
 export async function GET(

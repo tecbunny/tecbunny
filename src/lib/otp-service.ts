@@ -3,7 +3,7 @@
  * Handles OTP generation, validation, and management
  */
 
-import { createServiceClient } from '@/lib/supabase/server';
+import { createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import type { OtpType } from '@/lib/types';
 import { emailClient } from './email/client';
 
@@ -26,12 +26,12 @@ export interface OtpVerification {
 }
 
 export class OtpService {
-  private supabase;
+  private supabase: ReturnType<typeof createServiceClient> | null;
   private readonly OTP_EXPIRY_MINUTES = 10;
   private readonly MAX_ATTEMPTS = 3;
 
   constructor() {
-    this.supabase = createServiceClient();
+    this.supabase = isSupabaseServiceConfigured ? createServiceClient() : null;
   }
 
   /**
@@ -52,6 +52,9 @@ export class OtpService {
     error?: string;
   }> {
     try {
+      if (!this.supabase) {
+        return { success: false, error: 'Supabase service client is not configured' };
+      }
       // Check if there's already a pending OTP for this order
       const { data: existingOtp } = await this.supabase
         .from('order_otp_verifications')
@@ -160,6 +163,9 @@ export class OtpService {
     attempts_left?: number;
   }> {
     try {
+      if (!this.supabase) {
+        return { success: false, error: 'Supabase service client is not configured' };
+      }
       // Get OTP record
       const { data: otpRecord, error: fetchError } = await this.supabase
         .from('order_otp_verifications')
@@ -331,6 +337,7 @@ export class OtpService {
    */
   private async updateOrderOtpStatus(orderId: string, verified: boolean) {
     try {
+      if (!this.supabase) return;
       await this.supabase
         .from('orders')
         .update({
@@ -354,6 +361,15 @@ export class OtpService {
     max_attempts: number;
   }> {
     try {
+      if (!this.supabase) {
+        return {
+          verified: false,
+          pending: false,
+          expired: false,
+          attempts_used: 0,
+          max_attempts: this.MAX_ATTEMPTS
+        };
+      }
       const { data: otpRecord } = await this.supabase
         .from('order_otp_verifications')
         .select('*')
@@ -400,6 +416,7 @@ export class OtpService {
    */
   async cleanupExpiredOtps(): Promise<number> {
     try {
+      if (!this.supabase) return 0;
       const { count, error } = await this.supabase
         .from('order_otp_verifications')
         .delete({ count: 'exact' })

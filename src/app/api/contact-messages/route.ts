@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { createServiceClient, createClient as createServerClient } from '@/lib/supabase/server';
+import { createServiceClient, createClient as createServerClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { isAdmin } from '@/lib/permissions';
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten() }, { status: 400 });
     }
 
-    
+    const serviceSupabase = isSupabaseServiceConfigured ? createServiceClient() : await createServerClient();
     const payload = {
       name: parsed.data.name.trim(),
       email: parsed.data.email.trim().toLowerCase(),
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid query parameters' }, { status: 400 });
     }
 
-    
+    const serviceSupabase = isSupabaseServiceConfigured ? createServiceClient() : supabase;
     let query = serviceSupabase
       .from('contact_messages')
       .select('*')

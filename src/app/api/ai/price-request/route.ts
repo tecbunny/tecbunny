@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Service unavailable.' }, { status: 500 });
     }
 
-    const service = isSupabaseServiceConfigured ? createServiceClient() : null;
+    const service = createServiceClient();
     const { error } = await service
       .from('leads')
       .insert({

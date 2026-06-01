@@ -45,7 +45,7 @@ export async function POST(_request: NextRequest) {
       }
     }
 
-    const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
+    const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     const cutoffIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
     const { data: staleOrders, error: fetchError } = await serviceClient

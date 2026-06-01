@@ -1,7 +1,7 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { createServiceClient, createClient as createServerClient } from '@/lib/supabase/server';
+import { createServiceClient, createClient as createServerClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
 import type { ContactMessage } from '@/lib/types';
@@ -19,7 +19,7 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-async function PATCH(request: NextRequest, context: RouteContext) {
+export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
     if (!id) {
@@ -66,7 +66,7 @@ async function PATCH(request: NextRequest, context: RouteContext) {
       updateData.resolved_at = parsed.data.status === 'Resolved' ? new Date().toISOString() : null;
     }
 
-    
+    const serviceSupabase = isSupabaseServiceConfigured ? createServiceClient() : supabase;
     const { data, error } = await serviceSupabase
       .from('contact_messages')
       .update(updateData)

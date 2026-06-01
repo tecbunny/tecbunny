@@ -3,7 +3,7 @@
  * Handles service engineer assignments, ticket management, and service billing
  */
 
-import { createServiceClient } from '@/lib/supabase/server';
+import { createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import type { 
   ServiceTicket, 
   ServiceEngineer, 
@@ -48,10 +48,10 @@ export interface ServiceCompletion {
 }
 
 export class ServiceManagementService {
-  private supabase;
+  private supabase: ReturnType<typeof createServiceClient> | null;
 
   constructor() {
-    this.supabase = createServiceClient();
+    this.supabase = isSupabaseServiceConfigured ? createServiceClient() : null;
   }
 
   /**
@@ -64,6 +64,9 @@ export class ServiceManagementService {
     error?: string;
   }> {
     try {
+      if (!this.supabase) {
+        return { success: false, error: 'Supabase service client not configured' };
+      }
       const { data: ticket, error } = await this.supabase
         .from('service_tickets')
         .insert([{
@@ -112,6 +115,7 @@ export class ServiceManagementService {
     radius?: number
   ): Promise<ServiceEngineer[]> {
     try {
+      if (!this.supabase) return [];
       let query = this.supabase
         .from('service_engineers')
         .select(`
@@ -154,6 +158,9 @@ export class ServiceManagementService {
     error?: string;
   }> {
     try {
+      if (!this.supabase) {
+        return { success: false, error: 'Supabase service client not configured' };
+      }
       const { error } = await this.supabase
         .from('service_tickets')
         .update({
@@ -197,6 +204,9 @@ export class ServiceManagementService {
     error?: string;
   }> {
     try {
+      if (!this.supabase) {
+        return { success: false, error: 'Supabase service client not configured' };
+      }
       const updateData: any = {
         status,
         updated_at: new Date().toISOString()
@@ -245,6 +255,9 @@ export class ServiceManagementService {
     error?: string;
   }> {
     try {
+      if (!this.supabase) {
+        return { success: false, error: 'Supabase service client not configured' };
+      }
       // Calculate parts cost
       let totalPartsCost = 0;
       
@@ -327,6 +340,7 @@ export class ServiceManagementService {
     status?: ServiceTicketStatus
   ): Promise<ServiceTicket[]> {
     try {
+      if (!this.supabase) return [];
       let query = this.supabase
         .from('service_tickets')
         .select(`
@@ -362,6 +376,7 @@ export class ServiceManagementService {
     customerId: string
   ): Promise<ServiceTicket[]> {
     try {
+      if (!this.supabase) return [];
       const { data: tickets, error } = await this.supabase
         .from('service_tickets')
         .select(`
@@ -411,6 +426,9 @@ export class ServiceManagementService {
     error?: string;
   }> {
     try {
+      if (!this.supabase) {
+        return { success: false, error: 'Supabase service client not configured' };
+      }
       const { data: engineer, error } = await this.supabase
         .from('service_engineers')
         .upsert({
@@ -452,6 +470,7 @@ export class ServiceManagementService {
    */
   private async updateEngineerStats(ticketId: string): Promise<void> {
     try {
+      if (!this.supabase) return;
       // Get ticket details
       const { data: ticket } = await this.supabase
         .from('service_tickets')
@@ -499,6 +518,9 @@ export class ServiceManagementService {
     error?: string;
   }> {
     try {
+      if (!this.supabase) {
+        return { success: false, error: 'Supabase service client not configured' };
+      }
       const { error } = await this.supabase
         .from('service_tickets')
         .update({

@@ -165,15 +165,15 @@ const captchaConfig = {
 };
 
 // Log configuration for debugging (without exposing secret key values)
-const detectedEnvKeys = typeof process !== 'undefined' && process.env 
+const detected_env_vars = typeof process !== 'undefined' && process.env 
   ? Object.keys(process.env).filter(key => key.includes('TURNSTILE'))
   : [];
 
 logger.info('CAPTCHA Configuration loaded', {
   provider: captchaConfig.provider,
-  siteKey: captchaConfig.siteKey ? `${captchaConfig.siteKey.substring(0, 10)}...` : 'NOT SET',
-  secretKey: captchaConfig.secretKey ? 'SET' : 'NOT SET',
-  detectedEnvKeys,
+  site_key_prefix: captchaConfig.siteKey ? `${captchaConfig.siteKey.substring(0, 10)}...` : 'NOT SET',
+  secret_key_present: captchaConfig.secretKey ? 'SET' : 'NOT SET',
+  detected_env_vars,
   theme: captchaConfig.theme,
   size: captchaConfig.size,
   nodeEnv: process.env.NODE_ENV,
@@ -187,8 +187,8 @@ const isSecretKeyDefault = secretKey === defaultDevSecretKey;
 if (siteKey && secretKey) {
   if (isSiteKeyDefault !== isSecretKeyDefault) {
     logger.error('CAPTCHA configuration mismatch detected! One key is the default development key, but the other is custom. This will cause verification failures.', {
-      siteKey: isSiteKeyDefault ? 'DEFAULT_DEV_KEY' : 'CUSTOM_KEY',
-      secretKey: isSecretKeyDefault ? 'DEFAULT_DEV_KEY' : 'CUSTOM_KEY'
+      site_is_dev_default: isSiteKeyDefault,
+      secret_is_dev_default: isSecretKeyDefault
     });
   }
 }

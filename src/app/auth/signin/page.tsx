@@ -109,8 +109,10 @@ function SignInForm() {
         case 'admin':
           redirectUrl = '/management/admin';
           break;
-        case 'sales':
         case 'manager':
+          redirectUrl = '/management/manager';
+          break;
+        case 'sales':
         case 'service_engineer':
           redirectUrl = '/management/sales';
           break;
@@ -138,6 +140,86 @@ function SignInForm() {
     setError('');
   };
 
+  // ─── Shared post sign-in handler ───────────────────────────────────────────
+  // Called after a successful Supabase signInWithPassword regardless of identifier type.
+  const handleSignInSuccess = async (user: any) => {
+    setFailedAttempts(0);
+    setLockoutUntil(null);
+    setCaptchaToken(null);
+
+    // Check if 2FA is enabled for this user
+    try {
+      const response = await fetch('/api/auth/2fa/status');
+      const twoFactorStatus = await response.json();
+      if (response.ok && twoFactorStatus.enabled) {
+        setTwoFactorUser(user);
+        setShowTwoFactor(true);
+        setIsLoading(false);
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking 2FA status:', error);
+    }
+
+    toast({
+      title: 'Welcome back!',
+      description: 'You have been signed in successfully.',
+    });
+
+    // Fetch user profile to determine role-based redirect
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const userRole = normalizeRole(profile?.role) ?? 'customer';
+    let redirectUrl: string;
+
+    switch (userRole) {
+      case 'admin':
+        redirectUrl = '/management/admin';
+        break;
+      case 'manager':
+        redirectUrl = '/management/manager';
+        break;
+      case 'sales':
+      case 'service_engineer':
+        redirectUrl = '/management/sales';
+        break;
+      case 'accounts':
+        redirectUrl = '/management/accounts';
+        break;
+      case 'customer':
+      default:
+        redirectUrl = '/';
+        break;
+    }
+
+    window.location.href = redirectUrl;
+  };
+
+  // ─── Shared sign-in error handler ──────────────────────────────────────────
+  const handleSignInError = (signInError: any, isEmailFlow: boolean) => {
+    const newFailedAttempts = failedAttempts + 1;
+    setFailedAttempts(newFailedAttempts);
+
+    if (newFailedAttempts >= 5) {
+      const lockoutDuration = Math.min(300000, 60000 * Math.pow(2, newFailedAttempts - 5));
+      setLockoutUntil(Date.now() + lockoutDuration);
+      setError(`Too many failed attempts. Account locked for ${Math.ceil(lockoutDuration / 1000)} seconds.`);
+      return;
+    }
+
+    if (signInError.message.includes('Invalid login credentials')) {
+      setError(`Invalid ${isEmailFlow ? 'email' : 'mobile number'} or password. ${5 - newFailedAttempts} attempts remaining.`);
+    } else if (isEmailFlow && signInError.message.includes('Email not confirmed')) {
+      setError('Please verify your email address before signing in.');
+    } else {
+      setError(signInError.message);
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -157,88 +239,14 @@ function SignInForm() {
     try {
       const normalized = identifier.trim();
       const isEmail = normalized.includes('@');
+
       if (isEmail) {
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email: normalized,
           password,
         });
-
-        if (signInError) {
-          const newFailedAttempts = failedAttempts + 1;
-          setFailedAttempts(newFailedAttempts);
-
-          if (newFailedAttempts >= 5) {
-            const lockoutDuration = Math.min(300000, 60000 * Math.pow(2, newFailedAttempts - 5));
-            setLockoutUntil(Date.now() + lockoutDuration);
-            setError(`Too many failed attempts. Account locked for ${Math.ceil(lockoutDuration / 1000)} seconds.`);
-            return;
-          }
-
-          if (signInError.message.includes('Invalid login credentials')) {
-            setError(`Invalid mobile number or password. ${5 - newFailedAttempts} attempts remaining.`);
-          } else if (signInError.message.includes('Email not confirmed')) {
-            setError('Please verify your mobile number or email address before signing in.');
-          } else {
-            setError(signInError.message);
-          }
-          return;
-        }
-
-        if (data.user) {
-          setFailedAttempts(0);
-          setLockoutUntil(null);
-          setCaptchaToken(null);
-
-          // Check if 2FA is enabled for this user
-          try {
-            const response = await fetch('/api/auth/2fa/status');
-            const twoFactorStatus = await response.json();
-
-            if (response.ok && twoFactorStatus.enabled) {
-              setTwoFactorUser(data.user);
-              setShowTwoFactor(true);
-              setIsLoading(false);
-              return;
-            }
-          } catch (error) {
-            console.error('Error checking 2FA status:', error);
-          }
-
-          toast({
-            title: 'Welcome back!',
-            description: 'You have been signed in successfully.',
-          });
-
-          // Fetch user profile to determine role-based redirect
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .single();
-
-          const userRole = normalizeRole(profile?.role) ?? 'customer';
-          let redirectUrl: string;
-
-          switch (userRole) {
-            case 'admin':
-              redirectUrl = '/management/admin';
-              break;
-            case 'sales':
-            case 'manager':
-            case 'service_engineer':
-              redirectUrl = '/management/sales';
-              break;
-            case 'accounts':
-              redirectUrl = '/management/accounts';
-              break;
-            case 'customer':
-            default:
-              redirectUrl = '/';
-              break;
-          }
-
-          window.location.href = redirectUrl;
-        }
+        if (signInError) { handleSignInError(signInError, true); return; }
+        if (data.user) await handleSignInSuccess(data.user);
       } else {
         const digits = normalized.replace(/\D/g, '');
         const phone = digits.length === 10 ? `91${digits}` : digits;
@@ -246,81 +254,8 @@ function SignInForm() {
           phone,
           password,
         });
-
-        if (signInError) {
-          const newFailedAttempts = failedAttempts + 1;
-          setFailedAttempts(newFailedAttempts);
-
-          if (newFailedAttempts >= 5) {
-            const lockoutDuration = Math.min(300000, 60000 * Math.pow(2, newFailedAttempts - 5));
-            setLockoutUntil(Date.now() + lockoutDuration);
-            setError(`Too many failed attempts. Account locked for ${Math.ceil(lockoutDuration / 1000)} seconds.`);
-            return;
-          }
-
-          if (signInError.message.includes('Invalid login credentials')) {
-            setError(`Invalid login or password. ${5 - newFailedAttempts} attempts remaining.`);
-          } else {
-            setError(signInError.message);
-          }
-          return;
-        }
-
-        if (data.user) {
-          setFailedAttempts(0);
-          setLockoutUntil(null);
-          setCaptchaToken(null);
-
-          // Check if 2FA is enabled for this user
-          try {
-            const response = await fetch('/api/auth/2fa/status');
-            const twoFactorStatus = await response.json();
-
-            if (response.ok && twoFactorStatus.enabled) {
-              setTwoFactorUser(data.user);
-              setShowTwoFactor(true);
-              setIsLoading(false);
-              return;
-            }
-          } catch (error) {
-            console.error('Error checking 2FA status:', error);
-          }
-
-          toast({
-            title: 'Welcome back!',
-            description: 'You have been signed in successfully.',
-          });
-
-          // Fetch user profile to determine role-based redirect
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .single();
-
-          const userRole = normalizeRole(profile?.role) ?? 'customer';
-          let redirectUrl: string;
-
-          switch (userRole) {
-            case 'admin':
-              redirectUrl = '/management/admin';
-              break;
-            case 'sales':
-            case 'manager':
-            case 'service_engineer':
-              redirectUrl = '/management/sales';
-              break;
-            case 'accounts':
-              redirectUrl = '/management/accounts';
-              break;
-            case 'customer':
-            default:
-              redirectUrl = '/';
-              break;
-          }
-
-          window.location.href = redirectUrl;
-        }
+        if (signInError) { handleSignInError(signInError, false); return; }
+        if (data.user) await handleSignInSuccess(data.user);
       }
     } catch (err) {
       console.error('Sign in error:', err);
@@ -329,6 +264,7 @@ function SignInForm() {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-[#030712] text-slate-200 flex items-center justify-center px-4 py-16">

@@ -55,19 +55,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
+    // Check if user already exists — targeted query avoids fetching all users
     const normalizedMobile = String(mobile).replace(/\D/g, '');
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers.users.find(u =>
-      (email && u.email === email) ||
-      (normalizedMobile && (u.phone === normalizedMobile || u.user_metadata?.mobile === normalizedMobile))
-    );
-    
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'An account with this email or mobile already exists' },
-        { status: 409 }
-      );
+    const orFilters: string[] = [];
+    if (email) orFilters.push(`email.eq.${email}`);
+    if (normalizedMobile) orFilters.push(`mobile.eq.${normalizedMobile}`);
+
+    if (orFilters.length > 0) {
+      const { data: existingProfiles } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .or(orFilters.join(','))
+        .limit(1);
+
+      if (existingProfiles && existingProfiles.length > 0) {
+        return NextResponse.json(
+          { error: 'An account with this email or mobile already exists' },
+          { status: 409 }
+        );
+      }
     }
 
     // Create user account NOW (after OTP verification)
@@ -208,24 +214,10 @@ export async function POST(request: NextRequest) {
       redirectTo: '/'
     });
 
-    // Set auth cookies for automatic sign-in
-    if (signInData.session) {
-      // Access token is sent to client via JSON as well; keep it accessible to client-side JS.
-      response.cookies.set('sb-access-token', signInData.session.access_token, {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: signInData.session.expires_in
-      });
-
-      // Refresh token should be HttpOnly to reduce XSS risk.
-      response.cookies.set('sb-refresh-token', signInData.session.refresh_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7 // 7 days
-      });
-    }
+    // NOTE: We do NOT set manual auth cookies here.
+    // The Supabase client SDK (via @supabase/ssr) handles session cookies automatically
+    // when the client calls onAuthStateChange after receiving the session in the JSON response.
+    // Setting a non-HttpOnly access token cookie here would be an unnecessary XSS risk.
 
     return response;
 

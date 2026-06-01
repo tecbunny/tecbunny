@@ -142,8 +142,10 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
             case 'admin':
               redirectUrl = '/management/admin';
               break;
-            case 'sales':
             case 'manager':
+              redirectUrl = '/management/manager';
+              break;
+            case 'sales':
             case 'service_engineer':
               redirectUrl = '/management/sales';
               break;
@@ -216,8 +218,10 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
             case 'admin':
                 router.push('/management/admin');
                 break;
-            case 'sales':
             case 'manager':
+                router.push('/management/manager');
+                break;
+            case 'sales':
             case 'service_engineer':
                 router.push('/management/sales');
                 break;

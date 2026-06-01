@@ -192,10 +192,15 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         agent_id: orderData.agent_id || null
       };
 
+      // Get session token for Authorization header — more reliable than cookie-only auth
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      const accessToken = currentSession?.access_token;
+
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
         },
         body: JSON.stringify(orderPayload)
       });

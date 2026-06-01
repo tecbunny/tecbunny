@@ -96,12 +96,18 @@ export const getSessionWithRole = async (_request: NextRequest): Promise<{
 }> => {
   const supabase = await createServerClient();
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session) {
+    // Security: use getUser() not getSession(). getSession() reads cookies without
+    // server-side JWT validation. getUser() verifies the token with Supabase auth server.
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) {
       return { supabase, session: null, role: null };
     }
 
-    const role = await getEffectiveUserRole(session.user);
+    // Also fetch session for callers that need session.access_token etc.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const session = sessionData.session ?? null;
+
+    const role = await getEffectiveUserRole(user);
     return { supabase, session, role };
   } catch (error) {
     logger.error('server-role.session_fetch_failed', { error });

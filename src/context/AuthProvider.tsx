@@ -263,23 +263,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       const profileRole = parseRole(profile.role as string | undefined);
-      const userRole = appMetadataRole ?? profileRole ?? userMetadataRole ?? 'customer';
-
-      if (profileRole !== userRole) {
-        try {
-          await supabase
-            .from('profiles')
-            .update({ role: userRole })
-            .eq('id', supabaseUser.id);
-        } catch (updateError) {
-          logger.warn('AuthProvider role normalization update failed', {
-            error: updateError,
-            userId: supabaseUser.id,
-            currentRole: profile.role,
-            normalizedRole: userRole
-          });
-        }
-      }
+      // Security: Do NOT update the role from the client side.
+      // Role assignment is server-controlled (app_metadata or admin-triggered DB update).
+      // We simply resolve the best available role from trusted sources for UI display.
+      const userRole = appMetadataRole ?? profileRole ?? 'customer';
       
       // Add email from auth user if not in profile
       return { 

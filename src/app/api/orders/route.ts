@@ -20,9 +20,36 @@ const RATE_WINDOW_MS = 60 * 1000; // per minute
 export async function POST(request: NextRequest) {
   try {
     const correlationId = request.headers.get('x-correlation-id') || null;
-  const supabase = await createServerClient();
-  const serviceSupabase = isSupabaseServiceConfigured ? createServiceClient() : await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+
+    // Support both cookie-based auth (SSR) and Authorization: Bearer token (client fetch)
+    // The Bearer token path is more reliable for client-side fetches where cookie
+    // forwarding may be inconsistent (e.g. cross-subdomain, expired cookie, first login).
+    let user = null;
+
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+    if (bearerToken) {
+      // Verify the bearer token directly with Supabase
+      const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+      const supabaseVerifier = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      );
+      const { data: { user: tokenUser } } = await supabaseVerifier.auth.getUser(bearerToken);
+      user = tokenUser;
+    }
+
+    // Fallback: cookie-based session (standard SSR path)
+    const supabase = await createServerClient();
+    if (!user) {
+      const { data: { user: cookieUser } } = await supabase.auth.getUser();
+      user = cookieUser;
+    }
+
+    const serviceSupabase = isSupabaseServiceConfigured ? createServiceClient() : await createServerClient();
+
     if (!user) {
       return apiError('UNAUTHORIZED', { correlationId, overrideMessage: 'Authentication required' });
     }

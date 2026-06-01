@@ -532,9 +532,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (details: SignupDetails): Promise<AuthResponse> => {
     try {
-      // runtime bypass via query param or env (only allowed in non-production)
+      // runtime bypass via query param or env
       const runtimeBypass = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('disable_captcha') === '1';
-      const captchaDisabled = process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_DISABLE_CAPTCHA === 'true';
+      const captchaDisabled = process.env.NEXT_PUBLIC_DISABLE_CAPTCHA === 'true';
       const captchaBypassed = captchaDisabled || (process.env.NODE_ENV !== 'production' && runtimeBypass);
 
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -646,7 +646,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // runtime bypass header support
       const runtimeBypass = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('disable_captcha') === '1';
-      const captchaDisabled = process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_DISABLE_CAPTCHA === 'true';
+      const captchaDisabled = process.env.NEXT_PUBLIC_DISABLE_CAPTCHA === 'true';
       const captchaBypassed = captchaDisabled || (process.env.NODE_ENV !== 'production' && runtimeBypass);
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (captchaBypassed) headers['x-bypass-captcha'] = '1';

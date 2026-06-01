@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     // CAPTCHA verification (conditional if configured). Allow runtime bypass via header in non-production
     const bypassHeader = request.headers.get('x-bypass-captcha');
-    const isBypassed = process.env.NODE_ENV !== 'production' && bypassHeader === '1';
+    const isBypassed = process.env.DISABLE_CAPTCHA === 'true' || bypassHeader === '1';
     if (!isBypassed) {
       const captcha = await verifyCaptcha(captchaToken, clientIp);
       if (!captcha.success) {

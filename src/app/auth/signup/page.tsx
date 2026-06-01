@@ -35,7 +35,7 @@ export default function SignUpPage() {
   const [dispatchedChannel, setDispatchedChannel] = useState<'email' | 'sms' | 'whatsapp' | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-  const captchaDisabled = process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_DISABLE_CAPTCHA === 'true';
+  const captchaDisabled = process.env.NEXT_PUBLIC_DISABLE_CAPTCHA === 'true';
   // Allow quick runtime bypass via URL param ?disable_captcha=1 when not in production
   const runtimeBypass = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('disable_captcha') === '1';
   const captchaBypassed = captchaDisabled || (process.env.NODE_ENV !== 'production' && runtimeBypass);

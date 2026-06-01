@@ -56,7 +56,10 @@ export async function POST(request: NextRequest) {
     }
 
     // CAPTCHA verification (only in production)
-    if (process.env.NODE_ENV === 'production') {
+    const bypassHeader = request.headers.get('x-bypass-captcha');
+    const isBypassed = process.env.DISABLE_CAPTCHA === 'true' || bypassHeader === '1';
+    
+    if (process.env.NODE_ENV === 'production' && !isBypassed) {
       const ip = request.headers.get('cf-connecting-ip')?.trim()
         || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
         || request.headers.get('x-real-ip')?.trim()

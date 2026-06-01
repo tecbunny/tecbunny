@@ -63,7 +63,7 @@ export function SignupDialog({ children }: { children: React.ReactNode }) {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [preferredChannel, setPreferredChannel] = useState<PreferredChannel>('email');
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim();
-  const captchaDisabled = process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_DISABLE_CAPTCHA === 'true';
+  const captchaDisabled = process.env.NEXT_PUBLIC_DISABLE_CAPTCHA === 'true';
   
   // Debug logging
   logger.debug('CAPTCHA configuration in SignupDialogNew', {

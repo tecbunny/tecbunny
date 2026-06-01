@@ -147,7 +147,8 @@ const rawSiteKey = (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '').trim();
 const rawSecretKey = (process.env.TURNSTILE_SECRET_KEY || '').trim();
 
 const siteKey = rawSiteKey;
-const secretKey = rawSecretKey;
+// Auto-correct if the secret key was set to the default site key (common typo)
+const secretKey = rawSecretKey === '0x4AAAAAACXR-JIPYf0PSOt3' ? '0x4AAAAAACXR-AC4lpjtmrjXOPRSlPEE3y4' : rawSecretKey;
 
 const captchaConfig = {
   provider: 'turnstile' as const,

@@ -281,31 +281,56 @@ export class CaptchaService {
       
       clearTimeout(timeoutId);
 
-      if (!verifyResponse.ok) {
-        throw new Error(`Turnstile API returned ${verifyResponse.status}: ${verifyResponse.statusText}`);
+      let data: any;
+      try {
+        data = await verifyResponse.json();
+      } catch (jsonErr) {
+        if (!verifyResponse.ok) {
+          throw new Error(`Turnstile API returned ${verifyResponse.status}: ${verifyResponse.statusText}`);
+        }
+        throw new Error('Failed to parse Turnstile API response');
       }
 
-      const data = await verifyResponse.json();
-
-      if (!data.success) {
+      if (!verifyResponse.ok || !data.success) {
+        const errorCodes = data?.['error-codes'] || [];
         logger.warn('Turnstile verification failed:', {
-          success: data.success,
-          errorCodes: data['error-codes'] || [],
-          hostname: data.hostname,
-          action: data.action,
-          c_ts: data.challenge_ts
+          status: verifyResponse.status,
+          success: data?.success ?? false,
+          errorCodes,
+          hostname: data?.hostname,
+          action: data?.action,
+          c_ts: data?.challenge_ts
         });
+
+        let errorMsg = errorCodes.join(', ');
+        if (errorCodes.includes('invalid-input-secret')) {
+          errorMsg = 'invalid-input-secret (The configured secret key is invalid or mismatched)';
+        } else if (errorCodes.includes('invalid-input-response')) {
+          errorMsg = 'invalid-input-response (The user response token is invalid or expired)';
+        } else if (errorCodes.includes('missing-input-secret')) {
+          errorMsg = 'missing-input-secret (The secret key parameter is missing)';
+        } else if (errorCodes.includes('missing-input-response')) {
+          errorMsg = 'missing-input-response (The response token parameter is missing)';
+        }
+
+        return {
+          success: false,
+          error: errorMsg || `Turnstile API returned status ${verifyResponse.status}`,
+          errorCodes
+        };
       }
 
       return {
-        success: data.success,
+        success: true,
         challenge_ts: data.challenge_ts,
-        hostname: data.hostname,
-        errorCodes: data['error-codes']
+        hostname: data.hostname
       };
     } catch (error: any) {
       logger.error('Turnstile verification failed:', { error: error.message || error });
-      throw new Error(`Turnstile verification failed: ${error.message || 'Unknown error'}`);
+      return {
+        success: false,
+        error: error.message || 'Turnstile verification failed'
+      };
     }
   }
 

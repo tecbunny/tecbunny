@@ -116,8 +116,9 @@ export default function SignUpPage() {
       return false;
     }
     // Enhanced password validation
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(formData.password)) {
-      setError('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character');
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      setError('Password must contain at least one uppercase letter, one lowercase letter, one number, one special character (@$!%*?&), and only use letters, numbers, and allowed special characters.');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {

@@ -39,8 +39,12 @@ const signupSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   mobile: z.string().min(10, { message: 'Please enter a valid mobile number.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
-  confirmPassword: z.string().min(6, { message: 'Please confirm your password.' }),
+  password: z.string()
+    .min(8, { message: 'Password must be at least 8 characters.' })
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, {
+      message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, one special character (@$!%*?&), and only use allowed characters.',
+    }),
+  confirmPassword: z.string().min(8, { message: 'Please confirm your password.' }),
   privacyConsent: z.boolean().refine((val) => val === true, {
     message: 'Please accept the Privacy Policy and Terms to continue.',
   }),

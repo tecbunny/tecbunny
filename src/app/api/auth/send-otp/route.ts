@@ -10,7 +10,8 @@ const SEND_OTP_IP_LIMIT = { limit: 5, windowMs: 15 * 60 * 1000 };
 const SEND_OTP_IDENTIFIER_LIMIT = { limit: 3, windowMs: 15 * 60 * 1000 };
 
 function getClientIp(request: NextRequest) {
-  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  return request.headers.get('cf-connecting-ip')?.trim()
+    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')?.trim()
     || 'unknown';
 }
@@ -53,8 +54,8 @@ export async function POST(request: NextRequest) {
     if (!isBypassed) {
       const captcha = await verifyCaptcha(captchaToken, ip);
       if (!captcha.success) {
-        logger.warn('send_otp_captcha_failed', { correlationId, identifier: email || mobile, ip });
-        return apiError('VALIDATION_ERROR', { overrideMessage: 'Captcha verification failed. Please retry.', correlationId });
+        logger.warn('send_otp_captcha_failed', { correlationId, identifier: email || mobile, ip, error: captcha.error || captcha.errorCodes });
+        return apiError('VALIDATION_ERROR', { overrideMessage: `Captcha verification failed: ${captcha.error || captcha.errorCodes?.join(', ') || 'Please retry.'}`, correlationId });
       }
     } else {
       logger.debug('send_otp_captcha_bypassed', { correlationId, identifier: email || mobile, ip });

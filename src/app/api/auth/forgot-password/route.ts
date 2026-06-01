@@ -57,10 +57,14 @@ export async function POST(request: NextRequest) {
 
     // CAPTCHA verification (only in production)
     if (process.env.NODE_ENV === 'production') {
-      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+      const ip = request.headers.get('cf-connecting-ip')?.trim()
+        || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip')?.trim()
+        || 'unknown';
       const captcha = await verifyCaptcha(captchaToken, ip);
       if (!captcha.success) {
-        return NextResponse.json({ error: 'Captcha verification failed. Please retry.' }, { status: 400 });
+        logger.warn('forgot_password.captcha_failed', { identifier, ip, error: captcha.error || captcha.errorCodes });
+        return NextResponse.json({ error: `Captcha verification failed: ${captcha.error || captcha.errorCodes?.join(', ') || 'Please retry.'}` }, { status: 400 });
       }
     } else {
       logger.debug('forgot_password.captcha_bypass', { identifier });

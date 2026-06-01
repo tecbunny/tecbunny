@@ -15,7 +15,8 @@ const SIGNUP_IP_LIMIT = { limit: 5, windowMs: 15 * 60 * 1000 };
 const SIGNUP_IDENTIFIER_LIMIT = { limit: 3, windowMs: 30 * 60 * 1000 };
 
 function getClientIp(request: NextRequest) {
-  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  return request.headers.get('cf-connecting-ip')?.trim()
+    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')?.trim()
     || 'unknown';
 }
@@ -82,9 +83,9 @@ export async function POST(request: NextRequest) {
     if (!isBypassed) {
       const captcha = await verifyCaptcha(captchaToken, clientIp);
       if (!captcha.success) {
-        logger.warn('signup.captcha_failed', { email: normalizedEmail || email, ip: clientIp });
+        logger.warn('signup.captcha_failed', { email: normalizedEmail || email, ip: clientIp, error: captcha.error || captcha.errorCodes });
         return NextResponse.json(
-          { error: 'Captcha verification failed. Please retry.' },
+          { error: `Captcha verification failed: ${captcha.error || captcha.errorCodes?.join(', ') || 'Invalid captcha token'}` },
           { status: 400 }
         );
       }

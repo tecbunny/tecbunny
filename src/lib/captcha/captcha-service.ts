@@ -474,11 +474,16 @@ const captchaConfig = {
   size: 'normal' as const
 };
 
-// Log configuration for debugging (without exposing secret key)
+// Log configuration for debugging (without exposing secret key values)
+const detectedEnvKeys = typeof process !== 'undefined' && process.env 
+  ? Object.keys(process.env).filter(key => key.includes('CAPTCHA') || key.includes('TURNSTILE'))
+  : [];
+
 logger.info('CAPTCHA Configuration loaded', {
   provider: captchaConfig.provider,
   siteKey: captchaConfig.siteKey ? `${captchaConfig.siteKey.substring(0, 10)}...` : 'NOT SET',
   secretKey: captchaConfig.secretKey ? 'SET' : 'NOT SET',
+  detectedEnvKeys,
   theme: captchaConfig.theme,
   size: captchaConfig.size,
   nodeEnv: process.env.NODE_ENV,

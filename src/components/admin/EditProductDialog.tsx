@@ -153,24 +153,29 @@ export function EditProductDialog({ open, onOpenChange, product, onProductUpdate
 
   const onSubmit = async (values: ProductFormValues) => {
     try {
-      const { error } = await supabase
-        .from('products')
-        .update({
+      const response = await fetch(`/api/products/${product.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           title: values.title,
           name: values.title, // For backward compatibility
           description: values.description,
           price: values.price,
           category: values.category,
+          vendor: values.brand,
           brand: values.brand,
           image: values.image,
+          images: values.image ? [values.image] : [],
           stock_quantity: values.stock_quantity,
           status: values.status,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', product.id);
+        }),
+      });
+      const data = await response.json().catch(() => null);
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to update product');
       }
 
       toast({

@@ -138,28 +138,29 @@ export function CreateProductDialog({ open, onOpenChange, onProductCreated }: Cr
 
   const onSubmit = async (values: ProductFormValues) => {
     try {
-      const { error } = await supabase.from('products').insert([
-        {
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           title: values.title,
           name: values.title, // For backward compatibility
           description: values.description,
           price: values.price,
           category: values.category,
+          vendor: values.brand,
           brand: values.brand,
           image: values.image,
+          images: values.image ? [values.image] : [],
           stock_quantity: values.stock_quantity,
           status: values.status,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          // Defaulting required fields that might not be in form
-          popularity: 0,
-          rating: 0,
-          review_count: 0
-        },
-      ]);
+        }),
+      });
+      const data = await response.json().catch(() => null);
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to create product');
       }
 
       toast({

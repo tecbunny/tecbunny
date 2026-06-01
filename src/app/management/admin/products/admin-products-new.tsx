@@ -98,12 +98,13 @@ export default function AdminProductsPage() {
     if (!selectedProduct) return;
 
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', selectedProduct.id);
-
-      if (error) throw error;
+      const response = await fetch(`/api/products?id=${selectedProduct.id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to delete product');
+      }
 
       toast({
         title: 'Success',
@@ -149,12 +150,17 @@ export default function AdminProductsPage() {
 
     setSavingProductId(productId);
     try {
-      const { error } = await supabase
-        .from('products')
-        .update({ mrp: edited.mrp, price: edited.price })
-        .eq('id', productId);
-
-      if (error) throw error;
+      const response = await fetch(`/api/products/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mrp: edited.mrp, price: edited.price }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.error || 'Update failed');
+      }
       toast({ title: 'Success', description: 'Prices updated successfully.', duration: 2000 });
       setProducts(prev => prev.map(p => p.id === productId ? { ...p, mrp: edited.mrp, price: edited.price } : p));
       setEditedPrices(prev => {

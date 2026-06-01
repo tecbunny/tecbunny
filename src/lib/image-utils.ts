@@ -67,12 +67,14 @@ export function isValidImageUrl(url: any): url is string {
     return false;
   }
   
-    // Check for valid URL patterns
+    // Check for valid URL patterns or relative paths/filenames
     return trimmed.startsWith('http') ||
       trimmed.startsWith('/') ||
       trimmed.startsWith('./') ||
-      trimmed.startsWith('../');
-}
+      trimmed.startsWith('../') ||
+      (/\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(trimmed) && !trimmed.startsWith(' ')) ||
+      (trimmed.includes('/') && !trimmed.startsWith(' '));
+  }
 
 /**
  * Gets the first valid image from an array of images

@@ -190,16 +190,26 @@ export class CaptchaService {
     const params = new URLSearchParams({
       secret: this.config.secretKey,
       response,
-      ...(remoteIp && { remoteip: remoteIp })
+      ...(remoteIp && remoteIp !== 'unknown' && { remoteip: remoteIp })
     });
 
     const verifyResponse = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params
+      body: params.toString()
     });
 
     const data = await verifyResponse.json();
+
+    if (!data.success) {
+      logger.warn('Google reCAPTCHA verification failed:', {
+        success: data.success,
+        errorCodes: data['error-codes'] || [],
+        hostname: data.hostname,
+        action: data.action,
+        c_ts: data.challenge_ts
+      });
+    }
 
     return {
       success: data.success,
@@ -219,16 +229,25 @@ export class CaptchaService {
     const params = new URLSearchParams({
       secret: this.config.secretKey,
       response,
-      ...(remoteIp && { remoteip: remoteIp })
+      ...(remoteIp && remoteIp !== 'unknown' && { remoteip: remoteIp })
     });
 
     const verifyResponse = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params
+      body: params.toString()
     });
 
     const data = await verifyResponse.json();
+
+    if (!data.success) {
+      logger.warn('hCaptcha verification failed:', {
+        success: data.success,
+        errorCodes: data['error-codes'] || [],
+        hostname: data.hostname,
+        c_ts: data.challenge_ts
+      });
+    }
 
     return {
       success: data.success,
@@ -247,7 +266,7 @@ export class CaptchaService {
       const params = new URLSearchParams({
         secret: this.config.secretKey,
         response,
-        ...(remoteIp && { remoteip: remoteIp })
+        ...(remoteIp && remoteIp !== 'unknown' && { remoteip: remoteIp })
       });
 
       const controller = new AbortController();
@@ -256,7 +275,7 @@ export class CaptchaService {
       const verifyResponse = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params,
+        body: params.toString(),
         signal: controller.signal
       });
       
@@ -268,11 +287,13 @@ export class CaptchaService {
 
       const data = await verifyResponse.json();
 
-      // Log any error codes for debugging
-      if (data['error-codes'] && data['error-codes'].length > 0) {
-        logger.warn('Turnstile verification returned error codes:', { 
-          errorCodes: data['error-codes'],
-          success: data.success
+      if (!data.success) {
+        logger.warn('Turnstile verification failed:', {
+          success: data.success,
+          errorCodes: data['error-codes'] || [],
+          hostname: data.hostname,
+          action: data.action,
+          c_ts: data.challenge_ts
         });
       }
 
@@ -389,11 +410,13 @@ export class CaptchaService {
 }
 
 // Create default CAPTCHA service instance
-// HARDCODED FALLBACKS for production stability if env vars are missing
+// HARDCODED FALLBACKS for development mode only.
+// In production, missing credentials should result in disabled verification.
+const isDev = process.env.NODE_ENV === 'development';
 const captchaConfig = {
   provider: (process.env.CAPTCHA_PROVIDER as CaptchaProvider) || 'turnstile',
-  siteKey: (process.env.CAPTCHA_SITE_KEY || process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAACXR-JIPYf0PSOt3').trim(),
-  secretKey: (process.env.CAPTCHA_SECRET_KEY || process.env.TURNSTILE_SECRET_KEY || '0x4AAAAAACXR-AC4lpjtmrjXOPRSlPEE3y4').trim(),
+  siteKey: (process.env.CAPTCHA_SITE_KEY || process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || (isDev ? '0x4AAAAAACXR-JIPYf0PSOt3' : '')).trim(),
+  secretKey: (process.env.CAPTCHA_SECRET_KEY || process.env.TURNSTILE_SECRET_KEY || (isDev ? '0x4AAAAAACXR-AC4lpjtmrjXOPRSlPEE3y4' : '')).trim(),
   theme: 'light' as const,
   size: 'normal' as const
 };

@@ -51,6 +51,39 @@ export async function middleware(request: NextRequest) {
 
   let response = NextResponse.next({ request: { headers: requestHeaders } })
 
+  const finalizeResponse = (res: NextResponse) => {
+    if (res !== response) {
+      response.cookies.getAll().forEach((cookie) => {
+        res.cookies.set(cookie)
+      })
+    }
+
+    if (pathname.startsWith('/management') || pathname.startsWith('/auth')) {
+      res.headers.set('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+      res.headers.set('Pragma', 'no-cache')
+      res.headers.set('Expires', '0')
+    }
+
+    if (
+      pathname.startsWith('/management') ||
+      pathname.startsWith('/auth') ||
+      pathname.startsWith('/checkout') ||
+      pathname.startsWith('/cart') ||
+      pathname.startsWith('/profile')
+    ) {
+      res.headers.set('X-Robots-Tag', 'noindex, nofollow')
+    }
+
+    res.headers.set('X-Frame-Options', 'DENY')
+    res.headers.set('X-Content-Type-Options', 'nosniff')
+    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+    res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    res.headers.set('Content-Security-Policy', SHARED_CONTENT_SECURITY_POLICY)
+    res.headers.set('X-Correlation-Id', correlationId)
+
+    return res
+  }
+
   // Supabase Auth & Session Management - Safe initialization
   let user = null;
   let userRole: string | null = null;
@@ -106,7 +139,7 @@ export async function middleware(request: NextRequest) {
 
     // Root → redirect to management (middleware will then enforce auth)
     if (isRoot) {
-      return NextResponse.redirect(new URL('/management', request.url))
+      return finalizeResponse(NextResponse.redirect(new URL('/management', request.url)))
     }
 
     // Allow: staff login, auth callbacks, signout, API, management panel, Next internals
@@ -114,7 +147,7 @@ export async function middleware(request: NextRequest) {
 
     if (!isCrmAllowed) {
       // Any other public page (/products, /services, /about, etc.) → redirect to main site
-      return NextResponse.redirect(new URL(`https://www.tecbunny.com${pathname}`, request.url))
+      return finalizeResponse(NextResponse.redirect(new URL(`https://www.tecbunny.com${pathname}`, request.url)))
     }
 
     // Management panel paths: enforce authentication
@@ -122,11 +155,11 @@ export async function middleware(request: NextRequest) {
       if (!user) {
         const loginUrl = new URL('/auth/staff-signin', request.url)
         loginUrl.searchParams.set('next', pathname)
-        return NextResponse.redirect(loginUrl)
+        return finalizeResponse(NextResponse.redirect(loginUrl))
       }
       if (userRole && !CRM_STAFF_ROLES.has(userRole)) {
         // Authenticated but not staff → show denied
-        return NextResponse.redirect(new URL('/auth/staff-signin?denied=1', request.url))
+        return finalizeResponse(NextResponse.redirect(new URL('/auth/staff-signin?denied=1', request.url)))
       }
     }
   }
@@ -135,48 +168,19 @@ export async function middleware(request: NextRequest) {
   // If we are hitting an API route, and it is NOT explicitly public, require a user.
   if (pathname.startsWith('/api')) {
     if (!isPublicApiRoute && !user) {
-      return NextResponse.json(
+      return finalizeResponse(NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required for this endpoint' },
         { status: 401 }
-      )
+      ))
     }
   }
 
   // Protect Management Routes (on main domain, middleware redirects to CRM subdomain via vercel.json)
   if (pathname.startsWith('/management') && !user) {
-    return NextResponse.redirect(new URL('/auth/staff-signin', request.url))
+    return finalizeResponse(NextResponse.redirect(new URL('/auth/staff-signin', request.url)))
   }
 
-  const applySharedHeaders = () => {
-    // Add cache-control headers to prevent caching of auth-related pages
-    if (pathname.startsWith('/management') || pathname.startsWith('/auth')) {
-      response.headers.set('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
-      response.headers.set('Pragma', 'no-cache')
-      response.headers.set('Expires', '0')
-    }
-
-    if (
-      pathname.startsWith('/management') ||
-      pathname.startsWith('/auth') ||
-      pathname.startsWith('/checkout') ||
-      pathname.startsWith('/cart') ||
-      pathname.startsWith('/profile')
-    ) {
-      response.headers.set('X-Robots-Tag', 'noindex, nofollow')
-    }
-
-    // Global security headers (basic hardening)
-    response.headers.set('X-Frame-Options', 'DENY')
-    response.headers.set('X-Content-Type-Options', 'nosniff')
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-    response.headers.set('Content-Security-Policy', SHARED_CONTENT_SECURITY_POLICY)
-    response.headers.set('X-Correlation-Id', correlationId)
-
-    return response
-  }
-
-  return applySharedHeaders()
+  return finalizeResponse(response)
 }
 
 export const config = {

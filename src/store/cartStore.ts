@@ -414,7 +414,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   clearCart: (user) => {
-    set({ cartItems: [], pricing: { ...get().pricing, appliedCoupon: null } });
+    set({ cartItems: [], pricing: defaultPricing });
     
     const cartKey = getStorageKey('cart', user);
     const couponKey = getStorageKey('appliedCoupon', user);

@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { CartSheet } from '../cart/CartSheet';
+import { EnhancedCartSheet as CartSheet } from '../cart/EnhancedCartSheet';
 
 const navLinks = [
   { name: 'Home', href: '/' },

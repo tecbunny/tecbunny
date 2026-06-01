@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     const { data: dbProducts, error: productsError } = await serviceSupabase
       .from('products')
-      .select('id, price, stock_quantity')
+      .select('id, price, stock_quantity, gst_rate, gst_percentage')
       .in('id', itemIds);
 
     if (productsError || !dbProducts) {
@@ -61,7 +61,9 @@ export async function POST(request: NextRequest) {
        return apiError('INTERNAL_ERROR', { correlationId, overrideMessage: 'Failed to validate products' });
     }
 
-    let calculatedSubtotal = 0;
+    let calculatedSubtotal = 0; // Inclusive subtotal
+    let calculatedExclusiveSubtotal = 0; // Exclusive subtotal
+    let calculatedGstAmount = 0; // Dynamic GST Amount
     const validatedItems = [];
 
     for (const item of (orderData.items || [])) {
@@ -77,7 +79,16 @@ export async function POST(request: NextRequest) {
       }
 
       const price = dbProduct.price;
-      calculatedSubtotal += price * item.quantity;
+      const itemInclusiveTotal = price * item.quantity;
+      calculatedSubtotal += itemInclusiveTotal;
+
+      const gstRateRaw = dbProduct.gst_rate ?? dbProduct.gst_percentage ?? 18;
+      const gstRate = typeof gstRateRaw === 'number' ? gstRateRaw : parseFloat(gstRateRaw) || 18;
+      const itemBase = itemInclusiveTotal / (1 + (gstRate / 100));
+      const itemGst = itemInclusiveTotal - itemBase;
+
+      calculatedExclusiveSubtotal += itemBase;
+      calculatedGstAmount += itemGst;
       
       validatedItems.push({
         ...item,
@@ -86,12 +97,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const subtotal = calculatedSubtotal;
-    // Security Fix: Enforce server-side GST calculation.
-    // PRICES ARE INCLUSIVE OF GST
-    // Create tax component from the inclusive subtotal for reporting.
-    // gst_amount = subtotal - (subtotal / (1 + GST_RATE))
-    const gst_amount = subtotal - (subtotal / (1 + GST_RATE));
+    const subtotal = calculatedExclusiveSubtotal; // Exclusive subtotal
+    const gst_amount = calculatedGstAmount; // Dynamically calculated GST
     
     // Note: Discounts are currently trusted from client if coupon logic is client-side.
     // Ideally this should be validated against a coupon code lookup. 
@@ -99,10 +106,8 @@ export async function POST(request: NextRequest) {
     const discount_amount = Math.max(0, orderData.discount_amount || 0); 
     const shipping_amount = Math.max(0, orderData.shipping_amount || 0);
     
-    // Total is subtotal (inclusive) + shipping (assumed extra or inclusive? assuming extra for now if standard) - discount
-    // If shipping is also inclusive, logic adjustment needed. For now assuming shipping is added on top.
-    // But importantly, do NOT add GST on top of the already inclusive subtotal.
-    const total = subtotal + shipping_amount - discount_amount;
+    // Total is subtotal (inclusive) + shipping - discount
+    const total = calculatedSubtotal + shipping_amount - discount_amount;
     
     const normalizeOrderType = (value: unknown): string => {
       if (typeof value !== 'string') return '';

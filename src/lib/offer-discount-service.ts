@@ -4,6 +4,7 @@ import type { CartItem, CustomerCategory, AutoOffer, Coupon } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client';
 
 import { logger } from './logger';
+import { resolveSiteUrl } from './site-url';
 
 type MarketingOfferRecord = {
     id: string;
@@ -42,7 +43,11 @@ export class OfferDiscountService {
 
         // Prefer the dedicated auto-offers API (service-role powered on the server).
         try {
-            const response = await fetch(`/api/auto-offers?active=true&t=${encodeURIComponent(now)}`, {
+            let url = `/api/auto-offers?active=true&t=${encodeURIComponent(now)}`;
+            if (typeof window === 'undefined') {
+                url = `${resolveSiteUrl()}${url}`;
+            }
+            const response = await fetch(url, {
                 headers: { 'Cache-Control': 'no-store' }
             });
 
@@ -176,7 +181,11 @@ export class OfferDiscountService {
 
     private async fetchMarketingOffersPayload(): Promise<MarketingOfferRecord[]> {
         try {
-            const response = await fetch('/api/offers?active=true', { headers: { 'Cache-Control': 'no-store' } });
+            let url = '/api/offers?active=true';
+            if (typeof window === 'undefined') {
+                url = `${resolveSiteUrl()}${url}`;
+            }
+            const response = await fetch(url, { headers: { 'Cache-Control': 'no-store' } });
             if (!response.ok) {
                 const details = await response.json().catch(() => null);
                 logger.warn('OfferDiscountService.marketing.fetch_failed', { status: response.status, details });

@@ -203,6 +203,18 @@ export function InvoiceTemplate({ order, settings, autoPrint }: InvoiceTemplateP
                                     <span>SGST (9%)</span>
                                     <span>₹{(order.gst_amount / 2).toFixed(2)}</span>
                                 </div>
+                                {order.shipping_amount != null && order.shipping_amount > 0 && (
+                                    <div className="flex justify-between">
+                                        <span>Shipping Charges</span>
+                                        <span>₹{order.shipping_amount.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                {order.discount_amount != null && order.discount_amount > 0 && (
+                                    <div className="flex justify-between text-green-600 font-semibold">
+                                        <span>Discount</span>
+                                        <span>-₹{order.discount_amount.toFixed(2)}</span>
+                                    </div>
+                                )}
                                 <Separator />
                                 <div className="flex justify-between text-lg font-bold text-primary sm:text-xl">
                                     <span>Grand Total</span>

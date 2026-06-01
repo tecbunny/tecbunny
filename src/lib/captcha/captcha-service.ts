@@ -72,24 +72,43 @@ export class CaptchaService {
         };
       }
 
+      let result: CaptchaVerificationResult;
       switch (this.config.provider) {
         case 'recaptcha':
-          return await this.verifyRecaptcha(response, remoteIp);
+          result = await this.verifyRecaptcha(response, remoteIp);
+          break;
         case 'hcaptcha':
-          return await this.verifyHcaptcha(response, remoteIp);
+          result = await this.verifyHcaptcha(response, remoteIp);
+          break;
         case 'turnstile':
-          return await this.verifyTurnstile(response, remoteIp);
+          result = await this.verifyTurnstile(response, remoteIp);
+          break;
         case 'simple':
-          return await this.verifySimpleCaptcha(response);
+          result = await this.verifySimpleCaptcha(response);
+          break;
         default:
           throw new Error(`Unsupported CAPTCHA provider: ${this.config.provider}`);
       }
+
+      // In development mode, allow authentication even if CAPTCHA verification fails
+      if (!result.success && process.env.NODE_ENV === 'development') {
+        logger.warn('CAPTCHA verification failed, bypassing in development mode:', {
+          error: result.error,
+          errorCodes: result.errorCodes
+        });
+        return {
+          success: true,
+          error: `CAPTCHA failed but bypassed in development: ${result.error}`
+        };
+      }
+
+      return result;
     } catch (error: any) {
-      logger.error('CAPTCHA verification failed:', { error: error.message || error });
+      logger.error('CAPTCHA verification failed with exception:', { error: error.message || error });
       
-      // In development mode, allow login even if CAPTCHA fails
+      // In development mode, allow authentication even if CAPTCHA throws an exception
       if (process.env.NODE_ENV === 'development') {
-        logger.warn('CAPTCHA verification failed, allowing in development mode');
+        logger.warn('CAPTCHA verification threw exception, allowing in development mode');
         return {
           success: true,
           error: `CAPTCHA failed but bypassed in development: ${error instanceof Error ? error.message : 'CAPTCHA verification failed'}`
@@ -438,10 +457,19 @@ export class CaptchaService {
 // HARDCODED FALLBACKS for development mode only.
 // In production, missing credentials should result in disabled verification.
 const isDev = process.env.NODE_ENV === 'development';
+const defaultDevSiteKey = '0x4AAAAAACXR-JIPYf0PSOt3';
+const defaultDevSecretKey = '0x4AAAAAACXR-AC4lpjtmrjXOPRSlPEE3y4';
+
+const rawSiteKey = (process.env.CAPTCHA_SITE_KEY || process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '').trim();
+const rawSecretKey = (process.env.CAPTCHA_SECRET_KEY || process.env.TURNSTILE_SECRET_KEY || process.env.NEXT_PUBLIC_TURNSTILE_SECRET_KEY || '').trim();
+
+const siteKey = rawSiteKey || (isDev ? defaultDevSiteKey : '');
+const secretKey = rawSecretKey || (isDev ? defaultDevSecretKey : '');
+
 const captchaConfig = {
   provider: (process.env.CAPTCHA_PROVIDER as CaptchaProvider) || 'turnstile',
-  siteKey: (process.env.CAPTCHA_SITE_KEY || process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || (isDev ? '0x4AAAAAACXR-JIPYf0PSOt3' : '')).trim(),
-  secretKey: (process.env.CAPTCHA_SECRET_KEY || process.env.TURNSTILE_SECRET_KEY || (isDev ? '0x4AAAAAACXR-AC4lpjtmrjXOPRSlPEE3y4' : '')).trim(),
+  siteKey,
+  secretKey,
   theme: 'light' as const,
   size: 'normal' as const
 };
@@ -457,6 +485,19 @@ logger.info('CAPTCHA Configuration loaded', {
   disableCaptcha: process.env.DISABLE_CAPTCHA,
   context: 'captcha-service.configuration'
 });
+
+// Check for key mismatch
+const isSiteKeyDefault = siteKey === defaultDevSiteKey;
+const isSecretKeyDefault = secretKey === defaultDevSecretKey;
+
+if (siteKey && secretKey) {
+  if (isSiteKeyDefault !== isSecretKeyDefault) {
+    logger.error('CAPTCHA configuration mismatch detected! One key is the default development key, but the other is custom. This will cause verification failures.', {
+      siteKey: isSiteKeyDefault ? 'DEFAULT_DEV_KEY' : 'CUSTOM_KEY',
+      secretKey: isSecretKeyDefault ? 'DEFAULT_DEV_KEY' : 'CUSTOM_KEY'
+    });
+  }
+}
 
 export const captchaService = new CaptchaService(captchaConfig);
 

@@ -28,81 +28,98 @@ export const useAuth = () => {
 };
 
 export const useCart = () => {
-  const store = useCartStore();
+  const {
+    cartItems,
+    pricing,
+    isSessionExpired,
+    isHydrated,
+    loadCartFromStorage,
+    checkSessionExpiry,
+    saveCartToStorage,
+    refreshPricing: storeRefreshPricing,
+    checkAbandonedCart,
+    addToCart: storeAddToCart,
+    removeFromCart: storeRemoveFromCart,
+    updateQuantity: storeUpdateQuantity,
+    clearCart: storeClearCart,
+    applyCoupon: storeApplyCoupon,
+    removeCoupon: storeRemoveCoupon,
+    resetGuestSession,
+  } = useCartStore();
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
 
   // Run initialization logic exactly once or when user changes
   useEffect(() => {
-    store.loadCartFromStorage(user);
-  }, [user, store.loadCartFromStorage]);
+    loadCartFromStorage(user);
+  }, [user, loadCartFromStorage]);
 
   useEffect(() => {
-    store.checkSessionExpiry(user);
-    const interval = setInterval(() => store.checkSessionExpiry(user), 60 * 1000);
+    checkSessionExpiry(user);
+    const interval = setInterval(() => checkSessionExpiry(user), 60 * 1000);
     return () => clearInterval(interval);
-  }, [user, store.isHydrated, store.checkSessionExpiry]);
+  }, [user, isHydrated, checkSessionExpiry]);
 
   useEffect(() => {
-    if (store.isHydrated && !store.isSessionExpired) {
-      store.saveCartToStorage(user);
-      if (store.cartItems.length > 0) {
-        store.refreshPricing(undefined, user);
-      } else if (store.pricing.appliedCoupon) {
-        store.refreshPricing(null, user);
+    if (isHydrated && !isSessionExpired) {
+      saveCartToStorage(user);
+      if (cartItems.length > 0) {
+        storeRefreshPricing(undefined, user);
+      } else if (pricing.appliedCoupon) {
+        storeRefreshPricing(null, user);
       }
     }
-  }, [store.cartItems, store.isHydrated, store.isSessionExpired, store.pricing.appliedCoupon, user, store.saveCartToStorage, store.refreshPricing]);
+  }, [cartItems, isHydrated, isSessionExpired, pricing.appliedCoupon, user, saveCartToStorage, storeRefreshPricing]);
 
   useEffect(() => {
-    store.checkAbandonedCart(user);
-    const interval = setInterval(() => store.checkAbandonedCart(user), 5 * 60 * 1000);
+    checkAbandonedCart(user);
+    const interval = setInterval(() => checkAbandonedCart(user), 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [store.cartItems, store.isHydrated, user, store.isSessionExpired, store.checkAbandonedCart]);
+  }, [cartItems, isHydrated, user, isSessionExpired, checkAbandonedCart]);
 
   // Bind actions to user and trackEvent
   const addToCart = useCallback((item: any, quantity?: number) => {
-    store.addToCart(item, quantity || 1, user, trackEvent);
-  }, [store, user, trackEvent]);
+    storeAddToCart(item, quantity || 1, user, trackEvent);
+  }, [storeAddToCart, user, trackEvent]);
 
   const removeFromCart = useCallback((itemId: string) => {
-    store.removeFromCart(itemId, user, trackEvent);
-  }, [store, user, trackEvent]);
+    storeRemoveFromCart(itemId, user, trackEvent);
+  }, [storeRemoveFromCart, user, trackEvent]);
 
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
-    store.updateQuantity(itemId, quantity, user);
-  }, [store, user]);
+    storeUpdateQuantity(itemId, quantity, user);
+  }, [storeUpdateQuantity, user]);
 
   const clearCart = useCallback(() => {
-    store.clearCart(user);
-  }, [store, user]);
+    storeClearCart(user);
+  }, [storeClearCart, user]);
 
   const applyCoupon = useCallback((coupon: any) => {
-    return store.applyCoupon(coupon, user);
-  }, [store, user]);
+    return storeApplyCoupon(coupon, user);
+  }, [storeApplyCoupon, user]);
 
   const removeCoupon = useCallback(() => {
-    store.removeCoupon(user);
-  }, [store, user]);
+    storeRemoveCoupon(user);
+  }, [storeRemoveCoupon, user]);
 
   const refreshPricing = useCallback((currentAppliedCoupon?: any) => {
-    return store.refreshPricing(currentAppliedCoupon, user);
-  }, [store, user]);
+    return storeRefreshPricing(currentAppliedCoupon, user);
+  }, [storeRefreshPricing, user]);
 
   // Compute legacy values
-  const cartCount = useMemo(() => store.cartItems.reduce((count, item) => count + item.quantity, 0), [store.cartItems]);
-  const cartTotal = useMemo(() => store.cartItems.reduce((total, item) => total + item.price * item.quantity, 0), [store.cartItems]);
-  const cartSubtotal = useMemo(() => store.cartItems.reduce((total, item) => {
+  const cartCount = useMemo(() => cartItems.reduce((count, item) => count + item.quantity, 0), [cartItems]);
+  const cartTotal = useMemo(() => cartItems.reduce((total, item) => total + item.price * item.quantity, 0), [cartItems]);
+  const cartSubtotal = useMemo(() => cartItems.reduce((total, item) => {
     const price = item.price;
     const gstRate = typeof item.gstRate === 'number' ? item.gstRate : 18;
     const basePrice = price / (1 + (gstRate / 100));
     return total + basePrice * item.quantity;
-  }, 0), [store.cartItems]);
+  }, 0), [cartItems]);
   const cartGst = cartTotal - cartSubtotal;
 
   return {
-    cartItems: store.cartItems,
-    pricing: store.pricing,
+    cartItems,
+    pricing,
     addToCart,
     removeFromCart,
     updateQuantity,
@@ -114,7 +131,7 @@ export const useCart = () => {
     cartSubtotal,
     cartGst,
     cartTotal,
-    isSessionExpired: store.isSessionExpired,
-    resetGuestSession: store.resetGuestSession,
+    isSessionExpired,
+    resetGuestSession,
   };
 };

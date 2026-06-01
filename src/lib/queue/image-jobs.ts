@@ -4,10 +4,10 @@ import { createServiceClient, isSupabaseServiceConfigured } from '../supabase/se
 import { logger } from '../logger';
 import { isValidImageUrl } from '../image-utils';
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-const connection = new Redis(redisUrl, { maxRetriesPerRequest: null, enableOfflineQueue: false }) as any;
+const redisUrl = process.env.REDIS_URL;
 
-export const imageJobsQueue = new Queue('image-jobs', { connection });
+export let imageJobsQueue: any;
+export let imageWorker: any = null;
 
 async function processCleanupJob(job: Job) {
   const correlationId = job.data.correlationId || `cleanup-${Date.now()}`;
@@ -180,20 +180,40 @@ async function processFixImagesJob(job: Job) {
   };
 }
 
-export const imageWorker = new Worker('image-jobs', async (job: Job) => {
-  if (job.name === 'cleanup-images') {
-    return await processCleanupJob(job);
-  } else if (job.name === 'fix-images') {
-    return await processFixImagesJob(job);
-  } else {
-    throw new Error(`Unknown job name: ${job.name}`);
-  }
-}, { connection });
+if (redisUrl) {
+  const connection = new Redis(redisUrl, { maxRetriesPerRequest: null, enableOfflineQueue: false }) as any;
+  connection.on('error', (err: any) => {
+    logger.warn('redis_queue_connection_error', { error: err.message });
+  });
 
-imageWorker.on('completed', (job: Job, returnvalue: any) => {
-  logger.info(`Job ${job.id} completed!`, { returnvalue });
-});
+  imageJobsQueue = new Queue('image-jobs', { connection });
 
-imageWorker.on('failed', (job: Job | undefined, error: Error) => {
-  logger.error(`Job ${job?.id} failed`, { error: error.message });
-});
+  imageWorker = new Worker('image-jobs', async (job: Job) => {
+    if (job.name === 'cleanup-images') {
+      return await processCleanupJob(job);
+    } else if (job.name === 'fix-images') {
+      return await processFixImagesJob(job);
+    } else {
+      throw new Error(`Unknown job name: ${job.name}`);
+    }
+  }, { connection });
+
+  imageWorker.on('completed', (job: Job, returnvalue: any) => {
+    logger.info(`Job ${job.id} completed!`, { returnvalue });
+  });
+
+  imageWorker.on('failed', (job: Job | undefined, error: Error) => {
+    logger.error(`Job ${job?.id} failed`, { error: error.message });
+  });
+} else {
+  imageJobsQueue = {
+    add: async (name: string, data?: any) => {
+      logger.error('redis_queue_not_configured', { jobName: name });
+      throw new Error('Redis connection not configured. Background jobs cannot be queued.');
+    },
+    getJob: async (id: string) => {
+      logger.error('redis_queue_not_configured', { jobId: id });
+      throw new Error('Redis connection not configured. Background jobs cannot be queried.');
+    }
+  };
+}

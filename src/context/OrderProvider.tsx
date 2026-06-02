@@ -257,7 +257,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } finally {
       setIsProcessingOrder(false);
     }
-  }, [cartItems, clearCart, toast, user, hydrateCartItemsWithProductData]);
+  }, [cartItems, clearCart, toast, user, hydrateCartItemsWithProductData, supabase.auth]);
 
   const updateOrderStatus = useCallback(async (orderId: string, status: OrderStatus, additionalData?: Record<string, unknown>): Promise<boolean> => {
     try {

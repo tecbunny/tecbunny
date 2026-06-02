@@ -35,7 +35,7 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy' }: PolicyP
 
   if (loading) {
     return (
-      <div className="relative min-h-[60vh] overflow-hidden bg-slate-950 text-slate-200">
+      <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-200">
         <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-10" />
         <div className="mx-auto max-w-5xl px-4 pb-16 pt-12 sm:px-6 lg:px-8">
           <Link 
@@ -61,7 +61,7 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy' }: PolicyP
 
   if (error || !content) {
     return (
-      <div className="relative min-h-[60vh] overflow-hidden bg-slate-950 text-slate-200">
+      <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-200">
         <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
         <div className="mx-auto max-w-5xl px-4 pb-20 pt-12 sm:px-6 lg:px-8">
           <Link 
@@ -89,7 +89,7 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy' }: PolicyP
   }
 
   return (
-    <div className="relative overflow-hidden bg-slate-950 text-slate-200">
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-200">
       <style dangerouslySetInnerHTML={{ __html: `
         .policy-content h2 {
           font-size: 1.5rem !important;

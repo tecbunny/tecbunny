@@ -231,10 +231,29 @@ export default function ContactPage() {
         </div>
 
         {loading ? (
-          <div className="flex min-h-[40vh] items-center justify-center">
-            <div className="text-center">
-              <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-cyan-300" />
-              <p className="text-sm text-slate-400">Loading contact information...</p>
+          <div className="mt-16 grid gap-12 lg:grid-cols-2">
+            <div className="space-y-10">
+              <div className="grid gap-6 sm:grid-cols-2">
+                {[1, 2].map((i) => (
+                  <div key={i} className="rounded-2xl border border-white/10 bg-slate-900/70 p-6 animate-pulse">
+                    <div className="h-10 w-10 rounded-lg bg-slate-800 mb-4" />
+                    <div className="h-6 w-3/4 bg-slate-800 rounded mb-2" />
+                    <div className="h-4 w-full bg-slate-800 rounded" />
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-4">
+                <div className="h-8 w-48 bg-slate-800 rounded animate-pulse mb-4" />
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-14 w-full bg-slate-800 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            </div>
+            <div className="relative rounded-2xl border border-white/10 bg-slate-900/80 p-8 min-h-[600px] flex items-center justify-center">
+               <div className="text-center">
+                 <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-cyan-300" />
+                 <p className="text-sm text-slate-400">Loading contact information...</p>
+               </div>
             </div>
           </div>
         ) : (

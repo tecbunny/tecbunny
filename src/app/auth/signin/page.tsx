@@ -374,7 +374,7 @@ function SignInForm() {
                 )}
 
                 {turnstileSiteKey && (
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-h-[85px]">
                     <Label className="text-sm font-medium text-slate-300">Security Check</Label>
                     <Turnstile
                       sitekey={turnstileSiteKey}

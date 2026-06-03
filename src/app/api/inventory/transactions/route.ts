@@ -293,17 +293,21 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Manual ledger insert for fallback path
-      await supabase.from('stock_movements').insert({
-        product_id,
-        movement_type,
-        quantity_delta: quantity,
-        quantity_before: currentQty,
-        quantity_after: newQty,
-        reference_id:   reference_id || null,
-        reference_type,
-        notes: notes || `${movement_type} via API (fallback)`,
-      }).catch(() => { /* Non-fatal if table absent */ });
+      // Manual ledger insert for fallback path (non-fatal — table may not exist yet)
+      try {
+        await supabase.from('stock_movements').insert({
+          product_id,
+          movement_type,
+          quantity_delta: quantity,
+          quantity_before: currentQty,
+          quantity_after: newQty,
+          reference_id:   reference_id || null,
+          reference_type,
+          notes: notes || `${movement_type} via API (fallback)`,
+        });
+      } catch {
+        /* Non-fatal: stock_movements table may not exist yet */
+      }
 
       logger.info('inventory.transaction.fallback_success', {
         correlationId, product_id, newQty, movement_type,

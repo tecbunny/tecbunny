@@ -50,7 +50,6 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-# password_leak_protection = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
 site_url = "http://localhost:3000"

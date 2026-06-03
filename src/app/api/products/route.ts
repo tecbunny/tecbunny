@@ -497,6 +497,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Media validation gatekeeper check
+    if ((status === 'active' || status === 'published') && normalizedImages.length === 0) {
+      return NextResponse.json(
+        { error: 'Product cannot be published without at least one valid image upload reference.' },
+        { status: 422 }
+      );
+    }
+
     const supabase = role && ADMIN_ROLES.has(role) && isSupabaseServiceConfigured
       ? createServiceClient()
       : authClient;
@@ -844,6 +852,33 @@ export async function PUT(request: NextRequest) {
       ? createServiceClient()
       : authClient;
     const user = session.user;
+
+    // Media validation gatekeeper check
+    const targetStatus = updateData.status;
+    if (targetStatus === 'active' || targetStatus === 'published') {
+      const hasImagesPayload = Array.isArray(images);
+      let activeImagesCount = 0;
+      if (hasImagesPayload) {
+        const normalizedImages = images.map((img: any) => typeof img === 'string' ? img : img?.url).filter(Boolean);
+        activeImagesCount = normalizedImages.length;
+      } else {
+        // Query database for existing images
+        const { data: existingProduct } = await supabase
+          .from('products')
+          .select('images')
+          .eq('id', id)
+          .single();
+        activeImagesCount = Array.isArray(existingProduct?.images) ? existingProduct.images.length : 0;
+      }
+
+      if (activeImagesCount === 0) {
+        logger.warn('product_update_publish_blocked_no_images', { productId: id, correlationId });
+        return NextResponse.json(
+          { error: 'Product cannot be published without at least one valid image upload reference.' },
+          { status: 422, headers: { 'x-correlation-id': correlationId } }
+        );
+      }
+    }
 
     // Normalize tags if provided as comma separated string
     if (typeof (updateData as any).tags === 'string') {

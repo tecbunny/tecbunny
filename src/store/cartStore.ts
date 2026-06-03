@@ -72,6 +72,7 @@ export interface CartState {
   saveCartToStorage: (user: any) => void;
   checkSessionExpiry: (user: any) => void;
   checkAbandonedCart: (user: any) => void;
+  mergeGuestCartWithUserCart: (userId: string, supabaseClient: any) => Promise<void>;
 }
 
 const defaultPricing: CartPricing = {
@@ -493,5 +494,56 @@ export const useCartStore = create<CartState>((set, get) => ({
     });
     
     get().refreshPricing(null, user, customerCategory);
+  },
+
+  mergeGuestCartWithUserCart: async (userId: string, supabaseClient: any) => {
+    try {
+      const guestCartKey = 'cart_guest';
+      const guestCartRaw = typeof window !== 'undefined' ? localStorage.getItem(guestCartKey) : null;
+      const guestItems: CartItem[] = guestCartRaw ? JSON.parse(guestCartRaw) : [];
+      
+      const user = { id: userId };
+      const userCartKey = getStorageKey('cart', user);
+      const userCartRaw = typeof window !== 'undefined' ? localStorage.getItem(userCartKey) : null;
+      const userItems: CartItem[] = userCartRaw ? JSON.parse(userCartRaw) : [];
+
+      const mergedMap = new Map<string, CartItem>();
+
+      // Load existing user items first
+      userItems.forEach(item => {
+        mergedMap.set(item.id, { ...item });
+      });
+
+      // Merge guest items (sum quantities)
+      guestItems.forEach(guestItem => {
+        const existing = mergedMap.get(guestItem.id);
+        if (existing) {
+          existing.quantity += guestItem.quantity;
+        } else {
+          mergedMap.set(guestItem.id, { ...guestItem });
+        }
+      });
+
+      const mergedItems = Array.from(mergedMap.values());
+
+      set({ cartItems: mergedItems });
+
+      if (typeof window !== 'undefined') {
+        // Save to user storage
+        localStorage.setItem(userCartKey, JSON.stringify(mergedItems));
+        
+        // Clean up guest local storage
+        localStorage.removeItem('cart_guest');
+        localStorage.removeItem('appliedCoupon_guest');
+        localStorage.removeItem('guestSessionStart');
+      }
+
+      // Refresh pricing for the newly merged cart
+      await get().refreshPricing(undefined, user);
+      
+      logger.info('Cart guest-to-user merge complete', { userId, itemsCount: mergedItems.length });
+    } catch (error) {
+      logger.error('Failed to merge guest cart with user cart', { error });
+    }
   },
 }));

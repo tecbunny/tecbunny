@@ -1,7 +1,16 @@
 import { z } from 'zod';
+import { createClient } from '@supabase/supabase-js';
 
 import { logger } from './logger';
 import { formatCurrency } from './utils';
+
+const getSupabaseAdmin = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';
+  return createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false }
+  });
+};
 
 const orderSchema = z.object({
   orderNumber: z.string().min(1),
@@ -135,9 +144,65 @@ export class WhatsAppService {
     this.phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
   }
 
-  // Send WhatsApp notification
-  async sendMessage(to: string, message: any, messageType: 'text' | 'template' = 'text', isInfobip: boolean = true) {
+  async checkWhatsAppConsent(to: string, category: 'orderUpdates' | 'serviceUpdates' | 'securityAlerts' = 'orderUpdates'): Promise<boolean> {
     try {
+      const cleanNumber = to.replace(/[^\d]/g, '');
+      if (!cleanNumber) return false;
+
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!url || !key) {
+        return true; // Default to true if not configured
+      }
+      
+      const supabase = getSupabaseAdmin();
+      
+      const { data, error } = await supabase
+        .from('user_communication_preferences')
+        .select('*')
+        .or(`phone.eq.${cleanNumber},phone.eq.+${cleanNumber},phone.eq.91${cleanNumber}`)
+        .maybeSingle();
+
+      if (error) {
+        logger.error('Failed to query WhatsApp preferences for consent check:', { error: error.message, phone: cleanNumber });
+        return true; 
+      }
+
+      if (!data) {
+        return category === 'orderUpdates' || category === 'securityAlerts';
+      }
+
+      if (data.whatsappNotifications === false) {
+        return false;
+      }
+
+      if (category === 'orderUpdates') return data.orderUpdates !== false;
+      if (category === 'serviceUpdates') return data.serviceUpdates !== false;
+      if (category === 'securityAlerts') return data.securityAlerts !== false;
+
+      return false;
+    } catch (err) {
+      logger.error('Exception checking WhatsApp preferences:', { error: err });
+      return true; 
+    }
+  }
+
+  // Send WhatsApp notification
+  async sendMessage(
+    to: string, 
+    message: any, 
+    messageType: 'text' | 'template' = 'text', 
+    isInfobip: boolean = true,
+    category: 'orderUpdates' | 'serviceUpdates' | 'securityAlerts' = 'orderUpdates'
+  ) {
+    try {
+      // Check user consent first before dispatching
+      const consented = await this.checkWhatsAppConsent(to, category);
+      if (!consented) {
+        logger.info('WhatsApp message dispatch blocked by communication consent preferences', { to, category });
+        return { success: false, reason: 'Consent denied by user preferences' };
+      }
+
       // Clean phone number (remove +, spaces, etc.)
       const cleanNumber = to.replace(/[^\d]/g, '');
       const formattedNumber = cleanNumber.startsWith('91') ? cleanNumber : `91${cleanNumber}`;
@@ -576,7 +641,7 @@ ${description}
 
     message += `\n\n🛍️ Shop now: ${link}`;
 
-    return this.sendMessage(to, message);
+    return this.sendMessage(to, message, 'text', true, 'serviceUpdates');
   }
 
   // Send cart abandonment reminder
@@ -602,7 +667,7 @@ ${cartLink}
 Need help? Just reply to this message! 💬
     `.trim();
 
-    return this.sendMessage(to, message);
+    return this.sendMessage(to, message, 'text', true, 'serviceUpdates');
   }
 }
 

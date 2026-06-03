@@ -74,6 +74,21 @@ export async function POST(request: NextRequest) {
   }
 }
 
+const mapPaymentStatus = (status: string | undefined | null): 'approved' | 'failed' | 'pending' => {
+  if (!status) return 'pending';
+  const clean = status.trim().toLowerCase();
+  
+  if (['success', 'paid', 'approved', 'captured', 'completed', 'authorized', 'captured_success'].includes(clean)) {
+    return 'approved';
+  }
+  
+  if (['failed', 'failure', 'rejected', 'declined', 'cancelled', 'bounced'].includes(clean)) {
+    return 'failed';
+  }
+  
+  return 'pending';
+};
+
 async function processPaymentReceived(supabase: any, data: any, source: string) {
   const {
     payment_id,
@@ -102,16 +117,18 @@ async function processPaymentReceived(supabase: any, data: any, source: string) 
   const cleanPhone = customer_phone?.replace(/[^\d]/g, '');
   const formattedPhone = cleanPhone ? (cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`) : null;
   const paymentAmount = Number(amount ?? 0);
+  const systemPaymentStatus = mapPaymentStatus(payment_status);
 
-  // Update order status
+  // Update order status based on payment outcome
   if (orderId) {
+    const orderStatus = systemPaymentStatus === 'approved' ? 'Payment Confirmed' : 'Payment Failed';
     const { error: orderError } = await supabase
       .from('orders')
       .update({
         payment_id: paymentId,
         payment_method,
         payment_date: payment_date || new Date().toISOString(),
-        status: 'Payment Confirmed',
+        status: orderStatus,
         updated_at: new Date().toISOString()
       })
       .eq('order_id', orderId);
@@ -121,7 +138,7 @@ async function processPaymentReceived(supabase: any, data: any, source: string) 
     }
   }
 
-  // Store payment record
+  // Store payment record with mapped status
   const { error: paymentError } = await supabase
     .from('payments')
     .insert({
@@ -131,7 +148,7 @@ async function processPaymentReceived(supabase: any, data: any, source: string) 
       amount: paymentAmount,
       currency,
       payment_method,
-      status: payment_status,
+      status: systemPaymentStatus,
       gateway_response,
       source,
       metadata: {

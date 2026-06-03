@@ -203,55 +203,37 @@ export async function POST(request: NextRequest) {
       otp_required: !!orderData.agent_id // Flag for OTP requirement
     };
 
-    // Only insert fields that exist in the database schema
-    // Available fields: id, customer_name, customer_id, status, subtotal, gst_amount, total, type, items, processed_by, created_at
-    const orderToInsert = {
-      customer_name: orderData.customer_name,
-      customer_id: orderData.customer_id || null,
-      status: orderData.status || 'Pending',
-      subtotal: Math.round(subtotal * 100) / 100,
-      gst_amount: Math.round(gst_amount * 100) / 100,
-      total: Math.round(total * 100) / 100,
-      type: orderType,
-      items: orderItemsWithCustomerInfo,
-      processed_by: null,
-  delivery_address: orderData.delivery_address || pickupStore || null,
-      notes: orderData.notes || null,
-      payment_method: orderData.payment_method || null,
-      customer_email: orderData.customer_email || null,
-      customer_phone: orderData.customer_phone || null,
-      discount_amount: Math.round(discount_amount * 100) / 100,
-      shipping_amount: Math.round(shipping_amount * 100) / 100,
-      payment_status: orderData.payment_status || null,
-      created_at: new Date().toISOString()
-    };
+    // Execute atomic allocation and order placement via PostgreSQL RPC
+    const { data: rpcResult, error: rpcError } = await serviceSupabase.rpc('allocate_order_inventory_atomic', {
+      p_customer_name: orderData.customer_name,
+      p_customer_id: user.id,
+      p_customer_email: orderData.customer_email,
+      p_customer_phone: orderData.customer_phone,
+      p_delivery_address: orderData.delivery_address || pickupStore || null,
+      p_notes: orderData.notes || null,
+      p_payment_method: orderData.payment_method || null,
+      p_subtotal: Math.round(subtotal * 100) / 100,
+      p_gst_amount: Math.round(gst_amount * 100) / 100,
+      p_total: Math.round(total * 100) / 100,
+      p_discount_amount: Math.round(discount_amount * 100) / 100,
+      p_shipping_amount: Math.round(shipping_amount * 100) / 100,
+      p_payment_status: orderData.payment_status || null,
+      p_order_type: orderType,
+      p_items: validatedItems,
+      p_agent_id: orderData.agent_id || null
+    });
 
-  logger.debug('order_insert_payload', { userId: user.id });
-
-    // Insert order into database
-  const { data: createdOrder, error } = await serviceSupabase
-      .from('orders')
-      .insert([orderToInsert])
-      .select()
-      .single();
-
-    if (error) {
-      logger.error('order_create_db_error', { err: error.message, userId: user.id });
-      return apiError('INTERNAL_ERROR', { correlationId, overrideMessage: 'Failed to create order', details: { error: error.message } });
+    if (rpcError) {
+      logger.error('order_create_rpc_error', { err: rpcError.message, userId: user.id });
+      return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: rpcError.message || 'Failed to allocate stock and create order.' });
     }
 
-    // Deduct Stock
-    for (const item of validatedItems) {
-      const { error: stockError } = await serviceSupabase.rpc('decrement_product_stock', {
-        p_product_id: item.id,
-        p_quantity: item.quantity
-      });
-      
-      if (stockError) {
-        logger.error('order_stock_deduction_failed', { orderId: createdOrder.id, productId: item.id, error: stockError.message });
-        // Note: In a real production system, you might want to rollback the order here or alert admin
-      }
+    if (!rpcResult || !rpcResult.success || !rpcResult.order) {
+      logger.error('order_create_rpc_invalid_response', { rpcResult, userId: user.id });
+      return apiError('INTERNAL_ERROR', { correlationId, overrideMessage: 'Invalid response from allocation engine.' });
     }
+
+    const createdOrder = rpcResult.order;
 
     logger.info('order_created', { orderId: createdOrder.id, userId: user.id });
 

@@ -37,6 +37,32 @@ export async function PATCH(
     // Parse request body
     const updateData = await request.json();
     
+    // Media validation gatekeeper check
+    const targetStatus = updateData.status;
+    if (targetStatus === 'active' || targetStatus === 'published') {
+      const hasImagesPayload = 'images' in updateData && Array.isArray(updateData.images);
+      let activeImagesCount = 0;
+      if (hasImagesPayload) {
+        const normalizedImages = updateData.images.map((img: any) => typeof img === 'string' ? img : img?.url).filter(Boolean);
+        activeImagesCount = normalizedImages.length;
+      } else {
+        const { data: existingProduct } = await supabase
+          .from('products')
+          .select('images')
+          .eq('id', productId)
+          .single();
+        activeImagesCount = Array.isArray(existingProduct?.images) ? existingProduct.images.length : 0;
+      }
+
+      if (activeImagesCount === 0) {
+        logger.warn('product_patch_publish_blocked_no_images', { productId });
+        return NextResponse.json(
+          { success: false, error: 'Product cannot be published without at least one valid image upload reference.' },
+          { status: 422 }
+        );
+      }
+    }
+
     logger.info('product_update_request', { 
       productId, 
       updateFields: Object.keys(updateData),

@@ -56,6 +56,15 @@ export default function CheckoutPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [orderError, setOrderError] = useState<string>('');
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: ''
+  });
   const selectedPickupStore = pickupStores.find(store => store.id === selectedPickupStoreId) || pickupStores[0];
 
   const serviceOnlyCart = React.useMemo(() => {
@@ -120,11 +129,105 @@ export default function CheckoutPage() {
     }
   }, [serviceOnlyCart, orderType]);
 
+  const validateField = (field: string, value: string) => {
+    let error = '';
+    if (field === 'name') {
+      if (!value.trim()) {
+        error = 'Name is required';
+      } else if (value.trim().length < 3) {
+        error = 'Name must be at least 3 characters';
+      }
+    } else if (field === 'email') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!value.trim()) {
+        error = 'Email is required';
+      } else if (!emailRegex.test(value.trim())) {
+        error = 'Invalid email format';
+      }
+    } else if (field === 'phone') {
+      const cleanPhone = value.replace(/[^\d]/g, '');
+      if (!value.trim()) {
+        error = 'Phone number is required';
+      } else if (cleanPhone.length < 10 || cleanPhone.length > 12) {
+        error = 'Phone must be a valid 10-12 digit number';
+      }
+    } else if (field === 'pincode' && orderType === 'Delivery') {
+      if (!value.trim()) {
+        error = 'Pincode is required';
+      } else if (!/^\d{6}$/.test(value.trim())) {
+        error = 'Pincode must be exactly 6 digits';
+      }
+    } else if (field === 'address' && orderType === 'Delivery') {
+      if (!value.trim()) {
+        error = 'Address is required';
+      } else if (value.trim().length < 10) {
+        error = 'Please provide a more complete address';
+      }
+    } else if (field === 'city' && orderType === 'Delivery') {
+      if (!value.trim()) {
+        error = 'City is required';
+      }
+    } else if (field === 'state' && orderType === 'Delivery') {
+      if (!value.trim()) {
+        error = 'State is required';
+      }
+    }
+
+    setFieldErrors(prev => ({
+      ...prev,
+      [field]: error
+    }));
+
+    return !error;
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setCustomerInfo(prev => ({
       ...prev,
       [field]: value
     }));
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  const handleInputBlur = (field: string, value: string) => {
+    void validateField(field, value);
+  };
+
+  const handlePincodeChange = async (pincode: string) => {
+    handleInputChange('pincode', pincode);
+    
+    if (pincode.length === 6 && /^\d+$/.test(pincode)) {
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+        const data = await res.json();
+        if (data?.[0]?.Status === 'Success' && data[0].PostOffice) {
+          const postOffice = data[0].PostOffice[0];
+          setCustomerInfo(prev => ({
+            ...prev,
+            city: postOffice.District || prev.city,
+            state: postOffice.State || prev.state
+          }));
+          setFieldErrors(prev => ({
+            ...prev,
+            city: '',
+            state: '',
+            pincode: ''
+          }));
+        }
+      } catch (e) {
+        logger.warn('Pincode API lookup failed', { pincode, error: e });
+      }
+    } else if (pincode.length > 0 && !/^\d{0,6}$/.test(pincode)) {
+      setFieldErrors(prev => ({
+        ...prev,
+        pincode: 'Pincode must contain numeric digits only'
+      }));
+    }
   };
 
   const fallbackTotals = React.useMemo(() => {
@@ -194,13 +297,22 @@ export default function CheckoutPage() {
         return;
       }
       
-      if (!customerInfo.name || !customerInfo.email || !customerInfo.phone) {
-        setOrderError('Please fill in all required fields (Name, Email, Phone)');
-        return;
+      // Run field validation
+      let isValid = true;
+      const fieldsToValidate = ['name', 'email', 'phone'];
+      if (orderType === 'Delivery') {
+        fieldsToValidate.push('address', 'city', 'pincode', 'state');
       }
+      
+      fieldsToValidate.forEach(field => {
+        const value = customerInfo[field as keyof typeof customerInfo] || '';
+        if (!validateField(field, value)) {
+          isValid = false;
+        }
+      });
 
-      if (orderType === 'Delivery' && (!customerInfo.address || !customerInfo.city || !customerInfo.pincode)) {
-        setOrderError('Please fill in delivery address details');
+      if (!isValid) {
+        setOrderError('Please correct the validation errors in the form.');
         return;
       }
 
@@ -505,10 +617,14 @@ export default function CheckoutPage() {
                       required
                       value={customerInfo.name}
                       onChange={(event) => handleInputChange('name', event.target.value)}
-                      className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
+                      onBlur={(event) => handleInputBlur('name', event.target.value)}
+                      className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.name ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
                       placeholder=" "
                     />
                     <label htmlFor="name" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Full Name</label>
+                    {fieldErrors.name && (
+                      <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.name}</span>
+                    )}
                   </div>
                   <div className="input-group relative">
                     <input
@@ -517,10 +633,14 @@ export default function CheckoutPage() {
                       required
                       value={customerInfo.phone}
                       onChange={(event) => handleInputChange('phone', event.target.value)}
-                      className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
+                      onBlur={(event) => handleInputBlur('phone', event.target.value)}
+                      className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.phone ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
                       placeholder=" "
                     />
                     <label htmlFor="phone" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Phone Number</label>
+                    {fieldErrors.phone && (
+                      <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.phone}</span>
+                    )}
                   </div>
                   <div className="input-group relative">
                     <input
@@ -529,10 +649,14 @@ export default function CheckoutPage() {
                       required
                       value={customerInfo.email}
                       onChange={(event) => handleInputChange('email', event.target.value)}
-                      className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
+                      onBlur={(event) => handleInputBlur('email', event.target.value)}
+                      className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.email ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
                       placeholder=" "
                     />
                     <label htmlFor="email" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Email Address</label>
+                    {fieldErrors.email && (
+                      <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.email}</span>
+                    )}
                   </div>
                   <div className="input-group relative">
                     <input
@@ -560,10 +684,14 @@ export default function CheckoutPage() {
                       required={orderType === 'Delivery'}
                       value={customerInfo.address}
                       onChange={(event) => handleInputChange('address', event.target.value)}
-                      className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
+                      onBlur={(event) => handleInputBlur('address', event.target.value)}
+                      className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.address ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
                       placeholder=" "
                     ></textarea>
                     <label htmlFor="address" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Installation Address (Goa)</label>
+                    {fieldErrors.address && (
+                      <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.address}</span>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -603,21 +731,30 @@ export default function CheckoutPage() {
                         required={orderType === 'Delivery'}
                         value={customerInfo.city}
                         onChange={(event) => handleInputChange('city', event.target.value)}
-                        className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
+                        onBlur={(event) => handleInputBlur('city', event.target.value)}
+                        className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.city ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
                         placeholder=" "
                       />
                       <label htmlFor="city" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">City</label>
+                      {fieldErrors.city && (
+                        <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.city}</span>
+                      )}
                     </div>
                     <div className="input-group relative">
                       <input
                         type="text"
                         id="state"
+                        required={orderType === 'Delivery'}
                         value={customerInfo.state}
                         onChange={(event) => handleInputChange('state', event.target.value)}
-                        className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
+                        onBlur={(event) => handleInputBlur('state', event.target.value)}
+                        className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.state ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
                         placeholder=" "
                       />
                       <label htmlFor="state" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">State</label>
+                      {fieldErrors.state && (
+                        <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.state}</span>
+                      )}
                     </div>
                     <div className="input-group relative">
                       <input
@@ -625,11 +762,15 @@ export default function CheckoutPage() {
                         id="pincode"
                         required={orderType === 'Delivery'}
                         value={customerInfo.pincode}
-                        onChange={(event) => handleInputChange('pincode', event.target.value)}
-                        className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
+                        onChange={(event) => handlePincodeChange(event.target.value)}
+                        onBlur={(event) => handleInputBlur('pincode', event.target.value)}
+                        className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.pincode ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
                         placeholder=" "
                       />
                       <label htmlFor="pincode" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Pincode</label>
+                      {fieldErrors.pincode && (
+                        <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.pincode}</span>
+                      )}
                     </div>
                   </div>
 

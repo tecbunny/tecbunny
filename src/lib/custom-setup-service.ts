@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { logger } from './logger';
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from './supabase/server';
+import { getRedis } from './redis';
 
 export type JsonRecord = Record<string, unknown>;
 
@@ -386,6 +387,38 @@ export function buildCustomSetupBlueprintSummary(template: CustomSetupTemplateRo
 }
 
 export async function getCustomSetupBlueprintSummary(slug: string): Promise<CustomSetupBlueprintSummary | null> {
+  const redis = getRedis();
+  const cacheKey = `blueprint:summary:${slug}`;
+
+  if (redis) {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        logger.info('custom_setup.blueprint_cache_hit', { slug });
+        return JSON.parse(cached) as CustomSetupBlueprintSummary;
+      }
+    } catch (err) {
+      logger.warn('custom_setup.blueprint_cache_read_failed', {
+        slug,
+        error: err instanceof Error ? err.message : err,
+      });
+    }
+  }
+
   const template = await fetchCustomSetupTemplateBySlug(slug);
-  return buildCustomSetupBlueprintSummary(template);
+  const summary = buildCustomSetupBlueprintSummary(template);
+
+  if (redis && summary) {
+    try {
+      await redis.set(cacheKey, JSON.stringify(summary), 'EX', 3600); // Cache for 1 hour
+      logger.info('custom_setup.blueprint_cache_write', { slug });
+    } catch (err) {
+      logger.warn('custom_setup.blueprint_cache_write_failed', {
+        slug,
+        error: err instanceof Error ? err.message : err,
+      });
+    }
+  }
+
+  return summary;
 }

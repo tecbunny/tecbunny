@@ -4,9 +4,9 @@ import type { Metadata } from 'next';
 import { ShieldCheck, Wrench } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import CustomSetupFlow from '@/components/customised-setups/CustomSetupFlow';
 import { RefreshButton } from '@/components/customised-setups/RefreshButton';
 import { QuoteCTA } from '@/components/customised-setups/QuoteCTA';
+import CustomSetupFlow from '@/components/customised-setups/ClientCustomSetupFlow';
 import { DEFAULT_CUSTOM_SETUP_TEMPLATE_SLUG } from '@/lib/custom-setup.constants';
 import { getCustomSetupBlueprintSummary } from '@/lib/custom-setup-service';
 

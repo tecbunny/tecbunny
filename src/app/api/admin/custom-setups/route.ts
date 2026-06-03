@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildCustomSetupBlueprintSummary } from '@/lib/custom-setup-service';
 import { AdminAuthError, requireAdminContext } from '@/lib/auth/admin-guard';
 import { logger } from '@/lib/logger';
+import { getRedis } from '@/lib/redis';
+import { DEFAULT_CUSTOM_SETUP_TEMPLATE_SLUG } from '@/lib/custom-setup.constants';
 
 // export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -299,6 +301,23 @@ export async function PATCH(request: NextRequest) {
       }
 
       return NextResponse.json({ error: 'Unsupported update target' }, { status: 400 });
+    }
+
+    // Invalidate Redis cache for blueprint templates
+    const redis = getRedis();
+    if (redis) {
+      try {
+        await redis.del(`blueprint:summary:${DEFAULT_CUSTOM_SETUP_TEMPLATE_SLUG}`);
+        const keys = await redis.keys('blueprint:summary:*');
+        if (keys.length > 0) {
+          await redis.del(...keys);
+        }
+        logger.info('admin_custom_setups.cache_invalidated', { keysCleared: keys.length });
+      } catch (err) {
+        logger.warn('admin_custom_setups.cache_invalidation_failed', {
+          error: err instanceof Error ? err.message : err,
+        });
+      }
     }
 
     return NextResponse.json({ success: true, applied });

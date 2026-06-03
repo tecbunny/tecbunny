@@ -1,0 +1,384 @@
+﻿Unused files (81)
+refactor_routes.cjs                                       
+public/styles.css                                         
+src/hooks/use-customer-discounts.ts                       
+src/hooks/use-email.ts                                    
+src/hooks/use-mobile.tsx                                  
+src/hooks/use-otp.ts                                      
+src/hooks/use-resend-auth.ts                              
+src/lib/api-error-handler.ts                              
+src/lib/auth-redirects.ts                                 
+src/lib/commission-service.ts                             
+src/lib/email-service.ts                                  
+src/lib/innovationData.ts                                 
+src/lib/order-workflow.ts                                 
+src/lib/performance.ts                                    
+src/lib/pricing.ts                                        
+src/lib/request-validation.ts                             
+src/lib/servicesData.ts                                   
+src/lib/signup-session-manager.ts                         
+src/lib/smtp-service.ts                                   
+src/lib/timezone-cache.ts                                 
+src/lib/whatsapp-notification-service.ts                  
+src/components/auth/AuthStateManager.tsx                  
+src/components/auth/OTPChannelSelector.tsx                
+src/components/auth/SignupDialogNew.tsx                   
+src/components/admin/AdminPanel.tsx                       
+src/components/admin/csv-import-dialog.tsx                
+src/components/admin/customer-management.tsx              
+src/components/admin/HeroUploadDialog.tsx                 
+src/components/admin/index.ts                             
+src/components/admin/OrderShipModal.tsx                   
+src/components/admin/ProductImportDialog.tsx              
+src/components/admin/SetupButton.tsx                      
+src/components/cart/CartSheet.tsx                         
+src/components/cart/CouponDialog.tsx                      
+src/components/invoices/PremiumInvoiceTemplate.tsx        
+src/components/layout/HeroSection.tsx                     
+src/components/layout/NativeAppInitializer.tsx            
+src/components/products/ProductCard.tsx                   
+src/components/products/ProductRecommendations.tsx        
+src/components/products/ProductSearch.tsx                 
+src/components/products/ProductSort.tsx                   
+src/components/products/RecommendedProducts.tsx           
+src/components/profile/CommunicationPreferences.tsx       
+src/components/sales/PickupOrderDialog.tsx                
+src/components/shared/CustomerCategoryBadge.tsx           
+src/components/shared/ErrorBoundary.tsx                   
+src/components/shared/LazyComponents.tsx                  
+src/components/ui/accordion.tsx                           
+src/components/ui/aspect-ratio.tsx                        
+src/components/ui/breadcrumb.tsx                          
+src/components/ui/calendar.tsx                            
+src/components/ui/carousel.tsx                            
+src/components/ui/collapsible.tsx                         
+src/components/ui/command.tsx                             
+src/components/ui/context-menu.tsx                        
+src/components/ui/dynamic-head.tsx                        
+src/components/ui/dynamic-logo.tsx                        
+src/components/ui/hover-card.tsx                          
+src/components/ui/menubar.tsx                             
+src/components/ui/navigation-link.tsx                     
+src/components/ui/otp-input.tsx                           
+src/components/ui/progress.tsx                            
+src/components/ui/sidebar.tsx                             
+src/components/ui/slider.tsx                              
+src/components/ui/toggle-group.tsx                        
+src/components/ui/toggle.tsx                              
+src/components/ui/tooltip.tsx                             
+src/lib/ai/tools-implementation.ts                        
+src/lib/email/email-otp-service.ts                        
+src/lib/sms/msg91.ts                                      
+src/lib/types/superfone.ts                                
+src/app/commerce/products/[id]/product-detail.tsx         
+src/app/info/policies/privacy/privacy-policy.tsx          
+src/app/info/policies/return/return-policy.tsx            
+src/app/info/policies/shipping/shipping-policy.tsx        
+src/app/info/policies/terms/terms-of-service.tsx          
+src/app/management/accounts/reports/accounts-reports.tsx  
+src/app/management/accounts/invoices/accounts-invoices.tsx
+src/app/management/admin/orders/admin-orders.tsx          
+src/app/management/admin/products/admin-products.tsx      
+src/app/management/admin/settings/auto-promotion.tsx      
+Unused dependencies (31)
+@capacitor/android            package.json:35:6 
+@capacitor/app                package.json:36:6 
+@capacitor/cli                package.json:37:6 
+@capacitor/core               package.json:38:6 
+@capacitor/keyboard           package.json:39:6 
+@capacitor/splash-screen      package.json:40:6 
+@capacitor/status-bar         package.json:41:6 
+@headlessui/react             package.json:42:6 
+@heroicons/react              package.json:43:6 
+@radix-ui/react-accordion     package.json:45:6 
+@radix-ui/react-aspect-ratio  package.json:47:6 
+@radix-ui/react-collapsible   package.json:50:6 
+@radix-ui/react-context-menu  package.json:51:6 
+@radix-ui/react-hover-card    package.json:54:6 
+@radix-ui/react-icons         package.json:55:6 
+@radix-ui/react-menubar       package.json:57:6 
+@radix-ui/react-progress      package.json:59:6 
+@radix-ui/react-slider        package.json:64:6 
+@radix-ui/react-toggle        package.json:69:6 
+@radix-ui/react-toggle-group  package.json:70:6 
+@radix-ui/react-tooltip       package.json:71:6 
+@swc/helpers                  package.json:74:6 
+@vercel/analytics             package.json:77:6 
+cmdk                          package.json:82:6 
+critters                      package.json:83:6 
+embla-carousel-react          package.json:86:6 
+iconv-lite                    package.json:88:6 
+pg                            package.json:96:6 
+react-day-picker              package.json:99:6 
+sonner                        package.json:104:6
+vaul                          package.json:108:6
+Unused devDependencies (13)
+@next/eslint-plugin-next          package.json:114:6
+@svgr/webpack                     package.json:115:6
+@testing-library/jest-dom         package.json:120:6
+@testing-library/react            package.json:121:6
+@types/crypto-js                  package.json:122:6
+@typescript-eslint/eslint-plugin  package.json:128:6
+@typescript-eslint/parser         package.json:129:6
+csv-parser                        package.json:132:6
+eslint-config-next                package.json:134:6
+lightningcss                      package.json:135:6
+pdf-parse                         package.json:136:6
+rollup                            package.json:138:6
+supabase                          package.json:139:6
+Unlisted dependencies (1)
+nanoid  src/app/api/sales-agents/apply/route.ts:3:24
+Unlisted binaries (2)
+tailwindcss  package.json
+vercel       package.json
+Unused exports (152)
+OrderContext                                    src/context/OrderProvider.tsx:25:14            
+LoadingSpinner                        function  src/components/shared/LoadingSpinner.tsx:13:17 
+ButtonSpinner                         function  src/components/shared/LoadingSpinner.tsx:42:17 
+FullPageLoader                        function  src/components/shared/LoadingSpinner.tsx:48:17 
+createServerClient                              src/lib/supabase/server.ts:40:26               
+requireSupabasePublicEnv                        src/lib/supabase/server.ts:62:3                
+requireSupabaseServiceEnv                       src/lib/supabase/server.ts:63:3                
+createClient                                    src/lib/supabase.ts:2:10                       
+remaining                             function  src/lib/rate-limit.ts:151:17                   
+bucketResetMs                         function  src/lib/rate-limit.ts:160:17                   
+hasRole                               function  src/lib/permissions.ts:48:23                   
+isManager                             function  src/lib/permissions.ts:70:23                   
+isSales                               function  src/lib/permissions.ts:75:23                   
+isAccounts                            function  src/lib/permissions.ts:80:23                   
+isServiceEngineer                     function  src/lib/permissions.ts:85:23                   
+getRolePermissions                    function  src/lib/permissions.ts:93:17                   
+isCustomerClient                      function  src/lib/permissions.ts:100:17                  
+isSalesClient                         function  src/lib/permissions.ts:102:17                  
+isAccountsClient                      function  src/lib/permissions.ts:107:17                  
+isServiceEngineerClient               function  src/lib/permissions.ts:112:17                  
+isManagerClient                       function  src/lib/permissions.ts:114:17                  
+isAdminClient                         function  src/lib/permissions.ts:119:17                  
+APIResponses                                    src/lib/api-response.ts:197:14                 
+isAPIResponse                         function  src/lib/api-response.ts:268:17                 
+isSuccessResponse                     function  src/lib/api-response.ts:277:17                 
+isErrorResponse                       function  src/lib/api-response.ts:281:17                 
+isRoleAllowed                                   src/lib/auth/server-role.ts:118:14             
+envConfig                                       src/lib/environment-validator.ts:174:14        
+default                               variable  src/lib/environment-validator.ts:175:16        
+getServerAuthState                    function  src/lib/server-role-guard.ts:79:23             
+roleMatches                                     src/lib/server-role-guard.ts:106:14            
+getDefaultSiteUrls                    function  src/lib/site-url.ts:4:17                       
+sendInstoreOrderConfirmationTemplate  function  src/lib/superfone-whatsapp-service.ts:387:23   
+sendDynamicUrlTemplate                function  src/lib/superfone-whatsapp-service.ts:417:23   
+sendPaymentReminderTemplate           function  src/lib/superfone-whatsapp-service.ts:444:23   
+sendPaymentSuccessTemplate            function  src/lib/superfone-whatsapp-service.ts:479:23   
+testWhatsAppConnection                function  src/lib/superfone-whatsapp-service.ts:544:23   
+default                               variable  src/lib/superfone-whatsapp-service.ts:567:16   
+OtpService                            class     src/lib/otp-service.ts:28:14                   
+EnhancedCommissionService             class     src/lib/enhanced-commission-service.ts:45:14   
+EMAIL_TEMPLATES                                 src/lib/email/index.ts:8:10                    
+generateEmailTemplate                           src/lib/email/index.ts:9:10                    
+EmailService                                    src/lib/email/index.ts:10:10                   
+createEmailService                              src/lib/email/index.ts:10:24                   
+emailClient                                     src/lib/email/index.ts:11:10                   
+NEXT_PUBLIC_SUPPORT_PHONE                       src/lib/constants.ts:2:14                      
+CheckoutEngine                        class     src/lib/checkout-engine.ts:44:14               
+readNumericMetadata                   function  src/lib/custom-setup-pricing.ts:119:17         
+readBooleanMetadata                   function  src/lib/custom-setup-pricing.ts:138:17         
+resolvePricePair                      function  src/lib/custom-setup-pricing.ts:165:17         
+parseChannelCapacity                  function  src/lib/custom-setup-pricing.ts:195:17         
+normalizeCapacity                     function  src/lib/custom-setup-pricing.ts:204:17         
+normalizeMegapixels                   function  src/lib/custom-setup-pricing.ts:221:17         
+buildCapacityEntries                  function  src/lib/custom-setup-pricing.ts:241:17         
+buildCableEntries                     function  src/lib/custom-setup-pricing.ts:282:17         
+buildCameraMatrix                     function  src/lib/custom-setup-pricing.ts:320:17         
+buildHddOptionsFromComponents         function  src/lib/custom-setup-pricing.ts:377:17         
+pickFirstOption                       function  src/lib/custom-setup-pricing.ts:411:17         
+isUserAdmin                           function  src/lib/admin-auth.ts:9:23                     
+uploadToS3                            function  src/lib/s3-storage.ts:49:23                    
+uploadProductImage                    function  src/lib/s3-storage.ts:130:23                   
+deleteFromS3                          function  src/lib/s3-storage.ts:137:23                   
+getS3SignedUrl                        function  src/lib/s3-storage.ts:157:23                   
+useFormField                                    src/components/ui/form.tsx:180:3               
+reducer                                         src/hooks/use-toast.ts:68:14                   
+ALL_ROLES                                       src/lib/roles.ts:14:14                         
+PERMS                                           src/lib/roles.ts:41:14                         
+getDisplayName                        function  src/lib/roles.ts:157:17                        
+formatNumber                          function  src/lib/utils.ts:32:17                         
+truncateText                          function  src/lib/utils.ts:39:17                         
+generateRandomString                  function  src/lib/utils.ts:47:17                         
+isValidEmail                          function  src/lib/utils.ts:59:17                         
+isValidMobile                         function  src/lib/utils.ts:67:17                         
+getGstRateForCategory                 function  src/lib/utils.ts:97:17                         
+calculateGstAmount                    function  src/lib/utils.ts:141:17                        
+calculateTotalWithGst                 function  src/lib/utils.ts:148:17                        
+redisPing                             function  src/lib/redis.ts:27:23                         
+formatOrderNumberMedium               function  src/lib/order-utils.ts:44:17                   
+formatOrderId                         function  src/lib/order-utils.ts:59:17                   
+getOrderDisplayText                   function  src/lib/order-utils.ts:70:17                   
+STATUS_MAP                                      src/lib/orders/normalizers.ts:4:14             
+normalizeImageUrl                     function  src/lib/image-utils.ts:8:17                    
+getFirstValidImage                    function  src/lib/image-utils.ts:82:17                   
+filterValidImages                     function  src/lib/image-utils.ts:98:17                   
+getAllProductImages                   function  src/lib/image-utils.ts:155:17                  
+cleanupProductImages                  function  src/lib/image-utils.ts:178:17                  
+sendSupportNotification               function  src/lib/whatsapp-service.ts:642:23             
+sendPromotionalMessage                function  src/lib/whatsapp-service.ts:646:23             
+sendCartAbandonmentReminder           function  src/lib/whatsapp-service.ts:650:23             
+default                               variable  src/lib/whatsapp-service.ts:682:16             
+CaptchaService                        class     src/lib/captcha/captcha-service.ts:25:14       
+DualChannelOTPManager                 class     src/lib/dual-channel-otp-manager.ts:67:14      
+default                               variable  src/lib/dual-channel-otp-manager.ts:487:16     
+sendTransactional                     function  src/lib/sms/twofactor.ts:40:23                 
+sendPlain                             function  src/lib/sms/twofactor.ts:106:23                
+otpManager                                      src/lib/otp-manager.ts:567:14                  
+PricingService                        class     src/lib/pricing-service.ts:27:14               
+imageWorker                                     src/lib/queue/image-jobs.ts:10:12              
+sanitizeHtml                          function  src/lib/sanitize-html.ts:36:17                 
+ServiceManagementService              class     src/lib/service-management.ts:50:14            
+SuperfoneEnterpriseAPI                class     src/lib/superfone-enterprise-api.ts:228:14     
+SuperfoneService                      class     src/lib/superfone-service.ts:58:14             
+superfoneAPI                                    src/lib/superfone-service.ts:343:30            
+ScrollBar                                       src/components/ui/scroll-area.tsx:48:22        
+badgeVariants                                   src/components/ui/badge.tsx:36:17              
+TableFooter                                     src/components/ui/table.tsx:112:3              
+TableCaption                                    src/components/ui/table.tsx:116:3              
+createSupabaseClient                  function  src/lib/supabase-server.ts:6:17                
+updateWebhookEventStatus              function  src/lib/webhook-logger.ts:72:23                
+getProcessingTimeSeconds              function  src/lib/webhook-logger.ts:126:17               
+isCustomerClient                      function  src/lib/permissions-client.ts:7:17             
+isAccountsClient                      function  src/lib/permissions-client.ts:16:17            
+isAdminClient                         function  src/lib/permissions-client.ts:26:17            
+getRoleDisplayName                    function  src/lib/permissions-client.ts:36:17            
+getUserPermissions                    function  src/lib/permissions-client.ts:38:17            
+DropdownMenuCheckboxItem                        src/components/ui/dropdown-menu.tsx:189:3      
+DropdownMenuRadioItem                           src/components/ui/dropdown-menu.tsx:190:3      
+DropdownMenuShortcut                            src/components/ui/dropdown-menu.tsx:193:3      
+DropdownMenuGroup                               src/components/ui/dropdown-menu.tsx:194:3      
+DropdownMenuPortal                              src/components/ui/dropdown-menu.tsx:195:3      
+DropdownMenuSub                                 src/components/ui/dropdown-menu.tsx:196:3      
+DropdownMenuSubContent                          src/components/ui/dropdown-menu.tsx:197:3      
+DropdownMenuSubTrigger                          src/components/ui/dropdown-menu.tsx:198:3      
+DropdownMenuRadioGroup                          src/components/ui/dropdown-menu.tsx:199:3      
+useAuth                                         src/context/AuthProvider.tsx:724:14            
+SelectGroup                                     src/components/ui/select.tsx:151:3             
+SelectLabel                                     src/components/ui/select.tsx:155:3             
+SelectSeparator                                 src/components/ui/select.tsx:157:3             
+SelectScrollUpButton                            src/components/ui/select.tsx:158:3             
+SelectScrollDownButton                          src/components/ui/select.tsx:159:3             
+GST_RATES                                       src/lib/data.ts:10:14                          
+ROLE_PERMISSIONS                                src/lib/data.ts:27:14                          
+CUSTOMER_CATEGORIES                             src/lib/data.ts:67:14                          
+VALIDATION_PATTERNS                             src/lib/data.ts:90:14                          
+ERROR_MESSAGES                                  src/lib/data.ts:134:14                         
+hasPermission                         function  src/lib/data.ts:147:17                         
+getCustomerBenefits                   function  src/lib/data.ts:156:17                         
+EmailClient                           class     src/lib/email/client.ts:5:14                   
+createEmailService                    function  src/lib/email/service.ts:223:17                
+OfferDiscountService                  class     src/lib/offer-discount-service.ts:35:14        
+ToastAction                                     src/components/ui/toast.tsx:128:3              
+WhatsAppOTPService                    class     src/lib/whatsapp/whatsapp-otp-service.ts:22:14 
+sendWhatsAppMessage                   function  src/lib/whatsapp/whatsapp-otp-service.ts:562:23
+smsOTPService                                   src/lib/sms/sms-otp-service.ts:420:14          
+DialogPortal                                    src/components/ui/dialog.tsx:113:3             
+DialogOverlay                                   src/components/ui/dialog.tsx:114:3             
+AlertDialogPortal                               src/components/ui/alert-dialog.tsx:131:3       
+AlertDialogOverlay                              src/components/ui/alert-dialog.tsx:132:3       
+SheetPortal                                     src/components/ui/sheet.tsx:132:3              
+SheetOverlay                                    src/components/ui/sheet.tsx:133:3              
+SheetClose                                      src/components/ui/sheet.tsx:135:3              
+SheetDescription                                src/components/ui/sheet.tsx:140:3              
+Unused exported types (91)
+ButtonProps                          interface  src/components/ui/button.tsx:37:18            
+CustomSetupComponentOptionRow        interface  src/lib/custom-setup-service.ts:11:18         
+CustomSetupComponentRow              interface  src/lib/custom-setup-service.ts:21:18         
+CustomSetupSystemRow                 interface  src/lib/custom-setup-service.ts:41:18         
+CustomSetupVariableRow               interface  src/lib/custom-setup-service.ts:54:18         
+CustomSetupBlueprintOptionSummary    interface  src/lib/custom-setup-service.ts:81:18         
+CustomSetupBlueprintVariableSummary  interface  src/lib/custom-setup-service.ts:120:18        
+LogLevel                             type       src/lib/logger.ts:85:15                       
+Review                               interface  src/lib/types.ts:2:18                         
+ActivityLog                          interface  src/lib/types.ts:248:18                       
+ExpenseCategory                      type       src/lib/types.ts:257:13                       
+CouponType                           type       src/lib/types.ts:270:13                       
+CouponStatus                         type       src/lib/types.ts:271:13                       
+PricingWithOffers                    interface  src/lib/types.ts:385:18                       
+EnhancedCartItem                     interface  src/lib/types.ts:400:18                       
+Purchase                             interface  src/lib/types.ts:417:18                       
+ServiceStatus                        type       src/lib/types.ts:426:13                       
+ServicePriority                      type       src/lib/types.ts:427:13                       
+ServiceCategory                      type       src/lib/types.ts:428:13                       
+SalesAgentStatus                     type       src/lib/types.ts:431:13                       
+RedemptionStatus                     type       src/lib/types.ts:432:13                       
+SalesAgent                           interface  src/lib/types.ts:434:18                       
+AgentCommission                      interface  src/lib/types.ts:444:18                       
+AgentRedemptionRequest               interface  src/lib/types.ts:454:18                       
+ProductPricing                       interface  src/lib/types.ts:466:18                       
+OrderOtpVerification                 interface  src/lib/types.ts:495:18                       
+ServicePart                          interface  src/lib/types.ts:572:18                       
+AgentPerformance                     interface  src/lib/types.ts:585:18                       
+OrderStatusHistory                   interface  src/lib/types.ts:599:18                       
+CustomerAnalytics                    interface  src/lib/types.ts:611:18                       
+ProductAnalytics                     interface  src/lib/types.ts:625:18                       
+APIResponse                          interface  src/lib/api-response.ts:5:18                  
+PaginationOptions                    interface  src/lib/api-response.ts:26:18                 
+EnvironmentConfig                    interface  src/lib/environment-validator.ts:4:18         
+ServerAuthState                      interface  src/lib/server-role-guard.ts:73:18            
+OtpRequest                           interface  src/lib/otp-service.ts:12:18                  
+OtpVerification                      interface  src/lib/otp-service.ts:22:18                  
+CommissionCalculation                interface  src/lib/enhanced-commission-service.ts:13:18  
+CommissionBreakdown                  interface  src/lib/enhanced-commission-service.ts:24:18  
+CommissionRule                       interface  src/lib/enhanced-commission-service.ts:35:18  
+CheckoutEngineRequest                interface  src/lib/checkout-engine.ts:7:18               
+CheckoutEngineResponse               interface  src/lib/checkout-engine.ts:15:18              
+CaptchaProvider                      type       src/lib/captcha/captcha-service.ts:3:13       
+CaptchaConfig                        interface  src/lib/captcha/captcha-service.ts:5:18       
+OTPPurpose                           type       src/lib/multi-channel-otp-manager.ts:43:13    
+OTPRecord                            interface  src/lib/multi-channel-otp-manager.ts:61:18    
+OTPDeliveryOptions                   interface  src/lib/dual-channel-otp-manager.ts:14:18     
+OTPDeliveryResult                    interface  src/lib/dual-channel-otp-manager.ts:26:18     
+UserCommunicationPreferences         interface  src/lib/dual-channel-otp-manager.ts:48:18     
+OTPData                              interface  src/lib/otp-manager.ts:8:18                   
+ProductPrice                         interface  src/lib/pricing-service.ts:16:18              
+Product                              interface  src/lib/types/products.ts:3:18                
+ProductImage                         interface  src/lib/types/products.ts:23:18               
+ProductOption                        interface  src/lib/types/products.ts:30:18               
+ProductVariant                       interface  src/lib/types/products.ts:39:18               
+ProductFormData                      interface  src/lib/types/products.ts:91:18               
+ProductSearchFilters                 interface  src/lib/types/products.ts:121:18              
+ServiceTicketRequest                 interface  src/lib/service-management.ts:17:18           
+EngineerAssignment                   interface  src/lib/service-management.ts:28:18           
+ServiceCompletion                    interface  src/lib/service-management.ts:36:18           
+SuperfoneCall                        interface  src/lib/superfone-enterprise-api.ts:71:18     
+SuperfoneCallResponse                interface  src/lib/superfone-enterprise-api.ts:82:18     
+SuperfoneWhatsAppMediaPayload        interface  src/lib/superfone-enterprise-api.ts:91:18     
+SuperfoneWhatsAppTemplate            interface  src/lib/superfone-enterprise-api.ts:98:18     
+SuperfoneWhatsAppTemplateResponse    interface  src/lib/superfone-enterprise-api.ts:130:18    
+SuperfoneSMS                         interface  src/lib/superfone-enterprise-api.ts:142:18    
+SuperfoneSMSResponse                 interface  src/lib/superfone-enterprise-api.ts:152:18    
+SuperfoneContact                     interface  src/lib/superfone-enterprise-api.ts:161:18    
+SuperfoneContactResponse             interface  src/lib/superfone-enterprise-api.ts:171:18    
+SuperfoneCampaign                    interface  src/lib/superfone-enterprise-api.ts:179:18    
+SuperfoneWebhook                     interface  src/lib/superfone-enterprise-api.ts:193:18    
+SuperfoneAnalytics                   interface  src/lib/superfone-enterprise-api.ts:204:18    
+SuperfoneLogFilters                  interface  src/lib/superfone-enterprise-api.ts:212:18    
+SuperfoneLogResponse                 interface  src/lib/superfone-enterprise-api.ts:220:18    
+SuperfoneCallRequest                 interface  src/lib/superfone-service.ts:28:18            
+SuperfoneWhatsAppRequest             interface  src/lib/superfone-service.ts:35:18            
+SuperfoneSMSRequest                  interface  src/lib/superfone-service.ts:44:18            
+SuperfoneResponse                    interface  src/lib/superfone-service.ts:50:18            
+TwoFactorSetup                       interface  src/lib/two-factor-manager.ts:10:18           
+TwoFactorVerification                interface  src/lib/two-factor-manager.ts:16:18           
+WebhookEventStatus                   type       src/lib/webhook-logger.ts:118:13              
+AutoFillResult                       type       src/lib/homepage-auto-fill.ts:3:13            
+PaymentMethod                        interface  src/hooks/use-payment-methods.ts:5:18         
+PaymentSettings                      interface  src/hooks/use-payment-methods.ts:34:18        
+WishlistState                        interface  src/store/wishlistStore.ts:6:18               
+CartPricing                          interface  src/store/cartStore.ts:7:18                   
+CartState                            interface  src/store/cartStore.ts:54:18                  
+EmailServiceConfig                   interface  src/lib/email/service.ts:31:18                
+WhatsAppOTPConfig                    interface  src/lib/whatsapp/whatsapp-otp-service.ts:4:18 
+WhatsAppResponse                     interface  src/lib/whatsapp/whatsapp-otp-service.ts:11:18
+SMSOTPConfig                         interface  src/lib/sms/sms-otp-service.ts:3:18           
+Duplicate exports (5)
+CustomSetupFlow|default        src/components/customised-setups/CustomSetupFlow.tsx
+environmentValidator|default   src/lib/environment-validator.ts                    
+dualChannelOTPManager|default  src/lib/dual-channel-otp-manager.ts                 
+otpManager|default             src/lib/otp-manager.ts                              
+sanitizeHtml|default           src/lib/sanitize-html.ts                            

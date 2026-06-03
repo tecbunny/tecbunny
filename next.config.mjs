@@ -1,4 +1,4 @@
-﻿/** @type {import('next').NextConfig} */
+/** @type {import('next').NextConfig} */
 const isStaticExport = process.env.NEXT_OUTPUT_MODE === 'export';
 
 const nextConfig = {
@@ -12,6 +12,7 @@ const nextConfig = {
   poweredByHeader: false,
   images: {
     unoptimized: isStaticExport,
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
         protocol: 'https',

@@ -8,7 +8,8 @@ export async function logWebhookEvent(
   source: string,
   processed: boolean,
   errorMessage?: string,
-  startTime?: Date
+  startTime?: Date,
+  eventId?: string
 ) {
   try {
     const now = new Date();
@@ -25,7 +26,7 @@ export async function logWebhookEvent(
     } else {
       status = 'pending';
     }
-
+ 
     const webhookEvent = {
       source,
       event_type: eventType,
@@ -35,13 +36,14 @@ export async function logWebhookEvent(
       error_message: errorMessage,
       created_at: startTime ? startTime.toISOString() : now.toISOString(),
       processed_at: processedAt,
-      updated_at: now.toISOString()
+      updated_at: now.toISOString(),
+      event_id: eventId || null
     };
-
+ 
     const { error } = await supabase
       .from('webhook_events')
       .insert(webhookEvent);
-
+ 
     if (error) {
       logger.error('Failed to log webhook event to database:', { 
         error: error.message,

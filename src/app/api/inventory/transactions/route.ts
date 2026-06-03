@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
   try {
     const access = await requireApiRole({ allowedRoles: ['sales', 'manager'], minimumRole: 'admin' });
     if ('error' in access) return access.error;
-    const { supabase } = access;
+    const { supabase, session } = access;
 
     const body = await request.json().catch(() => ({}));
     const validation = movementSchema.safeParse(body);
@@ -304,6 +304,7 @@ export async function POST(request: NextRequest) {
           reference_id:   reference_id || null,
           reference_type,
           notes: notes || `${movement_type} via API (fallback)`,
+          created_by: session?.user?.id || null,
         });
       } catch {
         /* Non-fatal: stock_movements table may not exist yet */
@@ -425,6 +426,22 @@ export async function PUT(request: NextRequest) {
 // ?product_id=&movement_type=&limit=50&page=1&date_from=&date_to=
 // ─────────────────────────────────────────────────────────────────────────────
 
+function encodeCursor(createdAt: string, id: string): string {
+  return Buffer.from(JSON.stringify({ createdAt, id })).toString('base64');
+}
+
+function decodeCursor(cursorStr: string): { createdAt: string; id: string } | null {
+  try {
+    const json = JSON.parse(Buffer.from(cursorStr, 'base64').toString('utf-8'));
+    if (json && typeof json.createdAt === 'string' && typeof json.id === 'string') {
+      return json;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
   const correlationId = request.headers.get('x-correlation-id') || crypto.randomUUID();
 
@@ -437,32 +454,57 @@ export async function GET(request: NextRequest) {
     const product_id    = searchParams.get('product_id');
     const movement_type = searchParams.get('movement_type');
     const limit         = Math.min(parseInt(searchParams.get('limit') || '50'), 200);
-    const page          = Math.max(parseInt(searchParams.get('page') || '1'), 1);
-    const offset        = (page - 1) * limit;
     const date_from     = searchParams.get('date_from');
     const date_to       = searchParams.get('date_to');
+    const cursorParam   = searchParams.get('cursor');
 
     let q = supabase
       .from('stock_movements')
-      .select('*', { count: 'exact' })
+      .select('*')
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order('id', { ascending: false });
 
     if (product_id)    q = q.eq('product_id', product_id);
     if (movement_type) q = q.eq('movement_type', movement_type);
     if (date_from)     q = q.gte('created_at', date_from);
     if (date_to)       q = q.lte('created_at', date_to);
 
-    const { data, error, count } = await q;
+    if (cursorParam) {
+      const cursor = decodeCursor(cursorParam);
+      if (cursor) {
+        q = q.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`);
+      }
+      q = q.limit(limit + 1);
+    } else {
+      const page = Math.max(parseInt(searchParams.get('page') || '1'), 1);
+      const offset = (page - 1) * limit;
+      q = q.range(offset, offset + limit);
+    }
+
+    const { data, error } = await q;
 
     if (error) {
       return NextResponse.json({ error: error.message, correlationId }, { status: 500 });
     }
 
+    const hasNextPage = (data || []).length > limit;
+    const pageData = hasNextPage ? (data || []).slice(0, limit) : (data || []);
+    
+    let nextCursor: string | null = null;
+    if (hasNextPage && pageData.length > 0) {
+      const lastItem = pageData[pageData.length - 1];
+      nextCursor = encodeCursor(lastItem.created_at, lastItem.id);
+    }
+
     return NextResponse.json({
       success: true,
-      data: data || [],
-      pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) },
+      data: pageData,
+      pagination: {
+        limit,
+        next_cursor: nextCursor,
+        has_next: hasNextPage,
+        page: cursorParam ? undefined : Math.max(parseInt(searchParams.get('page') || '1'), 1)
+      },
       correlationId,
     });
   } catch (err: any) {

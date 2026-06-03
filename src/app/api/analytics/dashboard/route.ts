@@ -22,45 +22,60 @@ export async function GET(request: NextRequest) {
   if (range === '30d') dateFilter.setDate(dateFilter.getDate() - 30);
   if (range === 'all') dateFilter = new Date(0);
 
-  // Fetch Analytics Events
-  const { data: events } = await adminDb
-    .from('analytics_events')
-    .select('*')
-    .gte('created_at', dateFilter.toISOString());
+  // Optimize queries to use database-side counting & projection limits concurrently
+  const [
+    { count: pageViews },
+    { count: productViews },
+    { count: amcInquiries },
+    { count: installationInquiries },
+    { data: topProductsData },
+    { data: recentLeads }
+  ] = await Promise.all([
+    adminDb
+      .from('analytics_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_type', 'page_view')
+      .gte('created_at', dateFilter.toISOString()),
+    adminDb
+      .from('analytics_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_type', 'product_view')
+      .gte('created_at', dateFilter.toISOString()),
+    adminDb
+      .from('leads')
+      .select('*', { count: 'exact', head: true })
+      .eq('type', 'amc')
+      .gte('created_at', dateFilter.toISOString()),
+    adminDb
+      .from('leads')
+      .select('*', { count: 'exact', head: true })
+      .eq('type', 'installation')
+      .gte('created_at', dateFilter.toISOString()),
+    adminDb.rpc('get_top_products', {
+      p_start_date: dateFilter.toISOString(),
+      p_limit: 5
+    }),
+    adminDb
+      .from('leads')
+      .select('*')
+      .gte('created_at', dateFilter.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(10)
+  ]);
 
-  // Fetch Leads
-  const { data: leads } = await adminDb
-    .from('leads')
-    .select('*')
-    .gte('created_at', dateFilter.toISOString());
-
-  // Process Data
-  const pageViews = events?.filter(e => e.event_type === 'page_view').length || 0;
-  const productViews = events?.filter(e => e.event_type === 'product_view').length || 0;
-  const amcInquiries = leads?.filter(l => l.type === 'amc').length || 0;
-  const installationInquiries = leads?.filter(l => l.type === 'installation').length || 0;
-
-  // Top Products
-  const productStats = events
-    ?.filter(e => e.event_type === 'product_view' && e.resource_id)
-    .reduce((acc: any, curr) => {
-      acc[curr.resource_id] = (acc[curr.resource_id] || 0) + 1;
-      return acc;
-    }, {});
-
-  const topProducts = Object.entries(productStats || {})
-    .sort(([, a]: any, [, b]: any) => b - a)
-    .slice(0, 5)
-    .map(([id, count]) => ({ id, count }));
+  const topProducts = (topProductsData || []).map((row: any) => ({
+    id: row.resource_id,
+    count: Number(row.count) || 0
+  }));
 
   return NextResponse.json({
     summary: {
-      pageViews,
-      productViews,
-      amcInquiries,
-      installationInquiries
+      pageViews: pageViews || 0,
+      productViews: productViews || 0,
+      amcInquiries: amcInquiries || 0,
+      installationInquiries: installationInquiries || 0
     },
     topProducts,
-    recentLeads: leads?.slice(0, 10) || []
+    recentLeads: recentLeads || []
   });
 }

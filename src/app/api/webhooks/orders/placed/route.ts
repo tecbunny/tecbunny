@@ -3,40 +3,77 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendOrderNotification, sendWhatsAppNotification } from '@/lib/whatsapp-service';
 import { logger } from '@/lib/logger';
+import { validateWebhookSignature } from '@/lib/webhook-validator';
+import { logWebhookEvent } from '@/lib/webhook-logger';
 
 // Generic order placed webhook handler
 export async function POST(request: NextRequest) {
+  const correlationId = request.headers.get('x-correlation-id') || null;
+  const startTime = new Date();
+  let rawBody = '';
+
   try {
     const supabase = await createClient();
-    const body = await request.json();
+    rawBody = await request.text();
     
-    logger.info('Order placed webhook received:', { body: JSON.stringify(body) });
+    let body: any;
+    try {
+      body = JSON.parse(rawBody);
+    } catch (e) {
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    }
+    
+    logger.info('Order placed webhook received:', { body: JSON.stringify(body), correlationId });
 
-    // Validate webhook signature if provided
+    // Validate webhook signature
     const signature = request.headers.get('x-webhook-signature');
     const source = request.headers.get('x-webhook-source') || 'unknown';
     
-    if (!validateWebhookSignature(signature, body, source)) {
+    const secret = source === 'razorpay'
+      ? process.env.RAZORPAY_WEBHOOK_SECRET
+      : process.env.TECBUNNY_WEBHOOK_SECRET;
+
+    if (!validateWebhookSignature(signature, rawBody, secret)) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
+    // Idempotency: Check if this event was already processed
+    const eventId = body.id || body.event_id || body.order_id || body.order_number;
+    if (eventId) {
+      const { data: existingEvent } = await supabase
+        .from('webhook_events')
+        .select('id')
+        .eq('event_id', eventId)
+        .maybeSingle();
+
+      if (existingEvent) {
+        logger.info('Duplicate order placed webhook event received, skipping execution', { eventId, correlationId });
+        return NextResponse.json({ success: true, message: 'Event already processed (duplicate)' });
+      }
     }
 
     // Process order placement
     const result = await processOrderPlaced(supabase, body, source);
     
     // Log webhook event
-    await logWebhookEvent(supabase, 'order_placed', body, source, true);
+    await logWebhookEvent(supabase, 'order_placed', body, source, true, undefined, startTime, eventId);
     
     return NextResponse.json(result);
 
   } catch (error: any) {
-    logger.error('Order placed webhook error:', { error: error.message });
+    logger.error('Order placed webhook error:', { error: error.message, correlationId });
     
     // Log failed webhook event
     try {
       const supabase = await createClient();
-      await logWebhookEvent(supabase, 'order_placed', await request.json(), 'unknown', false, error.message);
+      let parsedBody = {};
+      try {
+        parsedBody = rawBody ? JSON.parse(rawBody) : {};
+      } catch {}
+      const eventId = (parsedBody as any).id || (parsedBody as any).event_id || (parsedBody as any).order_id || (parsedBody as any).order_number;
+      await logWebhookEvent(supabase, 'order_placed', parsedBody, 'unknown', false, error.message, startTime, eventId);
     } catch (logError: any) {
-      logger.error('Failed to log webhook error:', { error: logError.message });
+      logger.error('Failed to log webhook error:', { error: logError.message, correlationId });
     }
     
     return NextResponse.json(
@@ -57,9 +94,9 @@ async function processOrderPlaced(supabase: any, data: any, source: string) {
     phone,
     customer_name,
     customer_email,
-  total_amount,
-  amount,
-  order_total,
+    total_amount,
+    amount,
+    order_total,
     currency = 'INR',
     items,
     products,
@@ -286,47 +323,6 @@ Action: Process order! 📋
     }
   } catch (error: any) {
     logger.error('Failed to send team notification:', { error: error.message });
-  }
-}
-
-// Validate webhook signature
-function validateWebhookSignature(signature: string | null, body: any, source: string): boolean {
-  // Skip validation in development
-  if (process.env.NODE_ENV === 'development') {
-    return true;
-  }
-
-  if (!signature) {
-    logger.warn('No webhook signature provided:', { source });
-    return false;
-  }
-
-  // Add your signature validation logic here
-  return true;
-}
-
-// Log webhook events
-async function logWebhookEvent(
-  supabase: any, 
-  eventType: string, 
-  payload: any, 
-  source: string, 
-  processed: boolean, 
-  errorMessage?: string
-) {
-  try {
-    await supabase
-      .from('webhook_events')
-      .insert({
-        source,
-        event_type: eventType,
-        payload,
-        processed,
-        error_message: errorMessage,
-        created_at: new Date().toISOString()
-      });
-  } catch (error: any) {
-    logger.error('Failed to log webhook event:', { error: error.message });
   }
 }
 

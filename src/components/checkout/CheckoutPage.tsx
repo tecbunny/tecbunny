@@ -269,6 +269,7 @@ export default function CheckoutPage() {
         gst_amount: displayGstAmount,
         total: displayTotal,
         discount_amount: totalDiscount,
+        coupon_code: appliedCoupon?.code || undefined,
         items: orderItems
       };
 

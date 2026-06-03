@@ -42,6 +42,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Role update failed', details: rpcError.message }, { status: 500 });
     }
 
+    // Log the role alteration to security audit log
+    await supabase
+      .from('security_audit_log')
+      .insert({
+        event_type: 'role_alteration',
+        user_id: userId,
+        event_data: {
+          action: 'set',
+          previous_role: targetProfile.role,
+          new_role: newRole,
+          modified_by: ctx.user.id,
+          note: note ?? null
+        },
+        severity: 'high'
+      });
+
     // (Optional) also patch auth user app_metadata.role for runtime claims if using custom claims issuance (requires admin API) - omitted due to environment constraints
 
     return NextResponse.json({ success: true, userId, newRole });

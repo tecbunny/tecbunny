@@ -1,45 +1,73 @@
-import crypto from 'crypto';
-
 import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
 import { logger } from '@/lib/logger';
+import { validateWebhookSignature } from '@/lib/webhook-validator';
+import { logWebhookEvent } from '@/lib/webhook-logger';
 
 // Generic payment received webhook handler
 export async function POST(request: NextRequest) {
+  const correlationId = request.headers.get('x-correlation-id') || null;
+  const startTime = new Date();
+  let rawBody = '';
+
   try {
     const supabase = await createClient();
-    const rawBody = await request.text();
-    let body;
+    rawBody = await request.text();
+    let body: any;
     try {
-        body = JSON.parse(rawBody);
+      body = JSON.parse(rawBody);
     } catch (e) {
-        return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
     
-    logger.info('Payment received webhook received:', { body: JSON.stringify(body) });
+    logger.info('Payment received webhook received:', { body: JSON.stringify(body), correlationId });
 
     const signature = request.headers.get('x-webhook-signature');
     const source = request.headers.get('x-webhook-source') || 'unknown';
     
-    if (!validateWebhookSignature(signature, rawBody, source)) {
+    const secret = source === 'razorpay'
+      ? process.env.RAZORPAY_WEBHOOK_SECRET
+      : process.env.TECBUNNY_WEBHOOK_SECRET;
+
+    if (!validateWebhookSignature(signature, rawBody, secret)) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
+    // Idempotency: Check if this event was already processed
+    const eventId = body.id || body.event_id || body.payment_id || body.transaction_id;
+    if (eventId) {
+      const { data: existingEvent } = await supabase
+        .from('webhook_events')
+        .select('id')
+        .eq('event_id', eventId)
+        .maybeSingle();
+
+      if (existingEvent) {
+        logger.info('Duplicate payment received webhook event, skipping execution', { eventId, correlationId });
+        return NextResponse.json({ success: true, message: 'Event already processed (duplicate)' });
+      }
+    }
+
     const result = await processPaymentReceived(supabase, body, source);
-    await logWebhookEvent(supabase, 'payment_received', body, source, true);
+    await logWebhookEvent(supabase, 'payment_received', body, source, true, undefined, startTime, eventId);
     
     return NextResponse.json(result);
 
   } catch (error: any) {
-    logger.error('Payment received webhook error:', { error: error.message });
+    logger.error('Payment received webhook error:', { error: error.message, correlationId });
     
     try {
       const supabase = await createClient();
-      await logWebhookEvent(supabase, 'payment_received', await request.json(), 'unknown', false, error.message);
+      let parsedBody = {};
+      try {
+        parsedBody = rawBody ? JSON.parse(rawBody) : {};
+      } catch {}
+      const eventId = (parsedBody as any).id || (parsedBody as any).event_id || (parsedBody as any).payment_id || (parsedBody as any).transaction_id;
+      await logWebhookEvent(supabase, 'payment_received', parsedBody, 'unknown', false, error.message, startTime, eventId);
     } catch (logError: any) {
-      logger.error('Failed to log webhook error:', { error: logError.message });
+      logger.error('Failed to log webhook error:', { error: logError.message, correlationId });
     }
     
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -100,7 +128,7 @@ async function processPaymentReceived(supabase: any, data: any, source: string) 
       payment_id: paymentId,
       order_id: orderId,
       customer_phone: formattedPhone,
-  amount: paymentAmount,
+      amount: paymentAmount,
       currency,
       payment_method,
       status: payment_status,
@@ -243,56 +271,3 @@ Action: Process order for fulfillment! 📦
     logger.error('Failed to send team notification:', { error: error.message });
   }
 }
-
-function validateWebhookSignature(signature: string | null, rawBody: string, source: string): boolean {
-  if (process.env.NODE_ENV === 'development') {
-    return true;
-  }
-
-  if (!signature) {
-    logger.warn('No webhook signature provided:', { source });
-    return false;
-  }
-
-  // Razorpay Signature Verification
-  if (source === 'razorpay' && process.env.RAZORPAY_WEBHOOK_SECRET) {
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET)
-      .update(rawBody)
-      .digest('hex');
-    
-    if (signature !== expectedSignature) {
-      logger.warn('Invalid Razorpay signature', { signature, expectedSignature });
-      return false;
-    }
-    return true;
-  }
-
-  return true;
-}
-
-async function logWebhookEvent(
-  supabase: any, 
-  eventType: string, 
-  payload: any, 
-  source: string, 
-  processed: boolean, 
-  errorMessage?: string
-) {
-  try {
-    await supabase
-      .from('webhook_events')
-      .insert({
-        source,
-        event_type: eventType,
-        payload,
-        processed,
-        error_message: errorMessage,
-        created_at: new Date().toISOString()
-      });
-  } catch (error: any) {
-    logger.error('Failed to log webhook event:', { error: error.message });
-  }
-}
-
-

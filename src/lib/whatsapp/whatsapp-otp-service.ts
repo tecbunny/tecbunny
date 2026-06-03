@@ -33,16 +33,76 @@ export class WhatsAppOTPService extends WhatsAppService {
   async sendOTP(phone: string, code: string, purpose: string = 'verification', userName?: string): Promise<WhatsAppResponse> {
     try {
       const purposeText = this.getPurposeText(purpose);
-      const message = this.createOTPMessage(code, purposeText, userName);
+      const greeting = userName || 'Customer';
+      
+      const templateName = process.env.WHATSAPP_OTP_TEMPLATE_NAME || 'otp2';
+      const language = process.env.WHATSAPP_OTP_TEMPLATE_LANGUAGE || 'en_US';
+      const isInfobip = process.env.WHATSAPP_PROVIDER !== 'meta'; // Default to true (Infobip)
 
-      logger.info('Sending WhatsApp OTP:', { phone, purpose });
+      logger.info('Sending WhatsApp OTP template:', { phone, purpose, templateName });
 
-      const result = await this.sendMessage(phone, message);
+      let content: any;
+      if (isInfobip) {
+        content = {
+          templateName,
+          templateData: {
+            body: {
+              placeholders: [code]
+            }
+          },
+          language
+        };
+        // Support custom placeholders if configured in env
+        const rawPlaceholders = process.env.WHATSAPP_OTP_TEMPLATE_PLACEHOLDERS || process.env.INFOBIP_OTP_TEMPLATE_PLACEHOLDERS;
+        if (rawPlaceholders) {
+          content.templateData.body.placeholders = rawPlaceholders
+            .split(',')
+            .map((v: string) => v.trim())
+            .filter(Boolean)
+            .map((v: string) => v.replace(/\{code\}/g, code).replace(/\{name\}/g, greeting).replace(/\{purpose\}/g, purposeText));
+        }
+      } else {
+        // Meta Cloud API template structure
+        content = {
+          name: templateName,
+          language: {
+            code: language
+          },
+          components: [
+            {
+              type: 'body',
+              parameters: [
+                {
+                  type: 'text',
+                  text: code
+                }
+              ]
+            }
+          ]
+        };
+        // Support custom placeholders for Meta
+        const rawPlaceholders = process.env.WHATSAPP_OTP_TEMPLATE_PLACEHOLDERS;
+        if (rawPlaceholders) {
+          const params = rawPlaceholders
+            .split(',')
+            .map((v: string) => v.trim())
+            .filter(Boolean)
+            .map((v: string) => ({
+              type: 'text',
+              text: v.replace(/\{code\}/g, code).replace(/\{name\}/g, greeting).replace(/\{purpose\}/g, purposeText)
+            }));
+          if (params.length > 0) {
+            content.components[0].parameters = params;
+          }
+        }
+      }
+
+      const result = await this.sendMessage(phone, content, 'template', isInfobip);
       
       return {
         success: true,
         messageId: result.messages?.[0]?.id,
-        provider: 'whatsapp'
+        provider: isInfobip ? 'infobip-whatsapp' : 'meta-whatsapp'
       };
 
     } catch (error: any) {

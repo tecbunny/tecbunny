@@ -4,6 +4,13 @@ import nodemailer from 'nodemailer';
 import { buildPdf, loadCompanyInfo } from '@/lib/pdf-generator';
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
+import { getCustomSetupBlueprintSummary } from '@/lib/custom-setup-service';
+import { DEFAULT_CUSTOM_SETUP_TEMPLATE_SLUG } from '@/lib/custom-setup.constants';
+import {
+  buildPricingCatalog,
+  calculateTotals,
+  FALLBACK_HDD_OPTIONS
+} from '@/lib/custom-setup-pricing';
 
 export const runtime = 'nodejs';
 
@@ -39,7 +46,7 @@ async function sendEmailWithAttachment(to: string, subject: string, html: string
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { summary, selections, gstIncluded = true } = body;
+    const { summary, selections, gstIncluded = true, customSetupConfig } = body;
 
     const supabase = await createClient();
     const { data: auth, error: authError } = await supabase.auth.getUser();
@@ -51,8 +58,76 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Prefer service role for DB writes; fall back to user client if service env is absent.
-    const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
+    let finalSelections = selections;
+    if (customSetupConfig) {
+      const blueprint = await getCustomSetupBlueprintSummary(DEFAULT_CUSTOM_SETUP_TEMPLATE_SLUG);
+      const pricingCatalog = buildPricingCatalog(blueprint);
+
+      const {
+        system,
+        cameraCount,
+        analogSelections,
+        ipSelections,
+        hddId,
+        monitorIncluded,
+        installationIncluded
+      } = customSetupConfig;
+
+      const totals = calculateTotals({
+        system,
+        cameraCount,
+        analogSelections,
+        ipSelections,
+        hddId,
+        monitorIncluded,
+        installationIncluded,
+        pricingCatalog
+      });
+
+      const systemLabel = system === 'analog' ? 'Analog DVR' : 'IP NVR';
+      const selectableHddOptions = pricingCatalog.hddOptions.length ? pricingCatalog.hddOptions : FALLBACK_HDD_OPTIONS;
+      const hddLabel = selectableHddOptions.find((entry) => entry.id === hddId)?.label ?? 'Surveillance HDD';
+      const monitorOption = pricingCatalog.monitorOption;
+      const installationOption = pricingCatalog.installationOption;
+
+      const items = [
+        {
+          description: `${systemLabel} system (${cameraCount} cameras)`,
+          mrp: totals.system.mrp,
+          sale: totals.system.sale,
+        },
+        {
+          description: hddLabel,
+          mrp: totals.hdd.mrp,
+          sale: totals.hdd.sale,
+        },
+      ];
+
+      if (totals.monitor.included) {
+        items.push({
+          description: `Monitor (${monitorOption.label})`,
+          mrp: totals.monitor.mrp,
+          sale: totals.monitor.sale,
+        });
+      }
+
+      if (totals.installation.included) {
+        items.push({
+          description: `Installation (${installationOption.label})`,
+          mrp: totals.installation.mrp,
+          sale: totals.installation.sale,
+        });
+      }
+
+      finalSelections = {
+        type: 'customised_setup',
+        systemType: systemLabel,
+        cameraCount,
+        items,
+        totals: totals.overall,
+        breakdown: totals.system.breakdown,
+      };
+    }
 
     let company: Record<string, any> = {};
     try {
@@ -71,7 +146,7 @@ export async function POST(req: NextRequest) {
         customerEmail,
         gstIncluded,
         summary,
-        selections,
+        selections: finalSelections,
       });
     } catch (error) {
       logger.error('quotes.pdf_failed', { error, userId: user.id });
@@ -83,16 +158,15 @@ export async function POST(req: NextRequest) {
 
     const expiryAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const dbClient = serviceClient ?? supabase;
-
-    const insertResult = await dbClient.from('quotes').insert({
+    // Enforce RLS boundaries by using the user's standard client for quotes insertion
+    const insertResult = await supabase.from('quotes').insert({
       user_id: user.id,
       customer_name: customerName,
       customer_email: customerEmail,
       gst_included: !!gstIncluded,
       expiry_at: expiryAt,
       summary: summary || null,
-      selections: selections ?? null,
+      selections: finalSelections ?? null,
       status: 'created',
     });
 

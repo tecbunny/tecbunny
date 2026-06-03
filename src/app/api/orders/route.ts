@@ -13,6 +13,7 @@ import { otpService } from '@/lib/otp-service';
 import { enhancedCommissionService } from '@/lib/enhanced-commission-service';
 import { emailHelpers } from '@/lib/email';
 import { GST_RATE } from '@/lib/constants';
+import { checkoutEngine } from '@/lib/checkout-engine';
 
 const RATE_LIMIT = 5; // 5 orders
 const RATE_WINDOW_MS = 60 * 1000; // per minute
@@ -127,10 +128,30 @@ export async function POST(request: NextRequest) {
     const subtotal = calculatedExclusiveSubtotal; // Exclusive subtotal
     const gst_amount = calculatedGstAmount; // Dynamically calculated GST
     
-    // Note: Discounts are currently trusted from client if coupon logic is client-side.
-    // Ideally this should be validated against a coupon code lookup. 
-    // For now, ensuring gst logic is secure.
-    const discount_amount = Math.max(0, orderData.discount_amount || 0); 
+    // Security: Validate discount_amount against server-side coupon and auto-offer calculations
+    const checkoutResult = await checkoutEngine.calculate({
+      items: (orderData.items || []).map((item: any) => ({
+        id: item.id || item.productId,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      userId: user.id,
+      couponCode: orderData.coupon_code || orderData.couponCode || undefined,
+      salesAgentId: orderData.agent_id || undefined,
+    });
+
+    const serverDiscount = checkoutResult.totalDiscount;
+    const discount_amount = Math.max(0, orderData.discount_amount || 0);
+
+    if (discount_amount > serverDiscount + 1) { // 1 INR tolerance
+      logger.warn('order_discount_tampered', {
+        userId: user.id,
+        clientDiscount: discount_amount,
+        serverDiscount
+      });
+      return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: 'Invalid discount amount' });
+    }
+
     const shipping_amount = Math.max(0, orderData.shipping_amount || 0);
     
     // Total is subtotal (inclusive) + shipping - discount
@@ -249,27 +270,48 @@ export async function POST(request: NextRequest) {
       pickup_store: orderItemsData.pickup_store || pickupStore || null
     };
 
+    // Verify agent_id context against user session
+    let isAgentThemselves = false;
+    if (orderData.agent_id) {
+      const { data: agentRecord } = await serviceSupabase
+        .from('sales_agents')
+        .select('user_id')
+        .eq('id', orderData.agent_id)
+        .maybeSingle();
+      if (agentRecord && agentRecord.user_id === user.id) {
+        isAgentThemselves = true;
+      }
+    }
+
     // Handle agent commission if this is an agent order
     if (orderData.agent_id) {
       try {
-        // Calculate and save commission
-        const commissionResult = await enhancedCommissionService.calculateOrderCommission(
-          createdOrder.id,
-          orderData.agent_id
-        );
-
-        if (commissionResult.success && commissionResult.calculation) {
-          const saveResult = await enhancedCommissionService.saveCommissionRecord(
-            commissionResult.calculation
+        if (isAgentThemselves) {
+          // Calculate and save commission immediately
+          const commissionResult = await enhancedCommissionService.calculateOrderCommission(
+            createdOrder.id,
+            orderData.agent_id
           );
-          
-          if (saveResult.success) {
-            logger.info('order_commission_processed', { 
-              orderId: createdOrder.id, 
-              agentId: orderData.agent_id,
-              commissionAmount: commissionResult.calculation.commission_amount
-            });
+
+          if (commissionResult.success && commissionResult.calculation) {
+            const saveResult = await enhancedCommissionService.saveCommissionRecord(
+              commissionResult.calculation
+            );
+            
+            if (saveResult.success) {
+              logger.info('order_commission_processed', { 
+                orderId: createdOrder.id, 
+                agentId: orderData.agent_id,
+                commissionAmount: commissionResult.calculation.commission_amount
+              });
+            }
           }
+        } else {
+          logger.info('order_commission_deferred', {
+            orderId: createdOrder.id,
+            agentId: orderData.agent_id,
+            reason: 'Placed by user other than the agent (deferred until OTP verification)'
+          });
         }
 
         // Generate OTP for agent verification if customer phone is provided

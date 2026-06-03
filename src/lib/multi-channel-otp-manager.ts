@@ -98,6 +98,9 @@ class MultiChannelOTPManager {
       process.env.INFOBIP_BASE_URL &&
       process.env.INFOBIP_WHATSAPP_FROM &&
       process.env.INFOBIP_WHATSAPP_TEMPLATE_NAME
+    ) || Boolean(
+      process.env.WHATSAPP_ACCESS_TOKEN &&
+      process.env.WHATSAPP_PHONE_NUMBER_ID
     );
   }
   
@@ -352,13 +355,29 @@ class MultiChannelOTPManager {
   /**
    * Send WhatsApp OTP using Infobip template message
    */
-  private async sendWhatsAppOTP(phone: string, code: string, _purpose: string): Promise<ChannelSendSuccess> {
+  private async sendWhatsAppOTP(phone: string, code: string, purpose: string): Promise<ChannelSendSuccess> {
     try {
+      // Check if unified whatsappOTPService is configured
+      const { whatsappOTPService } = await import('./whatsapp/whatsapp-otp-service');
+      if (await whatsappOTPService.isConfigured()) {
+        const result = await whatsappOTPService.sendOTP(phone, code, purpose, 'Customer');
+        if (result.success) {
+          logger.info('WhatsApp OTP sent successfully via unified WhatsApp OTP Service', { phone });
+          return {
+            success: true,
+            provider: result.provider,
+            providerMessageId: result.messageId
+          };
+        }
+        throw new Error(result.error || 'WhatsApp send failed via unified service');
+      }
+
+      // Fallback to legacy sendInfobipWhatsAppOtp
       const { sendInfobipWhatsAppOtp } = await import('./infobip/infobip-whatsapp-otp');
       const infobipResult = await sendInfobipWhatsAppOtp(phone, code, 'Customer', code);
 
       if (infobipResult.success) {
-        logger.info('WhatsApp OTP sent successfully via Infobip', { phone });
+        logger.info('WhatsApp OTP sent successfully via Infobip (legacy)', { phone });
         return {
           success: true,
           provider: 'infobip-whatsapp',

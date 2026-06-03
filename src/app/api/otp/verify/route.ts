@@ -15,24 +15,97 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { otpId, code, channel, orderId, otp, customerPhone } = body;
 
-    // Support legacy format for agent orders
+    const reqCode = code || otp;
+    const reqPhone = customerPhone;
+
+    // Prefer service client for RLS bypass when looking up OTP/Order data
+    const serviceSupabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
+
+    // Check if this is an agent order verification (using order_otp_verifications table)
+    if (orderId && reqPhone && reqCode) {
+      const { data: agentOtpRecord } = await serviceSupabase
+        .from('order_otp_verifications')
+        .select('*')
+        .eq('order_id', orderId)
+        .eq('customer_phone', reqPhone)
+        .eq('verified', false)
+        .gte('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (agentOtpRecord) {
+        // Run verify via otpService
+        const { otpService } = await import('@/lib/otp-service');
+        const verifyResult = await otpService.verifyOtp({
+          order_id: orderId,
+          customer_phone: reqPhone,
+          otp_code: reqCode,
+        });
+
+        if (!verifyResult.success) {
+          return NextResponse.json({
+            success: false,
+            message: verifyResult.error || 'Invalid OTP code',
+            verified: false
+          }, { status: 400 });
+        }
+
+        // Process commission award immediately on success
+        if (agentOtpRecord.agent_id) {
+          try {
+            const { enhancedCommissionService } = await import('@/lib/enhanced-commission-service');
+            const commissionResult = await enhancedCommissionService.calculateOrderCommission(
+              orderId,
+              agentOtpRecord.agent_id
+            );
+
+            if (commissionResult.success && commissionResult.calculation) {
+              const saveResult = await enhancedCommissionService.saveCommissionRecord(
+                commissionResult.calculation
+              );
+              if (saveResult.success) {
+                logger.info('order_commission_processed_after_otp', { 
+                  orderId, 
+                  agentId: agentOtpRecord.agent_id,
+                  commissionAmount: commissionResult.calculation.commission_amount
+                });
+              }
+            }
+          } catch (commErr: any) {
+            logger.error('failed_to_process_commission_after_otp', {
+              orderId,
+              agentId: agentOtpRecord.agent_id,
+              error: commErr.message
+            });
+          }
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'OTP verified successfully',
+          verified: true
+        });
+      }
+    }
+
+    // Support legacy format for standard customer verification (using otp_verifications table)
     let finalOtpId = otpId;
-    let finalCode = code;
+    let finalCode = reqCode;
 
     // Legacy compatibility
-    if (!otpId && orderId && customerPhone && otp) {
+    if (!otpId && orderId && reqPhone) {
       if (!isSupabaseServiceConfigured) {
         logger.warn('otp.verify.legacy_lookup.skipped_missing_supabase', {
           orderId,
-          customerPhone
+          customerPhone: reqPhone
         });
       } else {
-        const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
-        const { data: otpRecord } = await supabase
+        const { data: otpRecord } = await serviceSupabase
           .from('otp_verifications')
           .select('id')
           .eq('order_id', orderId)
-          .eq('phone', customerPhone)
+          .eq('phone', reqPhone)
           .eq('verified', false)
           .gte('expires_at', new Date().toISOString())
           .order('created_at', { ascending: false })
@@ -41,7 +114,6 @@ export async function POST(request: NextRequest) {
 
         if (otpRecord) {
           finalOtpId = otpRecord.id;
-          finalCode = otp;
         }
       }
     }

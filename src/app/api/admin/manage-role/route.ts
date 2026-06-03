@@ -58,6 +58,21 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       return NextResponse.json({ error: 'Failed to update user role' }, { status: 500 });
     }
+
+    // Log the role alteration to security audit log
+    await supabaseAdmin
+      .from('security_audit_log')
+      .insert({
+        event_type: 'role_alteration',
+        user_id: userId,
+        event_data: {
+          action,
+          previous_role: profile.role,
+          new_role: newRole,
+          modified_by: 'maint_token_admin'
+        },
+        severity: 'high'
+      });
     
     // 3) Update auth metadata (if using syncing, though we moved to profiles-only, keeping this consistent is good practice)
     await supabaseAdmin.auth.admin.updateUserById(userId, {

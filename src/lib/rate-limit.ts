@@ -19,6 +19,47 @@ export interface RateLimitOptions {
 const stores: Record<string, Map<string, Bucket>> = {}
 const memoryBuckets = new Map<string, number[]>()
 
+// Periodic memory cleanup to prevent memory leaks in long-running processes
+if (typeof global !== 'undefined') {
+  const CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // Run every 5 minutes
+  const MAX_RECORD_AGE_MS = 10 * 60 * 1000; // Evict entries older than 10 minutes
+  const intervalKey = '_rate_limit_cleanup_interval';
+
+  if (!(global as any)[intervalKey]) {
+    (global as any)[intervalKey] = setInterval(() => {
+      const now = Date.now();
+
+      // Prune sync fixed-window bucket stores
+      for (const bucketName of Object.keys(stores)) {
+        const store = stores[bucketName];
+        for (const [key, rec] of store.entries()) {
+          if (now - rec.first > MAX_RECORD_AGE_MS) {
+            store.delete(key);
+          }
+        }
+        if (store.size === 0) {
+          delete stores[bucketName];
+        }
+      }
+
+      // Prune async memoryBuckets
+      for (const [key, timestamps] of memoryBuckets.entries()) {
+        const kept = timestamps.filter(ts => ts > now - MAX_RECORD_AGE_MS);
+        if (kept.length === 0) {
+          memoryBuckets.delete(key);
+        } else {
+          memoryBuckets.set(key, kept);
+        }
+      }
+    }, CLEANUP_INTERVAL_MS);
+
+    // Unref the interval so it doesn't block process termination in CLI/scripts
+    if (typeof (global as any)[intervalKey].unref === 'function') {
+      (global as any)[intervalKey].unref();
+    }
+  }
+}
+
 // Overloads
 export function rateLimit(key: string, bucketName: string, opts: RateLimitOptions): boolean
 export function rateLimit(key: string, limit: number, windowMs: number): Promise<Result>
@@ -34,6 +75,14 @@ export function rateLimit(
     if (!stores[bucketName]) stores[bucketName] = new Map()
     const store = stores[bucketName]
     const now = Date.now()
+
+    // Inline eviction of expired entries in this store
+    for (const [k, rec] of store.entries()) {
+      if (now - rec.first > opts.windowMs) {
+        store.delete(k)
+      }
+    }
+
     const rec = store.get(key)
     if (!rec) {
       store.set(key, { count: 1, first: now })
@@ -54,6 +103,16 @@ export function rateLimit(
     const windowMs = b
     const now = Date.now()
     const windowStart = now - windowMs
+
+    // Inline eviction for memoryBuckets
+    for (const [k, timestamps] of memoryBuckets.entries()) {
+      const kept = timestamps.filter(ts => ts > now - windowMs)
+      if (kept.length === 0) {
+        memoryBuckets.delete(k)
+      } else {
+        memoryBuckets.set(k, kept)
+      }
+    }
 
     const redis = getRedis()
     if (redis) {

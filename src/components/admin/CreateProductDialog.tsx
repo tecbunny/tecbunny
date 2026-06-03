@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
-import { X, Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -33,7 +33,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createClient } from '@/lib/supabase/client';
 import { useToast } from '../../hooks/use-toast';
 import { logger } from '@/lib/logger';
 
@@ -69,7 +68,6 @@ const CATEGORIES = [
 ];
 
 export function CreateProductDialog({ open, onOpenChange, onProductCreated }: CreateProductDialogProps) {
-  const supabase = createClient();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = React.useState(false);
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Activity, Users, Wrench, ShieldCheck } from 'lucide-react';
+import { Activity, Users, Wrench, ShieldCheck } from 'lucide-react';
 
 export default function AnalyticsDashboard() {
   const [data, setData] = useState<any>(null);

@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { Pencil, Plus, Trash2, MoreHorizontal, Loader2 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { useToast } from '../../../../hooks/use-toast';
 import { logger } from '@/lib/logger';
 import type { Product } from '@/lib/types';
@@ -56,7 +55,6 @@ export default function AdminProductsPage() {
   const [editedPrices, setEditedPrices] = React.useState<Record<string, { mrp: number; price: number }>>({});
   const [savingProductId, setSavingProductId] = React.useState<string | null>(null);
 
-  const supabase = createClient();
   const { toast } = useToast();
 
   const fetchProducts = React.useCallback(async () => {

@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense, useMemo } from 'react';
 import NextDynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 
-import { Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Phone } from 'lucide-react';
+import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Phone } from 'lucide-react';
 
 import { createClient } from '@/lib/supabase/client';
 import { normalizeRole } from '@/lib/roles';

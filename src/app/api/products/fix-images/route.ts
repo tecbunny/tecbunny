@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch (e) {
-      // ignore
+      logger.warn('Failed to parse fix-images request body', { error: e });
     }
     const dryRun = (body as any).dryRun !== false;
 

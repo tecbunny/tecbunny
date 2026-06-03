@@ -266,7 +266,6 @@ export default function CheckoutPage() {
     appliedCoupon,
     couponDiscount,
     totalDiscount,
-    canCombineDiscounts,
   } = pricing;
 
   const displaySubtotal = cartItems.length

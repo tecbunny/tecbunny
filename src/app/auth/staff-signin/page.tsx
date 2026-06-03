@@ -50,7 +50,6 @@ function StaffSignInForm() {
   const supabase = createClient();
 
   const denied = searchParams.get('denied');
-  const nextPath = searchParams.get('next') || '/management';
 
   const isLockedOut = useMemo(() => {
     if (!lockoutUntil) return false;
@@ -108,6 +107,7 @@ function StaffSignInForm() {
 
       window.location.href = getRedirectPath(userRole);
     } catch (err) {
+      console.error('2FA verification error:', err);
       setError('An unexpected error occurred during 2FA verification.');
     } finally {
       setIsLoading(false);
@@ -244,6 +244,7 @@ function StaffSignInForm() {
 
       window.location.href = getRedirectPath(userRole);
     } catch (err) {
+      console.error('Sign in error:', err);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

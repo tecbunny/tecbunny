@@ -32,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createClient } from '@/lib/supabase/client';
 import { useToast } from '../../hooks/use-toast';
 import { logger } from '@/lib/logger';
 import type { Product } from '@/lib/types';
@@ -70,7 +69,6 @@ const CATEGORIES = [
 ];
 
 export function EditProductDialog({ open, onOpenChange, product, onProductUpdated }: EditProductDialogProps) {
-  const supabase = createClient();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = React.useState(false);
 

@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
     try {
       body = JSON.parse(rawBody);
     } catch (e) {
+      logger.error('Failed to parse order placed webhook body', { error: e });
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
     

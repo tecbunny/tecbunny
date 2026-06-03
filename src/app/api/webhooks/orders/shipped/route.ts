@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch (e) {
-      logger.error('Failed to parse webhook body');
+      logger.error('Failed to parse webhook body', { error: e });
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
     
@@ -168,7 +168,8 @@ async function sendOrderShippedWhatsApp(phoneNumber: string, orderData: any) {
 
     logger.info('Order shipped WhatsApp sent (Template):', { 
       phoneNumber, 
-      orderId: orderData.orderId 
+      orderId: orderData.orderId,
+      estimatedDelivery 
     });
   } catch (error: any) {
     logger.error('Failed to send order shipped WhatsApp:', { error: error.message });

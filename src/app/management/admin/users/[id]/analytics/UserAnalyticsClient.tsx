@@ -12,7 +12,6 @@ import {
   ShoppingCart, 
   MessageSquare, 
   FileText, 
-  MousePointer, 
   Eye, 
   Facebook, 
   Instagram, 

@@ -43,7 +43,7 @@ const MAX_BATCH_SIZE = 500;
 //   3. Never round DOWN – always push to the ceiling above current value.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function psychologicalCeil(raw: number): number {
+function psychologicalCeil(raw: number): number {
   if (!Number.isFinite(raw) || raw <= 0) return 0;
 
   if (raw >= 100) {
@@ -63,7 +63,7 @@ export function psychologicalCeil(raw: number): number {
 // Core price calculation
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface PriceCalculationResult {
+interface PriceCalculationResult {
   dealer_price: number;
   /** Raw unrounded result of dealer × 1.416 */
   raw_price: number;
@@ -76,7 +76,7 @@ export interface PriceCalculationResult {
   effective_margin_pct: number;
 }
 
-export function calculateProductPrice(dealerPrice: number): PriceCalculationResult {
+function calculateProductPrice(dealerPrice: number): PriceCalculationResult {
   const dp = Math.max(0, Number(dealerPrice));
   const rawPrice = dp * PRICE_MULTIPLIER;
   const finalPrice = psychologicalCeil(rawPrice);

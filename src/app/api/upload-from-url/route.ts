@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
            return apiError('VALIDATION_ERROR', { overrideMessage: 'Invalid URL target', correlationId });
         }
       }
-    } catch (dnsError) {
+    } catch (_dnsError) {
        // If DNS fails, we can't verify, so we block
        logger.warn('upload_from_url_dns_fail', { correlationId, url });
        return apiError('VALIDATION_ERROR', { overrideMessage: 'Could not resolve URL', correlationId });

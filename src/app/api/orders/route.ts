@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { createClient as createServerClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { resolveSiteUrl } from '@/lib/site-url';
+import { GST_RATE } from '@/lib/constants';
 import { apiError, apiSuccess } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { 
@@ -12,7 +13,6 @@ import {
 import { otpService } from '@/lib/otp-service';
 import { enhancedCommissionService } from '@/lib/enhanced-commission-service';
 import { emailHelpers } from '@/lib/email';
-import { GST_RATE } from '@/lib/constants';
 import { checkoutEngine } from '@/lib/checkout-engine';
 
 const RATE_LIMIT = 5; // 5 orders
@@ -110,7 +110,8 @@ export async function POST(request: NextRequest) {
       const itemInclusiveTotal = price * item.quantity;
       calculatedSubtotal += itemInclusiveTotal;
 
-      const gstRateRaw = dbProduct.gst_rate ?? dbProduct.gst_percentage ?? 18;
+      // GST_RATE is a fraction (e.g. 0.18), product columns store percentage (e.g. 18)
+      const gstRateRaw = dbProduct.gst_rate ?? dbProduct.gst_percentage ?? (GST_RATE * 100);
       const gstRate = typeof gstRateRaw === 'number' ? gstRateRaw : parseFloat(gstRateRaw) || 18;
       const itemBase = itemInclusiveTotal / (1 + (gstRate / 100));
       const itemGst = itemInclusiveTotal - itemBase;
@@ -191,6 +192,8 @@ export async function POST(request: NextRequest) {
       ? (orderData.pickup_store || orderData.delivery_address || null)
       : null;
 
+    // Full JSONB payload stored in the orders.items column by the RPC so the entire
+    // customer context (phone, email, address) is recoverable from the row alone.
     const orderItemsWithCustomerInfo = {
       cart_items: orderData.items || [],
       customer_email: orderData.customer_email,
@@ -219,7 +222,8 @@ export async function POST(request: NextRequest) {
       p_shipping_amount: Math.round(shipping_amount * 100) / 100,
       p_payment_status: orderData.payment_status || null,
       p_order_type: orderType,
-      p_items: validatedItems,
+      // Pass full customer-context JSONB so the RPC stores it in the items column
+      p_items: orderItemsWithCustomerInfo,
       p_agent_id: orderData.agent_id || null
     });
 
@@ -388,12 +392,14 @@ export async function POST(request: NextRequest) {
             .map((item: any) => `• ${item.name} (₹${item.price} x ${item.quantity})`)
             .join('\n');
 
+          const siteUrl = resolveSiteUrl(request.headers.get('host') || undefined);
           const adminMessage = `🛒 New Order Received!\n\n` +
             `📋 Order ID: ${createdOrder.id}\n` +
             `👤 Customer: ${orderData.customer_name}\n` +
             `📱 Phone: ${formattedPhone}\n` +
             `💰 Total: ₹${fullOrder.total}\n` +
             `📦 Items:\n${itemsList || 'No items listed'}\n` +
+            `🔗 View: ${siteUrl}/management/admin/orders/${createdOrder.id}\n` +
             `⏰ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
 
           await sendWhatsAppTemplate({

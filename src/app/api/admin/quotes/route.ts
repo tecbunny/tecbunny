@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/admin-auth';
 
 // export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { isAdmin } = await requireAdmin(user, supabase);

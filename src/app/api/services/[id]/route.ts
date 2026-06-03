@@ -1,4 +1,4 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
@@ -64,7 +64,7 @@ export async function generateStaticParams() {
  * PUT /api/services/[id]
  * Update a service
  */
-async function PUT(
+export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -139,7 +139,7 @@ async function PUT(
  * DELETE /api/services/[id]
  * Delete a service
  */
-async function DELETE(
+export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {

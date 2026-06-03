@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         if (cached) {
           return NextResponse.json(JSON.parse(cached));
         }
-      } catch (err) {
+      } catch (_err) {
         // ignore cache read errors
       }
     }
@@ -260,7 +260,7 @@ The previous response was too brief. Expand each section with 2-4 sentences and 
     if (redis) {
       try {
         await redis.set(cacheKey, JSON.stringify(responseData), 'EX', 86400);
-      } catch (err) {
+      } catch (_err) {
         // ignore cache write errors
       }
     }

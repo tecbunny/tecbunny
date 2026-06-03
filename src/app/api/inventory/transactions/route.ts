@@ -416,13 +416,10 @@ export async function PUT(request: NextRequest) {
       ...rpcResult,
       correlationId,
     });
-  } catch (err: any) {
+  } catch (_err: any) {
     return NextResponse.json({ error: 'Internal server error', correlationId }, { status: 500 });
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GET – Query stock movement ledger
 // ?product_id=&movement_type=&limit=50&page=1&date_from=&date_to=
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -507,7 +504,7 @@ export async function GET(request: NextRequest) {
       },
       correlationId,
     });
-  } catch (err: any) {
+  } catch (_err: any) {
     return NextResponse.json({ error: 'Internal server error', correlationId }, { status: 500 });
   }
 }

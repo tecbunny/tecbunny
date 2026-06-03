@@ -347,7 +347,7 @@ export async function GET(request: NextRequest) {
       },
       correlationId,
     });
-  } catch (err: any) {
+  } catch (_err: any) {
     return NextResponse.json({ error: 'Internal server error', correlationId }, { status: 500 });
   }
 }

@@ -96,12 +96,21 @@ async function handleCustomerSignup(supabase: any, customerData: any) {
 async function handleOrderConfirmation(supabase: any, orderData: any) {
   const { customer_phone, order_number, amount, items } = orderData;
 
-  // Send WhatsApp order confirmation
+  // Send WhatsApp order confirmation template
   await sendOrderNotification(customer_phone, {
     orderNumber: order_number,
-    // amount, // Not supported by current schema/template
-    // items   // Not supported by current schema/template
   });
+
+  // Send a richer follow-up text with full order details (amount + item list)
+  if (amount || (Array.isArray(items) && items.length > 0)) {
+    const itemLines = Array.isArray(items)
+      ? items.slice(0, 5).map((i: any) => `• ${i.name ?? i.title ?? 'Item'} × ${i.quantity ?? 1}`).join('\n')
+      : '';
+    const moreCount = Array.isArray(items) && items.length > 5 ? `\n...and ${items.length - 5} more` : '';
+    const amountLine = amount ? `\n💰 Total: ₹${amount}` : '';
+    const detailMsg = `📋 Order #${order_number} Details${amountLine}${itemLines ? `\n\n${itemLines}${moreCount}` : ''}`.trim();
+    await (await import('@/lib/whatsapp-service')).sendWhatsAppNotification(customer_phone, detailMsg);
+  }
 
   // Log the notification
   await supabase

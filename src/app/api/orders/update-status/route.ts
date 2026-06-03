@@ -404,7 +404,7 @@ async function sendOrderStatusUpdateWhatsApp(phoneNumber: string, data: any) {
 
 ${namePrefix}Your order status has been updated.
 
-📦 Order: ${orderId}
+📦 Order: ${orderId}${priceDisplay ? ` ${priceDisplay}` : ''}
 🔄 New Status: ${status}
 
 Track full details here: https://tecbunny.com/orders/${orderId}

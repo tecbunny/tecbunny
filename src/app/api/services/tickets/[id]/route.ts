@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { serviceManagementService } from '@/lib/service-management';
 import { logger } from '@/lib/logger';
@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger';
  * Update service ticket status or assign engineer
  * PUT /api/services/tickets/[id]
  */
-async function PUT(
+export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {

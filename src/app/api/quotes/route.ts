@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
 import { buildPdf, loadCompanyInfo } from '@/lib/pdf-generator';
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import { getCustomSetupBlueprintSummary } from '@/lib/custom-setup-service';
 import { DEFAULT_CUSTOM_SETUP_TEMPLATE_SLUG } from '@/lib/custom-setup.constants';

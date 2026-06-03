@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { createClient as createServerClient, createServiceClient } from '@/lib/supabase/server';
+import { createClient as createServerClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import { isAtLeast } from '@/lib/roles';
 import type { UserRole } from '@/lib/types';
@@ -17,6 +17,8 @@ interface AutoFillOptions {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
+    // Use service client for product/order reads so RLS doesn't restrict catalog access
+    const dataClient = isSupabaseServiceConfigured ? createServiceClient() : supabase;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -43,7 +45,7 @@ export async function POST(request: NextRequest) {
     
 
     // 1) Fetch active products with relevant fields
-    const { data: products } = await supabase
+    const { data: products } = await dataClient
       .from('products')
       .select('id, title, name, images, price, offer_price, popularity, rating, review_count, created_at, prioritized, product_type')
       .eq('status', 'active');
@@ -52,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     // 2) Trending: aggregate sold quantities in last `days` days
     const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-    const { data: recentOrders } = await supabase
+    const { data: recentOrders } = await dataClient
       .from('orders')
       .select('items')
       .gte('created_at', cutoff);

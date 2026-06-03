@@ -273,7 +273,7 @@ async function adjustInventory(
       await svc
         .from('stock_movements')
         .insert({ product_id: pid, movement_type: 'out', quantity: qty, reference_type: 'agent_order', notes: 'Agent order deduction (fallback)' })
-    } catch (_) {
+    } catch (_ignoreErr) {
       // ignore
     }
 

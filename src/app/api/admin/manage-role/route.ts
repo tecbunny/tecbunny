@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 import { logger } from '@/lib/logger';
 
+
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.local';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';
 
@@ -77,6 +78,14 @@ export async function POST(request: NextRequest) {
     // 3) Update auth metadata (if using syncing, though we moved to profiles-only, keeping this consistent is good practice)
     await supabaseAdmin.auth.admin.updateUserById(userId, {
       user_metadata: { role: newRole }
+    });
+
+    logger.info('admin_role_change_success', {
+      userId,
+      action,
+      previousRole: profile.role,
+      newRole,
+      changedBy: 'maint_token_admin',
     });
 
     return NextResponse.json({ 

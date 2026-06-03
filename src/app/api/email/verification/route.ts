@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       const supabase = await createServerClient();
       const { data: { user } } = await supabase.auth.getUser();
       userId = user?.id || null;
-    } catch(_) {}
+    } catch(_ignoreErr) {}
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     const rateKey = userId ? `user:${userId}` : `ip:${ip}`;
     if (!rateLimit(rateKey, 'email_verification', { limit: LIMIT, windowMs: WINDOW_MS })) {

@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
         if (cached) {
           return NextResponse.json(JSON.parse(cached));
         }
-      } catch (err) {
+      } catch (_err) {
         // ignore cache read errors
       }
     }
@@ -303,7 +303,7 @@ export async function POST(request: NextRequest) {
     if (redis) {
       try {
         await redis.set(cacheKey, JSON.stringify(responseData), 'EX', 86400);
-      } catch (err) {
+      } catch (_err) {
         // ignore cache write errors
       }
     }

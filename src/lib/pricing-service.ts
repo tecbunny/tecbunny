@@ -200,9 +200,34 @@ export class PricingService {
     let totalDiscount = 0;
     const itemPrices = [];
 
+    // Fetch pricing source of truth from database to prevent manipulation
+    const productIds = items.map(item => item.product.id).filter(Boolean);
+    const supabase = await this.getSupabaseClient();
+    const { data: dbProducts } = await supabase
+      .from('products')
+      .select('id, price, mrp, status, is_deleted, gstRate, gst_rate, offer_price')
+      .in('id', productIds);
+      
+    const dbProductMap = new Map(dbProducts?.map(p => [p.id, p]) || []);
+
     for (const item of items) {
+      const dbProduct = dbProductMap.get(item.product.id);
+      
+      if (!dbProduct || dbProduct.is_deleted || dbProduct.status !== 'active') {
+        throw new Error(`Product ${item.product.id} is invalid or no longer available.`);
+      }
+
+      // Merge verified prices and metadata
+      const verifiedProduct = {
+        ...item.product,
+        price: dbProduct.price,
+        mrp: dbProduct.mrp,
+        offer_price: dbProduct.offer_price,
+        gstRate: dbProduct.gstRate ?? dbProduct.gst_rate ?? 18
+      };
+
       const priceInfo = await this.getProductPrice(
-        item.product, 
+        verifiedProduct, 
         { ...context, quantity: item.quantity }
       );
       
@@ -213,7 +238,7 @@ export class PricingService {
       totalDiscount += itemDiscount;
       
       itemPrices.push({
-        product_id: item.product.id,
+        product_id: verifiedProduct.id,
         quantity: item.quantity,
         unit_price: priceInfo.final_price,
         total_price: itemTotal,

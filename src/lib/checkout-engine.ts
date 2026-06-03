@@ -63,11 +63,38 @@ export class CheckoutEngine {
       const itemPrices = [];
       let grossSubtotal = 0; // Sum of item price * quantity before discounts and GST
 
-      // Convert CartItems to Product array for PricingService
-      const productsForPricing = items.map(item => ({
-        product: item as unknown as Product,
-        quantity: item.quantity
-      }));
+      // Retrieve verified pricing source of truth from database to prevent client-side price manipulation
+      const productIds = items.map(item => item.id);
+      const supabase = await pricingService['getSupabaseClient']();
+      const { data: dbProducts, error: dbError } = await supabase
+        .from('products')
+        .select('id, price, mrp, status, is_deleted, gstRate, gst_rate, offer_price')
+        .in('id', productIds);
+      
+      if (dbError || !dbProducts) {
+        logger.error('Failed to fetch pricing product metadata from database', { dbError });
+        throw new Error('Verification of product prices failed. Please try again.');
+      }
+
+      const dbProductMap = new Map(dbProducts.map(p => [p.id, p]));
+
+      // Convert CartItems to Product array for PricingService using verified database metadata
+      const productsForPricing = items.map(item => {
+        const dbProduct = dbProductMap.get(item.id);
+        if (!dbProduct || dbProduct.is_deleted || dbProduct.status !== 'active') {
+          throw new Error(`Product ${item.id} is invalid or no longer available.`);
+        }
+        return {
+          product: {
+            ...item,
+            price: dbProduct.price,
+            mrp: dbProduct.mrp,
+            offer_price: dbProduct.offer_price,
+            gstRate: dbProduct.gstRate ?? dbProduct.gst_rate ?? 18
+          } as unknown as Product,
+          quantity: item.quantity
+        };
+      });
 
       // Calculate initial pricing using pricing service
       const pricingResult = await pricingService.calculateCartTotal(productsForPricing, pricingContext);

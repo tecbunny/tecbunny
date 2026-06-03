@@ -314,7 +314,7 @@ export async function GET(request: NextRequest) {
 
       let query: any = supabase
         .from('products')
-        .select(publicProductSelect, { count: 'exact' })
+        .select(publicProductSelect, { count: 'estimated' })
         .range(offset, offset + limit - 1);
 
       // Apply sorting with prioritized products first

@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     // Support legacy format for standard customer verification (using otp_verifications table)
     let finalOtpId = otpId;
-    let finalCode = reqCode;
+    const finalCode = reqCode;
 
     // Legacy compatibility
     if (!otpId && orderId && reqPhone) {

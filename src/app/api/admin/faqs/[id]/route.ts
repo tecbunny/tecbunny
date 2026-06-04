@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authResult = await requireApiRole({ allowedRoles: ['admin'] });
@@ -15,7 +15,7 @@ export async function PUT(
     }
 
     const { supabase } = authResult;
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return APIResponseBuilder.badRequest('FAQ ID is required');
@@ -59,7 +59,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authResult = await requireApiRole({ allowedRoles: ['admin'] });
@@ -68,7 +68,7 @@ export async function DELETE(
     }
 
     const { supabase } = authResult;
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return APIResponseBuilder.badRequest('FAQ ID is required');

@@ -246,7 +246,7 @@ export function Footer() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           <div>
-            <h4 className="text-brand-cyan text-sm font-bold uppercase tracking-widest mb-6">Protocols</h4>
+            <h4 className="text-brand-cyan text-sm font-bold uppercase tracking-widest mb-6">Services</h4>
             <ul className="space-y-3 text-base text-slate-300">
               <li>
                 <Link href="/services" className="hover:text-white transition-colors flex items-center gap-2">
@@ -277,7 +277,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="text-brand-cyan text-sm font-bold uppercase tracking-widest mb-6">Database</h4>
+            <h4 className="text-brand-cyan text-sm font-bold uppercase tracking-widest mb-6">Company</h4>
             <ul className="space-y-3 text-base text-slate-300">
               <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link href="/products" className="hover:text-white transition-colors">Products</Link></li>
@@ -291,7 +291,7 @@ export function Footer() {
               <Globe className="h-16 w-16 text-brand-cyan" />
             </div>
 
-            <h4 className="text-white font-bold font-tech text-xl mb-4">Transmission Hub</h4>
+            <h4 className="text-white font-bold font-tech text-xl mb-4">Reach Us</h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
               <div>
@@ -307,7 +307,7 @@ export function Footer() {
                 </a>
               </div>
               <div>
-                <span className="block text-xs text-slate-500 uppercase mb-1">Comms</span>
+                <span className="block text-xs text-slate-500 uppercase mb-1">Contact</span>
                 <p className="text-brand-cyan hover:text-white transition-colors">
                   <a href={`tel:${supportPhone.replace(/\s+/g,'')}`}>{supportPhone}</a>
                 </p>

@@ -28,6 +28,7 @@ import { usePermissions } from '../hooks/use-permissions';
 import { useRevealSections } from '../hooks/use-reveal-sections';
 import type { Product, Service } from '@/lib/types';
 import HeroCarousel from './HeroCarousel';
+import { BRAND_LOGO_URL } from '@/components/ui/logo';
 
 
 const iconMap: Record<string, ComponentType<LucideProps>> = {
@@ -323,8 +324,8 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
       offer_price: price,
       discount_percentage: 0,
       category: service.category || 'Services',
-      image: '/brand.png',
-      images: ['/brand.png'],
+      image: BRAND_LOGO_URL,
+      images: [BRAND_LOGO_URL],
       product_type: 'service',
       tags: ['service', service.category || 'Services'],
       status: 'active',

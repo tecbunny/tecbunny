@@ -148,40 +148,63 @@ const structuredData = {
     {
       '@type': ['LocalBusiness', 'ITService', 'SecurityService'],
       '@id': 'https://www.tecbunny.com/#localbusiness',
-      name: 'TecBunny Solutions',
+      name: 'TecBunny Solutions Private Limited',
+      legalName: 'TECBUNNY SOLUTIONS PRIVATE LIMITED',
+      foundingDate: '2025',
       url: 'https://www.tecbunny.com',
+      logo: BRAND_LOGO_URL,
       image: BRAND_LOGO_URL,
       description:
         'CCTV installation, IT services, AMC support, networking, home automation, and RFID lock systems in Goa and Maharashtra.',
       telephone: '+91-9604136010',
       email: 'support@tecbunny.com',
-      priceRange: 'INR',
+      priceRange: '\u20b9\u20b9',
+      currenciesAccepted: 'INR',
+      paymentAccepted: 'Cash, UPI, Bank Transfer, Credit Card',
+      taxID: '30AAMCT1608G1ZO',
       address: {
         '@type': 'PostalAddress',
-        streetAddress: 'H No 11 Nhayginwada, Parse, Parxem',
+        streetAddress: 'H No 11, Nhayginwada, Parse, Parxem',
         addressLocality: 'Pernem',
         addressRegion: 'Goa',
         postalCode: '403512',
         addressCountry: 'IN',
       },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: 15.6730616,
+        longitude: 73.7855133,
+      },
+      openingHoursSpecification: [{
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        opens: '09:00',
+        closes: '19:00',
+      }],
       areaServed: [
-        {
-          '@type': 'State',
-          name: 'Goa',
-        },
-        {
-          '@type': 'State',
-          name: 'Maharashtra',
-        },
+        { '@type': 'City', name: 'Pernem' },
+        { '@type': 'City', name: 'Mapusa' },
+        { '@type': 'City', name: 'Panaji' },
+        { '@type': 'City', name: 'Margao' },
+        { '@type': 'City', name: 'Vasco da Gama' },
+        { '@type': 'City', name: 'Mumbai' },
+        { '@type': 'City', name: 'Pune' },
+        { '@type': 'State', name: 'Goa' },
+        { '@type': 'State', name: 'Maharashtra' },
       ],
-      serviceType: [
-        'CCTV installation',
-        'IT services',
-        'AMC support',
-        'Home automation',
-        'RFID lock systems',
-        'Computer networking',
-      ],
+      hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: 'Services',
+        itemListElement: [
+          { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'CCTV Installation & AMC' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Computer Repair & Upgrade' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Home Automation' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'RFID & Access Control' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Networking & Structured Cabling' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Web Development' } },
+        ],
+      },
+      sameAs: sameAsLinks,
     },
   ],
 };
@@ -202,6 +225,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fbcsagupcxheyiusjfak.supabase.co" />
+        <link rel="dns-prefetch" href="https://fbcsagupcxheyiusjfak.supabase.co" />
+        <link rel="dns-prefetch" href="https://www.facebook.com" />
+        <link rel="dns-prefetch" href="https://www.instagram.com" />
+        <link rel="dns-prefetch" href="https://maps.googleapis.com" />
         <link rel="preload" href="/noise.svg" as="image" type="image/svg+xml" fetchPriority="high" />
         <script
           type="application/ld+json"

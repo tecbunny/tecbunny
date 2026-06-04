@@ -22,16 +22,16 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    logger.error('complete_signup.configuration_missing');
-    return NextResponse.json(
-      { error: 'Service configuration error. Please contact support.' },
-      { status: 503 }
-    );
-  }
-  logger.info('complete_signup.start');
-    
-    const { email, password, name, mobile, otpVerified } = await request.json();
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      logger.error('complete_signup.configuration_missing');
+      return NextResponse.json(
+        { error: 'Service configuration error. Please contact support.' },
+        { status: 503 }
+      );
+    }
+    logger.info('complete_signup.start');
+      
+    const { email, password, name, mobile, otpId } = await request.json();
 
     // Validate required fields
     if (!password || !name || !mobile) {
@@ -48,15 +48,82 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!otpVerified) {
+    if (!otpId) {
       return NextResponse.json(
-        { error: 'OTP verification is required before account creation' },
+        { error: 'OTP transaction token reference (otpId) is required' },
         { status: 400 }
       );
     }
 
-    // Check if user already exists — targeted query avoids fetching all users
+    // Query OTP verification database record to establish session legitimacy
+    const { data: otpRecord, error: otpError } = await supabaseAdmin
+      .from('otp_verifications')
+      .select('*')
+      .eq('id', otpId)
+      .single();
+
+    if (otpError || !otpRecord) {
+      logger.error('complete_signup.otp_lookup_failed', { error: otpError, otpId });
+      return NextResponse.json(
+        { error: 'Invalid or missing OTP transaction reference' },
+        { status: 400 }
+      );
+    }
+
+    if (!otpRecord.verified) {
+      logger.warn('complete_signup.otp_unverified', { otpId });
+      return NextResponse.json(
+        { error: 'OTP has not been verified yet' },
+        { status: 400 }
+      );
+    }
+
+    // Verify OTP record binds cleanly to the registration identifiers
     const normalizedMobile = String(mobile).replace(/\D/g, '');
+    const otpPhoneClean = otpRecord.phone ? String(otpRecord.phone).replace(/\D/g, '') : '';
+    
+    const isPhoneMatch = otpPhoneClean === normalizedMobile;
+    const isEmailMatch = email && otpRecord.email && otpRecord.email.trim().toLowerCase() === email.trim().toLowerCase();
+
+    if (!isPhoneMatch && (!email || !isEmailMatch)) {
+      logger.warn('complete_signup.otp_identifier_mismatch', {
+        otpId,
+        requestMobile: normalizedMobile,
+        otpPhone: otpPhoneClean,
+        requestEmail: email,
+        otpEmail: otpRecord.email
+      });
+      return NextResponse.json(
+        { error: 'OTP details do not match the signup identifiers' },
+        { status: 400 }
+      );
+    }
+
+    // Check expiration timeline (verified within last 15 minutes)
+    const verifiedAt = otpRecord.verified_at ? new Date(otpRecord.verified_at).getTime() : 0;
+    if (Date.now() - verifiedAt > 15 * 60 * 1000) {
+      logger.warn('complete_signup.otp_session_expired', { otpId });
+      return NextResponse.json(
+        { error: 'OTP verification session has expired. Please verify again.' },
+        { status: 400 }
+      );
+    }
+
+    // Delete the verified OTP record immediately to prevent replay attacks
+    const { error: deleteOtpError } = await supabaseAdmin
+      .from('otp_verifications')
+      .delete()
+      .eq('id', otpId);
+
+    if (deleteOtpError) {
+      logger.error('complete_signup.otp_cleanup_failed', { error: deleteOtpError, otpId });
+      return NextResponse.json(
+        { error: 'Internal system error clearing session token' },
+        { status: 500 }
+      );
+    }
+
+    // Check if user already exists — targeted query avoids fetching all users
     const orFilters: string[] = [];
     if (email) orFilters.push(`email.eq.${email}`);
     if (normalizedMobile) orFilters.push(`mobile.eq.${normalizedMobile}`);
@@ -113,7 +180,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-  logger.info('complete_signup.user_created', { email: userData.user.email });
+    logger.info('complete_signup.user_created', { email: userData.user.email });
 
     // Create profile record explicitly
     try {
@@ -187,7 +254,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-  logger.info('complete_signup.signin_success', { userId: signInData.user.id });
+    logger.info('complete_signup.signin_success', { userId: signInData.user.id });
 
     // Send welcome WhatsApp notification
     if (normalizedMobile) {
@@ -213,11 +280,6 @@ export async function POST(request: NextRequest) {
       requiresSignIn: false,
       redirectTo: '/'
     });
-
-    // NOTE: We do NOT set manual auth cookies here.
-    // The Supabase client SDK (via @supabase/ssr) handles session cookies automatically
-    // when the client calls onAuthStateChange after receiving the session in the JSON response.
-    // Setting a non-HttpOnly access token cookie here would be an unnecessary XSS risk.
 
     return response;
 

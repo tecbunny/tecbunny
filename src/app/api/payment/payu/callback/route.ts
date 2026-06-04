@@ -34,6 +34,7 @@ function resolveEnvironmentPreference(envs: Array<string | null | undefined>): P
 
 export async function POST(request: NextRequest) {
   const correlationId = request.headers.get('x-correlation-id') || crypto.randomUUID();
+  const siteUrl = resolveSiteUrl(request.headers.get('host') || undefined);
 
   try {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     const txnId = payload.txnid || '';
     const status = (payload.status || '').toLowerCase();
 
-    // We skip the DB lookup and use hardcoded defaults + env vars
+    // Default configuration parsing
     const payuConfig = {
       enabled: true,
       config: {
@@ -123,8 +124,38 @@ export async function POST(request: NextRequest) {
     );
 
     const isGatewayReportedSuccess = status === 'success';
-    if (isGatewayReportedSuccess && !isHashValid) {
-      logger.warn('payu_callback.hash_mismatch', { correlationId, orderId, txnId });
+
+    // STRICT PAYMENT CHECK: Terminate immediately if hash verification fails to prevent spoofing
+    if (!isHashValid) {
+      logger.error('payu_callback.signature_verification_failed', { correlationId, orderId, txnId });
+      
+      // Update transaction ledger with warning details
+      await supabase
+        .from('payment_transactions')
+        .upsert({
+          order_id: orderId || null,
+          transaction_id: txnId || crypto.randomUUID(),
+          payment_method: 'payu',
+          status: 'failed',
+          gateway_response: { ...payload, hash_verified: false, security_alert: 'Signature validation failed (possible tampering).' },
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'transaction_id' });
+
+      if (orderId) {
+        await supabase
+          .from('orders')
+          .update({
+            payment_status: 'Payment Failed',
+            notes: 'PayU webhook failed cryptographic hash check.',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', orderId);
+      }
+
+      const failureUrl = new URL(`/payment/failed`, siteUrl);
+      failureUrl.searchParams.set('orderId', orderId);
+      failureUrl.searchParams.set('reason', 'Cryptographic signature verification failed.');
+      return NextResponse.redirect(failureUrl, 303);
     }
 
     const isSuccess = isGatewayReportedSuccess;
@@ -134,7 +165,7 @@ export async function POST(request: NextRequest) {
       transaction_id: txnId || crypto.randomUUID(),
       payment_method: 'payu',
       status: isSuccess ? 'success' : 'failed',
-      gateway_response: { ...payload, hash_verified: isHashValid },
+      gateway_response: { ...payload, hash_verified: true },
       updated_at: new Date().toISOString(),
     };
 
@@ -190,8 +221,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const siteUrl = resolveSiteUrl(request.headers.get('host') || undefined);
-
     if (!orderId) {
       const fallbackUrl = new URL(`/payment/failed`, siteUrl);
       fallbackUrl.searchParams.set('reason', 'Order reference missing.');
@@ -218,7 +247,7 @@ export async function POST(request: NextRequest) {
     failureUrl.searchParams.set('orderId', orderId);
     const reason = payload.error_Message || payload.field9 || status || 'Payment failed';
     failureUrl.searchParams.set('reason', reason);
-    logger.warn('payu_callback.failure', { correlationId, orderId, txnId, reason, hashValid: isHashValid, gatewayStatus: status });
+    logger.warn('payu_callback.failure', { correlationId, orderId, txnId, reason, hashValid: true, gatewayStatus: status });
     return NextResponse.redirect(failureUrl, 303);
   } catch (error) {
     logger.error('payu_callback.unhandled', {

@@ -797,7 +797,13 @@ export default function CheckoutPage() {
                   <Wallet className="h-5 w-5 text-emerald-300" /> Payment Protocol
                 </h3>
                 <div className="space-y-4">
-                  {paymentLoading && <div className="text-slate-400">Loading payment methods...</div>}
+                  {paymentLoading && (
+                    <div className="space-y-4 min-h-[220px]">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div key={index} className="h-16 w-full animate-pulse rounded-xl border border-white/5 bg-white/5" />
+                      ))}
+                    </div>
+                  )}
                   {!paymentLoading && getEnabledPaymentMethods().length === 0 && (
                     <div className="text-slate-400">No payment methods available. Please contact support.</div>
                   )}

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
 import type { User } from '@supabase/supabase-js';
 
 import { logger } from '@/lib/logger';
@@ -44,13 +43,12 @@ const otpService = new MultiChannelOTPManager();
 
 export async function POST(request: NextRequest) {
   try {
-  const body = await request.json();
-  const otp = (body?.otp || body?.code || '').toString().trim();
-  const email = (body?.email || body?.userEmail || '').toString().trim();
-  const mobile = (body?.mobile || '').toString().trim();
-  const otpId = (body?.otpId || body?.otp_id || '').toString().trim();
-  // Accept multiple client keys and normalize
-  const password: string = (body?.password || body?.newPassword || body?.new_password || '').toString();
+    const body = await request.json();
+    const otp = (body?.otp || body?.code || '').toString().trim();
+    const email = (body?.email || body?.userEmail || '').toString().trim();
+    const mobile = (body?.mobile || '').toString().trim();
+    const otpId = (body?.otpId || body?.otp_id || '').toString().trim();
+    const password: string = (body?.password || body?.newPassword || body?.new_password || '').toString();
 
     if (!otp || !otpId || (!email && !mobile) || !password) {
       return NextResponse.json(
@@ -68,8 +66,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-  // Validate password strength
-  const passwordError = validatePassword(password);
+    // Validate password strength
+    const passwordError = validatePassword(password);
     if (passwordError) {
       return NextResponse.json(
         { error: passwordError },
@@ -101,6 +99,30 @@ export async function POST(request: NextRequest) {
     if (otpRecord.purpose !== 'password_reset') {
       return NextResponse.json(
         { error: 'OTP type mismatch. Please request a new reset code.' },
+        { status: 400 }
+      );
+    }
+
+    // Confirm the OTP record binds directly to the requested identity to prevent Account Takeover
+    const normalizedRequestEmail = email ? email.trim().toLowerCase() : null;
+    const normalizedRequestMobile = mobile ? mobile.trim().replace(/\D/g, '') : null;
+
+    const normalizedOtpEmail = otpRecord.email ? otpRecord.email.trim().toLowerCase() : null;
+    const normalizedOtpPhone = otpRecord.phone ? otpRecord.phone.trim().replace(/\D/g, '') : null;
+
+    const isEmailValidMatch = normalizedRequestEmail && normalizedOtpEmail && normalizedRequestEmail === normalizedOtpEmail;
+    const isMobileValidMatch = normalizedRequestMobile && normalizedOtpPhone && normalizedRequestMobile === normalizedOtpPhone;
+
+    if (!isEmailValidMatch && !isMobileValidMatch) {
+      logger.warn('auth.reset_password.identity_spoofing_attempt', {
+        otpId,
+        requestEmail: normalizedRequestEmail,
+        otpEmail: normalizedOtpEmail,
+        requestMobile: normalizedRequestMobile,
+        otpPhone: normalizedOtpPhone
+      });
+      return NextResponse.json(
+        { error: 'Security verification failed: OTP reference mismatch.' },
         { status: 400 }
       );
     }
@@ -162,9 +184,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    // Mark OTP as used (cleanup) - already done in verifyOTP above
-    // await otpManager.verifyOTP(email, otp, 'recovery');
 
     if (process.env.NODE_ENV !== 'production') {
       logger.info('auth.reset_password.success', { identifier });

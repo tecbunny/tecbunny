@@ -539,12 +539,19 @@ export function ShopPageContent() {
 
         <div className="reveal-section mt-12" data-reveal-id="products-grid">
           {loading ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 min-h-[400px]">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="space-y-3 rounded-2xl border border-white/5 bg-white/5 p-4">
-                  <Skeleton className="h-48 w-full rounded-xl" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
+                <div key={i} className="flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-4">
+                  <Skeleton className="mb-4 h-48 w-full rounded-xl" />
+                  <Skeleton className="h-5 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2 mb-4" />
+                  <div className="mt-auto flex items-center justify-between pt-4">
+                    <div className="flex flex-col gap-1">
+                      <Skeleton className="h-6 w-20" />
+                      <Skeleton className="h-4 w-12" />
+                    </div>
+                    <Skeleton className="h-9 w-9 rounded-lg" />
+                  </div>
                 </div>
               ))}
             </div>

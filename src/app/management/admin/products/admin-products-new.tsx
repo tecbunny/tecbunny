@@ -198,8 +198,30 @@ export default function AdminProductsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="space-y-4 w-full min-h-[350px]">
+              <div className="flex items-center space-x-4 border-b border-white/5 pb-4">
+                <div className="h-4 bg-slate-800 rounded animate-pulse w-1/4" />
+                <div className="h-4 bg-slate-800 rounded animate-pulse w-1/6" />
+                <div className="h-4 bg-slate-800 rounded animate-pulse w-1/12" />
+                <div className="h-4 bg-slate-800 rounded animate-pulse w-1/12" />
+                <div className="h-4 bg-slate-800 rounded animate-pulse w-1/12" />
+                <div className="h-4 bg-slate-800 rounded animate-pulse w-1/12" />
+                <div className="h-4 bg-slate-800 rounded animate-pulse w-1/12 ml-auto" />
+              </div>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center space-x-4 py-3 border-b border-white/5">
+                  <div className="flex items-center gap-2 w-1/4">
+                    <div className="w-8 h-8 rounded bg-slate-800 animate-pulse" />
+                    <div className="h-4 bg-slate-800 rounded animate-pulse w-3/4" />
+                  </div>
+                  <div className="h-6 bg-slate-800 rounded animate-pulse w-1/6" />
+                  <div className="h-8 bg-slate-800 rounded animate-pulse w-28" />
+                  <div className="h-8 bg-slate-800 rounded animate-pulse w-28" />
+                  <div className="h-4 bg-slate-800 rounded animate-pulse w-1/12" />
+                  <div className="h-6 bg-slate-800 rounded animate-pulse w-16" />
+                  <div className="h-8 bg-slate-800 rounded animate-pulse w-10 ml-auto" />
+                </div>
+              ))}
             </div>
           ) : products.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">

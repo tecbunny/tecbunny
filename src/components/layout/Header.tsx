@@ -193,9 +193,9 @@ export function Header() {
     >
       <div className="absolute top-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60"></div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="relative z-20 flex flex-shrink-0 items-center gap-3 group">
+      <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/" className="relative z-20 flex w-[260px] flex-shrink-0 items-center gap-3 group xl:w-[300px]">
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/50 bg-white/95 p-1.5 shadow-[0_10px_30px_rgba(15,23,42,0.35)] ring-1 ring-cyan-200/30 transition-transform group-hover:scale-105">
               <Logo width={44} height={44} className="drop-shadow-sm" />
             </span>
@@ -209,8 +209,8 @@ export function Header() {
             </div>
           </Link>
 
-          <div className="hidden min-w-0 flex-1 items-center justify-center px-3 lg:flex xl:px-6">
-            <nav className="flex items-center gap-0.5 rounded-full border border-white/5 bg-white/5 p-1.5 shadow-lg shadow-black/20 backdrop-blur-md">
+          <div className="hidden min-w-0 flex-1 items-center justify-start lg:flex">
+            <nav className="flex max-w-full items-center gap-0.5 overflow-hidden rounded-full border border-white/5 bg-white/5 p-1.5 shadow-lg shadow-black/20 backdrop-blur-md">
               {navLinks.map((item) => (
                 item.children ? (
                   <div
@@ -228,7 +228,7 @@ export function Header() {
                   >
                     <Link
                       href={item.href}
-                      className={`nav-pill relative rounded-full px-2.5 xl:px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-300 inline-flex items-center gap-1
+                      className={`nav-pill relative rounded-full px-2 py-2 text-xs font-medium whitespace-nowrap transition-all duration-300 inline-flex items-center gap-1 xl:px-3 xl:text-sm
                         ${isActive(item.href)
                           ? 'nav-pill--active bg-white/10 text-white border border-white/5 shadow-inner'
                           : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -262,7 +262,7 @@ export function Header() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`nav-pill relative inline-flex items-center whitespace-nowrap rounded-full px-2.5 xl:px-4 py-2 text-sm font-medium transition-all duration-300
+                    className={`nav-pill relative inline-flex items-center whitespace-nowrap rounded-full px-2 py-2 text-xs font-medium transition-all duration-300 xl:px-3 xl:text-sm
                       ${isActive(item.href)
                         ? 'nav-pill--active bg-white/10 text-white border border-white/5 shadow-inner'
                         : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -285,13 +285,13 @@ export function Header() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/auth/signin"
-                  className="rounded-full border border-slate-400/40 bg-white/5 px-3 py-2 text-sm font-semibold text-white transition-colors hover:border-slate-400/70 hover:bg-white/10 hover:shadow-[0_0_12px_rgba(255,255,255,0.1)] xl:px-4"
+                  className="rounded-full border border-slate-400/40 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-slate-400/70 hover:bg-white/10 hover:shadow-[0_0_12px_rgba(255,255,255,0.1)] xl:px-4 xl:text-sm"
                 >
                   Login
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-cyan-200 transition-colors hover:border-cyan-400/70 xl:px-4"
+                  className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-200 transition-colors hover:border-cyan-400/70 xl:px-4 xl:text-sm"
                 >
                   Signup
                 </Link>
@@ -358,7 +358,7 @@ export function Header() {
               href="/customised-setups"
               onMouseMove={applyMagneticEffect}
               onMouseLeave={resetMagneticEffect}
-                className="magnetic-btn group relative rounded-lg border border-white/10 bg-gradient-to-r from-cyan-500/20 to-violet-500/20 px-4 py-2.5 text-sm font-bold text-white shadow-[0_0_15px_rgba(6,182,212,0.05)] transition-all hover:border-cyan-400/50 hover:shadow-[0_0_25px_rgba(6,182,212,0.2)] xl:px-6"
+                className="magnetic-btn group relative rounded-lg border border-white/10 bg-gradient-to-r from-cyan-500/20 to-violet-500/20 px-4 py-2.5 text-xs font-bold text-white shadow-[0_0_15px_rgba(6,182,212,0.05)] transition-all hover:border-cyan-400/50 hover:shadow-[0_0_25px_rgba(6,182,212,0.2)] xl:px-6 xl:text-sm"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500 opacity-0 transition-opacity duration-300 group-hover:opacity-20"></span>
               <span className="relative flex items-center gap-2">

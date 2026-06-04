@@ -7,7 +7,7 @@ export const metadata: Metadata = createPageMetadata({
   title: 'Annual Maintenance Contract in Goa',
   description: 'Get CCTV and computer AMC services in Goa with preventive maintenance, diagnostics, and priority support from TecBunny Solutions.',
   keywords: ['annual maintenance contract goa', 'amc services goa', 'cctv amc goa', 'computer amc goa', 'it maintenance goa'],
-  path: '/annual-maintenance-contract-goa',
+  path: '/amc-goa',
   image: '/brand.png',
 });
 

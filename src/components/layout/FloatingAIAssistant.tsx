@@ -7,7 +7,7 @@ import { Bot, X, Sparkles, ArrowRight } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
-const EXCLUDED_PREFIXES = ['/auth', '/management', '/checkout'];
+const EXCLUDED_PREFIXES = ['/auth', '/mgmt', '/checkout'];
 
 export function FloatingAIAssistant() {
   const pathname = usePathname() || '/';

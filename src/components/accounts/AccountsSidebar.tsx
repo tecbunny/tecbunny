@@ -17,9 +17,9 @@ import { Button } from '../ui/button';
 import { useAuth } from '@/lib/hooks';
 
 const navItems = [
-  { href: '/management/accounts', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/management/accounts/invoices', label: 'Invoices', icon: Receipt },
-  { href: '/management/accounts/reports', label: 'Billing Reports', icon: FileText },
+  { href: '/mgmt/accounts', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/mgmt/accounts/invoices', label: 'Invoices', icon: Receipt },
+  { href: '/mgmt/accounts/reports', label: 'Billing Reports', icon: FileText },
 ];
 
 export function AccountsSidebar() {

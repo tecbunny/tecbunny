@@ -285,7 +285,7 @@ export default function ProductManagementPage() {
               Template
             </Button>
             <Button asChild>
-              <Link href="/management/sales/products/new">
+              <Link href="/mgmt/sales/products/new">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add New Product
               </Link>
@@ -367,7 +367,7 @@ export default function ProductManagementPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => router.push(`/management/sales/products/edit/${product.id}`)}>
+                        <DropdownMenuItem onSelect={() => router.push(`/mgmt/sales/products/edit/${product.id}`)}>
                            <Pencil className="mr-2 h-4 w-4" />
                            Edit
                         </DropdownMenuItem>

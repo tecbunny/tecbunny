@@ -125,7 +125,9 @@ export class CheckoutEngine {
       );
 
       // 4. GST Calculation based on post-discount subtotal
+      let finalSubtotal = 0;
       let gstAmount = 0;
+      let finalTotal = 0;
       const totalDiscountApplied = discountResult.totalDiscount;
       
       // Proportionally apply discount to calculate accurate GST per item
@@ -133,37 +135,45 @@ export class CheckoutEngine {
       
       const itemPricesWithTaxes = pricedItems.map((item, index) => {
         const pInfo = pricingResult.item_prices[index];
-        const itemGross = item.price * item.quantity;
-        const itemDiscount = itemGross * discountRatio;
-        const itemNet = itemGross - itemDiscount;
         
         const gstRate = typeof item.gstRate === 'number' ? item.gstRate : 18;
-        // Assuming price includes GST, reverse calculate GST from net amount.
-        // Wait, pricing service says "Calculate GST (18% for most IT products)" by adding to subtotal.
-        // The original CartProvider extracts GST from inclusive price: basePrice = price / (1 + gstRate/100).
-        const basePrice = itemNet / (1 + (gstRate / 100));
-        const itemGst = itemNet - basePrice;
+        
+        // Step 1: Base Exclusive Price
+        const unitPriceExclusive = item.price / (1 + (gstRate / 100));
+        const baseExclusiveTotal = unitPriceExclusive * item.quantity;
+        
+        // Step 2: Apply Discount
+        const itemGrossInclusive = item.price * item.quantity;
+        const itemDiscountInclusive = itemGrossInclusive * discountRatio;
+        const itemDiscountExclusive = itemDiscountInclusive / (1 + (gstRate / 100));
+        const itemNetExclusive = Math.max(0, baseExclusiveTotal - itemDiscountExclusive);
+        
+        // Step 3: Calculate GST
+        const itemGst = itemNetExclusive * (gstRate / 100);
+        
+        // Step 4: Compute Final Pay Total
+        const itemFinalTotal = itemNetExclusive + itemGst;
+
+        finalSubtotal += itemNetExclusive;
         gstAmount += itemGst;
+        finalTotal += itemFinalTotal;
 
         return {
           product_id: item.id,
           quantity: item.quantity,
           unit_price: item.price,
-          total_price: itemGross,
-          discount_amount: itemDiscount,
+          total_price: itemGrossInclusive,
+          discount_amount: itemDiscountInclusive,
           pricing_info: pInfo.pricing_info
         };
       });
-
-      const finalTotal = Math.max(0, grossSubtotal - totalDiscountApplied);
-      const finalSubtotal = Math.max(0, finalTotal - gstAmount); // Subtotal without GST
 
       // 5. Commission Calculation (Estimate)
       let commissionEstimate = undefined;
       if (salesAgentId) {
         try {
           // Pre-tax amount for commission
-          const preTaxAmount = finalTotal - gstAmount;
+          const preTaxAmount = finalSubtotal;
           
           // Simulate an order calculation
           // We bypass actual order creation and use calculateItemCommission logic indirectly
@@ -185,12 +195,12 @@ export class CheckoutEngine {
       }
 
       return {
-        subtotal: finalSubtotal,
+        subtotal: Math.max(0, finalSubtotal),
         totalDiscount: totalDiscountApplied,
         autoOfferDiscount: discountResult.offerDiscount,
         couponDiscount: discountResult.couponDiscount,
-        gstAmount,
-        finalTotal,
+        gstAmount: Math.max(0, gstAmount),
+        finalTotal: Math.max(0, finalTotal),
         bestOffer: discountResult.bestOffer,
         appliedCoupon,
         availableCoupons: discountResult.availableCoupons,
@@ -201,7 +211,7 @@ export class CheckoutEngine {
 
     } catch (error) {
       logger.error('Checkout Engine Calculation Failed', { error });
-      throw error;
+      throw new Error('Checkout engine calculation failed due to internal execution errors.');
     }
   }
 

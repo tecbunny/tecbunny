@@ -203,7 +203,7 @@ export default function EditProductPage() {
                 variant: "destructive",
                 title: "Product not found",
             });
-            router.push('/management/sales/products');
+            router.push('/mgmt/sales/products');
         } else {
             
             // Handle PostgreSQL array format if needed
@@ -295,7 +295,7 @@ export default function EditProductPage() {
             title: "Product Updated",
             description: `${data.name} has been updated successfully.`,
         });
-        router.push(`/management/sales/products?refresh=${Date.now()}`);
+        router.push(`/mgmt/sales/products?refresh=${Date.now()}`);
     } catch(e: any) {
         toast({
             variant: "destructive",
@@ -317,7 +317,7 @@ export default function EditProductPage() {
     <div className="space-y-8">
       <div>
          <Button variant="outline" asChild>
-            <Link href="/management/sales/products">
+            <Link href="/mgmt/sales/products">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Products
             </Link>

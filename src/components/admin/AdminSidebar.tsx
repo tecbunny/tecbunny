@@ -52,52 +52,52 @@ const navSections: NavSection[] = [
   {
     title: 'Overview',
     items: [
-      { href: '/management/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-      { href: '/management/admin/analytics', label: 'Analytics', icon: Activity },
-      { href: '/management/admin/ai-assistant', label: 'AI Assistant', icon: Bot },
+      { href: '/mgmt/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+      { href: '/mgmt/admin/analytics', label: 'Analytics', icon: Activity },
+      { href: '/mgmt/admin/ai-assistant', label: 'AI Assistant', icon: Bot },
     ]
   },
   {
     title: 'Customers & Sales',
     items: [
-      { href: '/management/admin/users', label: 'User Management', icon: Users },
-      { href: '/management/admin/sales-agents', label: 'Sales Agents', icon: User },
-      { href: '/management/admin/contact-messages', label: 'Contact Messages', icon: MessageCircle },
-      { href: '/management/admin/quotes', label: 'Quotes', icon: FileText },
+      { href: '/mgmt/admin/users', label: 'User Management', icon: Users },
+      { href: '/mgmt/admin/sales-agents', label: 'Sales Agents', icon: User },
+      { href: '/mgmt/admin/contact-messages', label: 'Contact Messages', icon: MessageCircle },
+      { href: '/mgmt/admin/quotes', label: 'Quotes', icon: FileText },
     ]
   },
   {
     title: 'Catalog & Services',
     items: [
-      { href: '/management/admin/products', label: 'Product Catalog', icon: Package },
-      { href: '/management/admin/pricing', label: 'Pricing Management', icon: DollarSign },
-      { href: '/management/admin/custom-setups', label: 'Custom Setups', icon: Settings2 },
-      { href: '/management/admin/services', label: 'Service Management', icon: Wrench },
+      { href: '/mgmt/admin/products', label: 'Product Catalog', icon: Package },
+      { href: '/mgmt/admin/pricing', label: 'Pricing Management', icon: DollarSign },
+      { href: '/mgmt/admin/custom-setups', label: 'Custom Setups', icon: Settings2 },
+      { href: '/mgmt/admin/services', label: 'Service Management', icon: Wrench },
     ]
   },
   {
     title: 'Promotions & Content',
     items: [
-      { href: '/management/admin/offers', label: 'Offers & Discounts', icon: Gift },
-      { href: '/management/admin/coupons', label: 'Coupons', icon: Ticket },
-      { href: '/management/admin/policies', label: 'Policies Management', icon: FileText },
-      { href: '/management/admin/social-media', label: 'Social Media', icon: Share2 },
+      { href: '/mgmt/admin/offers', label: 'Offers & Discounts', icon: Gift },
+      { href: '/mgmt/admin/coupons', label: 'Coupons', icon: Ticket },
+      { href: '/mgmt/admin/policies', label: 'Policies Management', icon: FileText },
+      { href: '/mgmt/admin/social-media', label: 'Social Media', icon: Share2 },
     ]
   },
   {
     title: 'Experience & Branding',
     items: [
-      { href: '/management/admin/homepage-settings', label: 'Homepage Settings', icon: LayoutTemplate },
-      { href: '/management/admin/hero-banners', label: 'Hero Banners', icon: Images },
-      { href: '/management/admin/innovation', label: 'Innovation Content', icon: Lightbulb },
+      { href: '/mgmt/admin/homepage-settings', label: 'Homepage Settings', icon: LayoutTemplate },
+      { href: '/mgmt/admin/hero-banners', label: 'Hero Banners', icon: Images },
+      { href: '/mgmt/admin/innovation', label: 'Innovation Content', icon: Lightbulb },
     ]
   },
   {
     title: 'Operations & Security',
     items: [
-      { href: '/management/admin/security', label: 'Security Dashboard', icon: Shield },
-      { href: '/management/admin/payment-api', label: 'Payment API', icon: CreditCard },
-      { href: '/management/admin/settings', label: 'Site Settings', icon: Settings },
+      { href: '/mgmt/admin/security', label: 'Security Dashboard', icon: Shield },
+      { href: '/mgmt/admin/payment-api', label: 'Payment API', icon: CreditCard },
+      { href: '/mgmt/admin/settings', label: 'Site Settings', icon: Settings },
     ]
   }
 ];

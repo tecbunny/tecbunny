@@ -36,22 +36,45 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Edge Environment Protection: Block setup if any admin or superadmin already exists
+    const { data: existingAdmins, error: adminCheckError } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .in('role', ['admin', 'superadmin'])
+      .limit(1);
+
+    if (adminCheckError) {
+      return NextResponse.json({ error: 'Database check failed' }, { status: 500 });
+    }
+
+    if (existingAdmins && existingAdmins.length > 0) {
+      return NextResponse.json({ error: 'Initialization is already complete and locked' }, { status: 403 });
+    }
+
     const users = [];
-    if (process.env.INITIAL_ADMIN_1_EMAIL && process.env.INITIAL_ADMIN_1_PASSWORD) {
+    
+    // Superadmin seed
+    const superadminEmail = process.env.SEED_SUPERADMIN_EMAIL || process.env.INITIAL_ADMIN_2_EMAIL;
+    const superadminPassword = process.env.SEED_SUPERADMIN_PASSWORD || process.env.INITIAL_ADMIN_2_PASSWORD;
+    if (superadminEmail && superadminPassword) {
       users.push({
-        email: process.env.INITIAL_ADMIN_1_EMAIL,
-        password: process.env.INITIAL_ADMIN_1_PASSWORD,
-        name: process.env.INITIAL_ADMIN_1_NAME || 'Admin 1',
-        mobile: process.env.INITIAL_ADMIN_1_MOBILE || '',
-        role: 'admin'
+        email: superadminEmail,
+        password: superadminPassword,
+        name: process.env.SEED_SUPERADMIN_NAME || process.env.INITIAL_ADMIN_2_NAME || 'Super Admin',
+        mobile: process.env.SEED_SUPERADMIN_MOBILE || process.env.INITIAL_ADMIN_2_MOBILE || '',
+        role: 'superadmin'
       });
     }
-    if (process.env.INITIAL_ADMIN_2_EMAIL && process.env.INITIAL_ADMIN_2_PASSWORD) {
+
+    // Admin seed
+    const adminEmail = process.env.SEED_ADMIN_EMAIL || process.env.INITIAL_ADMIN_1_EMAIL;
+    const adminPassword = process.env.SEED_ADMIN_PASSWORD || process.env.INITIAL_ADMIN_1_PASSWORD;
+    if (adminEmail && adminPassword) {
       users.push({
-        email: process.env.INITIAL_ADMIN_2_EMAIL,
-        password: process.env.INITIAL_ADMIN_2_PASSWORD,
-        name: process.env.INITIAL_ADMIN_2_NAME || 'Admin 2',
-        mobile: process.env.INITIAL_ADMIN_2_MOBILE || '',
+        email: adminEmail,
+        password: adminPassword,
+        name: process.env.SEED_ADMIN_NAME || process.env.INITIAL_ADMIN_1_NAME || 'Admin',
+        mobile: process.env.SEED_ADMIN_MOBILE || process.env.INITIAL_ADMIN_1_MOBILE || '',
         role: 'admin'
       });
     }

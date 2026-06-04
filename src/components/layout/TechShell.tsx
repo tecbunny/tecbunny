@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const EXCLUDED_PREFIXES = [
   '/customised-setups',
-  '/management/admin',
+  '/mgmt/admin',
   '/profile',
   '/cart',
   '/checkout',

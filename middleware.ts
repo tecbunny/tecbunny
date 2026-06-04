@@ -46,9 +46,9 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set('x-correlation-id', correlationId)
 
   const pathname = request.nextUrl.pathname
-  const hostname = request.nextUrl.hostname
-  const hostSegments = hostname.split('.')
-  const isCrmSubdomain = hostSegments[0] === 'crm' || hostSegments[0] === 'crm-staging' || hostSegments[0].startsWith('crm-')
+  const hostHeader = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
+  const hostname = hostHeader.split(':')[0].trim()
+  const isCrmSubdomain = hostname === 'crm.tecbunny.com' || hostname.startsWith('crm.') || hostname.startsWith('crm-')
 
   let response = NextResponse.next({ request: { headers: requestHeaders } })
 
@@ -59,14 +59,14 @@ export async function middleware(request: NextRequest) {
       })
     }
 
-    if (pathname.startsWith('/management') || pathname.startsWith('/auth')) {
+    if (pathname.startsWith('/mgmt') || pathname.startsWith('/auth')) {
       res.headers.set('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
       res.headers.set('Pragma', 'no-cache')
       res.headers.set('Expires', '0')
     }
 
     if (
-      pathname.startsWith('/management') ||
+      pathname.startsWith('/mgmt') ||
       pathname.startsWith('/auth') ||
       pathname.startsWith('/checkout') ||
       pathname.startsWith('/cart') ||
@@ -137,9 +137,9 @@ export async function middleware(request: NextRequest) {
     const isNextInternal   = pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.match(/\.(png|jpg|jpeg|gif|svg|ico)$/i)
     const isRoot           = pathname === '/'
 
-    // Root → redirect to management (middleware will then enforce auth)
+    // Root → redirect to mgmt (middleware will then enforce auth)
     if (isRoot) {
-      return finalizeResponse(NextResponse.redirect(new URL('/management', request.url)))
+      return finalizeResponse(NextResponse.redirect(new URL('/mgmt', request.url)))
     }
 
     // Whitelist public access on CRM subdomain:
@@ -187,7 +187,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect Management Routes (on main domain, middleware redirects to CRM subdomain via vercel.json)
-  if (pathname.startsWith('/management') && !user) {
+  if (pathname.startsWith('/mgmt') && !user) {
     return finalizeResponse(NextResponse.redirect(new URL('/auth/staff-signin', request.url)))
   }
 

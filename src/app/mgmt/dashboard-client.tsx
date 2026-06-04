@@ -34,15 +34,15 @@ export default function ManagementDashboard() {
       
       switch (user.role) {
         case 'admin':
-          redirectPath = '/management/admin';
+          redirectPath = '/mgmt/admin';
           break;
         case 'sales':
         case 'service_engineer':
         case 'manager':
-          redirectPath = '/management/sales';
+          redirectPath = '/mgmt/sales';
           break;
         case 'accounts':
-          redirectPath = '/management/accounts';
+          redirectPath = '/mgmt/accounts';
           break;
         default:
           redirectPath = '/'; // Customers go to homepage
@@ -100,7 +100,7 @@ export default function ManagementDashboard() {
       title: 'Admin Panel',
       description: 'Complete system administration and settings',
       icon: Shield,
-      href: '/management/admin',
+      href: '/mgmt/admin',
       color: 'text-red-600 bg-red-50',
       available: isAdmin,
       restricted: !isAdmin
@@ -109,7 +109,7 @@ export default function ManagementDashboard() {
       title: 'Sales Management',
       description: 'Orders, products, and sales operations',
       icon: ShoppingCart,
-      href: '/management/sales',
+      href: '/mgmt/sales',
       color: 'text-blue-600 bg-blue-50',
       available: isSales || isAdmin,
       restricted: !(isSales || isAdmin)
@@ -118,7 +118,7 @@ export default function ManagementDashboard() {
       title: 'Accounts & Finance',
       description: 'Financial reports and accounting',
       icon: CreditCard,
-      href: '/management/accounts',
+      href: '/mgmt/accounts',
       color: 'text-green-600 bg-green-50',
       available: isAccountant || isAdmin,
       restricted: !(isAccountant || isAdmin)
@@ -129,25 +129,25 @@ export default function ManagementDashboard() {
     {
       title: 'View Orders',
       description: 'Check recent orders',
-      href: '/management/sales/orders',
+      href: '/mgmt/sales/orders',
       available: isSales || isAdmin
     },
     {
       title: 'Add Products',
       description: 'Add new inventory',
-      href: '/management/sales/products/new',
+      href: '/mgmt/sales/products/new',
       available: isSales || isAdmin
     },
     {
       title: 'User Management',
       description: 'Manage system users',
-      href: '/management/admin/users',
+      href: '/mgmt/admin/users',
       available: isAdmin
     },
     {
       title: 'System Settings',
       description: 'Configure application',
-      href: '/management/admin/settings',
+      href: '/mgmt/admin/settings',
       available: isAdmin
     }
   ];

@@ -399,7 +399,7 @@ export async function POST(request: NextRequest) {
             `📱 Phone: ${formattedPhone}\n` +
             `💰 Total: ₹${fullOrder.total}\n` +
             `📦 Items:\n${itemsList || 'No items listed'}\n` +
-            `🔗 View: ${siteUrl}/management/admin/orders/${createdOrder.id}\n` +
+            `🔗 View: ${siteUrl}/mgmt/admin/orders/${createdOrder.id}\n` +
             `⏰ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
 
           await sendWhatsAppTemplate({

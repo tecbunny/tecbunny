@@ -107,17 +107,17 @@ function SignInForm() {
 
       switch (userRole) {
         case 'admin':
-          redirectUrl = '/management/admin';
+          redirectUrl = '/mgmt/admin';
           break;
         case 'manager':
-          redirectUrl = '/management/manager';
+          redirectUrl = '/mgmt/manager';
           break;
         case 'sales':
         case 'service_engineer':
-          redirectUrl = '/management/sales';
+          redirectUrl = '/mgmt/sales';
           break;
         case 'accounts':
-          redirectUrl = '/management/accounts';
+          redirectUrl = '/mgmt/accounts';
           break;
         case 'customer':
         default:
@@ -178,17 +178,17 @@ function SignInForm() {
 
     switch (userRole) {
       case 'admin':
-        redirectUrl = '/management/admin';
+        redirectUrl = '/mgmt/admin';
         break;
       case 'manager':
-        redirectUrl = '/management/manager';
+        redirectUrl = '/mgmt/manager';
         break;
       case 'sales':
       case 'service_engineer':
-        redirectUrl = '/management/sales';
+        redirectUrl = '/mgmt/sales';
         break;
       case 'accounts':
-        redirectUrl = '/management/accounts';
+        redirectUrl = '/mgmt/accounts';
         break;
       case 'customer':
       default:

@@ -7,7 +7,7 @@ export const metadata: Metadata = createPageMetadata({
   title: 'RFID Lock System in Goa',
   description: 'TecBunny Solutions provides RFID lock systems and access control setup in Goa for hotels, offices, and secure managed spaces.',
   keywords: ['rfid lock system goa', 'access control system goa', 'smart lock installation goa', 'hotel lock system goa', 'biometric access goa'],
-  path: '/rfid-lock-system-goa',
+  path: '/rfid-goa',
   image: '/brand.png',
 });
 

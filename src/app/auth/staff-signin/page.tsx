@@ -124,15 +124,15 @@ function StaffSignInForm() {
   function getRedirectPath(role: string): string {
     switch (role) {
       case 'admin':
-        return '/management/admin';
+        return '/mgmt/admin';
       case 'sales':
       case 'service_engineer':
       case 'manager':
-        return '/management/sales';
+        return '/mgmt/sales';
       case 'accounts':
-        return '/management/accounts';
+        return '/mgmt/accounts';
       default:
-        return '/management';
+        return '/mgmt';
     }
   }
 

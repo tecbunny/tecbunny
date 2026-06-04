@@ -138,20 +138,31 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     try {
-      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-      const existingUser = existingUsers.users.find((u: any) =>
-        (normalizedEmail && u.email === normalizedEmail) ||
-        (mobile && (u.phone === mobile || u.user_metadata?.mobile === mobile))
-      );
-      
-      if (existingUser) {
-        return NextResponse.json(
-          { 
-            error: 'An account with this email or mobile already exists', 
-            code: 'USER_ALREADY_EXISTS'
-          },
-          { status: 409 }
-        );
+      const orConditions: string[] = [];
+      if (normalizedEmail) {
+        orConditions.push(`email.eq.${normalizedEmail}`);
+      }
+      if (mobile) {
+        orConditions.push(`mobile.eq.${mobile}`);
+      }
+
+      if (orConditions.length > 0) {
+        const { data: existingProfiles, error: checkError } = await supabaseAdmin
+          .from('profiles')
+          .select('id, email, mobile')
+          .or(orConditions.join(','));
+
+        if (checkError) {
+          logger.error('signup.check_existing_users_failed', { email: normalizedEmail || email, error: checkError.message });
+        } else if (existingProfiles && existingProfiles.length > 0) {
+          return NextResponse.json(
+            { 
+              error: 'An account with this email or mobile already exists', 
+              code: 'USER_ALREADY_EXISTS'
+            },
+            { status: 409 }
+          );
+        }
       }
     } catch (checkError) {
       logger.error('signup.check_existing_users_failed', { email: normalizedEmail || email, error: checkError });

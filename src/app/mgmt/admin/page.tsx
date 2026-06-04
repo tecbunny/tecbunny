@@ -254,17 +254,17 @@ export default function AdminDashboard() {
                             <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-6">
                                 <h3 className="font-semibold text-white tracking-wide mb-4">Command Protocols</h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <Link href="/management/admin/products">
+                                    <Link href="/mgmt/admin/products">
                                         <div className="p-3 text-center rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-semibold text-white cursor-pointer">
                                             Manage Products
                                         </div>
                                     </Link>
-                                    <Link href="/management/admin/services">
+                                    <Link href="/mgmt/admin/services">
                                         <div className="p-3 text-center rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-semibold text-white cursor-pointer">
                                             Manage Services
                                         </div>
                                     </Link>
-                                    <Link href="/management/admin/innovation">
+                                    <Link href="/mgmt/admin/innovation">
                                         <div className="p-3 text-center rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-semibold text-white cursor-pointer">
                                             Manage Innovation
                                         </div>
@@ -281,7 +281,7 @@ export default function AdminDashboard() {
                                     </button>
                                 </div>
                             </div>
-
+ 
                             <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-6">
                                 <h3 className="font-semibold text-white tracking-wide mb-4">Inventory Watch</h3>
                                 <div className="space-y-4">
@@ -313,7 +313,7 @@ export default function AdminDashboard() {
                                         </div>
                                     </div>
                                 </div>
-                                <Link href="/management/admin/products" className="block w-full mt-6">
+                                <Link href="/mgmt/admin/products" className="block w-full mt-6">
                                     <div className="py-2 text-xs font-semibold text-center border border-white/10 rounded-lg hover:bg-white/5 transition-colors text-slate-400 hover:text-white cursor-pointer">
                                         View Full Inventory
                                     </div>

@@ -229,7 +229,7 @@ export default function NewProductPage() {
             title: "Product Created",
             description: `${data.name} has been added to the inventory.`,
         });
-        router.push('/management/sales/products');
+        router.push('/mgmt/sales/products');
     } catch(e: any) {
         toast({
             variant: "destructive",
@@ -243,7 +243,7 @@ export default function NewProductPage() {
     <div className="space-y-8">
       <div>
          <Button variant="outline" asChild>
-            <Link href="/management/sales/products">
+            <Link href="/mgmt/sales/products">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Products
             </Link>

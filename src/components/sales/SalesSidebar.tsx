@@ -27,17 +27,17 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/hooks';
 
 const navItems = [
-  { href: '/management/sales', label: 'Dashboard', icon: LayoutDashboard, roles: ['sales', 'manager'], exact: true },
-  { href: '/management/sales/quick-billing', label: 'Quick Billing', icon: Zap, roles: ['sales', 'manager'] },
-  { href: '/management/sales/agent-order', label: 'Agent Order', icon: ShoppingBag, roles: ['sales', 'manager'] },
-  { href: '/management/sales/orders', label: 'Pickup Orders', icon: ShoppingBag, roles: ['sales', 'manager'] },
-  { href: '/management/sales/online-orders', label: 'Online Orders', icon: PackageCheck, roles: ['sales', 'manager'] },
-  { href: '/management/sales/products', label: 'Product Management', icon: Package, roles: ['manager'] },
-  { href: '/management/sales/inventory', label: 'Inventory', icon: PackageSearch, roles: ['manager'] },
-  { href: '/management/sales/purchase-entry', label: 'Purchase Entry', icon: Archive, roles: ['manager'] },
-  { href: '/management/sales/invoice-lookup', label: 'Invoice Lookup', icon: FileSearch, roles: ['sales', 'manager'] },
-  { href: '/management/sales/history', label: 'Billing History', icon: History, roles: ['sales', 'manager'] },
-  { href: '/management/sales/expenses', label: 'Expense Entry', icon: Receipt, roles: ['sales', 'manager'] },
+  { href: '/mgmt/sales', label: 'Dashboard', icon: LayoutDashboard, roles: ['sales', 'manager'], exact: true },
+  { href: '/mgmt/sales/quick-billing', label: 'Quick Billing', icon: Zap, roles: ['sales', 'manager'] },
+  { href: '/mgmt/sales/agent-order', label: 'Agent Order', icon: ShoppingBag, roles: ['sales', 'manager'] },
+  { href: '/mgmt/sales/orders', label: 'Pickup Orders', icon: ShoppingBag, roles: ['sales', 'manager'] },
+  { href: '/mgmt/sales/online-orders', label: 'Online Orders', icon: PackageCheck, roles: ['sales', 'manager'] },
+  { href: '/mgmt/sales/products', label: 'Product Management', icon: Package, roles: ['manager'] },
+  { href: '/mgmt/sales/inventory', label: 'Inventory', icon: PackageSearch, roles: ['manager'] },
+  { href: '/mgmt/sales/purchase-entry', label: 'Purchase Entry', icon: Archive, roles: ['manager'] },
+  { href: '/mgmt/sales/invoice-lookup', label: 'Invoice Lookup', icon: FileSearch, roles: ['sales', 'manager'] },
+  { href: '/mgmt/sales/history', label: 'Billing History', icon: History, roles: ['sales', 'manager'] },
+  { href: '/mgmt/sales/expenses', label: 'Expense Entry', icon: Receipt, roles: ['sales', 'manager'] },
 ];
 
 export function SalesSidebar() {

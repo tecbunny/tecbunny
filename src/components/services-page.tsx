@@ -366,7 +366,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
           {canManageServices && (
             <div className={cn('reveal-item mt-6 flex justify-center', revealDelayClass(210))}>
               <Link
-                href="/management/admin/services"
+                href="/mgmt/admin/services"
                 className="inline-flex items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-cyan-200 transition-colors hover:border-cyan-400/60"
               >
                 Manage Services
@@ -390,14 +390,14 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
               variant="outline"
               className="justify-center border-cyan-400/40 text-cyan-200 hover:border-cyan-400/70 hover:bg-cyan-500/10"
               onClick={() => {
-                void trackEvent('services_cta_click', { cta: 'cctv_site_survey', destination: '/cctv-installation-goa' });
-                router.push('/cctv-installation-goa');
+                void trackEvent('services_cta_click', { cta: 'cctv_site_survey', destination: '/cctv-goa' });
+                router.push('/cctv-goa');
               }}
             >
               Request CCTV Site Survey
             </Button>
           </div>
-
+ 
           <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(80))}>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-300 flex items-center justify-center">
@@ -412,14 +412,14 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
               variant="outline"
               className="justify-center border-blue-400/40 text-blue-200 hover:border-blue-400/70 hover:bg-blue-500/10"
               onClick={() => {
-                void trackEvent('services_cta_click', { cta: 'amc_quote', destination: '/annual-maintenance-contract-goa' });
-                router.push('/annual-maintenance-contract-goa');
+                void trackEvent('services_cta_click', { cta: 'amc_quote', destination: '/amc-goa' });
+                router.push('/amc-goa');
               }}
             >
               Request AMC Quote
             </Button>
           </div>
-
+ 
           <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(160))}>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-300 flex items-center justify-center">
@@ -434,14 +434,14 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
               variant="outline"
               className="justify-center border-emerald-400/40 text-emerald-200 hover:border-emerald-400/70 hover:bg-emerald-500/10"
               onClick={() => {
-                void trackEvent('services_cta_click', { cta: 'automation_consultation', destination: '/home-automation-goa' });
-                router.push('/home-automation-goa');
+                void trackEvent('services_cta_click', { cta: 'automation_consultation', destination: '/smarthome-goa' });
+                router.push('/smarthome-goa');
               }}
             >
               Book Automation Consultation
             </Button>
           </div>
-
+ 
           <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(240))}>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-violet-500/10 text-violet-300 flex items-center justify-center">
@@ -456,8 +456,8 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
               variant="outline"
               className="justify-center border-violet-400/40 text-violet-200 hover:border-violet-400/70 hover:bg-violet-500/10"
               onClick={() => {
-                void trackEvent('services_cta_click', { cta: 'rfid_demo', destination: '/rfid-lock-system-goa' });
-                router.push('/rfid-lock-system-goa');
+                void trackEvent('services_cta_click', { cta: 'rfid_demo', destination: '/rfid-goa' });
+                router.push('/rfid-goa');
               }}
             >
               Request RFID Demo

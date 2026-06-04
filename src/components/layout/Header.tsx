@@ -165,18 +165,18 @@ export function Header() {
   const showAdminOption = !loading && hasRoleClient(user, 'admin');
 
   const dashboardHref = React.useMemo(() => {
-    if (!user?.role) return '/management';
+    if (!user?.role) return '/mgmt';
     switch (user.role) {
       case 'admin':
-        return '/management/admin';
+        return '/mgmt/admin';
       case 'accounts':
-        return '/management/accounts';
+        return '/mgmt/accounts';
       case 'sales':
       case 'manager':
       case 'service_engineer':
-        return '/management/sales';
+        return '/mgmt/sales';
       default:
-        return '/management';
+        return '/mgmt';
     }
   }, [user?.role]);
 

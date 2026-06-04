@@ -7,7 +7,7 @@ export const metadata: Metadata = createPageMetadata({
   title: 'Home Automation in Goa',
   description: 'TecBunny Solutions designs smart home and connected-space automation in Goa for homes, villas, offices, and hospitality sites.',
   keywords: ['home automation goa', 'smart home solutions goa', 'home automation company goa', 'automation setup goa', 'smart office goa'],
-  path: '/home-automation-goa',
+  path: '/smarthome-goa',
   image: '/brand.png',
 });
 

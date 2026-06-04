@@ -140,17 +140,17 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
           
           switch (userRole) {
             case 'admin':
-              redirectUrl = '/management/admin';
+              redirectUrl = '/mgmt/admin';
               break;
             case 'manager':
-              redirectUrl = '/management/manager';
+              redirectUrl = '/mgmt/manager';
               break;
             case 'sales':
             case 'service_engineer':
-              redirectUrl = '/management/sales';
+              redirectUrl = '/mgmt/sales';
               break;
             case 'accounts':
-              redirectUrl = '/management/accounts';
+              redirectUrl = '/mgmt/accounts';
               break;
             case 'customer':
             default:
@@ -216,17 +216,17 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
         // Redirect based on role
         switch(user.role) {
             case 'admin':
-                router.push('/management/admin');
+                router.push('/mgmt/admin');
                 break;
             case 'manager':
-                router.push('/management/manager');
+                router.push('/mgmt/manager');
                 break;
             case 'sales':
             case 'service_engineer':
-                router.push('/management/sales');
+                router.push('/mgmt/sales');
                 break;
             case 'accounts':
-                router.push('/management/accounts');
+                router.push('/mgmt/accounts');
                 break;
             default:
                 // No redirect for customer, just close dialog

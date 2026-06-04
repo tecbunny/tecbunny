@@ -573,7 +573,7 @@ export default function UserManagementPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Link href={`/management/admin/users/${user.id}/analytics`}>
+                        <Link href={`/mgmt/admin/users/${user.id}/analytics`}>
                           <Button variant="ghost" size="icon" title="View Analytics">
                             <Activity className="h-4 w-4" />
                           </Button>

@@ -7,7 +7,7 @@ export const metadata: Metadata = createPageMetadata({
   title: 'CCTV Installation in Goa',
   description: 'TecBunny Solutions delivers CCTV site surveys, camera installation, cabling, storage configuration, and post-install support for homes and businesses in Goa.',
   keywords: ['cctv installation goa', 'security camera installation goa', 'cctv company goa', 'camera setup goa', 'cctv site survey goa'],
-  path: '/cctv-installation-goa',
+  path: '/cctv-goa',
   image: '/brand.png',
 });
 

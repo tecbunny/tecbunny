@@ -47,8 +47,8 @@
       ]
     },
     {
-      "source": "/management/:path*",
-      "destination": "https://crm.tecbunny.com/management/:path*",
+      "source": "/mgmt/:path*",
+      "destination": "https://crm.tecbunny.com/mgmt/:path*",
       "permanent": false,
       "has": [
         {
@@ -59,7 +59,7 @@
     },
     {
       "source": "/admin",
-      "destination": "/management",
+      "destination": "/mgmt",
       "permanent": false
     },
     {

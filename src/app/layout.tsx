@@ -1,4 +1,6 @@
 import type {Metadata, Viewport} from 'next';
+
+const BRAND_LOGO_URL = 'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/TecBunny%20Solution/TECBUNNY_SOLUTIONS_PVT_LTD-removebg-preview.png';
 import { Inter } from 'next/font/google';
 import { Suspense } from 'react';
 
@@ -58,7 +60,7 @@ export const metadata: Metadata = {
     siteName: 'TecBunny Solutions',
     images: [
       {
-        url: '/brand.png',
+        url: BRAND_LOGO_URL,
         width: 512,
         height: 512,
         alt: 'TecBunny Solutions',
@@ -70,7 +72,7 @@ export const metadata: Metadata = {
     title: 'TecBunny Solutions | CCTV, IT Services, Home Automation & AMC in Goa & Maharashtra',
     description:
       'CCTV installation, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.',
-    images: ['/brand.png'],
+    images: [BRAND_LOGO_URL],
     site: xHandle,
     creator: xHandle,
   },
@@ -93,20 +95,20 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/brand.png',
+        url: BRAND_LOGO_URL,
         sizes: '32x32',
         type: 'image/png',
       },
       {
-        url: '/brand.png',
+        url: BRAND_LOGO_URL,
         sizes: '16x16',
         type: 'image/png',
       },
     ],
-    shortcut: '/brand.png',
+    shortcut: BRAND_LOGO_URL,
     apple: [
       {
-        url: '/brand.png',
+        url: BRAND_LOGO_URL,
         sizes: '180x180',
         type: 'image/png',
       },
@@ -129,7 +131,7 @@ const structuredData = {
       '@id': 'https://www.tecbunny.com/#organization',
       name: 'TecBunny Solutions',
       url: 'https://www.tecbunny.com',
-      logo: 'https://www.tecbunny.com/brand.png',
+      logo: BRAND_LOGO_URL,
       description:
         'TecBunny Solutions offers CCTV, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.',
       sameAs: sameAsLinks,
@@ -148,7 +150,7 @@ const structuredData = {
       '@id': 'https://www.tecbunny.com/#localbusiness',
       name: 'TecBunny Solutions',
       url: 'https://www.tecbunny.com',
-      image: 'https://www.tecbunny.com/brand.png',
+      image: BRAND_LOGO_URL,
       description:
         'CCTV installation, IT services, AMC support, networking, home automation, and RFID lock systems in Goa and Maharashtra.',
       telephone: '+91-9604136010',

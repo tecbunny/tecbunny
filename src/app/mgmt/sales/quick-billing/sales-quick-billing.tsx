@@ -27,7 +27,7 @@ import { getGstRateForProduct, type CategoryGstRates } from '@/lib/utils';
 const defaultCompanySettings: CompanySettings = {
     name: 'TecBunny',
     address: 'Parcem, Pernem, Goa - 403512',
-    logoUrl: '/brand.png'
+    logoUrl: 'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/TecBunny%20Solution/TECBUNNY_SOLUTIONS_PVT_LTD-removebg-preview.png'
 };
 
 export default function QuickBillingPage() {

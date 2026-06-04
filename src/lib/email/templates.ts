@@ -2,7 +2,7 @@ import type { EmailTemplate, EmailTemplateData } from './types';
 
 const DEFAULT_COMPANY_DATA = {
   companyName: 'TecBunny',
-  companyLogo: 'https://tecbunny.com/brand.png',
+  companyLogo: 'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/TecBunny%20Solution/TECBUNNY_SOLUTIONS_PVT_LTD-removebg-preview.png',
   companyEmail: 'support@tecbunny.com',
   companyPhone: '+91 98765 43210',
   companyAddress: '123 Tech Street, Digital City, Tech State 560001',

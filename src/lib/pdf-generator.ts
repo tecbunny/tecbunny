@@ -147,20 +147,14 @@ export async function buildPdf(options: {
   const pan = company?.pan || '';
 
   const logoPath = resolveAssetPath(path.join('public', 'brand.png'));
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseLogoBucket = process.env.SUPABASE_LOGO_BUCKET || process.env.NEXT_PUBLIC_SUPABASE_LOGO_BUCKET || '';
-  const supabaseLogoPath = process.env.SUPABASE_LOGO_PATH || process.env.NEXT_PUBLIC_SUPABASE_LOGO_PATH || '';
-  const supabaseLogoUrl =
-    supabaseUrl && supabaseLogoBucket && supabaseLogoPath
-      ? `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/${supabaseLogoBucket.replace(/^\//, '').replace(/\/$/, '')}/${supabaseLogoPath.replace(/^\//, '')}`
-      : '';
+  const SUPABASE_BRAND_LOGO_URL = 'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/TecBunny%20Solution/TECBUNNY_SOLUTIONS_PVT_LTD-removebg-preview.png';
+  const supabaseLogoUrl = SUPABASE_BRAND_LOGO_URL;
   const logoUrl =
     company?.logoUrl ||
     company?.logo_url ||
     process.env.BRAND_LOGO_URL ||
     process.env.NEXT_PUBLIC_BRAND_LOGO_URL ||
-    supabaseLogoUrl ||
-    '';
+    supabaseLogoUrl;
   let logoBuffer: Buffer | null = null;
   try {
     if (logoUrl) {
@@ -182,10 +176,9 @@ export async function buildPdf(options: {
     } catch (error) {
       logger.error('quotes.logo_load_failed', { error });
       
-      // Remote fetch fallback
+      // Remote fetch fallback — use Supabase Storage URL directly
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.tecbunny.com';
-        const response = await fetch(`${baseUrl}/brand.png`);
+        const response = await fetch(SUPABASE_BRAND_LOGO_URL);
         if (response.ok) {
           logoBuffer = Buffer.from(await response.arrayBuffer());
         }

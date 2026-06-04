@@ -187,6 +187,81 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
   const canManageServices = atLeast('admin');
   useRevealSections();
 
+  const fallbackServicesList: Service[] = [
+    {
+      id: 'fallback-cctv',
+      title: 'CCTV Camera Installation',
+      description: 'Professional high-definition IP camera installations, secure local NVR/Cloud storage solutions, and remote mobile app viewing.',
+      icon: 'Cctv',
+      features: ['1080p/4K HDR video feed', 'Night vision & intelligent motion alerts', 'Secure local/cloud storage options', 'Remote access on iOS/Android'],
+      badge: 'Popular',
+      is_active: true,
+      price: 9999,
+      category: 'CCTV',
+      display_order: 1,
+      created_at: new Date(0).toISOString(),
+      updated_at: new Date(0).toISOString(),
+    },
+    {
+      id: 'fallback-amc',
+      title: 'Annual Maintenance Contract (AMC)',
+      description: 'Keep your IT systems and security cameras operational 24/7 with our comprehensive support plans.',
+      icon: 'Shield',
+      features: ['Quarterly preventive health checks', 'Unlimited emergency breakdown calls', 'Free labor on parts replacement', 'Guaranteed response times'],
+      badge: 'Recommended',
+      is_active: true,
+      price: 4999,
+      category: 'Support',
+      display_order: 2,
+      created_at: new Date(0).toISOString(),
+      updated_at: new Date(0).toISOString(),
+    },
+    {
+      id: 'fallback-smarthome',
+      title: 'Smart Home Automation',
+      description: 'Centralized and smartphone control for your lights, security, climate, and appliances with zero wire-cutting.',
+      icon: 'Cpu',
+      features: ['App and voice assistant controls', 'Automated energy saving workflows', 'Retrofit design for existing layouts', 'Multi-device integration'],
+      badge: 'Featured',
+      is_active: true,
+      price: 14999,
+      category: 'Installation',
+      display_order: 3,
+      created_at: new Date(0).toISOString(),
+      updated_at: new Date(0).toISOString(),
+    },
+    {
+      id: 'fallback-rfid',
+      title: 'RFID & Access Control Systems',
+      description: 'Biometric and smartcard access solutions for modern offices, warehouses, hotel resorts, and retail sites.',
+      icon: 'Award',
+      features: ['Card and fingerprint authentication', 'Employee attendance integration', 'Electronic door lock integration', 'Visitor log tracking'],
+      badge: 'New',
+      is_active: true,
+      price: 8999,
+      category: 'Protection',
+      display_order: 4,
+      created_at: new Date(0).toISOString(),
+      updated_at: new Date(0).toISOString(),
+    },
+    {
+      id: 'fallback-computer-repair',
+      title: 'Computer Repair & Tune-up',
+      description: 'Hardware diagnostics, RAM/SSD performance upgrades, OS clean installation, and malware/virus removal.',
+      icon: 'Wrench',
+      features: ['High-speed SSD upgrades', 'Professional OS configuration', 'Full internal dust cleaning', 'Certified parts replacement'],
+      badge: null,
+      is_active: true,
+      price: 999,
+      category: 'Computer',
+      display_order: 5,
+      created_at: new Date(0).toISOString(),
+      updated_at: new Date(0).toISOString(),
+    }
+  ];
+
+  const activeServices = services && services.length > 0 ? services : fallbackServicesList;
+
   const getContactHref = (service: Service) => {
     const title = (service.title || '').toLowerCase();
     const category = (service.category || '').toLowerCase();
@@ -221,7 +296,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
     return 'Request Service Quote';
   };
 
-  const serviceSections = services.reduce<Array<{ key: string; items: Service[] }>>((acc, service) => {
+  const serviceSections = activeServices.reduce<Array<{ key: string; items: Service[] }>>((acc, service) => {
     const key = service.category || 'Services';
     const existing = acc.find(section => section.key === key);
     if (existing) {

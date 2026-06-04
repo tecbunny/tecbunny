@@ -2,8 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { Logo } from '../ui/logo';
 import {
   Menu,
   X,
@@ -196,18 +196,7 @@ export function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <Link href="/" className="relative z-20 flex items-center gap-4 group">
-            <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-white/70 bg-white shadow-[0_0_28px_rgba(6,182,212,0.35)] transition-all duration-300 group-hover:border-cyan-300/80 group-hover:bg-white group-hover:shadow-[0_0_36px_rgba(6,182,212,0.5)]">
-              <Image
-                src="/brand.png"
-                alt="TecBunny Solutions"
-                width={56}
-                height={56}
-                sizes="(max-width: 640px) 48px, 56px"
-                quality={60}
-                className="h-14 w-14 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.4)] transition-transform group-hover:scale-110"
-                priority
-              />
-            </div>
+            <Logo width={64} height={64} className="transition-transform group-hover:scale-110" />
             <div className="flex flex-col">
               <span className="font-tech text-2xl font-bold tracking-wide text-white leading-none">
                 TECBUNNY<span className="text-cyan-300 animate-pulse">.</span>

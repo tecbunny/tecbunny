@@ -121,9 +121,24 @@ export default async function Page() {
       ? createServiceClient()
       : await createClient();
 
+    const { data: colsData } = await supabase
+      .from('information_schema.columns' as any)
+      .select('column_name')
+      .eq('table_name', 'services')
+      .eq('table_schema', 'public');
+
+    let selectColumns = PUBLIC_SERVICE_COLUMNS;
+    if (colsData && Array.isArray(colsData) && colsData.length > 0) {
+      const colNames = new Set(colsData.map((c: any) => c.column_name));
+      selectColumns = PUBLIC_SERVICE_COLUMNS
+        .split(',')
+        .filter(col => colNames.has(col))
+        .join(',');
+    }
+
     const { data, error } = await supabase
       .from('services')
-      .select(PUBLIC_SERVICE_COLUMNS);
+      .select(selectColumns);
 
     if (error) {
       logger.error('Error fetching services', {

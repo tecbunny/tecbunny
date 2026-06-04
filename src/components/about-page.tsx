@@ -36,12 +36,12 @@ export default function AboutPage() {
               </p>
               <div className="mt-6 flex gap-4">
                 <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-center">
-                  <span className="block text-xl font-semibold text-white">100+</span>
+                  <span className="block text-xl font-semibold text-white">120+</span>
                   <span className="text-xs uppercase tracking-widest text-slate-500">Projects</span>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-center">
-                  <span className="block text-xl font-semibold text-white">0</span>
-                  <span className="text-xs uppercase tracking-widest text-slate-500">Downtime</span>
+                  <span className="block text-xl font-semibold text-white">99.9%</span>
+                  <span className="text-xs uppercase tracking-widest text-slate-500">Uptime SLA</span>
                 </div>
               </div>
             </div>
@@ -83,8 +83,8 @@ export default function AboutPage() {
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-6">
               <div className="flex items-center gap-6">
-                <div className="flex h-24 w-24 items-center justify-center rounded-xl border border-white/10 bg-slate-800 text-3xl text-slate-600">
-                  👤
+                <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/20 to-blue-500/10 text-2xl font-bold text-cyan-300 font-tech shadow-lg shadow-cyan-500/5">
+                  SB
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-white">Shubham Sakharam Bhisaji</h3>
@@ -102,8 +102,8 @@ export default function AboutPage() {
 
             <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-6">
               <div className="flex items-center gap-6">
-                <div className="flex h-24 w-24 items-center justify-center rounded-xl border border-white/10 bg-slate-800 text-3xl text-slate-600">
-                  👤
+                <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-500/20 to-fuchsia-500/10 text-2xl font-bold text-violet-300 font-tech shadow-lg shadow-violet-500/5">
+                  KB
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-white">Kamana Ashok Bandekar</h3>
@@ -128,7 +128,7 @@ export default function AboutPage() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/10">🏛️</div>
             <h4 className="text-lg font-semibold text-white">Registered Entity</h4>
             <p className="mt-2 text-sm text-slate-400">Tecbunny Solutions Private Limited</p>
-            <p className="mt-3 inline-block rounded bg-cyan-500/10 px-2 py-1 text-xs font-semibold text-cyan-300">CIN: U80200GA2025PTC017366</p>
+            <p className="mt-3 inline-block rounded bg-cyan-500/10 px-2 py-1 text-xs font-semibold text-cyan-300">CIN: U80200GA2025PTC017488</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/10">📍</div>
@@ -160,7 +160,7 @@ export default function AboutPage() {
                 href="https://wa.me/919604136010"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-5 inline-flex items-center justify-center rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white"
+                className="mt-5 inline-flex items-center justify-center rounded-lg bg-emerald-500 px-5 py-2 text-sm font-semibold text-white"
               >
                 Chat Now
               </a>
@@ -170,7 +170,7 @@ export default function AboutPage() {
               <p className="mt-2 text-sm text-slate-400">For detailed inquiries and support</p>
               <a
                 href="mailto:support@tecbunny.com"
-                className="mt-5 inline-flex items-center justify-center rounded-full bg-blue-500 px-5 py-2 text-sm font-semibold text-white"
+                className="mt-5 inline-flex items-center justify-center rounded-lg bg-blue-500 px-5 py-2 text-sm font-semibold text-white"
               >
                 Send Email
               </a>
@@ -183,7 +183,7 @@ export default function AboutPage() {
                 href="https://maps.app.goo.gl/HZDjt3zoB1Rcrjqp8"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-5 inline-flex items-center justify-center rounded-full bg-red-500 px-5 py-2 text-sm font-semibold text-white"
+                className="mt-5 inline-flex items-center justify-center rounded-lg bg-red-500 px-5 py-2 text-sm font-semibold text-white"
               >
                 Get Directions
               </a>
@@ -197,10 +197,10 @@ export default function AboutPage() {
           <h2 className="text-3xl font-semibold text-white">Ready to Experience the Difference?</h2>
           <p className="mt-3 text-sm text-slate-400">Join thousands of satisfied customers who trust Tecbunny for their technology needs.</p>
           <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="/products" className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900">
+            <Link href="/products" className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-900">
               Shop Now
             </Link>
-            <Link href="/contact" className="rounded-full border border-white/40 px-6 py-3 text-sm font-semibold text-white">
+            <Link href="/contact" className="rounded-lg border border-white/40 px-6 py-3 text-sm font-semibold text-white">
               Contact Us
             </Link>
           </div>

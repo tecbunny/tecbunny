@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 const siteUrl = 'https://www.tecbunny.com';
-const defaultOgImage = `${siteUrl}/brand.png`;
+const defaultOgImage = 'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/TecBunny%20Solution/TECBUNNY_SOLUTIONS_PVT_LTD-removebg-preview.png';
 const xHandle = process.env.NEXT_PUBLIC_X_HANDLE;
 
 interface PageMetaInput {

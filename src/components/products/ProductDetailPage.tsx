@@ -201,12 +201,21 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
           ? rawHsn.trim()
           : undefined;
 
+        const gstRate = resolvedGst ?? 18;
+        const rawPrice = typeof data.price === 'number' ? data.price : Number(data.price) || 0;
+        const rawMrp = typeof data.mrp === 'number' ? data.mrp : Number(data.mrp) || (rawPrice * 1.2);
+        
+        const priceNum = Math.round(rawPrice * (1 + gstRate / 100));
+        const mrpNum = Math.round(rawMrp * (1 + gstRate / 100));
+
         setProduct({
           ...data,
           title: resolvedTitle,
           name: resolvedTitle,
+          price: priceNum,
+          mrp: mrpNum,
           hsnCode: resolvedHsn,
-          gstRate: resolvedGst ?? (data as any).gstRate,
+          gstRate: gstRate,
         });
       }
       setLoading(false);
@@ -408,10 +417,10 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
               <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-8 backdrop-blur-sm">
                 {pricing && (
                   <div className="flex flex-wrap items-end gap-3 mb-2">
-                    <span className="text-4xl font-bold text-cyan-300">₹{pricing.salePrice.toFixed(2)}</span>
+                    <span className="text-4xl font-bold text-cyan-300">₹{pricing.salePrice.toLocaleString('en-IN')}</span>
                     {pricing.hasDiscount && (
                       <>
-                        <span className="text-lg text-slate-500 line-through">₹{pricing.mrp.toFixed(2)}</span>
+                        <span className="text-lg text-slate-500 line-through">₹{pricing.mrp.toLocaleString('en-IN')}</span>
                         {pricing.percentageOff > 0 && (
                           <span className="text-xs font-bold text-emerald-300 bg-emerald-400/10 px-2 py-0.5 rounded">
                             {pricing.percentageOff}% OFF

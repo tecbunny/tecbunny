@@ -93,30 +93,31 @@ const PLAN_TIERS = [
   {
     name: 'Essentials',
     summary: 'Foundational coverage for smaller footprints.',
-    priceLabel: 'Custom quote',
+    priceLabel: 'From ₹4,999/month',
     highlight: false,
     items: ['Routine health checks', 'Remote assistance window', 'Lifecycle planning'],
   },
   {
     name: 'Growth',
     summary: 'Balanced coverage for multi-site needs.',
-    priceLabel: 'Scaled by scope',
+    priceLabel: 'From ₹14,999/month',
     highlight: true,
     items: ['Priority response lane', 'Quarterly optimization', 'Dedicated escalation path'],
   },
   {
     name: 'Enterprise',
     summary: 'High-availability operations at scale.',
-    priceLabel: 'Custom engagement',
+    priceLabel: 'Custom quote',
     highlight: false,
     items: ['Always-on monitoring', 'On-site engineering', 'Strategic roadmap reviews'],
   },
 ];
 
 const LOG_LINES = [
-  { left: '> Camera_01', right: 'ONLINE [REC]', tone: 'text-emerald-300' },
-  { left: '> Intrusion_Sys', right: 'ARMED', tone: 'text-emerald-300' },
-  { left: '> Server_Rack', right: 'TEMP_OK', tone: 'text-cyan-300' },
+  { left: '> Active_Sites', right: '142 [ONLINE]', tone: 'text-emerald-300' },
+  { left: '> Network_Uptime', right: '99.98% [NOMINAL]', tone: 'text-cyan-300' },
+  { left: '> Monitored_Chs', right: '1,840 [SECURE]', tone: 'text-emerald-300' },
+  { left: '> Dispatch_SLA', right: '< 2 Hrs [GUARANTEED]', tone: 'text-amber-300' },
 ];
 
 function applyMagneticEffect(event: React.MouseEvent<HTMLElement>) {
@@ -385,7 +386,7 @@ export default function HomePage() {
                 OPERATIONAL IN GOA & MH
               </div>
 
-              <h1 className="text-5xl font-bold leading-tight text-white md:text-7xl font-tech" aria-label="CCTV, IT services, and home automation in Goa and Maharashtra">
+              <h1 className="text-4xl sm:text-5xl font-bold leading-tight text-white md:text-7xl font-tech" aria-label="CCTV, IT services, and home automation in Goa and Maharashtra">
                 <span className="glitch-text" data-text="CCTV, IT & Automation">CCTV, IT & Automation</span>
                 <br />
                 <span className="bg-gradient-to-r from-[#06b6d4] via-blue-500 to-[#8b5cf6] bg-clip-text text-transparent">
@@ -432,8 +433,8 @@ export default function HomePage() {
 
               <div className="flex gap-8 border-t border-white/5 pt-8">
                 <div>
-                  <p className="text-2xl font-bold text-white font-tech">100</p>
-                  <p className="text-xs uppercase tracking-wider text-slate-400">Installations</p>
+                  <p className="text-2xl font-bold text-white font-tech">120+</p>
+                  <p className="text-xs uppercase tracking-wider text-slate-400">Projects</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-white font-tech">24/7</p>
@@ -460,12 +461,12 @@ export default function HomePage() {
                 </div>
                 <div className="my-4 h-px bg-white/10"></div>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded bg-white/10 animate-pulse">
-                    <Lock size={18} className="text-white" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded bg-cyan-500/10 border border-cyan-400/20">
+                    <ShieldCheck size={18} className="text-cyan-300" />
                   </div>
                   <div>
-                    <p className="font-bold text-white">Perimeter Secure</p>
-                    <p className="text-xs text-slate-500">Live Monitoring Active</p>
+                    <p className="font-bold text-white">SLA Active</p>
+                    <p className="text-xs text-slate-500">Response Guarantee Backed</p>
                   </div>
                 </div>
               </div>
@@ -486,6 +487,22 @@ export default function HomePage() {
           </section>
         )}
       </div>
+
+      {/* Partner Brands Strip */}
+      <section className="border-y border-white/5 bg-slate-950/80 py-10">
+        <div className="container mx-auto px-6">
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.35em] text-slate-500 mb-6">
+            Authorized Solutions & Brand Partnerships
+          </p>
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-6 items-center justify-items-center opacity-65">
+            {['CP PLUS', 'HIKVISION', 'DAHUA', 'UBIQUITI', 'CISCO', 'TP-LINK'].map((brand) => (
+              <span key={brand} className="text-sm font-bold tracking-widest text-slate-400 font-tech hover:text-cyan-400 transition-colors">
+                {brand}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section className="bg-slate-950 py-24 reveal-section is-revealed" data-reveal-id="pillars">
         <div className="container mx-auto px-6">
@@ -675,21 +692,102 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Recent Installations Gallery */}
+      <section className="bg-slate-950 py-24 border-t border-white/5">
+        <div className="container mx-auto px-6">
+          <div className="mb-14 max-w-2xl">
+            <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Case Studies</span>
+            <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">Recent Installations</h2>
+            <p className="mt-4 text-sm text-slate-400 sm:text-base">
+              Take a look at how we deploy security, IT networking, and home automation solutions across Goa and Maharashtra.
+            </p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                title: 'Grand Sunset Resort & Spa',
+                location: 'Calangute, Goa',
+                description: 'Designed and deployed a full 64-channel IP CCTV surveillance network and high-density guest Wi-Fi coverage across 3 resort wings.',
+                tag: 'Resort IP CCTV'
+              },
+              {
+                title: 'Mahad Industrial Zone Facility',
+                location: 'Mahad, Maharashtra',
+                description: 'Implemented multi-site server setups, structured optical fiber cabling, and biometric attendance/RFID door locks for 150+ staff.',
+                tag: 'IT Infrastructure & Access Control'
+              },
+              {
+                title: 'Premium Smart Villa',
+                location: 'Panaji, Goa',
+                description: 'Retrofitted an existing residential villa with wireless smart controls, automated perimeter alarms, smart locks, and motorized curtains.',
+                tag: 'Home Automation'
+              }
+            ].map((project) => (
+              <div key={project.title} className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 flex flex-col justify-between hover:border-cyan-400/30 transition-all duration-300">
+                <div>
+                  <span className="inline-block rounded bg-cyan-500/10 px-2.5 py-1 text-xs font-semibold text-cyan-300 mb-4">{project.tag}</span>
+                  <h3 className="text-lg font-semibold text-white mb-2">{project.title}</h3>
+                  <p className="text-xs text-slate-500 mb-4">{project.location}</p>
+                  <p className="text-sm text-slate-400">{project.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Client Testimonials */}
+      <section className="bg-slate-900/30 py-24 border-t border-white/5">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Reviews</span>
+            <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">Client Testimonials</h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                quote: "TecBunny upgraded our entire resort with high-definition IP cameras and seamless Wi-Fi. Their 24/7 support team is incredibly responsive.",
+                author: "Aman Naik",
+                role: "Owner, Grand Sunset Resort",
+                location: "Goa"
+              },
+              {
+                quote: "We signed an AMC with TecBunny for our IT infrastructure. Our system downtime has dropped to zero, and their quarterly audits keep everything running perfectly.",
+                author: "Priyanka Joshi",
+                role: "Operations Director, Mahad Industrial Plaza",
+                location: "Maharashtra"
+              },
+              {
+                quote: "The home automation setup is incredible. We can control lighting, climate, and security from our smartphones. A premium experience all around.",
+                author: "Rajesh D'Souza",
+                role: "Residential Owner",
+                location: "Goa"
+              }
+            ].map((t) => (
+              <div key={t.author} className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 flex flex-col justify-between backdrop-blur-sm relative hover:border-violet-500/30 transition-all duration-300">
+                <p className="text-slate-300 text-sm italic mb-6 leading-relaxed">“{t.quote}”</p>
+                <div>
+                  <p className="text-sm font-semibold text-white">{t.author}</p>
+                  <p className="text-xs text-slate-500">{t.role} • {t.location}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="bg-slate-900/50 py-24 reveal-section is-revealed" data-reveal-id="about">
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-slate-300 space-y-6 text-sm sm:text-base leading-relaxed">
-            <h2 className="text-3xl font-semibold text-white mb-8">Comprehensive Tech Solutions for Homes and Businesses</h2>
+            <h2 className="text-3xl font-semibold text-white mb-8">Goa & Maharashtra’s Trusted Technology Integrator</h2>
             <p>
-              At TecBunny Solutions, we understand that reliable technology is the backbone of modern living and seamless business operations. Based in the heart of Goa and extending our services across Maharashtra, we specialize in delivering comprehensive, end-to-end technology solutions designed to meet your unique needs. Whether you are a homeowner looking to secure your property or a business enterprise aiming to streamline your IT infrastructure, our team of seasoned professionals is here to guide you every step of the way. We believe in building long-lasting relationships with our clients by providing not just hardware, but complete ecosystems that work harmoniously to enhance security, productivity, and convenience.
+              At TecBunny Solutions, we design, deploy, and manage professional technology systems that protect your premises, keep your networks reliable, and automate your environment. Working closely with leading security and network brands, we deliver customized security and IT solutions for hospitality venues, retail shops, industrial spaces, and residential properties across Goa and Maharashtra.
             </p>
             <p>
-              Our expertise in Security Systems goes beyond standard CCTV installations. We design layered protection strategies that incorporate the latest high-definition surveillance cameras, intelligent video analytics, and secure cloud storage options. We ensure that you have real-time access to your premises, no matter where you are in the world. From intrusion detection systems to advanced biometric access controls, our tailored security architectures provide peace of mind. We meticulously plan camera placements, network bandwidth, and storage capacities to ensure optimal coverage without blind spots, giving you a robust security posture against any potential threats.
+              Our security architectures are built with enterprise-grade equipment from CP Plus, Hikvision, and Dahua, offering high-definition IP cameras, smart perimeter security, and secure local or cloud NVR systems. We customize camera placement and coverage to ensure complete visual security and 24/7 reliability.
             </p>
             <p>
-              When it comes to IT Reliability, we know that downtime is not an option. Our comprehensive IT services cover everything from initial network design and hardware procurement to ongoing maintenance and dedicated support. We specialize in building resilient networks that can handle the rigorous demands of modern digital workflows. Whether you need structured cabling for a new office space, reliable Wi-Fi solutions for a hospitality venue, or enterprise-grade server setups, TecBunny Solutions delivers. Our Annual Maintenance Contracts (AMC) are designed to provide proactive care, preventing issues before they disrupt your operations. Through continuous monitoring, routine health checks, and rapid incident response, we keep your technology infrastructure optimized and running smoothly 24/7.
-            </p>
-            <p>
-              The future belongs to Automation, and we are at the forefront of bringing smart environments to life. Our automation solutions transform ordinary spaces into highly responsive, energy-efficient, and easily manageable ecosystems. Imagine controlling your lighting, climate, security, and entertainment systems from a centralized hub or your smartphone. We integrate disparate systems to communicate with each other, offering intelligent automation that adapts to your daily routines. For commercial setups, this means automated energy management, streamlined facility operations, and enhanced user experiences. We work closely with architects, interior designers, and business owners to seamlessly weave technology into the fabric of your spaces, making them smarter, safer, and more sustainable for the future. Choose TecBunny Solutions—your trusted partner for all technology and security needs.
+              For IT infrastructure, our engineers design high-performance wired and wireless networks, structured cabling layouts, and server setups to ensure zero-bottleneck operations. Backed by our proactive Annual Maintenance Contracts (AMC) and on-site support guarantees, we keep your business systems secure and running smoothly at all times.
             </p>
           </div>
         </div>

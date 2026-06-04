@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { Logo } from '../ui/logo';
 
 import { Facebook, Twitter, Instagram, Linkedin, Youtube, Globe, FileText, Shield } from 'lucide-react';
 
@@ -28,6 +28,7 @@ const DEFAULT_COMPANY_INFO = {
   supportEmail: 'support@tecbunny.com',
   supportPhone: '+91 96041 36010',
   registeredAddress: 'H NO 11 NHAYGINWADA, PARSE, Parxem, Pernem, North Goa - 403512, Goa',
+  gstin: '30AAMCT1608G1ZO',
 };
 
 const FALLBACK_SOCIAL_LINKS = {
@@ -37,7 +38,7 @@ const FALLBACK_SOCIAL_LINKS = {
 };
 
 export function Footer() {
-  const [companyInfo, setCompanyInfo] = React.useState<{supportEmail?: string; supportPhone?: string; registeredAddress?: string}>(DEFAULT_COMPANY_INFO);
+  const [companyInfo, setCompanyInfo] = React.useState<{supportEmail?: string; supportPhone?: string; registeredAddress?: string; gstin?: string}>(DEFAULT_COMPANY_INFO);
   const [socialLinks, setSocialLinks] = React.useState<Record<string, string>>({});
   const [subscribeEmail, setSubscribeEmail] = React.useState('');
   const [subscribeStatus, setSubscribeStatus] = React.useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -192,17 +193,7 @@ export function Footer() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 mb-12 pb-12 border-b border-white/5">
           <div className="max-w-md">
             <Link href="/" className="flex items-center gap-3 mb-4 group">
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-white/50 bg-white shadow-[0_0_18px_rgba(6,182,212,0.25)] transition-all duration-300 group-hover:border-cyan-300/80 group-hover:bg-white group-hover:shadow-[0_0_24px_rgba(6,182,212,0.35)]">
-                <Image
-                  src="/brand.png"
-                  alt="TecBunny Solutions"
-                  width={56}
-                  height={56}
-                  sizes="48px"
-                  quality={60}
-                  className="h-12 w-12 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.35)] transition-transform group-hover:scale-105"
-                />
-              </div>
+              <Logo width={56} height={56} className="transition-transform group-hover:scale-105" />
               <span className="font-tech font-bold text-3xl sm:text-4xl text-white tracking-wide">
                 TECBUNNY<span className="text-brand-cyan">.</span>
               </span>
@@ -213,9 +204,12 @@ export function Footer() {
           </div>
 
           <div className="w-full lg:w-auto">
-            <h4 className="font-tech text-white text-lg font-bold mb-3 flex items-center gap-2">
+            <h4 className="font-tech text-white text-lg font-bold mb-2 flex items-center gap-2">
               <span className="text-brand-purple">SYSTEM UPDATES</span>
             </h4>
+            <p className="text-slate-400 text-sm mb-4 max-w-sm">
+              Subscribe to receive critical security advisories, local threat alerts, and seasonal tech maintenance checklists for your business or home.
+            </p>
             <form className="flex flex-col sm:flex-row gap-3" onSubmit={handleSubscribe}>
               <input
                 type="email"
@@ -302,7 +296,15 @@ export function Footer() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
               <div>
                 <span className="block text-xs text-slate-500 uppercase mb-1">Location</span>
-                <address className="text-slate-300 not-italic leading-relaxed">{address}</address>
+                <address className="text-slate-300 not-italic leading-relaxed mb-1">{address}</address>
+                <a
+                  href="https://maps.app.goo.gl/HZDjt3zoB1Rcrjqp8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-brand-cyan hover:underline"
+                >
+                  View on Google Maps
+                </a>
               </div>
               <div>
                 <span className="block text-xs text-slate-500 uppercase mb-1">Comms</span>
@@ -320,8 +322,9 @@ export function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-white/5 text-sm text-slate-400">
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6">
             <p>© 2025 TecBunny. All rights reserved. Built with ❤️ and innovation.</p>
+            <p className="font-mono">CIN: U80200GA2025PTC017488</p>
             <span className="hidden md:inline text-white/10">|</span>
-            <p className="font-mono">CIN: U80200GA2025PTC017366</p>
+            <p className="font-mono">GSTIN: {companyInfo.gstin || '30AAMCT1608G1ZO'}</p>
           </div>
 
           {activeSocialPlatforms.length > 0 && (

@@ -290,7 +290,9 @@ export function ShopPageContent() {
         
         // Normalize products to ensure required fields exist and are properly typed
         const normalized = (data || []).map((p: any) => {
-          const priceNum = typeof p.price === 'number' ? p.price : Number(p.price) || 0;
+          const rawPrice = typeof p.price === 'number' ? p.price : Number(p.price) || 0;
+          const rawMrp = typeof p.mrp === 'number' ? p.mrp : Number(p.mrp) || (rawPrice * 1.2);
+
           const resolvedTitle = [p.title, p.name]
             .map((value) => (typeof value === 'string' ? value.trim() : ''))
             .find((value) => value.length > 0) || 'Unnamed Product';
@@ -324,6 +326,10 @@ export function ShopPageContent() {
             resolvedGst = Number.isFinite(parsed) ? parsed : undefined;
           }
 
+          const gstRate = resolvedGst ?? 18;
+          const priceNum = Math.round(rawPrice * (1 + gstRate / 100));
+          const mrpNum = Math.round(rawMrp * (1 + gstRate / 100));
+
           const resolvedHsn = typeof rawHsn === 'string' && rawHsn.trim().length > 0
             ? rawHsn.trim()
             : undefined;
@@ -339,13 +345,14 @@ export function ShopPageContent() {
             brand: p.brand || p.vendor || undefined,
             // Provide safe defaults
             price: priceNum,
+            mrp: mrpNum,
             popularity: p.popularity || 0,
             rating: p.rating || 0,
             reviewCount: p.review_count ?? p.reviewCount ?? 0,
             created_at: p.created_at || new Date().toISOString(),
             image: finalImage || undefined,
             hsnCode: resolvedHsn,
-            gstRate: resolvedGst,
+            gstRate: gstRate,
           } as Product;
         });
 

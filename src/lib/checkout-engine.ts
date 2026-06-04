@@ -124,39 +124,55 @@ export class CheckoutEngine {
         appliedCoupon || undefined
       );
 
-      // 4. GST Calculation based on post-discount subtotal
+      // 4. GST Calculation based on post-discount subtotal using an immutable forward-calculation step tracking system
       let finalSubtotal = 0;
       let gstAmount = 0;
       let finalTotal = 0;
       const totalDiscountApplied = discountResult.totalDiscount;
-      
-      // Proportionally apply discount to calculate accurate GST per item
-      const discountRatio = grossSubtotal > 0 ? (totalDiscountApplied / grossSubtotal) : 0;
-      
+
+      // Prepare items list for discount distribution
+      const itemsToDistribute = pricedItems.map(item => ({
+        gross: item.price * item.quantity
+      }));
+
+      // Distribute total discount proportionally across all items down to the exact paisa (2 decimal places)
+      const distributedDiscounts = (() => {
+        const totalGross = itemsToDistribute.reduce((sum, item) => sum + item.gross, 0);
+        if (totalGross === 0 || totalDiscountApplied === 0) return itemsToDistribute.map(() => 0);
+
+        const discounts = itemsToDistribute.map(item => {
+          return Math.floor((item.gross / totalGross) * totalDiscountApplied * 100) / 100;
+        });
+
+        const sumDiscounts = discounts.reduce((sum, d) => sum + d, 0);
+        let remainder = Math.round((totalDiscountApplied - sumDiscounts) * 100) / 100;
+
+        // Distribute remainder (due to rounding) starting from the first items
+        for (let i = 0; i < itemsToDistribute.length && remainder > 0.001; i++) {
+          discounts[i] = Math.round((discounts[i] + 0.01) * 100) / 100;
+          remainder = Math.round((remainder - 0.01) * 100) / 100;
+        }
+
+        return discounts;
+      })();
+
       const itemPricesWithTaxes = pricedItems.map((item, index) => {
         const pInfo = pricingResult.item_prices[index];
-        
-        const gstRate = typeof item.gstRate === 'number' ? item.gstRate : 18;
-        
-        // Step 1: Base Exclusive Price
-        const unitPriceExclusive = item.price / (1 + (gstRate / 100));
-        const baseExclusiveTotal = unitPriceExclusive * item.quantity;
-        
-        // Step 2: Apply Discount
+        const dbProd = dbProductMap.get(item.id);
+        const gstRateRaw = dbProd?.gstRate ?? dbProd?.gst_rate ?? 18;
+        const gstRate = typeof gstRateRaw === 'number' ? gstRateRaw : parseFloat(gstRateRaw) || 18;
+
         const itemGrossInclusive = item.price * item.quantity;
-        const itemDiscountInclusive = itemGrossInclusive * discountRatio;
-        const itemDiscountExclusive = itemDiscountInclusive / (1 + (gstRate / 100));
-        const itemNetExclusive = Math.max(0, baseExclusiveTotal - itemDiscountExclusive);
-        
-        // Step 3: Calculate GST
-        const itemGst = itemNetExclusive * (gstRate / 100);
-        
-        // Step 4: Compute Final Pay Total
-        const itemFinalTotal = itemNetExclusive + itemGst;
+        const itemDiscountInclusive = distributedDiscounts[index];
+        const itemNetInclusive = Math.max(0, itemGrossInclusive - itemDiscountInclusive);
+
+        // Compute forward: base net exclusive, then GST as the remainder to match net inclusive exactly
+        const itemNetExclusive = Math.round((itemNetInclusive / (1 + (gstRate / 100))) * 100) / 100;
+        const itemGst = Math.round((itemNetInclusive - itemNetExclusive) * 100) / 100;
 
         finalSubtotal += itemNetExclusive;
         gstAmount += itemGst;
-        finalTotal += itemFinalTotal;
+        finalTotal += itemNetInclusive;
 
         return {
           product_id: item.id,

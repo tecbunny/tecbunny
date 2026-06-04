@@ -22,7 +22,26 @@ RETURNS VOID AS $$
 DECLARE
   v_key TEXT;
   v_val JSONB;
+  v_current_status TEXT;
+  v_current_payment_status TEXT;
+  v_items_json JSONB;
+  v_item RECORD;
 BEGIN
+  -- Acquire exclusive row lock on the target order to serialize transitions
+  SELECT status, payment_status, items INTO v_current_status, v_current_payment_status, v_items_json
+  FROM public.orders
+  WHERE id = target_order_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Order % not found', target_order_id;
+  END IF;
+
+  -- Atomic transition safeguard: prevent changing completed/delivered/cancelled orders to active states
+  IF v_current_status IN ('Cancelled', 'Rejected', 'Completed', 'Delivered') AND new_status NOT IN ('Cancelled', 'Rejected', 'Completed', 'Delivered') THEN
+    RAISE EXCEPTION 'Cannot transition order % from terminal state (%) to %', target_order_id, v_current_status, new_status;
+  END IF;
+
   -- Update orders table status and audit fields
   UPDATE public.orders
   SET
@@ -31,10 +50,6 @@ BEGIN
     processed_by = p_processed_by,
     updated_at = NOW()
   WHERE id = target_order_id;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'Order % not found', target_order_id;
-  END IF;
 
   -- Apply additional data keys if provided
   IF additional_data IS NOT NULL THEN
@@ -58,13 +73,34 @@ BEGIN
     UPDATE public.orders SET pickup_code = p_pickup_code WHERE id = target_order_id;
   END IF;
 
-  -- Handle cancellation auditing
+  -- Handle cancellation auditing, stock release, and commission cancellation
   IF new_status IN ('Cancelled', 'Rejected') THEN
     UPDATE public.orders
     SET
       cancelled_at = NOW(),
       cancelled_by = p_processed_by
     WHERE id = target_order_id;
+
+    -- Release allocated inventory stock if order is transition-to-cancelled
+    IF v_current_status NOT IN ('Cancelled', 'Rejected') AND v_items_json IS NOT NULL THEN
+      FOR v_item IN SELECT (value->>'id')::uuid AS id, (value->>'quantity')::integer AS quantity FROM jsonb_array_elements(v_items_json->'cart_items') LOOP
+        PERFORM public.record_atomic_stock_movement(
+          v_item.id,
+          'return',
+          v_item.quantity,
+          target_order_id::TEXT,
+          'online_order',
+          'Reverted stock due to order cancellation',
+          true,
+          p_processed_by
+        );
+      END LOOP;
+    END IF;
+
+    -- Automatically cancel associated sales commissions
+    UPDATE public.sales_agent_commissions
+    SET status = 'cancelled'
+    WHERE order_id = target_order_id;
   END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -86,7 +122,22 @@ DECLARE
   v_part RECORD;
   v_total_parts_cost NUMERIC := 0;
   v_total_cost NUMERIC := 0;
+  v_current_status TEXT;
 BEGIN
+  -- Acquire exclusive row lock on the service ticket
+  SELECT status INTO v_current_status
+  FROM public.service_tickets
+  WHERE id = p_ticket_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Service ticket % not found', p_ticket_id;
+  END IF;
+
+  IF v_current_status = 'completed' THEN
+    RAISE EXCEPTION 'Service ticket % is already completed', p_ticket_id;
+  END IF;
+
   -- 1. Insert parts if provided
   IF p_parts_used IS NOT NULL AND jsonb_array_length(p_parts_used) > 0 THEN
     FOR v_part IN SELECT * FROM jsonb_to_recordset(p_parts_used) AS x(part_name TEXT, quantity INTEGER, unit_cost NUMERIC, warranty_days INTEGER) LOOP
@@ -114,10 +165,6 @@ BEGIN
     photos = p_photos,
     updated_at = NOW()
   WHERE id = p_ticket_id;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'Service ticket % not found', p_ticket_id;
-  END IF;
 
   RETURN v_total_cost;
 END;
@@ -150,11 +197,13 @@ ALTER TABLE public.order_items ADD CONSTRAINT fk_order FOREIGN KEY (order_id) RE
 
 -- For order_otp_verifications
 ALTER TABLE public.order_otp_verifications DROP CONSTRAINT IF EXISTS fk_order;
+ALTER TABLE public.order_otp_verifications DROP CONSTRAINT IF EXISTS fk_order_otp;
 ALTER TABLE public.order_otp_verifications DROP CONSTRAINT IF EXISTS order_otp_verifications_order_id_fkey;
 ALTER TABLE public.order_otp_verifications ADD CONSTRAINT fk_order_otp FOREIGN KEY (order_id) REFERENCES public.orders(id) ON DELETE CASCADE;
 
 -- For sales_agent_commissions
 ALTER TABLE public.sales_agent_commissions DROP CONSTRAINT IF EXISTS sales_agent_commissions_order_id_fkey;
+ALTER TABLE public.sales_agent_commissions DROP CONSTRAINT IF EXISTS fk_sales_agent_commissions_order;
 ALTER TABLE public.sales_agent_commissions ADD CONSTRAINT fk_sales_agent_commissions_order FOREIGN KEY (order_id) REFERENCES public.orders(id) ON DELETE CASCADE;
 
 -- ────────────────────────────────────────────────────────────────────────────

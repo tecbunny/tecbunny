@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
     // Full JSONB payload stored in the orders.items column by the RPC so the entire
     // customer context (phone, email, address) is recoverable from the row alone.
     const orderItemsWithCustomerInfo = {
-      cart_items: orderData.items || [],
+      cart_items: validatedItems,
       customer_email: orderData.customer_email,
       customer_phone: orderData.customer_phone,
       delivery_address: orderData.delivery_address,

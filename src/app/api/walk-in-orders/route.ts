@@ -253,11 +253,52 @@ export async function POST(request: NextRequest) {
 
     if (action === 'create-order') {
       const { customer_name, customer_email, customer_phone, items, payment_method, notes } = data;
-      
-      // Calculate totals
-      const subtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
-      const gst_amount = subtotal * 0.18; // 18% GST
-      const total = subtotal + gst_amount;
+
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return NextResponse.json({ error: 'No items in order' }, { status: 400 });
+      }
+
+      // Look up and verify item base rates on the server side using canonical database values
+      const productIds = items.map((item: any) => item.product_id).filter(Boolean);
+      const { data: dbProducts, error: dbError } = await supabase
+        .from('products')
+        .select('id, price, gst_rate, gst_percentage')
+        .in('id', productIds);
+
+      if (dbError || !dbProducts) {
+        logger.error('walk_in_order.product_lookup_failed', { error: dbError, productIds });
+        return NextResponse.json({ error: 'Failed to validate products' }, { status: 500 });
+      }
+
+      let subtotal = 0; // exclusive subtotal
+      let gst_amount = 0;
+      const validatedItems = [];
+
+      for (const clientItem of items) {
+        const dbProduct = dbProducts.find((p: any) => p.id === clientItem.product_id);
+        if (!dbProduct) {
+          return NextResponse.json({ error: `Product not found: ${clientItem.product_id}` }, { status: 400 });
+        }
+
+        const price = dbProduct.price; // server price (inclusive)
+        const gstRateRaw = dbProduct.gst_rate ?? dbProduct.gst_percentage ?? 18;
+        const gstRate = typeof gstRateRaw === 'number' ? gstRateRaw : parseFloat(gstRateRaw) || 18;
+
+        const itemInclusiveTotal = price * clientItem.quantity;
+        const itemBase = itemInclusiveTotal / (1 + (gstRate / 100));
+        const itemGst = itemInclusiveTotal - itemBase;
+
+        subtotal += itemBase;
+        gst_amount += itemGst;
+
+        validatedItems.push({
+          ...clientItem,
+          price, // enforce server price
+          gst_rate: gstRate
+        });
+      }
+
+      const total = subtotal + gst_amount; // inclusive total
 
       // Create the order
       const { data: order, error: orderError } = await supabase
@@ -268,9 +309,9 @@ export async function POST(request: NextRequest) {
           customer_phone,
           status: 'Pending',
           type: 'Walk-in',
-          subtotal,
-          gst_amount,
-          total,
+          subtotal: Math.round(subtotal * 100) / 100,
+          gst_amount: Math.round(gst_amount * 100) / 100,
+          total: Math.round(total * 100) / 100,
           payment_method,
           notes,
           created_at: new Date().toISOString()
@@ -285,14 +326,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Create order items
-      const orderItems = items.map((item: any) => ({
+      // Create order items using validatedItems
+      const orderItems = validatedItems.map((item: any) => ({
         order_id: order.id,
         product_id: item.product_id,
         name: item.name,
         quantity: item.quantity,
-        price: item.price,
-        gst_rate: 18
+        price: item.price, // verified server price
+        gst_rate: item.gst_rate
       }));
 
       const { error: itemsError } = await supabase

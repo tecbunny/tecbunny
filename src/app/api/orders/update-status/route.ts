@@ -256,6 +256,22 @@ export async function POST(request: NextRequest) {
       additionalDataPayload.cancellation_reason = cancellationReason;
     }
 
+    // Pre-generate pickup OTP if transitioning to Ready for Pickup to avoid sequential PostgREST connection streams
+    let pickupCode: string | null = null;
+    if (normalizedStatus === 'Ready for Pickup' && orderRecord.customer_phone) {
+      try {
+        const otpResult = await otpService.generateOtp({
+          order_id: orderId,
+          customer_phone: orderRecord.customer_phone,
+          otp_type: 'pickup',
+          created_by: 'system'
+        } as any, true); // true = skip SMS
+        pickupCode = otpResult.otp_code || 'CODE-PENDING';
+      } catch (otpErr: any) {
+        logger.error('Failed to pre-generate pickup OTP', { error: otpErr.message, orderId });
+      }
+    }
+
     // Call update_order_status_v1 RPC atomically
     const { error: updateError } = await serviceClient
       .rpc('update_order_status_v1', {
@@ -263,7 +279,7 @@ export async function POST(request: NextRequest) {
         new_status: normalizedStatus,
         new_payment_status: paymentStatusUpdate.payment_status || null,
         additional_data: additionalDataPayload,
-        p_pickup_code: null, // set in sendOrderStatusUpdateWhatsApp if Ready for Pickup
+        p_pickup_code: pickupCode,
         p_processed_by: user.id
       });
 
@@ -290,7 +306,8 @@ export async function POST(request: NextRequest) {
         customerName: orderRecord.customer_name,
         amount: orderRecord.total,
         currency: 'INR',
-        cancelReason: additionalDataPayload.cancellation_reason as string
+        cancelReason: additionalDataPayload.cancellation_reason as string,
+        pickupCode
       });
     }
 
@@ -306,7 +323,7 @@ async function sendOrderStatusUpdateWhatsApp(phoneNumber: string, data: any) {
   try {
     const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createServerClient();
     let message = '';
-    const { orderId, status, customerName, amount, currency, cancelReason } = data;
+    const { orderId, status, customerName, amount, currency, cancelReason, pickupCode } = data;
     const namePrefix = customerName ? `Hi ${customerName}! ` : '';
     const priceDisplay = amount ? `(${currency || 'INR'} ${amount})` : '';
 
@@ -349,25 +366,12 @@ async function sendOrderStatusUpdateWhatsApp(phoneNumber: string, data: any) {
         return;
         
       case 'Ready for Pickup':
-         // Generate OTP/Code
-         const otpResult = await otpService.generateOtp({
-           order_id: orderId,
-           customer_phone: phoneNumber,
-           otp_type: 'pickup', // Ensure 'pickup' is a valid OtpType or just string if typed loosely
-           created_by: 'system'
-         } as any, true); // true = skip SMS
-
-         const pickupCode = otpResult.otp_code || 'CODE-PENDING';
-
-         // Update order record with pickup_code immediately so frontend sees it
-         await supabase.from('orders').update({
-             pickup_code: pickupCode
-         }).eq('id', orderId);
+         const finalPickupCode = pickupCode || 'CODE-PENDING';
 
          await sendOrderPickupReady(phoneNumber, {
            customerName,
            orderNumber: orderId,
-           pickupCode: pickupCode
+           pickupCode: finalPickupCode
          });
          logger.info('Order pickup ready WhatsApp sent:', { phoneNumber, orderId });
          return;

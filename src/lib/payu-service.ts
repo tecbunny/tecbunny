@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { logger } from './logger';
 
 export type PayuEnvironment = 'test' | 'production';
 
@@ -34,11 +35,16 @@ const GATEWAY_URL: Record<PayuEnvironment, string> = {
   production: 'https://secure.payu.in/_payment',
 };
 
+export const sanitizeHashValue = (val: string | number | undefined | null): string => {
+  if (val === undefined || val === null) return '';
+  return String(val).replace(/\|/g, '').trim();
+};
+
 function normaliseValue(value: string | number | null | undefined): string {
   if (value == null) {
     return '';
   }
-  return String(value);
+  return sanitizeHashValue(value);
 }
 
 function collectUdfValues(source: Record<string, string | undefined>): string[] {
@@ -100,6 +106,10 @@ export function normalisePayuEnvironment(value: string | null | undefined): Payu
 }
 
 export function generatePayuHash(config: PayuConfig, payload: PayuRequestPayload): string {
+  if (!config.merchantKey || !config.merchantSalt) {
+    throw new Error('PayU signature generation failed: Merchant key or salt is missing.');
+  }
+
   const udfValues = collectUdfValues(payload as unknown as Record<string, string | undefined>);
   const hashSequence = [
     config.merchantKey,
@@ -110,13 +120,18 @@ export function generatePayuHash(config: PayuConfig, payload: PayuRequestPayload
     payload.email,
     ...udfValues,
     config.merchantSalt,
-  ].join('|');
+  ].map(sanitizeHashValue).join('|');
 
   return crypto.createHash('sha512').update(hashSequence).digest('hex');
 }
 
 export function verifyPayuHash(config: PayuConfig, response: Record<string, string | undefined>): boolean {
   if (!response.hash) {
+    return false;
+  }
+
+  if (!config.merchantKey || !config.merchantSalt) {
+    logger.error('PayU signature verification failed: Merchant key or salt is missing.');
     return false;
   }
 
@@ -141,8 +156,8 @@ export function verifyPayuHash(config: PayuConfig, response: Record<string, stri
   ];
 
   const hashSequence = additionalCharges
-    ? [additionalCharges, ...baseSequence].join('|')
-    : baseSequence.join('|');
+    ? [additionalCharges, ...baseSequence].map(sanitizeHashValue).join('|')
+    : baseSequence.map(sanitizeHashValue).join('|');
 
   const expectedHash = crypto.createHash('sha512').update(hashSequence).digest('hex');
   return expectedHash === response.hash.toLowerCase();

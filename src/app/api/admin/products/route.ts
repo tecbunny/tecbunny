@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { isAdmin } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
+import { getProductDisplayImage } from '@/lib/image-utils';
 
 // export const dynamic = 'force-dynamic';
 
@@ -89,7 +90,8 @@ export async function GET(request: NextRequest) {
       title: product.title ?? product.name ?? 'Untitled product',
       name: product.name ?? product.title ?? 'Untitled product',
       price: product.price ?? 0,
-      category: product.category ?? 'Uncategorized'
+      category: product.category ?? 'Uncategorized',
+      image: getProductDisplayImage(product) || product.image || null
     }));
 
     return NextResponse.json({ products: normalized });

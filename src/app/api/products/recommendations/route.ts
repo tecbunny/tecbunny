@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getProductDisplayImage } from '@/lib/image-utils';
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -71,8 +72,18 @@ export async function GET(request: NextRequest) {
 
   const { data: recommendedProducts } = await recommendationQuery;
 
+  const normalizedViewed = (viewedProducts || []).map(p => ({
+    ...p,
+    image: getProductDisplayImage(p) || p.image || null
+  }));
+
+  const normalizedRecommended = (recommendedProducts || []).map(p => ({
+    ...p,
+    image: getProductDisplayImage(p) || p.image || null
+  }));
+
   return NextResponse.json({
-    recentlyViewed: viewedProducts,
-    recommended: recommendedProducts || []
+    recentlyViewed: normalizedViewed,
+    recommended: normalizedRecommended
   });
 }

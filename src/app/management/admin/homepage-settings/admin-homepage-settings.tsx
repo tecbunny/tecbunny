@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import type { Product } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
+import { getProductDisplayImage } from '@/lib/image-utils';
 import { useToast } from '../../../../hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { createClient } from '@/lib/supabase/client';
@@ -55,9 +56,9 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ title, description, a
           {allProducts.map(product => (
             <div key={product.id} className="flex items-center justify-between rounded-lg border p-3">
               <div className="flex items-center gap-4">
-                {product.image ? (
+                {getProductDisplayImage(product) ? (
                   <Image 
-                    src={product.image}
+                    src={getProductDisplayImage(product)!}
                     alt={product.name}
                     width={48}
                     height={48}

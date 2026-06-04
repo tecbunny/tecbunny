@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { getSessionWithRole } from '@/lib/auth/server-role';
 import { logger } from '@/lib/logger';
+import { getProductDisplayImage } from '@/lib/image-utils';
 
 const ADMIN_ROLES = new Set(['admin', 'manager']);
 
@@ -164,6 +165,10 @@ export async function GET(
         { success: false, error: error.message },
         { status: 404 }
       );
+    }
+
+    if (data) {
+      data.image = getProductDisplayImage(data) || data.image || null;
     }
 
     return NextResponse.json({

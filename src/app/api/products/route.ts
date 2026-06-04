@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { getSessionWithRole } from '@/lib/auth/server-role';
 import { logger } from '@/lib/logger';
+import { getProductDisplayImage } from '@/lib/image-utils';
 
 const HANDLE_MAX_LENGTH = 60;
 const PUBLIC_PRODUCTS_CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalidate=900';
@@ -93,6 +94,9 @@ function normalizeProductRecord(product: any) {
   if (!product || typeof product !== 'object') {
     return product;
   }
+
+  // Resolve product image from all possible fields (image, images, additional_images, etc.)
+  product.image = getProductDisplayImage(product) || product.image || null;
 
   const rawHsn =
     product.hsnCode ??

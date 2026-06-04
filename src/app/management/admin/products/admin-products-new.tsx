@@ -5,6 +5,7 @@ import { Pencil, Plus, Trash2, MoreHorizontal, Loader2 } from 'lucide-react';
 import { useToast } from '../../../../hooks/use-toast';
 import { logger } from '@/lib/logger';
 import type { Product } from '@/lib/types';
+import { getProductDisplayImage } from '@/lib/image-utils';
 
 import {
   Card,
@@ -222,8 +223,12 @@ export default function AdminProductsPage() {
                   <TableRow key={product.id}>
                     <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
-                             {product.image && (
-                                <img src={product.image} alt={product.title} className="w-8 h-8 rounded object-cover" />
+                             {getProductDisplayImage(product) ? (
+                                <img src={getProductDisplayImage(product)!} alt={product.title} className="w-8 h-8 rounded object-cover" />
+                             ) : (
+                                <div className="w-8 h-8 rounded bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                                    No Image
+                                </div>
                              )}
                              <span>{product.title || product.name}</span>
                         </div>

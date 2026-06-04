@@ -19,27 +19,6 @@ export const metadata: Metadata = createPageMetadata({
 // Always fetch fresh data so admin updates appear immediately
 // export const dynamic = 'force-dynamic';
 
-const PUBLIC_SERVICE_COLUMNS = [
-  'id',
-  'icon',
-  'icon_name',
-  'title',
-  'name',
-  'description',
-  'details',
-  'features',
-  'feature_list',
-  'badge',
-  'is_active',
-  'status',
-  'price',
-  'duration_days',
-  'category',
-  'display_order',
-  'created_at',
-  'updated_at',
-].join(',');
-
 type ServiceRow = {
   id: string | number;
   icon?: string | null;
@@ -122,11 +101,10 @@ export default async function Page() {
       ? createServiceClient()
       : await createClient();
 
-    // Select all known public columns — Supabase ignores missing columns gracefully.
-    // Do NOT query information_schema here: it causes DYNAMIC_SERVER_USAGE in static prerender.
+    // Select the row shape Supabase exposes and normalize defensively below.
     const { data, error } = await supabase
       .from('services')
-      .select(PUBLIC_SERVICE_COLUMNS);
+      .select('*');
 
     if (error) {
       logger.error('Error fetching services', {

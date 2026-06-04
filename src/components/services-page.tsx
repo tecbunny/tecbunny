@@ -77,6 +77,41 @@ interface AmcTerm {
 
 const servicePricing: ServicePricingCategory[] = [
   {
+    category: 'CCTV & AMC Services',
+    blurb: 'Professional installation and ongoing maintenance plans for cameras, NVRs, and access systems.',
+    plans: [
+      {
+        name: 'Home AMC',
+        summary: 'For homes with 4–8 cameras and one PC.',
+        tiers: [
+          { label: 'Home AMC — Annual', price: 'from ₹3,499/yr', detail: '2 preventive visits · Unlimited breakdown calls (labour & travel) · On-site within 48 hrs · Parts up to ₹2,000/yr', amount: 3499 }
+        ]
+      },
+      {
+        name: 'Business AMC',
+        summary: 'For shops, restaurants and offices up to 16 cameras.',
+        tiers: [
+          { label: 'Business AMC — Annual', price: 'from ₹8,999/yr', detail: '4 preventive visits + quarterly report · On-site within 24 hrs · Priority lane · Parts up to ₹6,000/yr', amount: 8999 }
+        ]
+      },
+      {
+        name: 'Enterprise AMC',
+        summary: 'For hotels, multi-site operations and large offices.',
+        tiers: [
+          { label: 'Enterprise AMC — Annual', price: 'from ₹29,999/yr', detail: 'Always-on monitoring · Named on-site engineer · Quarterly strategic reviews · Custom SLA & parts pool', amount: 29999 }
+        ]
+      },
+      {
+        name: 'CCTV New Installation',
+        summary: 'Supply, cable, configure and commission CP PLUS / Hikvision camera systems.',
+        tiers: [
+          { label: '4-Camera Kit (Home)', price: 'from ₹14,999', detail: '4 cameras · 4-ch NVR · 1TB HDD · Full cabling · Mobile app setup', amount: 14999 },
+          { label: '8-Camera Kit (Shop/Office)', price: 'from ₹24,999', detail: '8 cameras · 8-ch NVR · 2TB HDD · Full cabling · Remote access', amount: 24999 },
+        ]
+      }
+    ]
+  },
+  {
     category: 'Computer Services',
     blurb: 'From bespoke workstation builds to fast repair and upgrade programs.',
     plans: [
@@ -84,14 +119,34 @@ const servicePricing: ServicePricingCategory[] = [
         name: 'Repair Services',
         summary: 'Rapid fault isolation plus genuine spares for laptops and desktops.',
         tiers: [
-          { label: 'Standard Repair', price: '₹999', detail: 'Includes diagnostics, OS tune-up, and labor (parts extra).', amount: 999 }
+          { label: 'Standard Repair', price: '₹999', detail: 'Includes diagnostics, OS tune-up, and labour (parts extra).', amount: 999 }
         ]
       },
       {
         name: 'Upgrade Services',
         summary: 'Extend hardware life with certified performance upgrades.',
         tiers: [
-          { label: 'Upgrade Service Ticket', price: '₹999', detail: 'Covers labor for RAM, SSD, or GPU swaps (parts extra).', amount: 999 }
+          { label: 'Upgrade Service Ticket', price: '₹999', detail: 'Covers labour for RAM, SSD, or GPU swaps (parts extra).', amount: 999 }
+        ]
+      }
+    ]
+  },
+  {
+    category: 'Smart Home & Access Control',
+    blurb: 'Retrofit automation and access control for homes, hotels and offices.',
+    plans: [
+      {
+        name: 'Home Automation Starter',
+        summary: 'Voice + app control for lighting, fans and door bells.',
+        tiers: [
+          { label: 'Starter Pack (up to 5 nodes)', price: 'from ₹12,999', detail: 'Includes devices, programming, app setup, and 1-year support call.', amount: 12999 }
+        ]
+      },
+      {
+        name: 'RFID Access Control',
+        summary: 'Biometric and smartcard access for offices, warehouses and hotels.',
+        tiers: [
+          { label: 'Single Door RFID Kit', price: 'from ₹8,999', detail: 'Controller · reader · electric lock · power supply · programming & commissioning.', amount: 8999 }
         ]
       }
     ]

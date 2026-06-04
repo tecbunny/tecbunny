@@ -107,7 +107,7 @@ const PLAN_TIERS = [
   {
     name: 'Enterprise',
     summary: 'High-availability operations at scale.',
-    priceLabel: 'Custom quote',
+    priceLabel: 'From ₹24,999/month',
     highlight: false,
     items: ['Always-on monitoring', 'On-site engineering', 'Strategic roadmap reviews'],
   },

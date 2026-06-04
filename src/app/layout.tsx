@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.tecbunny.com'),
   title: {
     default: 'TecBunny Solutions | CCTV, IT Services, Home Automation & AMC in Goa & Maharashtra',
-    template: '%s | TecBunny Solutions',
+    template: '%s | TecBunny',
   },
   description:
     'TecBunny Solutions provides CCTV installation, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.',

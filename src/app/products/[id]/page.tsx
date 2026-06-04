@@ -3,18 +3,15 @@ import { Metadata } from 'next';
 import { createPageMetadata } from '@/lib/metadata';
 import { createClient } from '@/lib/supabase/server';
 import { BRAND_LOGO_URL } from '@/components/ui/logo';
+import { stripHtmlToPlainText } from '@/lib/strings';
 
 // ISR: revalidate every 5 minutes — dramatically reduces TTFB on product pages
 export const revalidate = 300;
+// force-static ensures Vercel edge caches the page (not private/no-store)
+export const dynamic = 'force-static';
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
-}
-
-/** Strip HTML tags and collapse whitespace for safe use in meta tags */
-function stripHtml(html: string | null | undefined): string {
-  if (!html) return '';
-  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
@@ -30,16 +27,13 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     });
   }
 
-  // Bug fix #2: null-safe title fallback
   const title = product.title || product.name || product.sku || 'Product';
-
-  // Bug fix #1: strip HTML from description before using in meta tags
   const rawDesc = product.description || product.details || '';
-  const plainDesc = stripHtml(rawDesc).slice(0, 160) ||
+  const plainDesc = stripHtmlToPlainText(rawDesc, 160) ||
     `Buy ${title} at TecBunny. CCTV, IT and automation hardware in Goa.`;
 
   return createPageMetadata({
-    title: `${title} | TecBunny`,
+    title,
     description: plainDesc,
     path: `/products/${id}`,
     image: product.image || product.image_url || BRAND_LOGO_URL,
@@ -67,7 +61,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       name: product.brand || 'TecBunny',
     },
     ...(product.category ? { category: product.category } : {}),
-    description: stripHtml(product.description || product.details).slice(0, 500) ||
+    description: stripHtmlToPlainText(product.description || product.details, 500) ||
       `Quality ${product.category || 'technology'} hardware available at TecBunny.`,
     image: [
       product.image || product.image_url || BRAND_LOGO_URL,

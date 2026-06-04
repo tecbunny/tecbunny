@@ -1,4 +1,4 @@
-import FaqsManagement from '../../../../components/admin/FaqsManagement';
+import FaqsManagement from '@/components/admin/FaqsManagement';
 
 export const metadata = {
   title: 'FAQ Management | Admin Dashboard',

@@ -21,7 +21,9 @@ export async function GET() {
       });
     }
 
-    return APIResponseBuilder.success({ faqs });
+    const response = APIResponseBuilder.success({ faqs });
+    response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+    return response;
   } catch (error: any) {
     return APIResponseBuilder.internalServerError('An unexpected error occurred while fetching FAQs', {
       error: error.message,

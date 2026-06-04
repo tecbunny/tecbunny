@@ -1,137 +1,71 @@
-"use client";
+import { Suspense } from 'react';
+import { createClient } from '@/lib/supabase/server';
+import FaqsClient from '@/components/FaqsClient';
+import { Skeleton } from '@/components/ui/skeleton';
 
-import { useEffect, useState, useMemo } from 'react';
-import { Search } from 'lucide-react';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Input } from '@/components/ui/input';
+export const revalidate = 60; // Revalidate at most once every minute
 
-interface FAQ {
-  id: string;
-  category: string;
-  question: string;
-  answer: string;
-  display_order: number;
+async function fetchFaqs() {
+  const supabase = await createClient();
+  const { data: faqs, error } = await supabase
+    .from('faqs')
+    .select('id, category, question, answer, display_order')
+    .eq('is_published', true)
+    .order('category', { ascending: true })
+    .order('display_order', { ascending: true });
+
+  if (error) {
+    console.error('Error loading FAQs from DB:', error);
+    return [];
+  }
+  return faqs || [];
 }
 
-export default function FaqsPage() {
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('All');
-
-  useEffect(() => {
-    async function fetchFaqs() {
-      try {
-        const response = await fetch('/api/faqs');
-        const result = await response.json();
-        if (result.success) {
-          setFaqs(result.data.faqs);
-        }
-      } catch (error) {
-        console.error('Failed to fetch FAQs:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchFaqs();
-  }, []);
-
-  const categories = useMemo(() => {
-    const cats = Array.from(new Set(faqs.map((f) => f.category)));
-    return ['All', ...cats];
-  }, [faqs]);
-
-  const filteredFaqs = useMemo(() => {
-    return faqs.filter((faq) => {
-      const matchesCategory = activeCategory === 'All' || faq.category === activeCategory;
-      const qLower = faq.question.toLowerCase();
-      const aLower = faq.answer.toLowerCase();
-      const searchLower = searchQuery.toLowerCase();
-      const matchesSearch =
-        qLower.includes(searchLower) || aLower.includes(searchLower);
-
-      return matchesCategory && matchesSearch;
-    });
-  }, [faqs, activeCategory, searchQuery]);
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <LoadingSpinner size="lg" text="Loading FAQs..." />
-      </div>
-    );
-  }
-
+export default async function FaqsPage() {
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+    <div className="container mx-auto px-4 py-16 max-w-4xl min-h-screen">
+      {/* Header section with explicit bounding height to prevent CLS */}
+      <div className="text-center mb-12 min-h-[120px] flex flex-col justify-center">
+        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-3 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
           Frequently Asked Questions
         </h1>
-        <p className="text-lg text-muted-foreground">
-          Find answers to common questions about our services.
+        <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+          Quickly find answers to common queries about our system, pricing, and services.
         </p>
       </div>
 
-      <div className="relative mb-8 max-w-xl mx-auto">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Search questions or answers..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 h-12 text-base rounded-full shadow-sm"
-        />
+      {/* Suspense wrapper with a layout-stable skeleton fallback matching exact bounds */}
+      <Suspense fallback={<FaqsSkeleton />}>
+        <FaqsLoader />
+      </Suspense>
+    </div>
+  );
+}
+
+async function FaqsLoader() {
+  const faqs = await fetchFaqs();
+  return <FaqsClient initialFaqs={faqs} />;
+}
+
+// Layout-stable skeleton skeleton loader to prevent layout shifts (CLS)
+function FaqsSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      {/* Search box placeholder */}
+      <div className="max-w-xl mx-auto h-12 bg-muted/40 rounded-full border border-muted/50 w-full" />
+
+      {/* Categories filter placeholder */}
+      <div className="flex justify-center gap-2 h-10 w-64 mx-auto bg-muted/20 rounded-full" />
+
+      {/* Simulated Accordion items with exact structural dimensions */}
+      <div className="space-y-4 min-h-[400px]">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="h-[60px] bg-muted/30 border border-muted/45 rounded-xl w-full"
+          />
+        ))}
       </div>
-
-      {categories.length > 1 && (
-        <div className="flex flex-wrap justify-center gap-2 mb-10">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setActiveCategory(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                activeCategory === category
-                  ? 'bg-primary text-primary-foreground shadow-md'
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {filteredFaqs.length > 0 ? (
-        <div className="space-y-4">
-          <Accordion type="multiple" className="w-full">
-            {filteredFaqs.map((faq) => (
-              <AccordionItem
-                key={faq.id}
-                value={faq.id}
-                className="bg-card mb-4 border rounded-lg px-4 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <AccordionTrigger className="text-left font-semibold text-lg py-4">
-                  {faq.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-4 leading-relaxed whitespace-pre-wrap">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No FAQs found matching your criteria.</p>
-        </div>
-      )}
     </div>
   );
 }

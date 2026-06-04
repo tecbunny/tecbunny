@@ -1,7 +1,7 @@
 -- Find product descriptions where pasted HTML, style blocks, or scripts are leaking into SEO text.
 select
   id,
-  coalesce(title, name, sku, id::text) as product_name,
+  coalesce(title, name, id::text) as product_name,
   left(description, 240) as current_description
 from products
 where description ~* '<(style|script|html|head|body|div|p|h[1-6]|ul|ol|li|table|span|br)\b'

@@ -386,10 +386,9 @@ export default function HomePage() {
                 OPERATIONAL IN GOA & MH
               </div>
 
-              <h1 className="text-4xl sm:text-5xl font-bold leading-tight text-white md:text-7xl font-tech" aria-label="CCTV, IT services, and home automation in Goa and Maharashtra">
-                <span className="glitch-text" data-text="CCTV, IT & Automation">CCTV, IT & Automation</span>
-                <br />
-                <span className="bg-gradient-to-r from-[#06b6d4] via-blue-500 to-[#8b5cf6] bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold leading-[1.12] text-white sm:text-5xl md:text-6xl xl:text-7xl font-tech" aria-label="CCTV, IT services, and home automation in Goa and Maharashtra">
+                <span className="glitch-text block pb-2" data-text="CCTV, IT & Automation">CCTV, IT & Automation</span>
+                <span className="block bg-gradient-to-r from-[#06b6d4] via-blue-500 to-[#8b5cf6] bg-clip-text pt-1 text-transparent">
                   for Goa & MH
                 </span>
               </h1>

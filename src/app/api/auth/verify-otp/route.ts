@@ -77,35 +77,10 @@ export async function POST(request: NextRequest) {
   }
   const purpose = type === 'signup' ? 'registration' : 'password_reset';
 
-  let otpId: string | undefined = typeof rawOtpId === 'string' ? rawOtpId.trim() : undefined;
+  const otpId = typeof rawOtpId === 'string' ? rawOtpId.trim() : undefined;
 
   if (!otpId) {
-    const lookupColumn = normalizedEmail ? 'email' : normalizedMobile ? 'phone' : null;
-    const lookupValue = normalizedEmail ?? normalizedMobile;
-
-    if (!lookupColumn || !lookupValue) {
-      return apiError('VALIDATION_ERROR', { overrideMessage: 'OTP reference not found. Please request a new code.', correlationId });
-    }
-
-    const { data: latestOtp, error: lookupError } = await supabaseAdmin
-      .from('otp_verifications')
-      .select('id')
-      .eq(lookupColumn, lookupValue)
-      .eq('purpose', purpose)
-      .eq('verified', false)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (lookupError) {
-      logger.warn('verify_otp.lookup_failed', { correlationId, error: lookupError.message, column: lookupColumn, value: lookupValue });
-    }
-
-    otpId = latestOtp?.id;
-  }
-
-  if (!otpId) {
-    return apiError('VALIDATION_ERROR', { overrideMessage: 'OTP reference is missing or expired. Please request a new code.', correlationId });
+    return apiError('VALIDATION_ERROR', { overrideMessage: 'otpId is required', correlationId });
   }
 
   const { data: otpRecord, error: otpRecordError } = await supabaseAdmin
@@ -161,11 +136,42 @@ export async function POST(request: NextRequest) {
     // For recovery type, find and confirm existing user
     if (type === 'recovery') {
       try {
-        const { data: allUsers } = await supabaseAdmin.auth.admin.listUsers();
-        const user = allUsers.users.find(u => 
-          (otpRecord.email && u.email === otpRecord.email) || 
-          (otpRecord.phone && u.user_metadata?.mobile === otpRecord.phone)
-        );
+        let user: any = null;
+        if (otpRecord.email) {
+          const { data: profile, error: profileErr } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('email', otpRecord.email.trim().toLowerCase())
+            .maybeSingle();
+          
+          if (profileErr) {
+            logger.error('verify_otp_profile_email_lookup_failed', { correlationId, error: profileErr.message });
+          } else if (profile?.id) {
+            const { data: userData, error: userErr } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+            if (!userErr && userData?.user) {
+              user = userData.user;
+            } else if (userErr) {
+              logger.error('verify_otp_get_user_failed', { correlationId, userId: profile.id, error: userErr.message });
+            }
+          }
+        } else if (otpRecord.phone) {
+          const { data: profile, error: profileErr } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('mobile', otpRecord.phone.trim())
+            .maybeSingle();
+          
+          if (profileErr) {
+            logger.error('verify_otp_profile_phone_lookup_failed', { correlationId, error: profileErr.message });
+          } else if (profile?.id) {
+            const { data: userData, error: userErr } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+            if (!userErr && userData?.user) {
+              user = userData.user;
+            } else if (userErr) {
+              logger.error('verify_otp_get_user_failed', { correlationId, userId: profile.id, error: userErr.message });
+            }
+          }
+        }
         
         if (user) {
           const { error: confirmError } = await supabaseAdmin.auth.admin.updateUserById(user.id, { email_confirm: true });

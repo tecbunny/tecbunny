@@ -156,7 +156,7 @@ export class CheckoutEngine {
       });
 
       const finalTotal = Math.max(0, grossSubtotal - totalDiscountApplied);
-      const finalSubtotal = Math.max(0, grossSubtotal - gstAmount); // Subtotal without GST
+      const finalSubtotal = Math.max(0, finalTotal - gstAmount); // Subtotal without GST
 
       // 5. Commission Calculation (Estimate)
       let commissionEstimate = undefined;
@@ -201,13 +201,7 @@ export class CheckoutEngine {
 
     } catch (error) {
       logger.error('Checkout Engine Calculation Failed', { error });
-      // Fallback
-      const grossSubtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      return {
-        ...this.emptyResponse(),
-        subtotal: grossSubtotal,
-        finalTotal: grossSubtotal,
-      };
+      throw error;
     }
   }
 

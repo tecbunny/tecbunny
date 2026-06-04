@@ -115,17 +115,32 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user by email or mobile
-    const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers();
-    
-    if (getUserError) {
-      logger.error('auth.reset_password.get_user_failed', { error: getUserError, identifier });
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+    let user: User | null = null;
+    try {
+      if (email) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email.trim().toLowerCase())
+          .maybeSingle();
+        if (profile) {
+          const { data: userData } = await supabase.auth.admin.getUserById(profile.id);
+          user = userData?.user;
+        }
+      } else if (mobile) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('mobile', mobile.trim())
+          .maybeSingle();
+        if (profile) {
+          const { data: userData } = await supabase.auth.admin.getUserById(profile.id);
+          user = userData?.user;
+        }
+      }
+    } catch (err) {
+      logger.error('auth.reset_password.lookup_failed', { error: err, identifier });
     }
-
-    const user = users.find((u: User) => u.email === email || (u.user_metadata?.mobile === mobile));
     
     if (!user) {
       return NextResponse.json(

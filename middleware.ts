@@ -46,8 +46,9 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set('x-correlation-id', correlationId)
 
   const pathname = request.nextUrl.pathname
-  const hostname = request.headers.get('host') || ''
-  const isCrmSubdomain = hostname === 'crm.tecbunny.com' || hostname.startsWith('crm.')
+  const hostname = request.nextUrl.hostname
+  const hostSegments = hostname.split('.')
+  const isCrmSubdomain = hostSegments[0] === 'crm' || hostSegments[0] === 'crm-staging' || hostSegments[0].startsWith('crm-')
 
   let response = NextResponse.next({ request: { headers: requestHeaders } })
 
@@ -128,13 +129,12 @@ export async function middleware(request: NextRequest) {
 
   // ─── CRM SUBDOMAIN (crm.tecbunny.com) ───────────────────────────────────────
   // This subdomain serves the admin/staff panel ONLY.
-  // Any public-facing page is off-limits — redirect it to www.tecbunny.com.
+  // Any public-facing page is off-limits.
   if (isCrmSubdomain) {
     const isStaffLoginPath = pathname.startsWith('/auth/staff-signin')
     const isAuthPath       = pathname.startsWith('/auth/callback') || pathname.startsWith('/auth/signout')
     const isApiPath        = pathname.startsWith('/api/')
-    const isManagementPath = pathname.startsWith('/management')
-    const isNextInternal   = pathname.startsWith('/_next') || pathname.startsWith('/favicon')
+    const isNextInternal   = pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.match(/\.(png|jpg|jpeg|gif|svg|ico)$/i)
     const isRoot           = pathname === '/'
 
     // Root → redirect to management (middleware will then enforce auth)
@@ -142,24 +142,35 @@ export async function middleware(request: NextRequest) {
       return finalizeResponse(NextResponse.redirect(new URL('/management', request.url)))
     }
 
-    // Allow: staff login, auth callbacks, signout, API, management panel, Next internals
-    const isCrmAllowed = isStaffLoginPath || isAuthPath || isApiPath || isManagementPath || isNextInternal
+    // Whitelist public access on CRM subdomain:
+    // Only allow login page, auth callbacks, signout, next internals, and public api endpoints.
+    const isPublicApi = isApiPath && isPublicApiRoute
+    const isAllowedWithoutAuth = isStaffLoginPath || isAuthPath || isNextInternal || isPublicApi
 
-    if (!isCrmAllowed) {
-      // Any other public page (/products, /services, /about, etc.) → redirect to main site
-      return finalizeResponse(NextResponse.redirect(new URL(`https://www.tecbunny.com${pathname}`, request.url)))
-    }
-
-    // Management panel paths: enforce authentication
-    if (!isApiPath && !isStaffLoginPath && !isAuthPath) {
-      if (!user) {
-        const loginUrl = new URL('/auth/staff-signin', request.url)
-        loginUrl.searchParams.set('next', pathname)
-        return finalizeResponse(NextResponse.redirect(loginUrl))
-      }
-      if (userRole && !CRM_STAFF_ROLES.has(userRole)) {
-        // Authenticated but not staff → show denied
-        return finalizeResponse(NextResponse.redirect(new URL('/auth/staff-signin?denied=1', request.url)))
+    if (!isAllowedWithoutAuth) {
+      if (isApiPath) {
+        if (!user) {
+          return finalizeResponse(NextResponse.json(
+            { error: 'Unauthorized', message: 'Authentication required for this endpoint' },
+            { status: 401 }
+          ))
+        }
+        if (!userRole || !CRM_STAFF_ROLES.has(userRole)) {
+          return finalizeResponse(NextResponse.json(
+            { error: 'Forbidden', message: 'Staff privileges required for this endpoint' },
+            { status: 403 }
+          ))
+        }
+      } else {
+        if (!user) {
+          const loginUrl = new URL('/auth/staff-signin', request.url)
+          loginUrl.searchParams.set('next', pathname)
+          return finalizeResponse(NextResponse.redirect(loginUrl))
+        }
+        if (!userRole || !CRM_STAFF_ROLES.has(userRole)) {
+          // Authenticated but not staff → show denied
+          return finalizeResponse(NextResponse.redirect(new URL('/auth/staff-signin?denied=1', request.url)))
+        }
       }
     }
   }

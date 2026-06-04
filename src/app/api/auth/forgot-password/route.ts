@@ -83,17 +83,28 @@ export async function POST(request: NextRequest) {
 
     // Check if user exists via email or mobile
     if (email) {
-      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers();
-      logger.info('forgot_password.lookup_start', { identifier, totalUsers: users?.length || 0 });
-      if (getUserError) {
-        logger.error('forgot_password.user_lookup_failed', { error: getUserError, identifier });
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle();
+
+      if (profileError) {
+        logger.error('forgot_password.profile_lookup_failed', { error: profileError, identifier });
         return NextResponse.json({ error: 'Service temporarily unavailable' }, { status: 500 });
       }
-      const authUser = users.find((u: User) => u.email === email);
-      if (!authUser) {
+
+      if (!profile) {
         logger.warn('forgot_password.user_missing', { identifier });
         return NextResponse.json({ success: true, message: 'If an account with this email or mobile exists, you will receive an OTP code.' });
       }
+
+      const { data: userData, error: getUserError } = await supabase.auth.admin.getUserById(profile.id);
+      if (getUserError || !userData?.user) {
+        logger.warn('forgot_password.user_auth_missing', { identifier, userId: profile.id, error: getUserError?.message });
+        return NextResponse.json({ success: true, message: 'If an account with this email or mobile exists, you will receive an OTP code.' });
+      }
+      logger.info('forgot_password.user_found', { identifier, userId: profile.id });
     } else if (mobile) {
       // Lookup by mobile in profiles
       const { data: profile, error: profileError } = await supabase

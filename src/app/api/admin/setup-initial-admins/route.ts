@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimit } from '@/lib/rate-limit';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.local';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';
@@ -10,13 +11,23 @@ const supabaseAdmin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-function isAuthorized(req: NextRequest) {
-  const token = req.headers.get('x-admin-token');
-  return !!token && token === process.env.ADMIN_MAINT_TOKEN;
+function getClientIp(request: NextRequest) {
+  return request.headers.get('cf-connecting-ip')?.trim()
+    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')?.trim()
+    || 'unknown';
 }
 
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  const clientIp = getClientIp(request);
+  if (!rateLimit(clientIp, 'setup_initial_admins_ip', { limit: 3, windowMs: 15 * 60 * 1000 })) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
+  const token = request.headers.get('x-admin-token');
+  const isTokenConfigured = process.env.ADMIN_MAINT_TOKEN && process.env.ADMIN_MAINT_TOKEN.length >= 32;
+
+  if (!isTokenConfigured || !token || token !== process.env.ADMIN_MAINT_TOKEN) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -25,22 +36,29 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const users = [
-      {
-        email: 'tecbunnysolution@gmail.com',
-        password: 'Bunny@6010',
-        name: 'Shubham Bhisaji',
-        mobile: '9604136010',
+    const users = [];
+    if (process.env.INITIAL_ADMIN_1_EMAIL && process.env.INITIAL_ADMIN_1_PASSWORD) {
+      users.push({
+        email: process.env.INITIAL_ADMIN_1_EMAIL,
+        password: process.env.INITIAL_ADMIN_1_PASSWORD,
+        name: process.env.INITIAL_ADMIN_1_NAME || 'Admin 1',
+        mobile: process.env.INITIAL_ADMIN_1_MOBILE || '',
         role: 'admin'
-      },
-      {
-        email: 'tecbunnysolutions@gmail.com',
-        password: 'Bunny@6010',
-        name: 'Shubham Bhisaji',
-        mobile: '7387375651',
+      });
+    }
+    if (process.env.INITIAL_ADMIN_2_EMAIL && process.env.INITIAL_ADMIN_2_PASSWORD) {
+      users.push({
+        email: process.env.INITIAL_ADMIN_2_EMAIL,
+        password: process.env.INITIAL_ADMIN_2_PASSWORD,
+        name: process.env.INITIAL_ADMIN_2_NAME || 'Admin 2',
+        mobile: process.env.INITIAL_ADMIN_2_MOBILE || '',
         role: 'admin'
-      }
-    ];
+      });
+    }
+
+    if (users.length === 0) {
+      return NextResponse.json({ error: 'Initial admin credentials environment variables are not configured.' }, { status: 500 });
+    }
 
     const results = [];
 

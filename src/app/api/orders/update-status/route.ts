@@ -246,26 +246,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const updatePayload: Record<string, unknown> = {
-      status: normalizedStatus,
-      processed_by: user.id,
-      updated_at: new Date().toISOString(),
-      ...resolvePaymentStatusUpdate(orderRecord, normalizedStatus),
-      ...sanitizeAdditionalData(additionalRaw),
-    };
+    const paymentStatusUpdate = resolvePaymentStatusUpdate(orderRecord, normalizedStatus);
+    const sanitizedAdditional = sanitizeAdditionalData(additionalRaw) as Record<string, unknown>;
 
+    const additionalDataPayload: Record<string, unknown> = { ...sanitizedAdditional };
     if (normalizedStatus === 'Cancelled' || normalizedStatus === 'Rejected') {
-      if (typeof updatePayload.cancellation_reason !== 'string' || !updatePayload.cancellation_reason) {
-        updatePayload.cancellation_reason = isCustomerCancel ? 'Cancelled by customer' : 'Cancelled via admin portal';
-      }
-      updatePayload.cancelled_at = new Date().toISOString();
-      updatePayload.cancelled_by = user.id;
+      const cancellationReason = sanitizedAdditional.cancellation_reason 
+        || (isCustomerCancel ? 'Cancelled by customer' : 'Cancelled via admin portal');
+      additionalDataPayload.cancellation_reason = cancellationReason;
     }
 
+    // Call update_order_status_v1 RPC atomically
     const { error: updateError } = await serviceClient
-      .from('orders')
-      .update(updatePayload)
-      .eq('id', orderId);
+      .rpc('update_order_status_v1', {
+        target_order_id: orderId,
+        new_status: normalizedStatus,
+        new_payment_status: paymentStatusUpdate.payment_status || null,
+        additional_data: additionalDataPayload,
+        p_pickup_code: null, // set in sendOrderStatusUpdateWhatsApp if Ready for Pickup
+        p_processed_by: user.id
+      });
 
     if (updateError) {
       logger.error('order_update_status_failed', {
@@ -290,7 +290,7 @@ export async function POST(request: NextRequest) {
         customerName: orderRecord.customer_name,
         amount: orderRecord.total,
         currency: 'INR',
-        cancelReason: updatePayload.cancellation_reason as string
+        cancelReason: additionalDataPayload.cancellation_reason as string
       });
     }
 

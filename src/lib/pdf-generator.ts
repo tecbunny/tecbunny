@@ -4,13 +4,44 @@ const fontkit = require('fontkit');
 import { PDFDocument, rgb, StandardFonts, type Color } from 'pdf-lib';
 import { logger } from './logger';
 
+// Helper to search for public assets at multiple levels to accommodate Vercel deployment/subfolder structures
+function resolveAssetPath(relativePath: string): string {
+  const pathsToTry = [
+    path.join(process.cwd(), relativePath),
+    path.join(process.cwd(), '..', relativePath),
+    path.join(__dirname, relativePath),
+    path.join(__dirname, '..', relativePath),
+    path.join(__dirname, '..', '..', relativePath),
+  ];
+  for (const p of pathsToTry) {
+    try {
+      const stat = require('fs').statSync(p);
+      if (stat.isFile()) {
+        return p;
+      }
+    } catch (_) {}
+  }
+  return path.join(process.cwd(), relativePath); // default fallback
+}
+
 export async function loadCompanyInfo() {
   try {
-    const filePath = path.join(process.cwd(), 'public', 'company-info.json');
+    const filePath = resolveAssetPath(path.join('public', 'company-info.json'));
     const raw = await fs.readFile(filePath, 'utf8');
     return JSON.parse(raw) as Record<string, any>;
   } catch (error) {
     logger.error('quotes.load_company_info_failed', { error });
+    
+    // Remote fetch fallback
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.tecbunny.com';
+      const response = await fetch(`${baseUrl}/company-info.json`);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (fallbackError) {
+      logger.error('quotes.load_company_info_remote_fallback_failed', { error: fallbackError });
+    }
     return {};
   }
 }
@@ -32,9 +63,8 @@ export async function buildPdf(options: {
   const today = new Date();
   const expiry = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const fontDir = path.join(process.cwd(), 'public', 'fonts');
-  const fontRegularPath = path.join(fontDir, 'NotoSans-Regular.ttf');
-  const fontBoldPath = path.join(fontDir, 'NotoSans-Bold.ttf');
+  const fontRegularPath = resolveAssetPath(path.join('public', 'fonts', 'NotoSans-Regular.ttf'));
+  const fontBoldPath = resolveAssetPath(path.join('public', 'fonts', 'NotoSans-Bold.ttf'));
   const remoteFontUrl =
     process.env.BRAND_FONT_URL ||
     'https://fonts.gstatic.com/s/notosans/v35/o-0IIpQlx3QUlC5A4PNr6DRAW_0.ttf';
@@ -116,7 +146,7 @@ export async function buildPdf(options: {
   const cin = company?.cin || '';
   const pan = company?.pan || '';
 
-  const logoPath = path.join(process.cwd(), 'public', 'brand.png');
+  const logoPath = resolveAssetPath(path.join('public', 'brand.png'));
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseLogoBucket = process.env.SUPABASE_LOGO_BUCKET || process.env.NEXT_PUBLIC_SUPABASE_LOGO_BUCKET || '';
   const supabaseLogoPath = process.env.SUPABASE_LOGO_PATH || process.env.NEXT_PUBLIC_SUPABASE_LOGO_PATH || '';
@@ -151,6 +181,17 @@ export async function buildPdf(options: {
       logoBuffer = await fs.readFile(logoPath);
     } catch (error) {
       logger.error('quotes.logo_load_failed', { error });
+      
+      // Remote fetch fallback
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.tecbunny.com';
+        const response = await fetch(`${baseUrl}/brand.png`);
+        if (response.ok) {
+          logoBuffer = Buffer.from(await response.arrayBuffer());
+        }
+      } catch (fallbackError) {
+        logger.error('quotes.logo_remote_fallback_failed', { error: fallbackError });
+      }
     }
   }
   const hasLogo = Boolean(logoBuffer);

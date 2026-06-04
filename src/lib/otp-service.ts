@@ -207,21 +207,23 @@ export class OtpService {
       const isValid = otpRecord.otp_code === verification.otp_code;
 
       if (isValid) {
-        // Mark as verified
-        const { error: updateError } = await this.supabase
+        // Mark as verified atomically
+        const { data: updatedRecord, error: updateError } = await this.supabase
           .from('order_otp_verifications')
           .update({
             verified: true,
             verified_at: new Date().toISOString(),
             attempts: newAttempts
           })
-          .eq('id', otpRecord.id);
+          .eq('id', otpRecord.id)
+          .eq('verified', false)
+          .select();
 
-        if (updateError) {
-          logger.error('Error updating OTP verification', { error: updateError, verification });
+        if (updateError || !updatedRecord || updatedRecord.length === 0) {
+          logger.error('Error updating OTP verification or already verified', { error: updateError, verification });
           return {
             success: false,
-            error: 'Failed to update verification status'
+            error: 'OTP already verified'
           };
         }
 

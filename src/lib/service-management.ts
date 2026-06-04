@@ -258,62 +258,27 @@ export class ServiceManagementService {
       if (!this.supabase) {
         return { success: false, error: 'Supabase service client not configured' };
       }
-      // Calculate parts cost
-      let totalPartsCost = 0;
-      
-      if (completion.parts_used && completion.parts_used.length > 0) {
-        // Insert service parts
-        const partsData = completion.parts_used.map(part => ({
-          ticket_id: completion.ticket_id,
-          part_name: part.part_name,
-          quantity: part.quantity,
-          unit_cost: part.unit_cost,
-          warranty_days: part.warranty_days || 0
-        }));
 
-        const { error: partsError } = await this.supabase
-          .from('service_parts')
-          .insert(partsData);
-
-        if (partsError) {
-          logger.error('Error inserting service parts', { error: partsError, completion });
-          return {
-            success: false,
-            error: 'Failed to save service parts'
-          };
-        }
-
-        // Calculate total parts cost
-        totalPartsCost = completion.parts_used.reduce(
-          (total, part) => total + (part.quantity * part.unit_cost), 
-          0
-        );
-      }
-
-      const totalCost = (completion.service_charge || 0) + totalPartsCost;
-
-      // Update service ticket with completion details
-      const { error } = await this.supabase
-        .from('service_tickets')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          engineer_notes: completion.engineer_notes,
-          service_charge: completion.service_charge,
-          parts_cost: totalPartsCost,
-          total_cost: totalCost,
-          actual_duration: completion.actual_duration,
-          photos: completion.photos
-        })
-        .eq('id', completion.ticket_id);
+      // Call database function atomically
+      const { data, error } = await this.supabase
+        .rpc('complete_service_ticket_v1', {
+          p_ticket_id: completion.ticket_id,
+          p_engineer_notes: completion.engineer_notes || '',
+          p_service_charge: completion.service_charge || 0,
+          p_actual_duration: completion.actual_duration || null,
+          p_photos: completion.photos || [],
+          p_parts_used: completion.parts_used || []
+        });
 
       if (error) {
-        logger.error('Error completing service', { error, completion });
+        logger.error('Error completing service atomically', { error, completion });
         return {
           success: false,
-          error: 'Failed to complete service'
+          error: error.message || 'Failed to complete service'
         };
       }
+
+      const totalCost = Number(data);
 
       // Update engineer statistics
       await this.updateEngineerStats(completion.ticket_id);

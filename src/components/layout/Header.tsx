@@ -330,7 +330,7 @@ export function Header() {
                     </DropdownMenuItem>
                     {showAdminOption && (
                       <DropdownMenuItem asChild className="cursor-pointer focus:bg-white/10">
-                        <Link href="/admin">Admin Panel</Link>
+                        <Link href="/mgmt/admin">Admin Panel</Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem asChild className="cursor-pointer focus:bg-white/10">
@@ -532,7 +532,7 @@ export function Header() {
               </Link>
               {showAdminOption && (
                 <Link
-                  href="/admin"
+                  href="/mgmt/admin"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-between rounded-lg px-4 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
                 >

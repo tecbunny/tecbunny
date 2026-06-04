@@ -455,13 +455,19 @@ export class DualChannelOTPManager {
 
       const otpId = matchingRecord.id;
       if (otpId) {
-        const { error: updateError } = await (this.supabase! as any)
+        const { data: updatedRecord, error: updateError } = await (this.supabase! as any)
           .from('otp_codes')
           .update({ used: true })
-          .eq('id', otpId);
+          .eq('id', otpId)
+          .eq('used', false)
+          .select();
 
-        if (updateError) {
-          logger.error('Failed to mark OTP as used:', updateError);
+        if (updateError || !updatedRecord || updatedRecord.length === 0) {
+          logger.error('OTP verification failed: already used or concurrent update', {
+            otpId,
+            identifier
+          });
+          return { valid: false };
         }
       }
 

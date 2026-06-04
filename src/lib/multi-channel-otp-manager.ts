@@ -381,7 +381,17 @@ class MultiChannelOTPManager {
         return { success: false, message: `Invalid OTP. ${otpRecord.max_attempts - newAttempts} attempts remaining.`, canRetry: true };
       }
 
-      await supabaseClient.from('otp_verifications').update({ verified: true, verified_at: new Date().toISOString() }).eq('id', verification.otpId);
+      // Atomically update verified to true where verified was false
+      const { data: updatedRecord, error: updateError } = await supabaseClient
+        .from('otp_verifications')
+        .update({ verified: true, verified_at: new Date().toISOString() })
+        .eq('id', verification.otpId)
+        .eq('verified', false)
+        .select();
+
+      if (updateError || !updatedRecord || updatedRecord.length === 0) {
+        return { success: false, message: 'OTP already verified or session expired.' };
+      }
       return { success: true, message: 'OTP verified successfully' };
     } catch (error) {
       return { success: false, message: 'Verification failed' };

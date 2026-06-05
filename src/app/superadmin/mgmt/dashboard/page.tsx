@@ -141,7 +141,7 @@ export default async function SuperadminDashboard() {
                 </p>
               </div>
               <Link 
-                href="/superadmin/ai-config"
+                href="/superadmin/mgmt/ai-config"
                 className="mt-6 inline-flex items-center gap-1.5 text-xs text-rose-400 group-hover:text-white font-semibold transition-colors uppercase tracking-wider"
               >
                 Configure Prompts <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
@@ -160,7 +160,7 @@ export default async function SuperadminDashboard() {
                 </p>
               </div>
               <Link 
-                href="/superadmin/payment-settings"
+                href="/superadmin/mgmt/payment-settings"
                 className="mt-6 inline-flex items-center gap-1.5 text-xs text-indigo-400 group-hover:text-white font-semibold transition-colors uppercase tracking-wider"
               >
                 Configure Gateways <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />

@@ -66,7 +66,7 @@ function SuperadminSignInForm() {
 
       // Clear Turnstile and redirect
       setCaptchaToken(null);
-      window.location.href = '/superadmin/dashboard';
+      window.location.href = '/superadmin/mgmt/dashboard';
     } catch (err) {
       console.error('Superadmin sign-in error:', err);
       setError('An unexpected error occurred. Please try again.');

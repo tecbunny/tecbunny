@@ -102,7 +102,7 @@ export default function PaymentSettingsConsole() {
             <span className="font-semibold tracking-widest text-sm uppercase text-white">Payment settings console</span>
           </div>
           <Link
-            href="/superadmin/dashboard"
+            href="/superadmin/mgmt/dashboard"
             className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -256,7 +256,7 @@ export default function PaymentSettingsConsole() {
             {/* Save Actions */}
             <div className="flex justify-end gap-3">
               <Link
-                href="/superadmin/dashboard"
+                href="/superadmin/mgmt/dashboard"
                 className="px-5 py-2.5 rounded-lg text-slate-400 hover:text-white text-xs font-semibold uppercase tracking-wider transition-colors"
               >
                 Cancel

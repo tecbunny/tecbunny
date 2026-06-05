@@ -107,7 +107,7 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/cart') ||
       pathname.startsWith('/checkout')
     ) {
-      return finalizeResponse(NextResponse.redirect(new URL('/superadmin/dashboard', request.url)))
+      return finalizeResponse(NextResponse.redirect(new URL('/superadmin/mgmt/dashboard', request.url)))
     }
   }
 

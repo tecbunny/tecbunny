@@ -735,45 +735,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Client Testimonials */}
-      <section className="bg-slate-900/30 py-24 border-t border-white/5">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Reviews</span>
-            <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">Client Testimonials</h2>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                quote: "TecBunny upgraded our entire resort with high-definition IP cameras and seamless Wi-Fi. Their 24/7 support team is incredibly responsive.",
-                author: "Aman Naik",
-                role: "Owner, Grand Sunset Resort",
-                location: "Goa"
-              },
-              {
-                quote: "We signed an AMC with TecBunny for our IT infrastructure. Our system downtime has dropped to zero, and their quarterly audits keep everything running perfectly.",
-                author: "Priyanka Joshi",
-                role: "Operations Director, Mahad Industrial Plaza",
-                location: "Maharashtra"
-              },
-              {
-                quote: "The home automation setup is incredible. We can control lighting, climate, and security from our smartphones. A premium experience all around.",
-                author: "Rajesh D'Souza",
-                role: "Residential Owner",
-                location: "Goa"
-              }
-            ].map((t) => (
-              <div key={t.author} className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 flex flex-col justify-between backdrop-blur-sm relative hover:border-violet-500/30 transition-all duration-300">
-                <p className="text-slate-300 text-sm italic mb-6 leading-relaxed">“{t.quote}”</p>
-                <div>
-                  <p className="text-sm font-semibold text-white">{t.author}</p>
-                  <p className="text-xs text-slate-500">{t.role} • {t.location}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       <section className="bg-slate-900/50 py-24 reveal-section is-revealed" data-reveal-id="about">
         <div className="container mx-auto px-6">

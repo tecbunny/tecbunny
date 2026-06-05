@@ -11,6 +11,7 @@ import { usePageContent } from '../hooks/use-page-content';
 interface PolicyPageProps {
   pageKey: string;
   defaultTitle?: string;
+  initialContent?: any;
 }
 
 type JumpItem = {
@@ -19,8 +20,13 @@ type JumpItem = {
   level: 'h2' | 'h3';
 };
 
-export default function PolicyPage({ pageKey, defaultTitle = 'Policy' }: PolicyPageProps) {
-  const { content, loading, error } = usePageContent(pageKey);
+export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialContent }: PolicyPageProps) {
+  const { content: clientContent, loading: clientLoading, error: clientError } = usePageContent(initialContent ? '' : pageKey);
+  
+  const content = initialContent || clientContent;
+  const loading = initialContent ? false : clientLoading;
+  const error = initialContent ? null : clientError;
+
   const policyData = content?.content || {};
   const rawDescription = extractRawDescription(policyData);
   const descriptionHtml = formatDescriptionAsHtml(rawDescription);

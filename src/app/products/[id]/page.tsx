@@ -126,7 +126,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
         />
       )}
-      <ProductDetailPage productId={id} />
+      <ProductDetailPage productId={id} initialProduct={product} />
     </>
   );
 }

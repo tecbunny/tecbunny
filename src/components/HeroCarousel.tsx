@@ -119,9 +119,9 @@ export default function HeroCarousel({ pageKey, intervalMs = 6000, className }: 
 
   if (loading) {
     return (
-      <section className={cn('py-6', className)} aria-label={PAGE_LABEL[pageKey]}>
+      <section className={cn('py-10 sm:py-14', className)} aria-label={PAGE_LABEL[pageKey]}>
         <div className="container mx-auto px-4">
-          <div className="h-48 w-full animate-pulse rounded-2xl bg-muted" />
+          <div className="h-[340px] sm:h-[420px] w-full animate-pulse rounded-3xl bg-slate-900/60 border border-white/5" />
         </div>
       </section>
     );

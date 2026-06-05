@@ -211,7 +211,76 @@ function ProductGridImage({
   );
 }
 
-export function ShopPageContent() {
+interface ShopPageContentProps {
+  initialRawProducts?: any[];
+  initialRawAutoOffers?: any[];
+}
+
+function normalizeRawProduct(p: any): Product {
+  const rawPrice = typeof p.price === 'number' ? p.price : Number(p.price) || 0;
+  const rawMrp = typeof p.mrp === 'number' ? p.mrp : Number(p.mrp) || (rawPrice * 1.2);
+
+  const resolvedTitle = [p.title, p.name]
+    .map((value) => (typeof value === 'string' ? value.trim() : ''))
+    .find((value) => value.length > 0) || 'Unnamed Product';
+
+  // Get valid display image using utility function
+  const finalImage = getProductDisplayImage(
+    { ...p, title: resolvedTitle, name: resolvedTitle },
+    {
+      fallbackText: resolvedTitle,
+      fallbackSize: '400x400',
+    }
+  );
+
+  const rawHsn =
+    p.hsnCode ??
+    (p as any).hsn_code ??
+    (p as any).hsn ??
+    (p as any).hsn_sac ??
+    null;
+  const rawGst =
+    p.gstRate ??
+    (p as any).gst_rate ??
+    (p as any).gst_percentage ??
+    null;
+
+  let resolvedGst: number | undefined;
+  if (typeof rawGst === 'number' && Number.isFinite(rawGst)) {
+    resolvedGst = rawGst;
+  } else if (typeof rawGst === 'string') {
+    const parsed = Number.parseFloat(rawGst);
+    resolvedGst = Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  const gstRate = resolvedGst ?? 18;
+  const priceNum = Math.round(rawPrice * (1 + gstRate / 100));
+  const mrpNum = Math.round(rawMrp * (1 + gstRate / 100));
+
+  const resolvedHsn = typeof rawHsn === 'string' && rawHsn.trim().length > 0
+    ? rawHsn.trim()
+    : undefined;
+
+  return {
+    ...p,
+    id: p.id,
+    name: resolvedTitle,
+    title: resolvedTitle,
+    category: p.category || p.product_type || 'General',
+    brand: p.brand || p.vendor || undefined,
+    price: priceNum,
+    mrp: mrpNum,
+    popularity: p.popularity || 0,
+    rating: p.rating || 0,
+    reviewCount: p.review_count ?? p.reviewCount ?? 0,
+    created_at: p.created_at || new Date().toISOString(),
+    image: finalImage || undefined,
+    hsnCode: resolvedHsn,
+    gstRate: gstRate,
+  } as Product;
+}
+
+export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: ShopPageContentProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -222,13 +291,42 @@ export function ShopPageContent() {
   const brandFilter = searchParams.get('brand') || '';
   const refresh = searchParams.get('refresh') || '';
   
-  const [products, setProducts] = React.useState<Product[]>([]);
+  const initialEnrichedProducts = React.useMemo(() => {
+    if (initialRawProducts && initialRawProducts.length > 0) {
+      const normalized = initialRawProducts.map(normalizeRawProduct);
+      return applyAutoOffersToProducts(normalized, initialRawAutoOffers || []);
+    }
+    return [];
+  }, [initialRawProducts, initialRawAutoOffers]);
+
+  const [products, setProducts] = React.useState<Product[]>(initialEnrichedProducts);
   const [filteredProducts, setFilteredProducts] = React.useState<Product[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(!initialRawProducts || initialRawProducts.length === 0);
   const [fetchWarning, setFetchWarning] = React.useState<string | null>(null);
-  const [categories, setCategories] = React.useState<string[]>([]);
-  const [priceRange, setPriceRange] = React.useState<[number, number]>([0, 100000]);
-  const [maxPrice, setMaxPrice] = React.useState(100000);
+  
+  const [categories, setCategories] = React.useState<string[]>(() => {
+    if (initialEnrichedProducts.length > 0) {
+      return [...new Set(initialEnrichedProducts.map(p => p.category).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b));
+    }
+    return [];
+  });
+  
+  const [priceRange, setPriceRange] = React.useState<[number, number]>(() => {
+    if (initialEnrichedProducts.length > 0) {
+      const prices = initialEnrichedProducts.map(p => p.price);
+      return [Math.min(...prices), Math.max(...prices)];
+    }
+    return [0, 100000];
+  });
+  
+  const [maxPrice, setMaxPrice] = React.useState(() => {
+    if (initialEnrichedProducts.length > 0) {
+      return Math.max(...initialEnrichedProducts.map(p => p.price));
+    }
+    return 100000;
+  });
+  
   const [localSearchQuery, setLocalSearchQuery] = React.useState(searchQuery);
   const { addToCart } = useCart();
   useRevealSections();
@@ -252,6 +350,9 @@ export function ShopPageContent() {
 
   // Fetch products from database
   React.useEffect(() => {
+    if (initialRawProducts && initialRawProducts.length > 0) {
+      return;
+    }
     const fetchProducts = async () => {
       setLoading(true);
       setFetchWarning(null);
@@ -289,72 +390,7 @@ export function ShopPageContent() {
         }
         
         // Normalize products to ensure required fields exist and are properly typed
-        const normalized = (data || []).map((p: any) => {
-          const rawPrice = typeof p.price === 'number' ? p.price : Number(p.price) || 0;
-          const rawMrp = typeof p.mrp === 'number' ? p.mrp : Number(p.mrp) || (rawPrice * 1.2);
-
-          const resolvedTitle = [p.title, p.name]
-            .map((value) => (typeof value === 'string' ? value.trim() : ''))
-            .find((value) => value.length > 0) || 'Unnamed Product';
-
-          // Get valid display image using utility function
-          const finalImage = getProductDisplayImage(
-            { ...p, title: resolvedTitle, name: resolvedTitle },
-            {
-              fallbackText: resolvedTitle,
-              fallbackSize: '400x400',
-            }
-          );
-
-          const rawHsn =
-            p.hsnCode ??
-            (p as any).hsn_code ??
-            (p as any).hsn ??
-            (p as any).hsn_sac ??
-            null;
-          const rawGst =
-            p.gstRate ??
-            (p as any).gst_rate ??
-            (p as any).gst_percentage ??
-            null;
-
-          let resolvedGst: number | undefined;
-          if (typeof rawGst === 'number' && Number.isFinite(rawGst)) {
-            resolvedGst = rawGst;
-          } else if (typeof rawGst === 'string') {
-            const parsed = Number.parseFloat(rawGst);
-            resolvedGst = Number.isFinite(parsed) ? parsed : undefined;
-          }
-
-          const gstRate = resolvedGst ?? 18;
-          const priceNum = Math.round(rawPrice * (1 + gstRate / 100));
-          const mrpNum = Math.round(rawMrp * (1 + gstRate / 100));
-
-          const resolvedHsn = typeof rawHsn === 'string' && rawHsn.trim().length > 0
-            ? rawHsn.trim()
-            : undefined;
-
-          return {
-            ...p,
-            id: p.id,
-            // Ensure name/title always present and in sync
-            name: resolvedTitle,
-            title: resolvedTitle,
-            // Map category/brand from alternative fields when missing
-            category: p.category || p.product_type || 'General',
-            brand: p.brand || p.vendor || undefined,
-            // Provide safe defaults
-            price: priceNum,
-            mrp: mrpNum,
-            popularity: p.popularity || 0,
-            rating: p.rating || 0,
-            reviewCount: p.review_count ?? p.reviewCount ?? 0,
-            created_at: p.created_at || new Date().toISOString(),
-            image: finalImage || undefined,
-            hsnCode: resolvedHsn,
-            gstRate: gstRate,
-          } as Product;
-        });
+        const normalized = data.map(normalizeRawProduct);
 
         logger.info('ShopPage: Products normalized', { count: normalized.length });
 
@@ -391,7 +427,7 @@ export function ShopPageContent() {
     };
 
     fetchProducts();
-  }, [refresh]);
+  }, [refresh, initialRawProducts]);
 
   // Filter and sort products
   React.useEffect(() => {

@@ -31,9 +31,9 @@ const AddToCartButton = dynamic(
 const HeroCarousel = dynamic(() => import('./HeroCarousel'), {
   ssr: false,
   loading: () => (
-    <section className="py-6" aria-hidden="true">
+    <section className="py-10 sm:py-14" aria-hidden="true">
       <div className="container mx-auto px-4">
-        <div className="h-48 w-full rounded-2xl bg-slate-900/60" />
+        <div className="h-[340px] sm:h-[420px] w-full animate-pulse rounded-3xl bg-slate-900/60 border border-white/5" />
       </div>
     </section>
   ),

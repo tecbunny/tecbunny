@@ -18,15 +18,68 @@ import { StarRating } from './StarRating';
 
 interface ProductDetailPageProps {
   productId: string;
+  initialProduct?: any;
 }
 
-export function ProductDetailPage({ productId }: ProductDetailPageProps) {
+export function ProductDetailPage({ productId, initialProduct }: ProductDetailPageProps) {
   const router = useRouter();
   const { trackEvent } = useAnalytics();
   const { toast } = useToast();
   const isMountedRef = useRef(true);
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  const initialEnrichedProduct = useMemo(() => {
+    if (initialProduct) {
+      const p = initialProduct;
+      const resolvedTitle = [p.title, p.name]
+        .map((value) => (typeof value === 'string' ? value.trim() : ''))
+        .find((value) => value.length > 0) || 'Product';
+
+      const rawHsn =
+        p.hsnCode ??
+        (p as any).hsn_code ??
+        (p as any).hsn ??
+        (p as any).hsn_sac ??
+        null;
+      const rawGst =
+        p.gstRate ??
+        (p as any).gst_rate ??
+        (p as any).gst_percentage ??
+        null;
+
+      let resolvedGst: number | undefined;
+      if (typeof rawGst === 'number' && Number.isFinite(rawGst)) {
+        resolvedGst = rawGst;
+      } else if (typeof rawGst === 'string') {
+        const parsed = Number.parseFloat(rawGst);
+        resolvedGst = Number.isFinite(parsed) ? parsed : undefined;
+      }
+
+      const resolvedHsn = typeof rawHsn === 'string' && rawHsn.trim().length > 0
+        ? rawHsn.trim()
+        : undefined;
+
+      const gstRate = resolvedGst ?? 18;
+      const rawPrice = typeof p.price === 'number' ? p.price : Number(p.price) || 0;
+      const rawMrp = typeof p.mrp === 'number' ? p.mrp : Number(p.mrp) || (rawPrice * 1.2);
+      
+      const priceNum = Math.round(rawPrice * (1 + gstRate / 100));
+      const mrpNum = Math.round(rawMrp * (1 + gstRate / 100));
+
+      return {
+        ...p,
+        title: resolvedTitle,
+        name: resolvedTitle,
+        price: priceNum,
+        mrp: mrpNum,
+        hsnCode: resolvedHsn,
+        gstRate: gstRate,
+      } as Product;
+    }
+    return null;
+  }, [initialProduct]);
+
+  const [product, setProduct] = useState<Product | null>(initialEnrichedProduct);
+  const [loading, setLoading] = useState(!initialProduct);
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState<'specs' | 'description' | 'warranty'>('specs');
   const supabase = createClient();
@@ -137,6 +190,9 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
   }, []);
 
   useEffect(() => {
+    if (initialProduct) {
+      return;
+    }
     const fetchProduct = async () => {
       if (isMountedRef.current) {
         setLoading(true);
@@ -222,7 +278,7 @@ export function ProductDetailPage({ productId }: ProductDetailPageProps) {
     };
 
     fetchProduct();
-  }, [productId, supabase]);
+  }, [productId, supabase, initialProduct]);
 
   const handleShare = async () => {
     if (!product) return;

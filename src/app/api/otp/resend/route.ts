@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import MultiChannelOTPManager from '@/lib/multi-channel-otp-manager';
+import { OTPManager } from '@/lib/otp-manager';
 
-const otpManager = new MultiChannelOTPManager();
+const otpManager = new OTPManager();
 
 /**
  * Resend OTP using WhatsApp or email

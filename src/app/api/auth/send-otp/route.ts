@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-import MultiChannelOTPManager from '@/lib/multi-channel-otp-manager';
+import { OTPManager } from '@/lib/otp-manager';
 import { logger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/errors';
 import { verifyCaptcha } from '@/lib/captcha/captcha-service';
@@ -28,7 +28,7 @@ function getClientIp(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const correlationId = request.headers.get('x-correlation-id');
-  const otpManager = new MultiChannelOTPManager();
+  const otpManager = new OTPManager();
   try {
     let body: any;
     try { body = await request.json(); } catch { return apiError('VALIDATION_ERROR', { overrideMessage: 'Invalid JSON body', correlationId }); }

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-import MultiChannelOTPManager from '@/lib/multi-channel-otp-manager';
+import { OTPManager } from '@/lib/otp-manager';
 import { logger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/errors';
 import { rateLimit } from '@/lib/rate-limit';
@@ -12,7 +12,7 @@ const isSupabaseConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const otpService = new MultiChannelOTPManager();
+const otpService = new OTPManager();
 const VERIFY_OTP_IP_LIMIT = { limit: 15, windowMs: 15 * 60 * 1000 };
 const VERIFY_OTP_IDENTIFIER_LIMIT = { limit: 10, windowMs: 15 * 60 * 1000 };
 

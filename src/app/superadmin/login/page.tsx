@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useMemo } from 'react';
 import NextDynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, ShieldAlert, Terminal } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, AlertCircle, ShieldAlert, Terminal } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeRole } from '@/lib/roles';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 function SuperadminSignInForm() {
-  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +47,7 @@ function SuperadminSignInForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: email.trim(),
+          userId: userId.trim(),
           password,
           captchaToken
         })
@@ -97,23 +97,23 @@ function SuperadminSignInForm() {
 
         <div className="bg-slate-950/80 backdrop-blur-xl border border-rose-500/20 rounded-2xl p-8 shadow-[0_0_50px_rgba(244,63,94,0.05)]">
           <form onSubmit={handleSignIn} className="space-y-5">
-            {/* Email */}
+            {/* User ID */}
             <div className="relative">
-              <Label htmlFor="superadmin-email" className="text-xs text-slate-400 mb-1.5 block">
-                Superadmin Email
+              <Label htmlFor="superadmin-user-id" className="text-xs text-slate-400 mb-1.5 block">
+                Superadmin User ID
               </Label>
               <div className="relative">
                 <Input
-                  id="superadmin-email"
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="superadmin@tecbunny.com"
+                  id="superadmin-user-id"
+                  type="text"
+                  value={userId}
+                  onChange={e => setUserId(e.target.value)}
+                  placeholder="superadmin"
                   className="w-full bg-slate-900/60 border border-slate-800 rounded-lg px-4 py-3 text-white outline-none focus:border-rose-500 transition-colors pr-10"
                   required
-                  autoComplete="email"
+                  autoComplete="username"
                 />
-                <Mail className="absolute right-3 top-3.5 h-4 w-4 text-slate-600 pointer-events-none" />
+                <User className="absolute right-3 top-3.5 h-4 w-4 text-slate-600 pointer-events-none" />
               </div>
             </div>
 
@@ -169,7 +169,7 @@ function SuperadminSignInForm() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading || !email || !password}
+              disabled={isLoading || !userId || !password}
               className="group relative w-full py-3 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold tracking-widest uppercase rounded-lg transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(244,63,94,0.2)] overflow-hidden"
             >
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-700" />

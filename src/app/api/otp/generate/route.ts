@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient } from '@supabase/supabase-js';
 
-import MultiChannelOTPManager, { type OTPRequest } from '@/lib/multi-channel-otp-manager';
+import { OTPManager, type OTPRequest } from '@/lib/otp-manager';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'service-role-placeholder';
@@ -12,7 +12,7 @@ const supabase = createClient(
   SUPABASE_SERVICE_ROLE_KEY
 );
 
-const otpManager = new MultiChannelOTPManager();
+const otpManager = new OTPManager();
 
 /**
  * Generate OTP with WhatsApp or email support

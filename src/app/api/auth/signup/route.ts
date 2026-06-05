@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyCaptcha } from '@/lib/captcha/captcha-service';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
-import MultiChannelOTPManager, { type OTPChannel } from '@/lib/multi-channel-otp-manager';
+import { OTPManager, type OTPChannel } from '@/lib/otp-manager';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'service-role-placeholder';
@@ -29,7 +29,7 @@ function getSupabaseAdmin() {
     }
   });
 }
-const otpService = new MultiChannelOTPManager();
+const otpService = new OTPManager();
 
 export async function POST(request: NextRequest) {
   try {

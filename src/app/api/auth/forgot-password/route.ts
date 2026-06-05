@@ -5,7 +5,7 @@ import type { User } from '@supabase/supabase-js';
 
 import { verifyCaptcha } from '@/lib/captcha/captcha-service';
 import { logger } from '@/lib/logger';
-import MultiChannelOTPManager, { type OTPChannel } from '@/lib/multi-channel-otp-manager';
+import { OTPManager, type OTPChannel } from '@/lib/otp-manager';
 
 // Rate limiting storage (in production, use Redis)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -32,7 +32,7 @@ function isRateLimited(email: string): boolean {
   return false;
 }
 
-const otpService = new MultiChannelOTPManager();
+const otpService = new OTPManager();
 
 export async function POST(request: NextRequest) {
   try {

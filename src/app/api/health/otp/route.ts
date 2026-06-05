@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 
-import otpManager from '@/lib/otp-manager';
+import { otpManager } from '@/lib/otp-manager';
 
 export async function GET() {
   try {
     const testEmail = 'healthcheck@example.com';
-    const otp = otpManager.generateOTP();
+    const otp = await otpManager.generateOTP();
     const stored = await otpManager.storeOTP(testEmail, otp, 'signup');
     return NextResponse.json({ ok: true, stored });
   } catch (error) {

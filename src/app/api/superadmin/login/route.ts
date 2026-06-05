@@ -12,8 +12,9 @@ function getClientIp(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { email, password, captchaToken } = await request.json();
+    const { userId, email, password, captchaToken } = await request.json();
     const ip = getClientIp(request);
+    const submittedUserId = String(userId ?? email ?? '').trim();
 
     // Verify Turnstile Captcha if site key is configured
     const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -25,27 +26,27 @@ export async function POST(request: Request) {
       }
     }
 
-    const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
+    const correctUserId = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
     const correctPassword = process.env.SUPERADMIN_PASSWORD;
 
-    if (!correctEmail || !correctPassword) {
+    if (!correctUserId || !correctPassword) {
       logger.error('superadmin_login.configuration_missing');
       return NextResponse.json({ error: 'Superadmin credentials are not configured on server.' }, { status: 500 });
     }
 
-    if (email.trim() !== correctEmail.trim() || password !== correctPassword) {
-      logger.warn('superadmin_login.failed_attempt', { email, ip });
+    if (submittedUserId !== correctUserId.trim() || password !== correctPassword) {
+      logger.warn('superadmin_login.failed_attempt', { userId: submittedUserId, ip });
       return NextResponse.json({ error: 'Invalid superadmin credentials.' }, { status: 401 });
     }
 
     // Generate secure session token (SHA-256 hash of credentials + secret salt)
     const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-    const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
+    const msgBuffer = new TextEncoder().encode(`${correctUserId}:${correctPassword}:${secret}`);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const token = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    logger.info('superadmin_login.success', { email, ip });
+    logger.info('superadmin_login.success', { userId: submittedUserId, ip });
 
     const response = NextResponse.json({ success: true, message: 'Superadmin authenticated successfully' });
 

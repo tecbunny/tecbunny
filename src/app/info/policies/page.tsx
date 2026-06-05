@@ -61,7 +61,7 @@ export default function PoliciesPage() {
   return (
     <div className="relative overflow-hidden bg-slate-950 text-slate-200">
       {/* Dynamic Background Accents */}
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-10" />
+      <div className="pointer-events-none absolute inset-0 bg-noise opacity-10" />
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none" />
 

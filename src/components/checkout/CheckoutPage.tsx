@@ -560,7 +560,7 @@ export default function CheckoutPage() {
       `}</style>
 
       <section className="pt-28 pb-16 relative">
-        <div className="fixed inset-0 bg-[url('/noise.svg')] opacity-5 pointer-events-none"></div>
+        <div className="fixed inset-0 bg-noise opacity-5 pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex items-center justify-between mb-8">

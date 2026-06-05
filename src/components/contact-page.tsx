@@ -213,7 +213,7 @@ export default function ContactPage() {
 
   return (
     <section className="relative overflow-hidden bg-slate-950 text-slate-200">
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
+      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="pointer-events-none absolute left-20 top-20 h-96 w-96 rounded-full bg-cyan-500/10 blur-[120px]" />
 
       <div className="mx-auto max-w-7xl px-4 pb-20 pt-0 sm:px-6 lg:px-8 sm:pt-0">

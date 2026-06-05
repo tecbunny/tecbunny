@@ -263,7 +263,7 @@ function StaffSignInForm() {
       `}</style>
 
       {/* Background effects */}
-      <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-noise opacity-10 pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-indigo-500/5 rounded-full blur-[120px] animate-pulse pointer-events-none" />
 
       <div className="relative w-full max-w-md">

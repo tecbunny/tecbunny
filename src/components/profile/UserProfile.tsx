@@ -272,7 +272,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-8 relative">
-          <div className="fixed inset-0 bg-[url('/noise.svg')] opacity-5 pointer-events-none"></div>
+          <div className="fixed inset-0 bg-noise opacity-5 pointer-events-none"></div>
 
           <div className="max-w-6xl mx-auto space-y-8 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

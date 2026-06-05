@@ -20,7 +20,7 @@ export const metadata: Metadata = createPageMetadata({
 function ProductsPageSkeleton() {
   return (
     <div className="relative overflow-hidden bg-slate-950 text-slate-200 min-h-screen">
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
+      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <section className="py-10 sm:py-14">
         <div className="container mx-auto px-4">
           <div className="h-[340px] sm:h-[420px] w-full animate-pulse rounded-3xl bg-slate-900/60 border border-white/5" />

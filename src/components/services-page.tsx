@@ -475,7 +475,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
   return (
     <div className="relative overflow-hidden bg-slate-950 text-slate-200">
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
+      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="pointer-events-none absolute left-1/2 top-32 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-blue-500/10 blur-[140px]" />
 
       <HeroCarousel pageKey="services" />

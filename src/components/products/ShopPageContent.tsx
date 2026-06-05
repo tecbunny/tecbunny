@@ -501,7 +501,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
 
   return (
     <section className="relative overflow-hidden bg-slate-950 text-slate-200">
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
+      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="pointer-events-none absolute right-0 top-0 h-[500px] w-[500px] rounded-full bg-cyan-500/10 blur-[120px]" />
 
       <HeroCarousel pageKey="products" />

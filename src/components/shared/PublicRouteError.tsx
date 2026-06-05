@@ -9,7 +9,7 @@ type PublicRouteErrorProps = {
 export function PublicRouteError({ title, description, reset }: PublicRouteErrorProps) {
   return (
     <div className="relative overflow-hidden bg-slate-950 text-slate-200">
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
+      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="mx-auto flex min-h-[60vh] max-w-3xl flex-col items-start justify-center px-4 py-20 sm:px-6 lg:px-8">
         <span className="rounded-full border border-rose-400/30 bg-rose-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-rose-300">
           Route Error

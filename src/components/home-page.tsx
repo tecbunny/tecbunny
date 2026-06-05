@@ -371,7 +371,7 @@ export default function HomePage() {
         {enableAmbientEffects ? (
           <canvas ref={canvasRef} className={`pointer-events-none absolute inset-0 h-full w-full opacity-30 ${prefersReducedMotion ? 'hidden' : ''}`} aria-hidden="true" />
         ) : null}
-        <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20 brightness-100 contrast-150" />
+        <div className="pointer-events-none absolute inset-0 bg-noise opacity-20 brightness-100 contrast-150" />
         <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[#06b6d4]/20 blur-[100px]" aria-hidden="true" />
         <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-[#8b5cf6]/20 blur-[100px]" aria-hidden="true" />
 

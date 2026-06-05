@@ -55,7 +55,7 @@ export default async function CustomisedSetupsPage({
   return (
     <main className="min-h-screen bg-[#030712] text-slate-200">
       <section className="relative pt-28 pb-12 overflow-hidden border-b border-white/5">
-        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10"></div>
+        <div className="absolute inset-0 bg-noise opacity-10"></div>
         <div className="relative z-10 mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-cyan-300">
             <ShieldCheck className="h-4 w-4" /> Custom Setup Configurator

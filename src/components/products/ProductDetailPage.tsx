@@ -381,7 +381,7 @@ export function ProductDetailPage({ productId, initialProduct }: ProductDetailPa
       `}</style>
 
       <div className="relative">
-        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-5 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-noise opacity-5 pointer-events-none"></div>
         <div className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8 relative z-10">
           <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
             <button

@@ -5,7 +5,7 @@ import Link from 'next/link';
 export default function AboutPage() {
   return (
     <div className="relative overflow-hidden bg-slate-950 text-slate-200">
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
+      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="pointer-events-none absolute top-20 right-20 h-96 w-96 rounded-full bg-cyan-500/10 blur-[110px]" />
 
       <section className="relative pb-20 pt-0 sm:pt-0">

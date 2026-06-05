@@ -68,7 +68,7 @@ export default function LocalServiceLandingPage({
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-200">
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
+      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="pointer-events-none absolute left-1/2 top-24 h-[32rem] w-[48rem] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-[140px]" />
 
       <section className="relative border-b border-white/5 px-4 pb-16 pt-28 sm:px-6 lg:px-8">

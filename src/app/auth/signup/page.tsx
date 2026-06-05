@@ -259,7 +259,7 @@ export default function SignUpPage() {
             box-shadow: 0 0 40px rgba(139, 92, 246, 0.15);
           }
         `}</style>
-        <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10" />
+        <div className="absolute inset-0 bg-noise opacity-10" />
         <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] bg-purple-400/10 rounded-full blur-[100px] animate-pulse pointer-events-none" />
 
         <div className="relative w-full max-w-md signup-card rounded-2xl p-8 text-center">
@@ -300,7 +300,7 @@ export default function SignUpPage() {
         }
       `}</style>
 
-      <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10" />
+      <div className="absolute inset-0 bg-noise opacity-10" />
       <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-400/10 rounded-full blur-[100px] animate-pulse pointer-events-none" />
 
 

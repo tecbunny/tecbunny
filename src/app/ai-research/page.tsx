@@ -159,7 +159,7 @@ export default function AiResearchPage() {
 
   return (
     <div className="flex h-[calc(100vh-80px)] flex-col bg-slate-950 text-slate-200">
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
+      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between border-b border-white/10 bg-slate-950/80 px-4 py-4 backdrop-blur-md sm:px-6 lg:px-8">

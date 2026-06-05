@@ -121,7 +121,7 @@ export default function AdminDashboard() {
             `}</style>
 
             <div className="relative">
-                <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-5 pointer-events-none" />
+                <div className="absolute inset-0 bg-noise opacity-5 pointer-events-none" />
 
                 <div className="relative z-10 mx-auto max-w-7xl px-6 py-8 lg:px-10 space-y-8">
                     <div className="flex flex-wrap items-center justify-between gap-4">

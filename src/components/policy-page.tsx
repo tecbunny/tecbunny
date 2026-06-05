@@ -42,7 +42,7 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialCo
   if (loading) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-200">
-        <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-10" />
+        <div className="pointer-events-none absolute inset-0 bg-noise opacity-10" />
         <div className="mx-auto max-w-5xl px-4 pb-16 pt-12 sm:px-6 lg:px-8">
           <Link 
             href="/" 
@@ -68,7 +68,7 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialCo
   if (error || !content) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-200">
-        <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
+        <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
         <div className="mx-auto max-w-5xl px-4 pb-20 pt-12 sm:px-6 lg:px-8">
           <Link 
             href="/" 
@@ -134,7 +134,7 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialCo
           font-weight: 600 !important;
         }
       ` }} />
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-10" />
+      <div className="pointer-events-none absolute inset-0 bg-noise opacity-10" />
       
       {/* Decorative Blur Orbs */}
       <div className="absolute top-10 left-10 w-[400px] h-[400px] bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none" />

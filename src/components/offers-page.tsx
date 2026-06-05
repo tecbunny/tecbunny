@@ -153,7 +153,7 @@ export default function OffersPage() {
 
   return (
     <div className="relative overflow-hidden bg-slate-950 text-slate-200">
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.svg')] opacity-20" />
+      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="pointer-events-none absolute right-1/4 top-0 h-[600px] w-[600px] rounded-full bg-amber-400/10 blur-[140px]" />
 
       <HeroCarousel pageKey="offers" />

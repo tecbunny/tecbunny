@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const correctEmail = process.env.SUPERADMIN_EMAIL;
+    const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
     const correctPassword = process.env.SUPERADMIN_PASSWORD;
 
     if (!correctEmail || !correctPassword) {

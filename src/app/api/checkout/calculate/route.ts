@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     // Check superadmin session cookie first to block checkout calculations
     const superadminCookie = req.cookies.get('superadmin-session')?.value;
     if (superadminCookie) {
-      const correctEmail = process.env.SUPERADMIN_EMAIL;
+      const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
       const correctPassword = process.env.SUPERADMIN_PASSWORD;
       if (correctEmail && correctPassword) {
         const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';

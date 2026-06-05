@@ -254,31 +254,36 @@ export default function AdminDashboard() {
                             <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-6">
                                 <h3 className="font-semibold text-white tracking-wide mb-4">Command Protocols</h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <Link href="/mgmt/admin/products">
+                                    <Link href="/mgmt/admin/staff">
                                         <div className="p-3 text-center rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-semibold text-white cursor-pointer">
-                                            Manage Products
+                                            Staff Management
                                         </div>
                                     </Link>
-                                    <Link href="/mgmt/admin/services">
+                                    <Link href="/mgmt/admin/inventory">
                                         <div className="p-3 text-center rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-semibold text-white cursor-pointer">
-                                            Manage Services
+                                            Inventory Management
                                         </div>
                                     </Link>
-                                    <Link href="/mgmt/admin/innovation">
+                                    <Link href="/mgmt/admin/orders">
                                         <div className="p-3 text-center rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-semibold text-white cursor-pointer">
-                                            Manage Innovation
+                                            All Orders
                                         </div>
                                     </Link>
-                                    <button
-                                        className="p-3 rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-semibold text-white"
-                                    >
-                                        New Quote
-                                    </button>
-                                    <button
-                                        className="p-3 rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-semibold text-white"
-                                    >
-                                        Add Client
-                                    </button>
+                                    <Link href="/mgmt/admin/purchase">
+                                        <div className="p-3 text-center rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-semibold text-white cursor-pointer">
+                                            Purchase Entry
+                                        </div>
+                                    </Link>
+                                    <Link href="/mgmt/admin/invoice-lookup">
+                                        <div className="p-3 text-center rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-semibold text-white cursor-pointer">
+                                            Invoice Lookup
+                                        </div>
+                                    </Link>
+                                    <Link href="/mgmt/admin/quotes">
+                                        <div className="p-3 text-center rounded-xl border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-400/10 transition-all text-xs font-semibold text-white cursor-pointer">
+                                            Quotes Management
+                                        </div>
+                                    </Link>
                                 </div>
                             </div>
  

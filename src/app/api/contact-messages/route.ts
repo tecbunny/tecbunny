@@ -37,6 +37,26 @@ const statusFilterSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Check superadmin session cookie first to block contact messages submissions
+    const superadminCookie = request.cookies.get('superadmin-session')?.value;
+    if (superadminCookie) {
+      const correctEmail = process.env.SUPERADMIN_EMAIL;
+      const correctPassword = process.env.SUPERADMIN_PASSWORD;
+      if (correctEmail && correctPassword) {
+        const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
+        const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        if (superadminCookie === expectedToken) {
+          return NextResponse.json({ 
+            error: 'Forbidden - System Configuration Accounts Cannot Submit Contact Messages.' 
+          }, { status: 403 });
+        }
+      }
+    }
+
     const submissionIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'anonymous';
     if (!rateLimit(submissionIp, 'contact_messages_post', CONTACT_RATE_LIMIT)) {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });

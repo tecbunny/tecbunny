@@ -138,6 +138,15 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   loadCartFromStorage: (user: any) => {
     try {
+      if (user?.role === 'superadmin') {
+        set({ cartItems: [], pricing: defaultPricing, isHydrated: true });
+        const cartKey = getStorageKey('cart', user);
+        const couponKey = getStorageKey('appliedCoupon', user);
+        localStorage.removeItem(cartKey);
+        localStorage.removeItem(couponKey);
+        return;
+      }
+
       if (!user && isGuestSessionExpired(user)) {
         set({ isSessionExpired: true });
         get().resetGuestSession();
@@ -172,6 +181,8 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   saveCartToStorage: (user: any) => {
+    if (user?.role === 'superadmin') return;
+
     const state = get();
     if (!state.isHydrated) return;
     
@@ -323,6 +334,15 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   addToCart: (item, quantity = 1, user, trackEvent) => {
+    if (user?.role === 'superadmin') {
+      toast({
+        title: "Access Blocked",
+        description: "Superadmin accounts cannot initialize a cart or place orders.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!user && isGuestSessionExpired(user)) {
       set({ isSessionExpired: true });
       toast({
@@ -393,6 +413,8 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   updateQuantity: (itemId, quantity, user) => {
+    if (user?.role === 'superadmin') return;
+
     if (!user && isGuestSessionExpired(user)) {
       set({ isSessionExpired: true });
       return;
@@ -434,6 +456,10 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   applyCoupon: async (coupon, user, customerCategory) => {
+    if (user?.role === 'superadmin') {
+      return false;
+    }
+
     if (!user && isGuestSessionExpired(user)) {
       set({ isSessionExpired: true });
       toast({
@@ -497,6 +523,8 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   mergeGuestCartWithUserCart: async (userId: string, supabaseClient: any) => {
+    if (userId === 'superadmin-root-id') return;
+
     try {
       const guestCartKey = 'cart_guest';
       const guestCartRaw = typeof window !== 'undefined' ? localStorage.getItem(guestCartKey) : null;

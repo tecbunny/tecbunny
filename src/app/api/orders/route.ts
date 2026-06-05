@@ -22,6 +22,27 @@ export async function POST(request: NextRequest) {
   try {
     const correlationId = request.headers.get('x-correlation-id') || null;
 
+    // Check superadmin session cookie first to block order placements
+    const superadminCookie = request.cookies.get('superadmin-session')?.value;
+    if (superadminCookie) {
+      const correctEmail = process.env.SUPERADMIN_EMAIL;
+      const correctPassword = process.env.SUPERADMIN_PASSWORD;
+      if (correctEmail && correctPassword) {
+        const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
+        const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        if (superadminCookie === expectedToken) {
+          return apiError('FORBIDDEN', { 
+            correlationId, 
+            overrideMessage: '403 Forbidden - System Configuration Accounts Cannot Place Orders.' 
+          });
+        }
+      }
+    }
+
     // Support both cookie-based auth (SSR) and Authorization: Bearer token (client fetch)
     // The Bearer token path is more reliable for client-side fetches where cookie
     // forwarding may be inconsistent (e.g. cross-subdomain, expired cookie, first login).

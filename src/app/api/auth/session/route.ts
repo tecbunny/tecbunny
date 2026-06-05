@@ -11,8 +11,39 @@ async function createAuthenticatedClient() {
 }
 
 // GET /api/auth/session - Get current user session
-export async function GET(_request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    // Check superadmin session cookie first
+    const superadminCookie = request.cookies.get('superadmin-session')?.value;
+    if (superadminCookie) {
+      const correctEmail = process.env.SUPERADMIN_EMAIL;
+      const correctPassword = process.env.SUPERADMIN_PASSWORD;
+      if (correctEmail && correctPassword) {
+        const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
+        const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        if (superadminCookie === expectedToken) {
+          return NextResponse.json({
+            session: {
+              user: { id: 'superadmin-root-id', email: correctEmail },
+              expires_at: Math.floor(Date.now() / 1000) + 86400
+            },
+            user: {
+              id: 'superadmin-root-id',
+              email: correctEmail,
+              name: 'System Super Administrator',
+              role: 'superadmin',
+              customer_category: 'standard',
+              discount_percentage: 0
+            }
+          });
+        }
+      }
+    }
+
     if (!isSupabasePublicConfigured) {
       logger.error('auth.session.get.missing_supabase_config');
       return NextResponse.json(

@@ -100,6 +100,17 @@ export async function middleware(request: NextRequest) {
     return res
   }
 
+  // Trace Superadmin claims and lock out from client pages (redirect to dashboard)
+  if (isSuperadmin) {
+    if (
+      pathname.startsWith('/profile') ||
+      pathname.startsWith('/cart') ||
+      pathname.startsWith('/checkout')
+    ) {
+      return finalizeResponse(NextResponse.redirect(new URL('/superadmin/dashboard', request.url)))
+    }
+  }
+
   // Supabase Auth & Session Management - Safe initialization
   let user = null;
   let userRole: string | null = null;
@@ -160,9 +171,9 @@ export async function middleware(request: NextRequest) {
     const isLoginRoute = pathname === '/superadmin/login' || pathname === '/api/superadmin/login'
     if (!isLoginRoute && !isSuperadmin) {
       if (pathname.startsWith('/api/')) {
-        return finalizeResponse(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+        return finalizeResponse(NextResponse.json({ error: 'Not Found' }, { status: 404 }))
       }
-      return finalizeResponse(NextResponse.redirect(new URL('/staff/login', request.url)))
+      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
     }
   }
 

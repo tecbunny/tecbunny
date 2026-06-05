@@ -89,6 +89,11 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const userRef = useRef<User | null>(null);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
   const sessionManager = SessionManager.getInstance();
@@ -323,6 +328,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     const getSession = async () => {
       try {
+        // First try to check our internal session API which handles superadmin cookies
+        try {
+          const sessionRes = await fetch('/api/auth/session');
+          if (sessionRes.ok) {
+            const sessionData = await sessionRes.json();
+            if (sessionData && sessionData.session && sessionData.user) {
+              if (sessionData.user.role === 'superadmin') {
+                if (mounted) {
+                  setUser(sessionData.user);
+                  setLoading(false);
+                }
+                if (typeof window !== 'undefined') {
+                  sessionManager.registerSessionStart(Date.now());
+                }
+                return;
+              }
+            }
+          }
+        } catch (sessionApiError) {
+          logger.warn('AuthProvider.session_api_check_failed', { error: sessionApiError });
+        }
+
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -384,6 +411,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
+      
+      // If we are currently a superadmin, do not let standard Supabase auth state change overwrite our session
+      if (userRef.current?.role === 'superadmin') {
+        return;
+      }
       
       // Skip token refresh events to prevent unnecessary renders
       if (event === 'TOKEN_REFRESHED') {
@@ -531,6 +563,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       logger.error('Server signout error', { error });
+    }
+
+    // Call superadmin logout route if superadmin
+    if (user?.role === 'superadmin') {
+      try {
+        await fetch('/api/superadmin/logout', { method: 'POST' });
+      } catch (err) {
+        logger.error('Superadmin logout error', { error: err });
+      }
     }
 
     try {

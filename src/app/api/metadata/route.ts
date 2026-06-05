@@ -26,7 +26,7 @@ export async function GET() {
     const metadata = {
       siteName: settingsMap.get('siteName') || 'TecBunny - Your Tech Store',
       description: settingsMap.get('siteDescription') || 'Discover the latest technology with beautiful design and exceptional user experience.',
-      logoUrl: settingsMap.get('logoUrl') || '/logo.svg',
+      logoUrl: settingsMap.get('logoUrl') || '/logo.png',
       faviconUrl: settingsMap.get('faviconUrl') || '/favicon.ico',
     };
     
@@ -39,7 +39,7 @@ export async function GET() {
     return NextResponse.json({
       siteName: 'TecBunny - Your Tech Store',
       description: 'Discover the latest technology with beautiful design and exceptional user experience.',
-      logoUrl: '/logo.svg',
+      logoUrl: '/logo.png',
       faviconUrl: '/favicon.ico',
     });
   }

@@ -19,7 +19,7 @@ const companySettings: CompanySettings = {
     name: 'TecBunny',
     address: '123 Tech Lane, Circuit City, 560100',
     gstin: '30AAMCT1608G1ZO',
-    logoUrl: '/logo.svg' // Assuming you have a logo in public/
+    logoUrl: '/logo.png' // Assuming you have a logo in public/
 };
 
 export default function InvoiceLookupPage() {

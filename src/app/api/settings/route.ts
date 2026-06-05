@@ -12,7 +12,7 @@ const PUBLIC_DEFAULTS: Record<string, unknown> = {
   site_branding: 'TecBunny',
   siteName: 'TecBunny - Your Tech Store',
   siteDescription: 'Discover the latest technology with beautiful design and exceptional user experience.',
-  logoUrl: '/logo.svg',
+  logoUrl: '/logo.png',
   faviconUrl: '/favicon.ico',
   tagline: '',
   payment_phonepe_public: null,

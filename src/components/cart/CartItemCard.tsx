@@ -7,6 +7,8 @@ import { Trash2, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/lib/hooks';
 import type { CartItem } from '@/lib/types';
 
+import { BRAND_LOGO_URL } from '@/components/ui/logo';
+
 interface CartItemCardProps {
   item: CartItem;
 }
@@ -42,7 +44,7 @@ export function CartItemCard({ item }: CartItemCardProps) {
   }
 
   const cleanSrc = candidateImages.find((src) => typeof src === 'string' && src.trim().length > 0);
-  const imageSrc = cleanSrc ? cleanSrc.trim() : '/brand.png';
+  const imageSrc = cleanSrc ? cleanSrc.trim() : BRAND_LOGO_URL;
   const fallbackProductUrl = item.id?.startsWith('service-') ? '/services' : `/products/${item.id}`;
   const productHref = typeof item.product_url === 'string' && item.product_url.length > 0
     ? item.product_url

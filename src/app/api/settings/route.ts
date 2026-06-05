@@ -52,6 +52,12 @@ function isAllowedPublicKey(key: string) {
     'payment_phonepe_public',
     'payment_razorpay_public',
     'feature_flags_public',
+    'facebookUrl',
+    'twitterUrl',
+    'instagramUrl',
+    'linkedinUrl',
+    'youtubeUrl',
+    'websiteUrl',
   ];
   return allowList.includes(key);
 }

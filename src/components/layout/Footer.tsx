@@ -132,27 +132,20 @@ export function Footer() {
   React.useEffect(() => {
     const loadSocialLinks = async () => {
       try {
-        const { data, error } = await supabase
-          .from('settings')
-          .select('key, value')
-          .in('key', [
-            'facebookUrl',
-            'twitterUrl',
-            'instagramUrl',
-            'linkedinUrl',
-            'youtubeUrl',
-            'websiteUrl',
-          ]);
-
-        if (error) {
-          logger.error('Footer: failed to load social media links', { error });
+        const response = await fetch(
+          '/api/settings?keys=facebookUrl,twitterUrl,instagramUrl,linkedinUrl,youtubeUrl,websiteUrl'
+        );
+        if (!response.ok) {
+          logger.error('Footer: failed to load social media links from api', { status: response.status });
+          setSocialLinks(FALLBACK_SOCIAL_LINKS);
           return;
         }
 
+        const data = await response.json();
         const links: Record<string, string> = {};
-        data?.forEach((setting) => {
-          if (setting.value) {
-            links[setting.key] = setting.value as string;
+        Object.keys(data).forEach((key) => {
+          if (data[key]) {
+            links[key] = data[key] as string;
           }
         });
 
@@ -162,11 +155,12 @@ export function Footer() {
         });
       } catch (error) {
         logger.error('Footer: unexpected error while loading social media links', { error });
+        setSocialLinks(FALLBACK_SOCIAL_LINKS);
       }
     };
 
     loadSocialLinks();
-  }, [supabase]);
+  }, []);
 
   const supportEmail = companyInfo.supportEmail || DEFAULT_COMPANY_INFO.supportEmail;
   const supportPhone = companyInfo.supportPhone || DEFAULT_COMPANY_INFO.supportPhone;

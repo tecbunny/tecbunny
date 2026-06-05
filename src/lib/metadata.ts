@@ -23,7 +23,8 @@ export function createPageMetadata({
   openGraph,
   twitter,
 }: PageMetaInput): Metadata {
-  const resolvedImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
+  const activeImage = (image === '/brand.png' || image.endsWith('/brand.png')) ? defaultOgImage : image;
+  const resolvedImage = activeImage.startsWith('http') ? activeImage : `${siteUrl}${activeImage}`;
   const canonical = path.startsWith('http') ? path : `${siteUrl}${path}`;
 
   return {

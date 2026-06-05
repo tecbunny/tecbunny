@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { BRAND_LOGO_URL } from '@/components/ui/logo';
 
 export function GET() {
   const manifest = {
@@ -16,7 +17,7 @@ export function GET() {
     categories: ['business', 'shopping', 'productivity'],
     icons: [
       {
-        src: '/brand.png',
+        src: BRAND_LOGO_URL,
         sizes: '512x512',
         type: 'image/png',
       },

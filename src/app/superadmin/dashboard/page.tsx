@@ -1,35 +1,36 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { 
   ShieldAlert, Settings, Cpu, CreditCard, ClipboardList, 
   Users, UserCheck, Key, RefreshCw, LogOut, ArrowRight 
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
-import { normalizeRole } from '@/lib/roles';
+import { createServiceClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function SuperadminDashboard() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const cookieStore = await cookies();
+  const superadminCookie = cookieStore.get('superadmin-session')?.value;
+  let isSuperadmin = false;
+  if (superadminCookie) {
+    const correctEmail = process.env.SUPERADMIN_EMAIL;
+    const correctPassword = process.env.SUPERADMIN_PASSWORD;
+    if (correctEmail && correctPassword) {
+      const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
+      const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      isSuperadmin = (superadminCookie === expectedToken);
+    }
+  }
 
-  if (!user) {
+  if (!isSuperadmin) {
     redirect('/superadmin/login');
   }
 
-  // Get profile role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  const userRole = normalizeRole(user.app_metadata?.role || profile?.role);
-
-  if (userRole !== 'superadmin') {
-    // Silent fail and redirect to 404
-    redirect('/404');
-  }
+  const supabase = createServiceClient();
 
   // Fetch telemetry counts from DB safely
   let userCount = 0;
@@ -71,16 +72,16 @@ export default async function SuperadminDashboard() {
             <span className="text-xs px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/20 text-rose-300 font-mono">
               SYSTEM_ROOT
             </span>
-            <form action="/api/auth/complete-signup" method="POST" className="m-0">
+            <div className="flex items-center">
               {/* Force log out path */}
-              <Link
-                href="/auth/signout"
+              <a
+                href="/api/superadmin/logout"
                 className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-rose-400 transition-colors"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 Sign Out
-              </Link>
-            </form>
+              </a>
+            </div>
           </div>
         </div>
       </header>

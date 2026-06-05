@@ -75,6 +75,28 @@ async function getUserTotals() {
 
 // Create client for current user authentication
 async function createAuthenticatedClient(request: NextRequest) {
+  // Check superadmin session cookie first
+  const superadminCookie = request.cookies.get('superadmin-session')?.value;
+  if (superadminCookie) {
+    const correctEmail = process.env.SUPERADMIN_EMAIL;
+    const correctPassword = process.env.SUPERADMIN_PASSWORD;
+    if (correctEmail && correctPassword) {
+      const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
+      const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      if (superadminCookie === expectedToken) {
+        return {
+          supabase: supabaseAdmin,
+          session: { user: { id: 'superadmin-root-id', email: correctEmail } } as any,
+          role: 'superadmin'
+        };
+      }
+    }
+  }
+
   const authHeader = request.headers.get('authorization');
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.substring(7).trim();
@@ -101,14 +123,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
     }
 
-    // Security: Admin Only
+    // Security: Admin / Superadmin Only
     const { session, role } = await createAuthenticatedClient(request);
 
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!role || !['admin', 'manager'].includes(role)) {
+    if (!role || !['admin', 'manager', 'superadmin'].includes(role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -121,7 +143,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * pageSize;
 
     const search = (searchParams.get('search') || '').trim();
-    const roles = parseCsvParam(searchParams.get('role'));
+    let roles = parseCsvParam(searchParams.get('role'));
     const status = searchParams.get('status');
     const customerCategories = parseCsvParam(searchParams.get('customerCategory'));
     const discountMinParam = searchParams.get('discountMin');
@@ -137,10 +159,26 @@ export async function GET(request: NextRequest) {
     let totals = null;
     if (includeCounts) {
       try {
-        totals = await getUserTotals();
+        if (role === 'superadmin') {
+          totals = await getUserTotals();
+        } else {
+          const customerRes = await supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer');
+          const customerCount = customerRes.count ?? 0;
+          totals = {
+            total: customerCount,
+            staff: 0,
+            customers: customerCount,
+            sales: 0
+          };
+        }
       } catch (totalsError) {
         logger.error('users.fetch_totals_failed', { error: totalsError });
       }
+    }
+
+    // Force non-superadmins to only view standard customers
+    if (role !== 'superadmin') {
+      roles = ['customer'];
     }
 
     if (roles.includes(ROLE_SENTINEL_NONE)) {
@@ -246,26 +284,31 @@ export async function POST(request: NextRequest) {
       logger.error('users.supabase_configuration_missing');
       return NextResponse.json({ error: 'Service configuration error' }, { status: 503 });
     }
-  const { session, role } = await createAuthenticatedClient(request);
+    const { session, role } = await createAuthenticatedClient(request);
     
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin or manager (allow managers to create accounts too)
-    if (!role || !['admin', 'manager'].includes(role)) {
+    // Check if user is admin, manager or superadmin
+    if (!role || !['admin', 'manager', 'superadmin'].includes(role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();
     const email = body.email as string | undefined;
     const name = body.name as string | undefined;
-  const requestedRole = (body.role as string | undefined) || 'customer';
+    const requestedRole = (body.role as string | undefined) || 'customer';
     const mobile = body.mobile as string | undefined;
     let password = body.password as string | undefined;
 
     if (!email || !name) {
       return NextResponse.json({ error: 'Email and name are required' }, { status: 400 });
+    }
+
+    // Reject requests if a non-superadmin tries to create an account with a role other than 'customer'
+    if (role !== 'superadmin' && requestedRole !== 'customer') {
+      return NextResponse.json({ error: 'Forbidden: Admins can only create customer profiles' }, { status: 403 });
     }
 
     // Auto-generate a strong password if not provided
@@ -282,7 +325,7 @@ export async function POST(request: NextRequest) {
       email_confirm: true,
       user_metadata: {
         name,
-  role: requestedRole
+        role: requestedRole
       }
     });
 
@@ -320,7 +363,7 @@ export async function POST(request: NextRequest) {
     // Send credentials via email (no verification required)
     try {
       const improvedEmailService = (await import('@/lib/improved-email-service')).default;
-  const siteUrl = resolveSiteUrl(request.headers.get('host') || undefined);
+      const siteUrl = resolveSiteUrl(request.headers.get('host') || undefined);
       const subject = 'Your Account Has Been Created - TecBunny Store';
       const html = `
         <div style="font-family: Arial, sans-serif; line-height:1.6;">
@@ -363,14 +406,14 @@ export async function PUT(request: NextRequest) {
       logger.error('users.supabase_configuration_missing');
       return NextResponse.json({ error: 'Service configuration error' }, { status: 503 });
     }
-  const { session, role } = await createAuthenticatedClient(request);
+    const { session, role } = await createAuthenticatedClient(request);
     
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin
-    if (!role || !['admin', 'manager'].includes(role)) {
+    // Check if user is admin, manager or superadmin
+    if (!role || !['admin', 'manager', 'superadmin'].includes(role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -378,6 +421,28 @@ export async function PUT(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
+
+    // Fetch target profile first to enforce RBAC limits
+    const { data: targetProfile, error: fetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError || !targetProfile) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
+    }
+
+    if (role !== 'superadmin') {
+      // Reject if non-superadmin attempts to update a non-customer profile
+      if (targetProfile.role !== 'customer') {
+        return NextResponse.json({ error: 'Forbidden: Admins cannot update non-customer profiles' }, { status: 403 });
+      }
+      // Reject if non-superadmin attempts to change a user's role to something other than 'customer'
+      if (updates.role && updates.role !== 'customer') {
+        return NextResponse.json({ error: 'Forbidden: Admins cannot change profile role to non-customer' }, { status: 403 });
+      }
     }
 
     // Update user metadata if provided
@@ -452,14 +517,14 @@ export async function DELETE(request: NextRequest) {
       logger.error('users.supabase_configuration_missing');
       return NextResponse.json({ error: 'Service configuration error' }, { status: 503 });
     }
-  const { session, role } = await createAuthenticatedClient(request);
+    const { session, role } = await createAuthenticatedClient(request);
     
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin
-    if (!role || role !== 'admin') {
+    // Check if user is admin or superadmin
+    if (!role || !['admin', 'superadmin'].includes(role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -473,6 +538,24 @@ export async function DELETE(request: NextRequest) {
     // Don't allow deleting self
     if (userId === session.user.id) {
       return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
+    }
+
+    // Fetch target profile first to enforce RBAC limits
+    const { data: targetProfile, error: fetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError || !targetProfile) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
+    }
+
+    if (role !== 'superadmin') {
+      // Block non-superadmins from deleting profiles where role is not 'customer'
+      if (targetProfile.role !== 'customer') {
+        return NextResponse.json({ error: 'Forbidden: Admins cannot delete non-customer profiles' }, { status: 403 });
+      }
     }
 
     // Delete user (this will cascade to profile due to foreign key)

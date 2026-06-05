@@ -43,35 +43,19 @@ function SuperadminSignInForm() {
     setError('');
 
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+      const response = await fetch('/api/superadmin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          captchaToken
+        })
       });
 
-      if (authError) {
-        setError(authError.message);
-        return;
-      }
-
-      const user = data?.user;
-      if (!user) {
-        setError('Sign in failed. Please try again.');
-        return;
-      }
-
-      // Query profiles table to double-verify role
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      const userRole = normalizeRole(user.app_metadata?.role || profile?.role) ?? null;
-
-      if (userRole !== 'superadmin') {
-        // Sign out immediately - unauthorized
-        await supabase.auth.signOut();
-        setError('Access denied. Superadmin credentials required.');
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || 'Authentication failed. Invalid credentials.');
         return;
       }
 

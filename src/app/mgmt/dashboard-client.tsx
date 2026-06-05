@@ -24,7 +24,7 @@ export default function ManagementDashboard() {
   // Single redirect effect - only run once when loading completes
   React.useEffect(() => {
     if (!loading && !user) {
-      router.replace('/auth/staff-signin'); // CRM portal — staff login only
+      router.replace('/staff/login'); // CRM portal — staff login only
       return;
     }
     

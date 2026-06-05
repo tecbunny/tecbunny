@@ -13,10 +13,11 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '../../../hooks/use-toast';
 import { TwoFactorVerification } from '@/components/auth/TwoFactorVerification';
 
-// Staff roles permitted to access the CRM
-const STAFF_ROLES = new Set(['admin', 'manager', 'sales', 'service_engineer', 'accounts']);
+// Staff roles permitted to access the CRM/Management Panel
+const STAFF_ROLES = new Set(['superadmin', 'admin', 'manager', 'sales', 'service_engineer', 'accounts']);
 
 const ROLE_LABELS: Record<string, string> = {
+  superadmin: 'Super Administrator',
   admin: 'Administrator',
   manager: 'Manager',
   sales: 'Sales Agent',
@@ -123,6 +124,7 @@ function StaffSignInForm() {
 
   function getRedirectPath(role: string): string {
     switch (role) {
+      case 'superadmin':
       case 'admin':
         return '/mgmt/admin';
       case 'sales':
@@ -276,7 +278,7 @@ function StaffSignInForm() {
           <p className="text-slate-400 text-sm mt-2">TecBunny Solutions — Authorised Staff Only</p>
           <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300">
             <Users className="h-3 w-3" />
-            crm.tecbunny.com
+            Staff Control Panel
           </div>
         </div>
 

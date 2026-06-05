@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 import MultiChannelOTPManager from '@/lib/multi-channel-otp-manager';
 import { logger } from '@/lib/logger';
@@ -8,6 +9,15 @@ import { rateLimit } from '@/lib/rate-limit';
 
 const SEND_OTP_IP_LIMIT = { limit: 5, windowMs: 15 * 60 * 1000 };
 const SEND_OTP_IDENTIFIER_LIMIT = { limit: 3, windowMs: 15 * 60 * 1000 };
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'service-role-placeholder';
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
 function getClientIp(request: NextRequest) {
   return request.headers.get('cf-connecting-ip')?.trim()
@@ -36,6 +46,32 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : undefined;
     const normalizedMobile = mobile ? String(mobile).replace(/\D/g, '') : undefined;
+
+    // Guard against staff accounts using the public client portal
+    const searchVal = normalizedEmail || normalizedMobile;
+    if (searchVal) {
+      let query = supabaseAdmin.from('profiles').select('role');
+      if (normalizedEmail) {
+        query = query.eq('email', normalizedEmail);
+      } else {
+        query = query.eq('mobile', normalizedMobile);
+      }
+      
+      const { data: profile } = await query.maybeSingle();
+      if (profile?.role) {
+        const role = profile.role.trim().toLowerCase();
+        const isStaff = ['superadmin', 'admin', 'manager', 'sales', 'service_engineer', 'accounts'].includes(role);
+        if (isStaff) {
+          logger.warn('send_otp.staff_blocked_on_public_portal', { correlationId, email: normalizedEmail, mobile: normalizedMobile, role });
+          return apiError('FORBIDDEN', {
+            overrideMessage: 'High-privilege account detected. Please log in through the Staff Portal.',
+            correlationId,
+            details: { redirectTo: '/staff/login' }
+          });
+        }
+      }
+    }
+
     const ip = getClientIp(request);
 
     if (!rateLimit(ip, 'auth_send_otp_ip', SEND_OTP_IP_LIMIT)) {

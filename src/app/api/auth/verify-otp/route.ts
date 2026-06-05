@@ -137,16 +137,18 @@ export async function POST(request: NextRequest) {
     if (type === 'recovery') {
       try {
         let user: any = null;
+        let profileRole: string | null = null;
         if (otpRecord.email) {
           const { data: profile, error: profileErr } = await supabaseAdmin
             .from('profiles')
-            .select('id')
+            .select('id, role')
             .eq('email', otpRecord.email.trim().toLowerCase())
             .maybeSingle();
           
           if (profileErr) {
             logger.error('verify_otp_profile_email_lookup_failed', { correlationId, error: profileErr.message });
           } else if (profile?.id) {
+            profileRole = profile.role;
             const { data: userData, error: userErr } = await supabaseAdmin.auth.admin.getUserById(profile.id);
             if (!userErr && userData?.user) {
               user = userData.user;
@@ -157,19 +159,33 @@ export async function POST(request: NextRequest) {
         } else if (otpRecord.phone) {
           const { data: profile, error: profileErr } = await supabaseAdmin
             .from('profiles')
-            .select('id')
+            .select('id, role')
             .eq('mobile', otpRecord.phone.trim())
             .maybeSingle();
           
           if (profileErr) {
             logger.error('verify_otp_profile_phone_lookup_failed', { correlationId, error: profileErr.message });
           } else if (profile?.id) {
+            profileRole = profile.role;
             const { data: userData, error: userErr } = await supabaseAdmin.auth.admin.getUserById(profile.id);
             if (!userErr && userData?.user) {
               user = userData.user;
             } else if (userErr) {
               logger.error('verify_otp_get_user_failed', { correlationId, userId: profile.id, error: userErr.message });
             }
+          }
+        }
+        
+        if (profileRole) {
+          const role = profileRole.trim().toLowerCase();
+          const isStaff = ['superadmin', 'admin', 'manager', 'sales', 'service_engineer', 'accounts'].includes(role);
+          if (isStaff) {
+            logger.warn('verify_otp.staff_blocked_on_public_portal', { correlationId, email: otpRecord.email, phone: otpRecord.phone, role });
+            return apiError('FORBIDDEN', { 
+              overrideMessage: 'High-privilege account detected. Please use the Staff Portal to authenticate.', 
+              correlationId,
+              details: { redirectTo: '/staff/login' }
+            });
           }
         }
         

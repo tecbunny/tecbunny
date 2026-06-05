@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "alias": ["tecbunny.store", "www.tecbunny.store", "tecbunny.com", "www.tecbunny.com", "crm.tecbunny.com"],
+  "alias": ["tecbunny.store", "www.tecbunny.store", "tecbunny.com", "www.tecbunny.com"],
   "regions": ["bom1"],
   "framework": "nextjs",
   "buildCommand": "npm run build",
@@ -43,17 +43,6 @@
         {
           "type": "host",
           "value": "tecbunny.com"
-        }
-      ]
-    },
-    {
-      "source": "/mgmt/:path*",
-      "destination": "https://crm.tecbunny.com/mgmt/:path*",
-      "permanent": false,
-      "has": [
-        {
-          "type": "host",
-          "value": "www.tecbunny.com"
         }
       ]
     },

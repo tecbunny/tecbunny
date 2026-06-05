@@ -503,8 +503,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = useCallback(async (options?: { redirectTo?: string; silent?: boolean }) => {
-    const redirectTo = options?.redirectTo;
+    let redirectTo = options?.redirectTo;
     const silent = Boolean(options?.silent);
+
+    // If redirectTo is not explicitly specified, detect if current user is staff/worker
+    if (!redirectTo && user) {
+      const isStaff = ['superadmin', 'admin', 'manager', 'sales', 'service_engineer', 'accounts'].includes(user.role);
+      redirectTo = isStaff ? '/staff/login' : '/auth/signin';
+    }
 
     if (!silent) {
       setLoading(true);
@@ -549,13 +555,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.location.reload();
       }
     }
-  }, [sessionManager, supabase]);
+  }, [sessionManager, supabase, user]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const handleSessionExpired = () => {
-      logout({ redirectTo: '/auth/signin?session=expired', silent: true });
+      const isStaff = user && ['superadmin', 'admin', 'manager', 'sales', 'service_engineer', 'accounts'].includes(user.role);
+      logout({ redirectTo: isStaff ? '/staff/login?session=expired' : '/auth/signin?session=expired', silent: true });
     };
 
     window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
@@ -563,7 +570,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
     };
-  }, [logout]);
+  }, [logout, user]);
 
   const signup = async (details: SignupDetails): Promise<AuthResponse> => {
     try {

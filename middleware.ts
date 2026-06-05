@@ -46,9 +46,22 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set('x-correlation-id', correlationId)
 
   const pathname = request.nextUrl.pathname
-  const hostHeader = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
-  const hostname = hostHeader.split(':')[0].trim()
-  const isCrmSubdomain = hostname === 'crm.tecbunny.com' || hostname.startsWith('crm.') || hostname.startsWith('crm-')
+
+  // Superadmin session validation via Edge Runtime Web Crypto
+  const superadminCookie = request.cookies.get('superadmin-session')?.value
+  let isSuperadmin = false
+  if (superadminCookie) {
+    const correctEmail = process.env.SUPERADMIN_EMAIL
+    const correctPassword = process.env.SUPERADMIN_PASSWORD
+    if (correctEmail && correctPassword) {
+      const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default'
+      const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`)
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+      isSuperadmin = (superadminCookie === expectedToken)
+    }
+  }
 
   let response = NextResponse.next({ request: { headers: requestHeaders } })
 
@@ -70,7 +83,9 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/auth') ||
       pathname.startsWith('/checkout') ||
       pathname.startsWith('/cart') ||
-      pathname.startsWith('/profile')
+      pathname.startsWith('/profile') ||
+      pathname.startsWith('/superadmin') ||
+      pathname.startsWith('/api/superadmin')
     ) {
       res.headers.set('X-Robots-Tag', 'noindex, nofollow')
     }
@@ -120,8 +135,8 @@ export async function middleware(request: NextRequest) {
           userRole = norm === 'superadmin' || norm === 'super-admin' || norm === 'super admin' ? 'superadmin' : norm;
         }
 
-        // Fallback to database for CRM subdomain or Superadmin paths
-        const needsRoleLookup = !userRole || isCrmSubdomain || pathname.startsWith('/superadmin') || pathname.startsWith('/api/superadmin');
+        // Fallback to database for Management or Superadmin paths
+        const needsRoleLookup = !userRole || pathname.startsWith('/mgmt') || pathname.startsWith('/api/mgmt') || pathname.startsWith('/superadmin') || pathname.startsWith('/api/superadmin');
         if (needsRoleLookup) {
           const { data: profile } = await supabase
             .from('profiles')
@@ -141,65 +156,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // ─── SUPERADMIN PATH PROTECTIONS ───────────────────────────────────────────
-  // Silent rewrite to 404 for unauthorized access to superadmin panel or APIs
   if (pathname.startsWith('/superadmin') || pathname.startsWith('/api/superadmin')) {
-    const isLoginPath = pathname === '/superadmin/login';
-    if (isLoginPath) {
-      if (user && userRole !== 'superadmin') {
-        return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)));
+    const isLoginRoute = pathname === '/superadmin/login' || pathname === '/api/superadmin/login'
+    if (!isLoginRoute && !isSuperadmin) {
+      if (pathname.startsWith('/api/')) {
+        return finalizeResponse(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
       }
-    } else {
-      if (!user || userRole !== 'superadmin') {
-        return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)));
-      }
-    }
-  }
-
-  // ─── CRM SUBDOMAIN (crm.tecbunny.com) ───────────────────────────────────────
-  // This subdomain serves the admin/staff panel ONLY.
-  // Any public-facing page is off-limits.
-  if (isCrmSubdomain) {
-    const isStaffLoginPath = pathname.startsWith('/auth/staff-signin')
-    const isAuthPath       = pathname.startsWith('/auth/callback') || pathname.startsWith('/auth/signout')
-    const isApiPath        = pathname.startsWith('/api/')
-    const isNextInternal   = pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.match(/\.(png|jpg|jpeg|gif|svg|ico)$/i)
-    const isRoot           = pathname === '/'
-
-    // Root → redirect to mgmt (middleware will then enforce auth)
-    if (isRoot) {
-      return finalizeResponse(NextResponse.redirect(new URL('/mgmt', request.url)))
-    }
-
-    // Whitelist public access on CRM subdomain:
-    // Only allow login page, auth callbacks, signout, next internals, and public api endpoints.
-    const isPublicApi = isApiPath && isPublicApiRoute
-    const isAllowedWithoutAuth = isStaffLoginPath || isAuthPath || isNextInternal || isPublicApi
-
-    if (!isAllowedWithoutAuth) {
-      if (isApiPath) {
-        if (!user) {
-          return finalizeResponse(NextResponse.json(
-            { error: 'Unauthorized', message: 'Authentication required for this endpoint' },
-            { status: 401 }
-          ))
-        }
-        if (!userRole || !CRM_STAFF_ROLES.has(userRole)) {
-          return finalizeResponse(NextResponse.json(
-            { error: 'Forbidden', message: 'Staff privileges required for this endpoint' },
-            { status: 403 }
-          ))
-        }
-      } else {
-        if (!user) {
-          const loginUrl = new URL('/auth/staff-signin', request.url)
-          loginUrl.searchParams.set('next', pathname)
-          return finalizeResponse(NextResponse.redirect(loginUrl))
-        }
-        if (!userRole || !CRM_STAFF_ROLES.has(userRole)) {
-          // Authenticated but not staff → show denied
-          return finalizeResponse(NextResponse.redirect(new URL('/auth/staff-signin?denied=1', request.url)))
-        }
-      }
+      return finalizeResponse(NextResponse.redirect(new URL('/staff/login', request.url)))
     }
   }
 
@@ -214,9 +177,18 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protect Management Routes (on main domain, middleware redirects to CRM subdomain via vercel.json)
-  if (pathname.startsWith('/mgmt') && !user) {
-    return finalizeResponse(NextResponse.redirect(new URL('/auth/staff-signin', request.url)))
+  // Protect Management Routes
+  if (pathname.startsWith('/mgmt')) {
+    if (!user) {
+      const loginUrl = new URL('/staff/login', request.url)
+      loginUrl.searchParams.set('next', pathname)
+      return finalizeResponse(NextResponse.redirect(loginUrl))
+    }
+    
+    // Check if the user is a staff/worker role
+    if (!userRole || !CRM_STAFF_ROLES.has(userRole)) {
+      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
+    }
   }
 
   return finalizeResponse(response)

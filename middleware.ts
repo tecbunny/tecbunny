@@ -1,9 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-// Staff roles that are permitted to access the CRM subdomain
-const CRM_STAFF_ROLES = new Set(['superadmin', 'admin', 'manager', 'sales', 'service_engineer', 'accounts'])
-
 const SHARED_CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cs.iubenda.com https://cdn.iubenda.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com",
@@ -21,7 +18,6 @@ const SHARED_CONTENT_SECURITY_POLICY = [
 
 export async function middleware(request: NextRequest) {
   // Define public API routes that don't require authentication
-  // Note: Maintain this list carefully. All other /api/* routes will be protected by default (Fail-Closed).
   const publicApiRoutes = [
     '/api/auth',     // Auth endpoints (signin, callback, etc)
     '/api/health',
@@ -51,7 +47,7 @@ export async function middleware(request: NextRequest) {
   const superadminCookie = request.cookies.get('superadmin-session')?.value
   let isSuperadmin = false
   if (superadminCookie) {
-    const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL
+    const correctEmail = process.env.SUPERADMIN_USER_ID
     const correctPassword = process.env.SUPERADMIN_PASSWORD
     if (correctEmail && correctPassword) {
       const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default'
@@ -100,7 +96,7 @@ export async function middleware(request: NextRequest) {
     return res
   }
 
-  // Trace Superadmin claims and lock out from client pages (redirect to dashboard)
+  // Trace Superadmin claims and lock out from client storefront pages (redirect to dashboard)
   if (isSuperadmin) {
     if (
       pathname.startsWith('/profile') ||
@@ -143,11 +139,11 @@ export async function middleware(request: NextRequest) {
         const rawRole = user.app_metadata?.role;
         if (rawRole && typeof rawRole === 'string') {
           const norm = rawRole.trim().toLowerCase();
-          userRole = norm === 'superadmin' || norm === 'super-admin' || norm === 'super admin' ? 'superadmin' : norm;
+          userRole = norm;
         }
 
-        // Fallback to database for Management or Superadmin paths
-        const needsRoleLookup = !userRole || pathname.startsWith('/mgmt') || pathname.startsWith('/api/mgmt') || pathname.startsWith('/superadmin') || pathname.startsWith('/api/superadmin');
+        // Fallback to database for Management paths
+        const needsRoleLookup = !userRole || pathname.startsWith('/mgmt') || pathname.startsWith('/api/mgmt');
         if (needsRoleLookup) {
           const { data: profile } = await supabase
             .from('profiles')
@@ -155,13 +151,16 @@ export async function middleware(request: NextRequest) {
             .eq('id', user.id)
             .single();
           if (profile?.role && typeof profile.role === 'string') {
-            const norm = profile.role.trim().toLowerCase();
-            userRole = norm === 'superadmin' || norm === 'super-admin' || norm === 'super admin' ? 'superadmin' : norm;
+            userRole = profile.role.trim().toLowerCase();
           }
+        }
+
+        // SECURITY: Strip superadmin privileges from Supabase relational database profiles
+        if (userRole === 'superadmin' || userRole === 'super-admin' || userRole === 'super admin') {
+          userRole = 'customer';
         }
       }
     } catch (e) {
-      // If Supabase fails, we proceed with user = null
       console.error('Middleware Supabase Error:', e);
     }
   }
@@ -173,18 +172,31 @@ export async function middleware(request: NextRequest) {
       if (pathname.startsWith('/api/')) {
         return finalizeResponse(NextResponse.json({ error: 'Not Found' }, { status: 404 }))
       }
-      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
+      return finalizeResponse(new NextResponse('Not Found', { status: 404, headers: { 'Content-Type': 'text/plain' } }))
     }
   }
 
   // SECURITY: Fail-Closed API Protection
-  // If we are hitting an API route, and it is NOT explicitly public, require a user.
   if (pathname.startsWith('/api')) {
-    if (!isPublicApiRoute && !user) {
+    if (!isPublicApiRoute && !user && !isSuperadmin) {
       return finalizeResponse(NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required for this endpoint' },
         { status: 401 }
       ))
+    }
+
+    // API Route Guards for each Role Tier
+    if (pathname.startsWith('/api/admin') && userRole !== 'admin') {
+      return finalizeResponse(NextResponse.json({ error: 'Not Found' }, { status: 404 }))
+    }
+    if (pathname.startsWith('/api/manager') && userRole !== 'manager') {
+      return finalizeResponse(NextResponse.json({ error: 'Not Found' }, { status: 404 }))
+    }
+    if (pathname.startsWith('/api/sales-staff') && userRole !== 'sales-staff' && userRole !== 'sales') {
+      return finalizeResponse(NextResponse.json({ error: 'Not Found' }, { status: 404 }))
+    }
+    if (pathname.startsWith('/api/sales-external') && userRole !== 'sales-external') {
+      return finalizeResponse(NextResponse.json({ error: 'Not Found' }, { status: 404 }))
     }
   }
 
@@ -196,8 +208,23 @@ export async function middleware(request: NextRequest) {
       return finalizeResponse(NextResponse.redirect(loginUrl))
     }
     
-    // Check if the user is a staff/worker role
-    if (!userRole || !CRM_STAFF_ROLES.has(userRole)) {
+    // Check if the user has a valid staff role
+    const STAFF_ROLES = new Set(['admin', 'manager', 'sales', 'sales-staff', 'sales-external', 'service_engineer', 'accounts'])
+    if (!userRole || !STAFF_ROLES.has(userRole)) {
+      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
+    }
+
+    // Role path segregation
+    if (pathname.startsWith('/mgmt/admin') && userRole !== 'admin') {
+      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
+    }
+    if (pathname.startsWith('/mgmt/manager') && userRole !== 'manager') {
+      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
+    }
+    if (pathname.startsWith('/mgmt/sales-staff') && userRole !== 'sales-staff' && userRole !== 'sales') {
+      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
+    }
+    if (pathname.startsWith('/mgmt/sales-external') && userRole !== 'sales-external') {
       return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
     }
   }
@@ -207,13 +234,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

@@ -167,14 +167,17 @@ export function Header() {
   const dashboardHref = React.useMemo(() => {
     if (!user?.role) return '/mgmt';
     switch (user.role) {
+      case 'superadmin':
+        return '/superadmin/mgmt/dashboard';
       case 'admin':
         return '/mgmt/admin';
-      case 'accounts':
-        return '/mgmt/accounts';
-      case 'sales':
       case 'manager':
-      case 'service_engineer':
-        return '/mgmt/sales';
+        return '/mgmt/manager';
+      case 'sales-staff':
+      case 'sales':
+        return '/mgmt/sales-staff';
+      case 'sales-external':
+        return '/mgmt/sales-external';
       default:
         return '/mgmt';
     }

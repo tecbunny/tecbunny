@@ -14,15 +14,14 @@ import { useToast } from '../../../hooks/use-toast';
 import { TwoFactorVerification } from '@/components/auth/TwoFactorVerification';
 
 // Staff roles permitted to access the CRM/Management Panel
-const STAFF_ROLES = new Set(['superadmin', 'admin', 'manager', 'sales', 'service_engineer', 'accounts']);
+const STAFF_ROLES = new Set(['admin', 'manager', 'sales-staff', 'sales', 'sales-external']);
 
 const ROLE_LABELS: Record<string, string> = {
-  superadmin: 'Super Administrator',
   admin: 'Administrator',
   manager: 'Manager',
-  sales: 'Sales Agent',
-  service_engineer: 'Service Engineer',
-  accounts: 'Accounts',
+  'sales-staff': 'Sales Staff',
+  sales: 'Sales Staff',
+  'sales-external': 'Sales Non-Staff (External)',
 };
 
 function StaffSignInForm() {
@@ -98,7 +97,11 @@ function StaffSignInForm() {
         .eq('id', twoFactorUser.id)
         .single();
 
-      const userRole = normalizeRole(profile?.role) ?? null;
+      let userRole = normalizeRole(profile?.role) ?? null;
+      if (userRole === 'superadmin') {
+        userRole = null;
+      }
+
       if (!userRole || !STAFF_ROLES.has(userRole)) {
         await supabase.auth.signOut();
         setError('Access denied. This portal is for staff only. Please contact your administrator.');
@@ -124,15 +127,15 @@ function StaffSignInForm() {
 
   function getRedirectPath(role: string): string {
     switch (role) {
-      case 'superadmin':
       case 'admin':
         return '/mgmt/admin';
-      case 'sales':
-      case 'service_engineer':
       case 'manager':
-        return '/mgmt/sales';
-      case 'accounts':
-        return '/mgmt/accounts';
+        return '/mgmt/manager';
+      case 'sales-staff':
+      case 'sales':
+        return '/mgmt/sales-staff';
+      case 'sales-external':
+        return '/mgmt/sales-external';
       default:
         return '/mgmt';
     }
@@ -227,7 +230,10 @@ function StaffSignInForm() {
         .eq('id', authUser.id)
         .single();
 
-      const userRole = normalizeRole(profile?.role) ?? null;
+      let userRole = normalizeRole(profile?.role) ?? null;
+      if (userRole === 'superadmin') {
+        userRole = null;
+      }
 
       if (!userRole || !STAFF_ROLES.has(userRole)) {
         // Sign them out immediately — customer accounts are not allowed here

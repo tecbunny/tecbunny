@@ -3,7 +3,9 @@
 
 export const ROLE_HIERARCHY = {
   customer: 1,
+  'sales-external': 2,
   sales: 2,
+  'sales-staff': 2,
   service_engineer: 2, // lateral to sales
   accounts: 3,
   manager: 4,
@@ -17,7 +19,11 @@ export const ALL_ROLES: UserRole[] = Object.keys(ROLE_HIERARCHY) as UserRole[];
 const ROLE_ALIASES: Readonly<Record<string, UserRole>> = {
   super_admin: 'superadmin',
   'super-admin': 'superadmin',
-  'super admin': 'superadmin'
+  'super admin': 'superadmin',
+  'sales_staff': 'sales-staff',
+  'sales staff': 'sales-staff',
+  'sales_external': 'sales-external',
+  'sales external': 'sales-external'
 };
 
 export function normalizeRole(value: unknown): UserRole | null {
@@ -76,6 +82,14 @@ const BASE_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     PERMS.ORDER_VIEW_ALL,
     PERMS.CUSTOMER_MANAGE
   ],
+  'sales-staff': [
+    PERMS.ORDER_VIEW_ALL,
+    PERMS.CUSTOMER_MANAGE
+  ],
+  'sales-external': [
+    PERMS.ORDER_VIEW_ALL,
+    PERMS.CUSTOMER_MANAGE
+  ],
   service_engineer: [
     PERMS.SERVICE_TICKET_VIEW,
     PERMS.SERVICE_TICKET_MANAGE_ASSIGNED,
@@ -111,6 +125,8 @@ function buildEffectivePermissions(): Record<UserRole, Set<Permission>> {
   const effective: Record<UserRole, Set<Permission>> = {
     customer: new Set(BASE_ROLE_PERMISSIONS.customer),
     sales: new Set(),
+    'sales-staff': new Set(),
+    'sales-external': new Set(),
     service_engineer: new Set(),
     accounts: new Set(),
     manager: new Set(),
@@ -125,6 +141,14 @@ function buildEffectivePermissions(): Record<UserRole, Set<Permission>> {
   // sales inherits customer
   addAll(effective.sales, Array.from(effective.customer));
   addAll(effective.sales, BASE_ROLE_PERMISSIONS.sales);
+
+  // sales-staff inherits customer
+  addAll(effective['sales-staff'], Array.from(effective.customer));
+  addAll(effective['sales-staff'], BASE_ROLE_PERMISSIONS['sales-staff']);
+
+  // sales-external inherits customer
+  addAll(effective['sales-external'], Array.from(effective.customer));
+  addAll(effective['sales-external'], BASE_ROLE_PERMISSIONS['sales-external']);
 
   // service_engineer inherits customer only (lateral)
   addAll(effective.service_engineer, Array.from(effective.customer));
@@ -162,6 +186,8 @@ export function hasPermission(role: UserRole, perm: Permission): boolean {
 export const ROLE_DISPLAY_NAME: Record<UserRole, string> = {
   customer: 'Customer',
   sales: 'Sales Representative',
+  'sales-staff': 'Sales Staff',
+  'sales-external': 'External Sales',
   service_engineer: 'Service Engineer',
   accounts: 'Accounts Manager',
   manager: 'Manager',

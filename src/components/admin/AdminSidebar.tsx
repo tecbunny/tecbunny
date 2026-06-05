@@ -27,6 +27,9 @@ import {
   Bot,
   Activity,
   Lightbulb,
+  ShoppingBag,
+  Archive,
+  FileSearch,
 } from 'lucide-react';
 
 import { Logo } from '@/components/ui/logo';
@@ -53,51 +56,17 @@ const navSections: NavSection[] = [
     title: 'Overview',
     items: [
       { href: '/mgmt/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-      { href: '/mgmt/admin/analytics', label: 'Analytics', icon: Activity },
-      { href: '/mgmt/admin/ai-assistant', label: 'AI Assistant', icon: Bot },
     ]
   },
   {
-    title: 'Customers & Sales',
+    title: 'Operations',
     items: [
-      { href: '/mgmt/admin/users', label: 'User Management', icon: Users },
-      { href: '/mgmt/admin/sales-agents', label: 'Sales Agents', icon: User },
-      { href: '/mgmt/admin/contact-messages', label: 'Contact Messages', icon: MessageCircle },
-      { href: '/mgmt/admin/quotes', label: 'Quotes', icon: FileText },
-    ]
-  },
-  {
-    title: 'Catalog & Services',
-    items: [
-      { href: '/mgmt/admin/products', label: 'Product Catalog', icon: Package },
-      { href: '/mgmt/admin/pricing', label: 'Pricing Management', icon: DollarSign },
-      { href: '/mgmt/admin/custom-setups', label: 'Custom Setups', icon: Settings2 },
-      { href: '/mgmt/admin/services', label: 'Service Management', icon: Wrench },
-    ]
-  },
-  {
-    title: 'Promotions & Content',
-    items: [
-      { href: '/mgmt/admin/offers', label: 'Offers & Discounts', icon: Gift },
-      { href: '/mgmt/admin/coupons', label: 'Coupons', icon: Ticket },
-      { href: '/mgmt/admin/policies', label: 'Policies Management', icon: FileText },
-      { href: '/mgmt/admin/social-media', label: 'Social Media', icon: Share2 },
-    ]
-  },
-  {
-    title: 'Experience & Branding',
-    items: [
-      { href: '/mgmt/admin/homepage-settings', label: 'Homepage Settings', icon: LayoutTemplate },
-      { href: '/mgmt/admin/hero-banners', label: 'Hero Banners', icon: Images },
-      { href: '/mgmt/admin/innovation', label: 'Innovation Content', icon: Lightbulb },
-    ]
-  },
-  {
-    title: 'Operations & Security',
-    items: [
-      { href: '/mgmt/admin/security', label: 'Security Dashboard', icon: Shield },
-      { href: '/mgmt/admin/payment-api', label: 'Payment API', icon: CreditCard },
-      { href: '/mgmt/admin/settings', label: 'Site Settings', icon: Settings },
+      { href: '/mgmt/admin/staff', label: 'Staff Management', icon: Users },
+      { href: '/mgmt/admin/inventory', label: 'Inventory Management', icon: Package },
+      { href: '/mgmt/admin/orders', label: 'All Orders', icon: ShoppingBag },
+      { href: '/mgmt/admin/purchase', label: 'Purchase Management', icon: Archive },
+      { href: '/mgmt/admin/invoice-lookup', label: 'Invoice Look-up', icon: FileSearch },
+      { href: '/mgmt/admin/quotes', label: 'Quotes Management', icon: FileText },
     ]
   }
 ];

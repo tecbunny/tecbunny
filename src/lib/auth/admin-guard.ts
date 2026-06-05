@@ -96,13 +96,8 @@ export async function requireAdminContext(): Promise<AdminContext> {
       code: profileError.code,
     });
     if (!isSupabaseServiceConfigured) {
-      // Continue with metadata role if service key is unavailable
       logger.warn('admin_auth_profile_fallback_metadata');
-      // HARDENING: If profile lookup fails and we don't have service key, 
-      // relying solely on metadata might be acceptable ONLY if we trust app_metadata.
-      // But for high security, if we can't verify against DB, we generally should FAIL or rely ONLY on app_metadata (JWT).
     } else {
-      // If service IS configured but lookup failed, this is an error state -> deny access
       throw new AdminAuthError(500, 'Failed to verify admin profile');
     }
   }
@@ -112,7 +107,12 @@ export async function requireAdminContext(): Promise<AdminContext> {
     extractRoleFromMetadata(user.app_metadata as Record<string, unknown> | undefined);
     
   const profileRole = normalizeRole(profile?.role);
-  const resolvedRole = pickHighestRole(metadataRole, profileRole);
+  let resolvedRole = pickHighestRole(metadataRole, profileRole);
+
+  // Strip superadmin claim from standard database-backed accounts
+  if (resolvedRole === 'superadmin') {
+    resolvedRole = 'customer';
+  }
 
   if (!isAdminRole(resolvedRole)) {
     throw new AdminAuthError(403, 'Insufficient permissions');
@@ -120,7 +120,7 @@ export async function requireAdminContext(): Promise<AdminContext> {
 
   return {
     user,
-    role: resolvedRole,
+    role: resolvedRole as 'admin' | 'manager',
     serviceSupabase,
   };
 }
@@ -132,12 +132,11 @@ export interface SuperadminContext {
 }
 
 export async function requireSuperadminContext(): Promise<SuperadminContext> {
-  // Try validating superadmin via cookie first
   try {
     const cookieStore = await cookies();
     const superadminCookie = cookieStore.get('superadmin-session')?.value;
     if (superadminCookie) {
-      const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
+      const correctEmail = process.env.SUPERADMIN_USER_ID;
       const correctPassword = process.env.SUPERADMIN_PASSWORD;
       if (correctEmail && correctPassword) {
         const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
@@ -167,9 +166,5 @@ export async function requireSuperadminContext(): Promise<SuperadminContext> {
     logger.warn('admin_guard.superadmin_cookie_check_failed', { error: cookieError });
   }
 
-  const context = await requireAdminContext();
-  if (context.role !== 'superadmin') {
-    throw new AdminAuthError(403, 'Superadmin permissions required');
-  }
-  return context as unknown as SuperadminContext;
+  throw new AdminAuthError(403, 'Superadmin permissions required');
 }

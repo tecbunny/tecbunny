@@ -37,6 +37,18 @@ export const ROLE_PERMISSIONS = {
     canViewCustomers: true,
     canProcessPayments: true,
   },
+  'sales-staff': {
+    canViewProducts: true,
+    canManageOrders: true,
+    canViewCustomers: true,
+    canProcessPayments: true,
+  },
+  'sales-external': {
+    canViewProducts: true,
+    canManageOrders: true,
+    canViewCustomers: true,
+    canProcessPayments: true,
+  },
   manager: {
     canViewProducts: true,
     canManageOrders: true,

@@ -540,7 +540,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // If redirectTo is not explicitly specified, detect if current user is staff/worker
     if (!redirectTo && user) {
-      const isStaff = ['superadmin', 'admin', 'manager', 'sales', 'service_engineer', 'accounts'].includes(user.role);
+      const isStaff = ['admin', 'manager', 'sales-staff', 'sales', 'sales-external'].includes(user.role);
       redirectTo = isStaff ? '/staff/login' : '/auth/signin';
     }
 
@@ -602,7 +602,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (typeof window === 'undefined') return;
 
     const handleSessionExpired = () => {
-      const isStaff = user && ['superadmin', 'admin', 'manager', 'sales', 'service_engineer', 'accounts'].includes(user.role);
+      const isStaff = user && ['admin', 'manager', 'sales-staff', 'sales', 'sales-external'].includes(user.role);
       logout({ redirectTo: isStaff ? '/staff/login?session=expired' : '/auth/signin?session=expired', silent: true });
     };
 

@@ -12,7 +12,7 @@ export interface Database {
           otp_code: string | null;
           expires_at: string;
           type: 'signup' | 'recovery' | 'login_2fa' | 'agent_order';
-          channel: 'sms' | 'email' | null;
+          channel: 'whatsapp' | 'email' | null;
           used: boolean;
           created_at: string;
           updated_at: string;
@@ -25,7 +25,7 @@ export interface Database {
           otp_code?: string | null;
           expires_at: string;
           type: 'signup' | 'recovery' | 'login_2fa' | 'agent_order';
-          channel?: 'sms' | 'email' | null;
+          channel?: 'whatsapp' | 'email' | null;
           used?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -38,7 +38,7 @@ export interface Database {
           otp_code?: string | null;
           expires_at?: string;
           type?: 'signup' | 'recovery' | 'login_2fa' | 'agent_order';
-          channel?: 'sms' | 'email' | null;
+          channel?: 'whatsapp' | 'email' | null;
           used?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -48,8 +48,7 @@ export interface Database {
         Row: {
           id: string;
           userId: string;
-          preferredOTPChannel: 'sms' | 'email';
-          smsNotifications: boolean;
+          preferredOTPChannel: 'whatsapp' | 'email';
           emailNotifications: boolean;
           whatsappNotifications: boolean;
           orderUpdates: boolean;
@@ -63,8 +62,7 @@ export interface Database {
         Insert: {
           id?: string;
           userId: string;
-          preferredOTPChannel?: 'sms' | 'email';
-          smsNotifications?: boolean;
+          preferredOTPChannel?: 'whatsapp' | 'email';
           emailNotifications?: boolean;
           whatsappNotifications?: boolean;
           orderUpdates?: boolean;
@@ -78,8 +76,7 @@ export interface Database {
         Update: {
           id?: string;
           userId?: string;
-          preferredOTPChannel?: 'sms' | 'email';
-          smsNotifications?: boolean;
+          preferredOTPChannel?: 'whatsapp' | 'email';
           emailNotifications?: boolean;
           whatsappNotifications?: boolean;
           orderUpdates?: boolean;

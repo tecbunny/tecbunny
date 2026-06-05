@@ -32,7 +32,7 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [dispatchedChannel, setDispatchedChannel] = useState<'email' | 'sms' | 'whatsapp' | null>(null);
+  const [dispatchedChannel, setDispatchedChannel] = useState<'email' | 'whatsapp' | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const Turnstile = useMemo(
@@ -41,8 +41,6 @@ export default function SignUpPage() {
   );
   const getVerificationPrompt = (channel?: string) => {
     switch (channel) {
-      case 'sms':
-        return 'Answer the automated call to hear your verification code.';
       case 'whatsapp':
         return 'Please check your WhatsApp messages for the verification code.';
       default:
@@ -51,8 +49,6 @@ export default function SignUpPage() {
   };
   const getChannelLabel = (channel?: string) => {
     switch (channel) {
-      case 'sms':
-        return 'OTP on Call';
       case 'whatsapp':
         return 'WhatsApp';
       default:
@@ -197,9 +193,9 @@ export default function SignUpPage() {
         });
       }
 
-      const resolvedChannel = (['sms', 'email', 'whatsapp'].includes(data?.channel)
+      const resolvedChannel = (['email', 'whatsapp'].includes(data?.channel)
         ? data.channel
-        : preferredChannel) as 'email' | 'sms' | 'whatsapp';
+        : preferredChannel) as 'email' | 'whatsapp';
       setDispatchedChannel(resolvedChannel);
 
       // Persist signup session (email, name, mobile, password) for OTP verification and account creation

@@ -15,7 +15,7 @@ const supabase = createClient(
 const otpManager = new MultiChannelOTPManager();
 
 /**
- * Generate OTP with multi-channel support (SMS, Email, WhatsApp)
+ * Generate OTP with WhatsApp or email support
  * POST /api/otp/generate
  */
 export async function POST(request: NextRequest) {
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       phone: finalPhone,
       email,
       purpose: finalPurpose,
-      preferredChannel: preferredChannel || 'sms', // Default to SMS
+      preferredChannel: preferredChannel || (finalPhone ? 'whatsapp' : 'email'),
       userId: finalUserId,
       orderId: finalOrderId
     };

@@ -7,9 +7,9 @@ import { GST_RATE } from '@/lib/constants';
 import { apiError, apiSuccess } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { 
-  sendOrderConfirmationTemplate,
-  sendWhatsAppTemplate
-} from '@/lib/superfone-whatsapp-service';
+  sendOrderNotification,
+  sendWhatsAppNotification
+} from '@/lib/whatsapp-service';
 import { otpService } from '@/lib/otp-service';
 import { enhancedCommissionService } from '@/lib/enhanced-commission-service';
 import { emailHelpers } from '@/lib/email';
@@ -395,11 +395,10 @@ export async function POST(request: NextRequest) {
         const formattedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+91${cleanPhone}`;
 
         // Send order confirmation to customer
-        await sendOrderConfirmationTemplate(
-          formattedPhone,
-          createdOrder.id.toString(),
-          orderData.customer_name
-        );
+        await sendOrderNotification(formattedPhone, {
+          orderNumber: createdOrder.id.toString(),
+          customerName: orderData.customer_name
+        });
 
         logger.info('order_whatsapp_customer_sent', { 
           orderId: createdOrder.id, 
@@ -423,19 +422,7 @@ export async function POST(request: NextRequest) {
             `🔗 View: ${siteUrl}/mgmt/admin/orders/${createdOrder.id}\n` +
             `⏰ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
 
-          await sendWhatsAppTemplate({
-            templateName: 'admin_notification',
-            language: 'en',
-            recipient: adminPhone,
-            components: [
-              {
-                type: 'text',
-                parameters: [
-                  { type: 'text', text: adminMessage }
-                ]
-              }
-            ]
-          });
+          await sendWhatsAppNotification(adminPhone, adminMessage);
 
           logger.info('order_whatsapp_admin_sent', { 
             orderId: createdOrder.id, 
@@ -451,19 +438,7 @@ export async function POST(request: NextRequest) {
             `💰 ₹${fullOrder.total}\n` +
             `⏰ ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
 
-          await sendWhatsAppTemplate({
-            templateName: 'manager_notification',
-            language: 'en',
-            recipient: managerPhone,
-            components: [
-              {
-                type: 'text',
-                parameters: [
-                  { type: 'text', text: managerMessage }
-                ]
-              }
-            ]
-          });
+          await sendWhatsAppNotification(managerPhone, managerMessage);
 
           logger.info('order_whatsapp_manager_sent', { 
             orderId: createdOrder.id, 

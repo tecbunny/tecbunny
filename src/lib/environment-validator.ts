@@ -16,11 +16,6 @@ export interface EnvironmentConfig {
     from: string;
     fromName: string;
   };
-  sms: {
-    twoFactorApiKey: string;
-    senderId: string;
-    baseUrl: string;
-  };
   whatsapp: {
     accessToken: string;
     phoneNumberId: string;
@@ -59,13 +54,6 @@ class EnvironmentValidator {
       pass: this.optionalEnv('SMTP_PASS', 'SMTP Password'),
       from: this.getEnv('SMTP_FROM', 'noreply@tecbunny.com'),
       fromName: this.getEnv('SMTP_FROM_NAME', 'TecBunny Solutions')
-    };
-
-    // SMS Configuration
-    this.config.sms = {
-      twoFactorApiKey: this.optionalEnv('TWOFACTOR_API_KEY', '2Factor API Key'),
-      senderId: this.getEnv('TWOFACTOR_SENDER_ID', 'TECBNY'),
-      baseUrl: this.getEnv('TWOFACTOR_BASE_URL', 'https://2factor.in/API')
     };
 
     // WhatsApp Configuration
@@ -141,10 +129,6 @@ class EnvironmentValidator {
   }
 
   // Feature availability checks
-  isSMSEnabled(): boolean {
-    return !!(this.config.sms?.twoFactorApiKey);
-  }
-
   isEmailEnabled(): boolean {
     return !!(this.config.smtp?.user && this.config.smtp?.pass);
   }
@@ -159,11 +143,9 @@ class EnvironmentValidator {
 
   getFeatureStatus() {
     return {
-      sms: this.isSMSEnabled(),
       email: this.isEmailEnabled(),
       whatsapp: this.isWhatsAppEnabled(),
       database: this.isSupabaseEnabled(),
-      dualChannelOTP: this.isSMSEnabled() && this.isEmailEnabled(),
       notifications: this.isWhatsAppEnabled() || this.isEmailEnabled()
     };
   }

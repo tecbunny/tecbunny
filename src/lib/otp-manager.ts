@@ -24,18 +24,6 @@ interface OTPInsertData {
   used: boolean;
 }
 
-interface OTPSessionData {
-  id?: string;
-  identifier: string;
-  otp_code: string;
-  expires_at: string;
-  type: string;
-  used: boolean;
-  session_id?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
 class OTPManager {
   private supabase: ReturnType<typeof createClient> | null;
 
@@ -160,79 +148,6 @@ class OTPManager {
   // In-memory OTP storage as fallback
   private otpStorage = new Map<string, {otp: string, type: string, expires: number, used: boolean}>();
 
-  // In-memory mapping of 2factor.in session ids keyed by identifier (email or mobile)
-  // When we use 2factor.in AUTOGEN, the provider returns a session id which we use to verify later
-  private otpSessionStorage = new Map<string, { sessionId: string; expires: number }>();
-
-  // Persist 2factor sessions in Supabase table `otp_sessions` when available.
-  // Expected columns: id (uuid), identifier (text), session_id (text), expires_at (timestamptz), type (text)
-  private async saveSession(identifier: string, sessionId: string, expiresAt: Date, type: string) {
-    try {
-      if (!this.supabase) return false;
-      const { error } = await (this.supabase as any)
-        .from('otp_sessions')
-        .insert({ identifier, session_id: sessionId, expires_at: expiresAt.toISOString(), type });
-      if (error) {
-        // If the table doesn't exist or insertion fails, keep in-memory fallback
-        logger.warn('Could not persist OTP session to database; using in-memory fallback', {
-          identifier,
-          sessionId,
-          type,
-          error,
-        });
-        return false;
-      }
-      return true;
-    } catch (err) {
-      logger.warn('Unexpected error saving OTP session to database; using in-memory fallback', {
-        identifier,
-        sessionId,
-        type,
-        error: err,
-      });
-      return false;
-    }
-  }
-
-  private async getSessionFromDB(identifier: string): Promise<OTPSessionData | null> {
-    try {
-      if (!this.supabase) return null;
-      const { data, error } = await this.supabase
-        .from('otp_sessions')
-        .select('*')
-        .eq('identifier', identifier)
-        .limit(1)
-        .order('expires_at', { ascending: false })
-        .maybeSingle<OTPSessionData>();
-      if (error) {
-        // Table may not exist
-        return null;
-      }
-      return data || null;
-    } catch (err) {
-      logger.warn('Error fetching OTP session from database', { identifier, error: err });
-      return null;
-    }
-  }
-
-  private async deleteSessionFromDB(identifier: string): Promise<boolean> {
-    try {
-      if (!this.supabase) return false;
-      const { error } = await this.supabase
-        .from('otp_sessions')
-        .delete()
-        .eq('identifier', identifier);
-      if (error) {
-        logger.warn('Error deleting OTP session from database', { identifier, error });
-        return false;
-      }
-      return true;
-    } catch (err) {
-      logger.warn('Unexpected error deleting OTP session from database', { identifier, error: err });
-      return false;
-    }
-  }
-
   private storeOTPInMemory(email: string, otp: string, type: string): boolean {
     const key = `${email}:${type}`;
     this.otpStorage.set(key, {
@@ -255,32 +170,9 @@ class OTPManager {
       // Generate OTP
       const otp = this.generateOTP();
 
-      // If a mobile number was passed instead of email and 2factor is configured, prefer 2factor.in
-      const maybePhone = String(email || '').replace(/[\s+\-()]/g, '');
-      const twoFactorKey = process.env.TWOFACTOR_API_KEY;
-      const looksLikePhone = /^\d{8,15}$/.test(maybePhone);
-
-      if (twoFactorKey && looksLikePhone) {
-        // Use 2factor.in AUTOGEN to send an SMS OTP; store the returned session id for verification
-        const twoResult = await this.sendVia2Factor(maybePhone);
-        if (!twoResult.success) {
-          return { success: false, message: twoResult.message };
-        }
-        // keep a short-lived session mapping (5 minutes) and attempt to persist in DB for serverless
-        const expires = Date.now() + 5 * 60 * 1000;
-        this.otpSessionStorage.set(maybePhone, { sessionId: twoResult.sessionId!, expires });
-        // Try to persist in DB; if it fails we'll rely on in-memory map
-        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-        await this.saveSession(maybePhone, twoResult.sessionId!, expiresAt, type).catch(() => null);
-
-        // For phone/SMS flow we rely on provider session; do not attempt to send an email
-        return { success: true, message: 'OTP sent via SMS', waitTime: undefined };
-      } else {
-        // Store in database as before for email/legacy fallback
-        const stored = await this.storeOTP(normalizedEmail, otp, type);
-        if (!stored) {
-          return { success: false, message: 'Failed to store OTP in database' };
-        }
+      const stored = await this.storeOTP(normalizedEmail, otp, type);
+      if (!stored) {
+        return { success: false, message: 'Failed to store OTP in database' };
       }
   // Send email
     const emailResult = await improvedEmailService.sendOTPEmail(normalizedEmail, otp, type);
@@ -308,68 +200,7 @@ class OTPManager {
     const normalizedEmail = email.trim().toLowerCase();
     logger.debug('Starting OTP verification', { email, type });
     try {
-      // If there is a 2factor.in session for this identifier (phone), use the provider to verify first
-      const maybePhone = String(email || '').replace(/[\s+\-()]/g, '');
-      logger.debug('Checking OTP sessions for identifier', { identifier: maybePhone });
-      // Prefer persisted DB session (works in serverless); fall back to in-memory map
-      const dbSession = await this.getSessionFromDB(maybePhone);
-      if (dbSession) {
-        const expiresAt = new Date(dbSession.expires_at).getTime();
-        logger.debug('Found persisted OTP session', { identifier: maybePhone, expiresAt });
-        if (Date.now() > expiresAt) {
-          logger.debug('Persisted OTP session expired', { identifier: maybePhone });
-          await this.deleteSessionFromDB(maybePhone).catch(() => null);
-        } else {
-          if (!dbSession.session_id) {
-            logger.warn('Persisted OTP session missing session_id', { identifier: maybePhone });
-            return { success: false, message: 'Invalid session' };
-          }
-          logger.debug('Verifying OTP via 2Factor using persisted session', {
-            identifier: maybePhone,
-            sessionId: dbSession.session_id,
-          });
-          const twoVerify = await this.verifyVia2Factor(dbSession.session_id, otp);
-          if (twoVerify.success) {
-            logger.info('2Factor verification succeeded via persisted session', { identifier: maybePhone });
-            await this.deleteSessionFromDB(maybePhone).catch(() => null);
-            this.otpSessionStorage.delete(maybePhone);
-            return { success: true, message: 'OTP verified successfully' };
-          }
-          logger.warn('2Factor verification failed via persisted session', {
-            identifier: maybePhone,
-            message: twoVerify.message,
-          });
-          // fall through to in-memory/db fallback if provider verification fails
-        }
-      } else {
-        logger.debug('No persisted OTP session found', { identifier: maybePhone });
-      }
 
-      const sessionEntry = this.otpSessionStorage.get(maybePhone);
-      if (sessionEntry) {
-        logger.debug('Found in-memory OTP session', { identifier: maybePhone });
-        if (Date.now() > sessionEntry.expires) {
-          logger.debug('In-memory OTP session expired', { identifier: maybePhone });
-          this.otpSessionStorage.delete(maybePhone);
-        } else {
-          logger.debug('Verifying OTP via 2Factor using in-memory session', {
-            identifier: maybePhone,
-            sessionId: sessionEntry.sessionId,
-          });
-          const twoVerify = await this.verifyVia2Factor(sessionEntry.sessionId, otp);
-          if (twoVerify.success) {
-            logger.info('2Factor verification succeeded via in-memory session', { identifier: maybePhone });
-            this.otpSessionStorage.delete(maybePhone);
-            return { success: true, message: 'OTP verified successfully' };
-          }
-          logger.warn('2Factor verification failed via in-memory session', {
-            identifier: maybePhone,
-            message: twoVerify.message,
-          });
-        }
-      } else {
-        logger.debug('No in-memory OTP session found', { identifier: maybePhone });
-      }
 
       // Try database first if configured
       let otpRecord: OTPData | null = null;
@@ -526,42 +357,7 @@ class OTPManager {
     }
   }
 
-  // 2factor.in integration helpers
-  private async sendVia2Factor(mobile: string): Promise<{ success: boolean; message: string; sessionId?: string }> {
-    try {
-      const apiKey = process.env.TWOFACTOR_API_KEY;
-      if (!apiKey) return { success: false, message: '2factor API key not configured' };
-      // 2factor AUTOGEN endpoint: https://2factor.in/API/V1/{API_KEY}/SMS/AUTOGEN/{MOBILE}/AUTOGEN
-      const url = `https://2factor.in/API/V1/${encodeURIComponent(apiKey)}/SMS/AUTOGEN/${encodeURIComponent(mobile)}/AUTOGEN`;
-      const res = await fetch(url, { method: 'GET' });
-      const json = await res.json();
-      if (!res.ok || json.Status !== 'Success') {
-        return { success: false, message: json.Details || json.description || 'Failed to send SMS via 2factor' };
-      }
-      // json.Details contains session id
-      return { success: true, message: 'OTP sent via SMS', sessionId: json.Details };
-    } catch (err: unknown) {
-      logger.error('2factor send error', { mobile, error: err });
-      return { success: false, message: err instanceof Error ? err.message : '2factor send failed' };
-    }
-  }
-
-  private async verifyVia2Factor(sessionId: string, otp: string): Promise<{ success: boolean; message?: string }> {
-    try {
-      const apiKey = process.env.TWOFACTOR_API_KEY;
-      if (!apiKey) return { success: false, message: '2factor API key not configured' };
-      const url = `https://2factor.in/API/V1/${encodeURIComponent(apiKey)}/SMS/VERIFY/${encodeURIComponent(sessionId)}/${encodeURIComponent(otp)}`;
-      const res = await fetch(url, { method: 'GET' });
-      const json = await res.json();
-      if (!res.ok || json.Status !== 'Success') {
-        return { success: false, message: json.Details || json.description || 'OTP verification failed' };
-      }
-      return { success: true };
-    } catch (err: unknown) {
-      logger.error('2factor verify error', { sessionId, error: err });
-      return { success: false, message: err instanceof Error ? err.message : '2factor verify failed' };
-    }
-  }
+  // Phone OTP delivery is handled by MultiChannelOTPManager through Infobip WhatsApp.
 }
 
 export const otpManager = new OTPManager();

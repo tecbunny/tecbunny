@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
-import { sendWhatsAppTemplate } from '@/lib/superfone-whatsapp-service';
+import { sendPaymentConfirmationNotification, sendWhatsAppNotification } from '@/lib/whatsapp-service';
 import { logger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/errors';
 import { rateLimit } from '@/lib/rate-limit';
@@ -169,20 +169,15 @@ export async function POST(request: NextRequest) {
               `📅 Date: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
         }
 
-        // Send to customer
-        await sendWhatsAppTemplate({
-          templateName: 'payment_notification',
-          language: 'en',
-          recipient: formattedPhone,
-          components: [
-            {
-              type: 'text',
-              parameters: [
-                { type: 'text', text: customerMessage }
-              ]
-            }
-          ]
-        });
+        if (status === 'success') {
+          await sendPaymentConfirmationNotification(formattedPhone, {
+            orderNumber: order_id,
+            amount: `₹${amount}`,
+            customerName: order.customer_name
+          });
+        } else {
+          await sendWhatsAppNotification(formattedPhone, customerMessage);
+        }
 
         logger.info('payment_whatsapp_customer_sent', { 
           order_id, 
@@ -208,19 +203,7 @@ export async function POST(request: NextRequest) {
 ❌ Reason: ${failure_reason}`;
           }
 
-          await sendWhatsAppTemplate({
-            templateName: 'admin_payment_notification',
-            language: 'en',
-            recipient: adminPhone,
-            components: [
-              {
-                type: 'text',
-                parameters: [
-                  { type: 'text', text: adminMessage }
-                ]
-              }
-            ]
-          });
+          await sendWhatsAppNotification(adminPhone, adminMessage);
 
           logger.info('payment_whatsapp_admin_sent', { 
             order_id, 
@@ -239,19 +222,7 @@ export async function POST(request: NextRequest) {
             `👤 ${order.customer_name}\n` +
             `⏰ ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
 
-          await sendWhatsAppTemplate({
-            templateName: 'manager_payment_notification',
-            language: 'en',
-            recipient: managerPhone,
-            components: [
-              {
-                type: 'text',
-                parameters: [
-                  { type: 'text', text: managerMessage }
-                ]
-              }
-            ]
-          });
+          await sendWhatsAppNotification(managerPhone, managerMessage);
 
           logger.info('payment_whatsapp_manager_sent', { 
             order_id, 

@@ -26,7 +26,7 @@ const DEFAULT_SECURITY_SETTINGS: Record<string, { value: string; description: st
   },
   mfa_phone_enabled: {
     value: 'false',
-    description: 'Allow SMS/phone-based multi-factor authentication.'
+    description: 'Allow phone-based multi-factor authentication through WhatsApp.'
   },
   mfa_webauthn_enabled: {
     value: 'false',

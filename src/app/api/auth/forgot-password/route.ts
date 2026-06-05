@@ -122,9 +122,9 @@ export async function POST(request: NextRequest) {
       }
       logger.info('forgot_password.profile_found', { identifier, userId: profile.id });
     }
-    const normalizedChannel: OTPChannel = requestedChannel && ['sms', 'email', 'whatsapp'].includes(requestedChannel)
+    const normalizedChannel: OTPChannel = requestedChannel && ['email', 'whatsapp'].includes(requestedChannel)
       ? requestedChannel
-      : (email ? 'email' : (mobile ? 'sms' : 'email'));
+      : (email ? 'email' : (mobile ? 'whatsapp' : 'email'));
 
     logger.info('forgot_password.sending_otp', { identifier, preferredChannel: normalizedChannel });
 

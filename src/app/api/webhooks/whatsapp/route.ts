@@ -196,7 +196,7 @@ To check your order:
 2️⃣ Enter your order number
 3️⃣ Or share your order number here
 
-📱 SMS tracking updates
+📱 WhatsApp tracking updates
 📧 Email confirmations sent
 🚚 Free shipping on orders above ₹1,000
 

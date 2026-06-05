@@ -6,6 +6,7 @@
 import { createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import type { OtpType } from '@/lib/types';
 import { emailClient } from './email/client';
+import { sendInfobipWhatsAppOtp } from './infobip/infobip-whatsapp-otp';
 
 import { logger } from './logger';
 
@@ -16,7 +17,7 @@ export interface OtpRequest {
   customer_email?: string;
   otp_type: OtpType;
   created_by?: string;
-  channel?: 'sms' | 'email' | 'both';
+  channel?: 'whatsapp' | 'email' | 'both';
 }
 
 export interface OtpVerification {
@@ -44,7 +45,7 @@ export class OtpService {
   /**
    * Generate and send OTP for agent order verification
    */
-  async generateOtp(request: OtpRequest, skipSms: boolean = false): Promise<{
+  async generateOtp(request: OtpRequest, skipPhoneDelivery: boolean = false): Promise<{
     success: boolean;
     otp_id?: string;
     otp_code?: string;
@@ -66,9 +67,9 @@ export class OtpService {
         .single();
 
       if (existingOtp) {
-        if (!skipSms) {
+        if (!skipPhoneDelivery) {
           // Resend existing OTP
-          await this.sendOtpSms(request.customer_phone, existingOtp.otp_code, request.otp_type);
+          await this.sendOtpWhatsApp(request.customer_phone, existingOtp.otp_code, request.otp_type);
         }
         
         return {
@@ -111,20 +112,16 @@ export class OtpService {
           await emailClient.sendOtpEmail(request.customer_email, otpCode);
         } catch (emailError) {
           logger.error('Failed to send OTP email', { error: emailError, email: request.customer_email });
-          // If email-only channel failed, we should probably report error, 
-          // but if 'both', we might want to continue to SMS or return success if at least one worked.
           if (request.channel === 'email') {
             return { success: false, error: 'Failed to send OTP email' };
           }
         }
       }
 
-      if (!skipSms && (request.channel === 'sms' || request.channel === 'both' || !request.channel)) {
-        // Send OTP via SMS
-        const smsResult = await this.sendOtpSms(request.customer_phone, otpCode, request.otp_type);
+      if (!skipPhoneDelivery && (request.channel === 'whatsapp' || request.channel === 'both' || !request.channel)) {
+        const whatsAppResult = await this.sendOtpWhatsApp(request.customer_phone, otpCode, request.otp_type);
         
-        if (!smsResult.success && request.channel !== 'both') {
-          // Delete the OTP record if SMS failed (and it was the only channel)
+        if (!whatsAppResult.success && request.channel !== 'both') {
           await this.supabase
             .from('order_otp_verifications')
             .delete()
@@ -132,7 +129,7 @@ export class OtpService {
 
           return {
             success: false,
-            error: 'Failed to send OTP SMS'
+            error: 'Failed to send OTP via WhatsApp'
           };
         }
       }
@@ -261,77 +258,32 @@ export class OtpService {
   }
 
   /**
-   * Send OTP via SMS (integrate with SMS service)
+   * Send OTP via Infobip WhatsApp
    */
-  private async sendOtpSms(
+  private async sendOtpWhatsApp(
     phone: string, 
     otpCode: string, 
     otpType: OtpType
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      // Format phone number (ensure it has country code)
-      const formattedPhone = phone.startsWith('+91') ? phone : `+91${phone}`;
-      
-      // Prepare message based on OTP type
-      let message = '';
-      if (otpType === 'agent_order') {
-        message = `Your OTP for agent order verification is: ${otpCode}. Valid for ${this.OTP_EXPIRY_MINUTES} minutes. - Tecbunny Solutions`;
-      } else {
-        message = `Your OTP for customer verification is: ${otpCode}. Valid for ${this.OTP_EXPIRY_MINUTES} minutes. - Tecbunny Solutions`;
+      const formattedPhone = phone.startsWith('+91') ? phone : `+91${phone.replace(/\D/g, '')}`;
+      const userName = otpType === 'agent_order' ? 'Agent order customer' : 'Customer';
+      const result = await sendInfobipWhatsAppOtp(formattedPhone, otpCode, userName, otpCode);
+
+      if (!result.success) {
+        return { success: false, error: result.error || 'WhatsApp delivery failed' };
       }
 
-      // Here you would integrate with your SMS service
-      // Example: 2Factor.in, TextLocal, MSG91, etc.
-      
-    // For demo purposes, we'll log the OTP (remove in production)
-    logger.debug('SMS OTP generated', { phone: formattedPhone });
-      
-      // Mock SMS sending - replace with actual SMS service
-      const smsResult = await this.mockSmsService(formattedPhone, message);
-      
-      return smsResult;
+      logger.debug('WhatsApp OTP sent', { phone: formattedPhone, messageId: result.messageId });
+      return { success: true };
 
     } catch (error) {
-      logger.error('Error sending SMS', { error, phone });
+      logger.error('Error sending WhatsApp OTP', { error, phone });
       return {
         success: false,
-        error: 'Failed to send SMS'
+        error: 'Failed to send OTP via WhatsApp'
       };
     }
-  }
-
-  /**
-   * Mock SMS service - replace with actual implementation
-   */
-  private async mockSmsService(
-    phone: string, 
-    message: string
-  ): Promise<{ success: boolean; error?: string }> {
-    // This is a mock implementation
-    // In production, integrate with services like:
-    // - 2Factor.in
-    // - TextLocal
-    // - MSG91
-    // - AWS SNS
-    // - etc.
-
-    logger.debug('Mock SMS service invoked', { phone, messageLength: message.length });
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Simulate 90% success rate
-        const success = Math.random() > 0.1;
-        
-        if (success) {
-          resolve({ success: true });
-        } else {
-          resolve({ 
-            success: false, 
-            error: 'SMS delivery failed' 
-          });
-        }
-      }, 1000);
-    });
   }
 
   /**

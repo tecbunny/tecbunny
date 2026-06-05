@@ -80,19 +80,15 @@ content_path = "./supabase/templates/confirmation_otp.html"
 content = "\n<h2>Confirm your signup</h2>\n\n<p>Follow this link to confirm your user:</p>\n<p><a href=\"{{ .ConfirmationURL }}\">Confirm your mail</a></p>\n"
 
 [auth.sms]
-# Allow/disallow new user signups via SMS to your project.
-enable_signup = true
-# If enabled, users need to confirm their phone number before signing in.
-enable_confirmations = true
+# SMS auth is disabled. Phone verification is handled by application OTP over Infobip WhatsApp.
+enable_signup = false
+enable_confirmations = false
 
 # Use pre-defined map of phone number to short code for testing.
 # [auth.sms.test_otp]
 # 4152127777 = "123456"
 
-# Configure SMS provider (webhook configured via dashboard/API)
-# SMS webhooks are configured through Supabase Dashboard or API
-# URL: https://your-vercel-domain.vercel.app/api/auth/sms-webhook
-# Secret: env(SUPABASE_AUTH_SMS_WEBHOOK_SECRET)
+# Do not configure an SMS provider or webhook for this project.
 
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin`, `notion`, `twitch`,

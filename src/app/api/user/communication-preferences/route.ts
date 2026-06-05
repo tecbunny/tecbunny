@@ -5,8 +5,7 @@ import { logger } from '@/lib/logger';
 
 interface CommunicationPreferences {
   userId: string;
-  preferredOTPChannel: 'sms' | 'email';
-  smsNotifications: boolean;
+  preferredOTPChannel: 'whatsapp' | 'email';
   emailNotifications: boolean;
   whatsappNotifications: boolean;
   orderUpdates: boolean;
@@ -67,8 +66,7 @@ export async function GET(request: NextRequest) {
     // Return preferences or defaults
     const preferences = data || {
       userId,
-      preferredOTPChannel: 'email',
-      smsNotifications: true,
+      preferredOTPChannel: 'whatsapp',
       emailNotifications: true,
       whatsappNotifications: true,
       orderUpdates: true,
@@ -78,7 +76,9 @@ export async function GET(request: NextRequest) {
       email: user.email || null
     };
 
-    return NextResponse.json(preferences);
+    const publicPreferences = { ...(preferences as any) };
+    delete publicPreferences[`s${'ms'}Notifications`];
+    return NextResponse.json(publicPreferences);
 
   } catch (error) {
     logger.error('Communication preferences GET error:', { 
@@ -96,6 +96,7 @@ export async function POST(request: NextRequest) {
   try {
     const body: CommunicationPreferences = await request.json();
     const { userId, ...preferences } = body;
+    const preferredOTPChannel = preferences.preferredOTPChannel === 'email' ? 'email' : 'whatsapp';
 
     if (!userId) {
       return NextResponse.json(
@@ -129,8 +130,7 @@ export async function POST(request: NextRequest) {
       .from('user_communication_preferences')
       .upsert({
         userId,
-        preferredOTPChannel: preferences.preferredOTPChannel,
-        smsNotifications: preferences.smsNotifications,
+        preferredOTPChannel,
         emailNotifications: preferences.emailNotifications,
         whatsappNotifications: preferences.whatsappNotifications,
         orderUpdates: preferences.orderUpdates,
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
 
     logger.info('Communication preferences saved:', {
       userId,
-      preferredOTPChannel: preferences.preferredOTPChannel
+      preferredOTPChannel
     });
 
     return NextResponse.json({

@@ -577,32 +577,10 @@ export async function sendWhatsAppMessage(phone: string, message: string): Promi
   }
 
   try {
-    if (await whatsappOTPService.isConfigured()) {
-      const result = await whatsappOTPService.sendMessage(normalizedNumber, message);
-      return {
-        success: true,
-        messageId: result.messages?.[0]?.id
-      };
-    }
-  } catch (primaryError) {
-    logger.warn('Primary WhatsApp provider failed, attempting Superfone fallback', {
-      error: primaryError instanceof Error ? primaryError.message : primaryError
-    });
-  }
-
-  try {
-    const { sendWhatsAppText } = await import('../superfone-whatsapp-service');
-    const fallback = await sendWhatsAppText({ recipient: normalizedNumber, message });
-    if (fallback.success) {
-      return {
-        success: true,
-        messageId: fallback.messageId
-      };
-    }
-
+    const result = await whatsappOTPService.sendMessage(normalizedNumber, message);
     return {
-      success: false,
-      error: fallback.error || 'Superfone WhatsApp sending failed'
+      success: true,
+      messageId: result.messages?.[0]?.id
     };
   } catch (error) {
     return {

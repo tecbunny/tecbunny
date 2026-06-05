@@ -113,23 +113,6 @@ export async function GET(_request: NextRequest) {
     }
 
     // 5. External Services Check
-    
-    // SMS Service Check
-    if (featureStatus.sms) {
-      checks.push({
-        service: '2Factor.in SMS Service',
-        status: 'healthy',
-        message: 'SMS service configured (API key present)',
-        details: { configured: true }
-      });
-    } else {
-      checks.push({
-        service: '2Factor.in SMS Service',
-        status: 'degraded',
-        message: 'SMS service not configured (missing API key)',
-        details: { configured: false }
-      });
-    }
 
     // Email Service Check
     if (featureStatus.email) {

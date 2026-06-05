@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
     logger.info('signup.sending_otp', { email: normalizedEmail || email, mobile: !!mobile, clientIp });
 
     const otpMobile = mobile || undefined;
-    const preferredChannel: OTPChannel = (requestedChannel && ['email', 'sms', 'whatsapp'].includes(requestedChannel)) 
+    const preferredChannel: OTPChannel = (requestedChannel && ['email', 'whatsapp'].includes(requestedChannel)) 
       ? requestedChannel as OTPChannel 
       : 'whatsapp';
     const enforcePreferredChannel = true;

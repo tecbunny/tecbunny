@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 import { 
-  sendShippingNotificationTemplate,
-  sendWhatsAppTemplate
-} from '@/lib/superfone-whatsapp-service';
+  sendShipmentNotification,
+  sendWhatsAppNotification
+} from '@/lib/whatsapp-service';
 import { logger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/errors';
 import { rateLimit } from '@/lib/rate-limit';
@@ -194,27 +194,14 @@ export async function POST(request: NextRequest) {
 
         // Send to customer using shipping notification template
         if (tracking_number && status === 'shipped') {
-          await sendShippingNotificationTemplate(
-            formattedPhone,
-            order_id,
-            tracking_number,
-            order.customer_name
-          );
-        } else {
-          // Use generic template for other statuses
-          await sendWhatsAppTemplate({
-            templateName: 'shipping_notification',
-            language: 'en',
-            recipient: formattedPhone,
-            components: [
-              {
-                type: 'text',
-                parameters: [
-                  { type: 'text', text: customerMessage }
-                ]
-              }
-            ]
+          await sendShipmentNotification(formattedPhone, {
+            orderNumber: order_id,
+            trackingNumber: tracking_number,
+            carrier,
+            customerName: order.customer_name
           });
+        } else {
+          await sendWhatsAppNotification(formattedPhone, customerMessage);
         }
 
         logger.info('shipping_whatsapp_customer_sent', { 
@@ -238,19 +225,7 @@ export async function POST(request: NextRequest) {
             `📍 Address: ${delivery_address || 'As provided'}\n` +
             `⏰ Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
 
-          await sendWhatsAppTemplate({
-            templateName: 'manager_shipping_notification',
-            language: 'en',
-            recipient: managerPhone,
-            components: [
-              {
-                type: 'text',
-                parameters: [
-                  { type: 'text', text: managerMessage }
-                ]
-              }
-            ]
-          });
+          await sendWhatsAppNotification(managerPhone, managerMessage);
 
           logger.info('shipping_whatsapp_manager_sent', { 
             order_id, 
@@ -271,19 +246,7 @@ export async function POST(request: NextRequest) {
               `📦 ${tracking_number || 'No tracking'}\n` +
               `⏰ ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
 
-            await sendWhatsAppTemplate({
-              templateName: 'admin_shipping_notification',
-              language: 'en',
-              recipient: adminPhone,
-              components: [
-                {
-                  type: 'text',
-                  parameters: [
-                    { type: 'text', text: adminMessage }
-                  ]
-                }
-              ]
-            });
+            await sendWhatsAppNotification(adminPhone, adminMessage);
 
             logger.info('shipping_whatsapp_admin_sent', { 
               order_id, 

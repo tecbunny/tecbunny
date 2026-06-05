@@ -47,7 +47,7 @@ const extractRoleFromMetadata = (metadata: Record<string, unknown> | undefined |
   return null;
 };
 
-type OTPChannel = 'email' | 'sms' | 'whatsapp';
+type OTPChannel = 'email' | 'whatsapp';
 
 interface SignupDetails {
   email: string;
@@ -623,9 +623,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (captchaBypassed) headers['x-bypass-captcha'] = '1';
 
-      const preferredChannel: OTPChannel = details.preferredChannel && ['email', 'sms', 'whatsapp'].includes(details.preferredChannel)
+      const preferredChannel: OTPChannel = details.preferredChannel && ['email', 'whatsapp'].includes(details.preferredChannel)
         ? details.preferredChannel
-        : (details.email ? 'email' : (details.phone ? 'sms' : 'email'));
+        : (details.email ? 'email' : (details.phone ? 'whatsapp' : 'email'));
 
       const response = await fetch('/api/auth/signup', {
         method: 'POST',

@@ -265,7 +265,7 @@ export async function POST(request: NextRequest) {
           customer_phone: orderRecord.customer_phone,
           otp_type: 'pickup',
           created_by: 'system'
-        } as any, true); // true = skip SMS
+        } as any, true); // true = skip phone delivery
         pickupCode = otpResult.otp_code || 'CODE-PENDING';
       } catch (otpErr: any) {
         logger.error('Failed to pre-generate pickup OTP', { error: otpErr.message, orderId });

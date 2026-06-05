@@ -96,8 +96,8 @@ export async function POST(request: NextRequest) {
 
     const purpose = type === 'recovery' ? 'password_reset' : 'registration';
 
-    // Prefer SMS when mobile is provided, otherwise email
-    const preferredChannel = normalizedMobile ? 'sms' : 'email';
+    // Prefer WhatsApp when mobile is provided, otherwise email
+    const preferredChannel = normalizedMobile ? 'whatsapp' : 'email';
 
     const result = await otpManager.generateOTP({
       phone: normalizedMobile,

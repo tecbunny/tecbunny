@@ -5,7 +5,7 @@ import MultiChannelOTPManager from '@/lib/multi-channel-otp-manager';
 const otpManager = new MultiChannelOTPManager();
 
 /**
- * Resend OTP using fallback channel
+ * Resend OTP using WhatsApp or email
  * POST /api/otp/resend
  */
 export async function POST(request: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!fallbackChannel || !['sms', 'email', 'whatsapp'].includes(fallbackChannel)) {
+    if (!fallbackChannel || !['email', 'whatsapp'].includes(fallbackChannel)) {
       return NextResponse.json(
         { error: 'Valid fallback channel is required' },
         { status: 400 }

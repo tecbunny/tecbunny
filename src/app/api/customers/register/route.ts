@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-
 import { createClient } from '@/lib/supabase/server';
-import { 
-  sendWelcomeTemplate,
-  sendWhatsAppTemplate
-} from '@/lib/superfone-whatsapp-service';
+import { sendWelcomeNotification, sendWhatsAppNotification } from '@/lib/whatsapp-service';
 import { logger } from '@/lib/logger';
 import { apiError, apiSuccess } from '@/lib/errors';
 import { rateLimit } from '@/lib/rate-limit';
@@ -31,8 +27,8 @@ export async function POST(request: NextRequest) {
       return apiError('RATE_LIMITED', { correlationId });
     }
 
-  const body: CustomerRegistrationData = await request.json();
-  const { name, phone, email, source = 'website', tags = [], consent_whatsapp = true } = body;
+    const body: CustomerRegistrationData = await request.json();
+    const { name, phone, email, source = 'website', tags = [], consent_whatsapp = true } = body;
 
     // Validate required fields
     if (!name || !phone) {
@@ -122,7 +118,7 @@ export async function POST(request: NextRequest) {
       try {
         if (isNewCustomer) {
           // Send welcome message to new customer
-          await sendWelcomeTemplate(formattedPhone, name);
+          await sendWelcomeNotification(formattedPhone, { customerName: name });
           logger.info('welcome_whatsapp_sent', { 
             customerId: customer.id, 
             phone: formattedPhone,
@@ -133,22 +129,8 @@ export async function POST(request: NextRequest) {
         // Notify admin about new registration
         const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER;
         if (adminPhone) {
-          await sendWhatsAppTemplate({
-            templateName: 'customer_notification',
-            language: 'en',
-            recipient: adminPhone,
-            components: [
-              {
-                type: 'body',
-                parameters: [
-                  { type: 'text', text: name },
-                  { type: 'text', text: formattedPhone },
-                  { type: 'text', text: email || 'Not provided' },
-                  { type: 'text', text: source }
-                ]
-              }
-            ]
-          });
+          const messageText = `🚨 *New Customer Registered* - TecBunny\n\n👤 *Name:* ${name}\n📞 *Phone:* ${formattedPhone}\n📧 *Email:* ${email || 'Not provided'}\n🌐 *Source:* ${source}`;
+          await sendWhatsAppNotification(adminPhone, messageText);
 
           logger.info('admin_notification_sent', { 
             customerId: customer.id,
@@ -160,22 +142,8 @@ export async function POST(request: NextRequest) {
         // Notify manager if different from admin
         const managerPhone = process.env.MANAGER_WHATSAPP_NUMBER;
         if (managerPhone && managerPhone !== adminPhone) {
-          await sendWhatsAppTemplate({
-            templateName: 'customer_notification',
-            language: 'en',
-            recipient: managerPhone,
-            components: [
-              {
-                type: 'body',
-                parameters: [
-                  { type: 'text', text: name },
-                  { type: 'text', text: formattedPhone },
-                  { type: 'text', text: email || 'Not provided' },
-                  { type: 'text', text: source }
-                ]
-              }
-            ]
-          });
+          const messageText = `🚨 *New Customer Registered* - TecBunny\n\n👤 *Name:* ${name}\n📞 *Phone:* ${formattedPhone}\n📧 *Email:* ${email || 'Not provided'}\n🌐 *Source:* ${source}`;
+          await sendWhatsAppNotification(managerPhone, messageText);
 
           logger.info('manager_notification_sent', { 
             customerId: customer.id,
@@ -190,7 +158,6 @@ export async function POST(request: NextRequest) {
           customerId: customer.id,
           correlationId 
         });
-        // Don't fail the registration if WhatsApp fails
       }
     }
 
@@ -238,7 +205,7 @@ export async function GET(request: NextRequest) {
       .eq('phone', formattedPhone)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+    if (error && error.code !== 'PGRST116') {
       logger.error('customer_lookup_error', { error, phone: formattedPhone, correlationId });
       return apiError('DATABASE_ERROR', { correlationId });
     }

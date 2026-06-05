@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
 import { logger } from '@/lib/logger';
-import { sendAccountCreationConfirmationTemplate, sendWhatsAppText } from '@/lib/superfone-whatsapp-service';
+import { sendWelcomeNotification, sendWhatsAppNotification } from '@/lib/whatsapp-service';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -87,29 +86,23 @@ export async function POST(request: NextRequest) {
 
     const customerName = (name || profile.name || '').trim() || 'there';
 
-    let sendResult = await sendAccountCreationConfirmationTemplate(targetPhone, customerName, typeof loginUrl === 'string' ? loginUrl : undefined);
-
-    if (!sendResult.success) {
+    let sendResult: { success: boolean; error?: string; messageId?: string } = { success: false };
+    try {
+      const result = await sendWelcomeNotification(targetPhone, { customerName });
+      sendResult = { success: true, messageId: result?.messages?.[0]?.id || 'delivered' };
+    } catch (err: any) {
+      logger.warn('first_login_whatsapp.template_failed_attempting_fallback', { error: err.message });
       const textFallback = [
         `Hi ${customerName}, your TecBunny account is ready.`,
         typeof loginUrl === 'string' && loginUrl.trim() ? `Login here: ${loginUrl.trim()}` : null,
         'If you need help, reply to this message or contact TecBunny support.',
-      ]
-        .filter(Boolean)
-        .join(' ');
+      ].filter(Boolean).join(' ');
 
-      const textResult = await sendWhatsAppText({
-        recipient: targetPhone,
-        message: textFallback,
-      });
-
-      if (textResult.success) {
-        logger.info('first_login_whatsapp.text_fallback_sent', {
-          userId,
-          phone: targetPhone,
-          messageId: textResult.messageId,
-        });
-        sendResult = textResult;
+      try {
+        const textResult = await sendWhatsAppNotification(targetPhone, textFallback);
+        sendResult = { success: true, messageId: textResult?.messages?.[0]?.id || 'delivered' };
+      } catch (fallbackErr: any) {
+        sendResult = { success: false, error: fallbackErr.message };
       }
     }
 

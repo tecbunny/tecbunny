@@ -20,7 +20,6 @@ export function Logo({ className, width = 40, height = 40, alt = 'TecBunny Logo'
       height={height}
       className={`object-contain ${className ?? ''}`}
       priority
-      unoptimized
     />
   );
 }

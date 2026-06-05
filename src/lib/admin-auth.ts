@@ -5,8 +5,13 @@
 
 import { SupabaseClient, User } from '@supabase/supabase-js';
 import { isAtLeast, normalizeRole } from './roles';
+import { isSuperadminSession } from './permissions';
 
 export async function isUserAdmin(user: User, supabase: SupabaseClient): Promise<boolean> {
+  if (await isSuperadminSession()) {
+    return true;
+  }
+
   // First check app_metadata (secure, admin-only editable)
   const metadataRole = normalizeRole(user.app_metadata?.role);
   if (metadataRole && isAtLeast(metadataRole, 'admin')) {
@@ -30,6 +35,10 @@ export async function isUserAdmin(user: User, supabase: SupabaseClient): Promise
 }
 
 export async function requireAdmin(user: User | null, supabase: SupabaseClient): Promise<{ isAdmin: boolean; error?: string; status?: number }> {
+  if (await isSuperadminSession()) {
+    return { isAdmin: true };
+  }
+
   if (!user) {
     return { isAdmin: false, error: 'Authentication required', status: 401 };
   }
@@ -44,6 +53,10 @@ export async function requireAdmin(user: User | null, supabase: SupabaseClient):
 }
 
 export async function isUserSuperadmin(user: User, supabase: SupabaseClient): Promise<boolean> {
+  if (await isSuperadminSession()) {
+    return true;
+  }
+
   const metadataRole = normalizeRole(user.app_metadata?.role);
   if (metadataRole && metadataRole === 'superadmin') {
     return true;
@@ -65,6 +78,10 @@ export async function isUserSuperadmin(user: User, supabase: SupabaseClient): Pr
 }
 
 export async function requireSuperadmin(user: User | null, supabase: SupabaseClient): Promise<{ isSuperadmin: boolean; error?: string; status?: number }> {
+  if (await isSuperadminSession()) {
+    return { isSuperadmin: true };
+  }
+
   if (!user) {
     return { isSuperadmin: false, error: 'Authentication required', status: 401 };
   }

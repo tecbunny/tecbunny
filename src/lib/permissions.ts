@@ -1,4 +1,5 @@
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 
 import { createClient } from '@/lib/supabase/server';
 
@@ -7,12 +8,42 @@ import { logger } from './logger';
 import { ROLE_HIERARCHY as roleHierarchy, EFFECTIVE_PERMISSIONS, isAtLeast, normalizeRole } from './roles';
 
 /**
+ * Validates the Edge Superadmin session cookie.
+ */
+export async function isSuperadminSession(): Promise<boolean> {
+  try {
+    const cookieStore = await cookies();
+    const superadminCookie = cookieStore.get('superadmin-session')?.value;
+    if (!superadminCookie) return false;
+
+    const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
+    const correctPassword = process.env.SUPERADMIN_PASSWORD;
+    if (!correctEmail || !correctPassword) return false;
+
+    const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
+    const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    return superadminCookie === expectedToken;
+  } catch (error) {
+    console.error('Error verifying superadmin session on server:', error);
+    return false;
+  }
+}
+
+/**
  * Fetches the role for a given user from the database.
  * This is the centralized function for determining a user's role.
  * @param user The Supabase user object.
  * @returns The user's role, or null if not found or an error occurs.
  */
 async function getUserRole(user: SupabaseUser | null): Promise<UserRole | null> {
+  if (await isSuperadminSession()) {
+    return 'superadmin';
+  }
+
   if (!user) return null;
 
   // First check app_metadata (secure, admin-only editable)
@@ -60,6 +91,10 @@ export async function hasRole(user: SupabaseUser | null, requiredRole: UserRole)
 
 // Check if user is admin
 export async function isAdmin(user: SupabaseUser | null): Promise<boolean> {
+  if (await isSuperadminSession()) {
+    return true;
+  }
+
   if (!user) return false;
   
   // First check app_metadata (secure, admin-only editable)
@@ -75,6 +110,10 @@ export async function isAdmin(user: SupabaseUser | null): Promise<boolean> {
 
 // Check if user is superadmin
 export async function isSuperadmin(user: SupabaseUser | null): Promise<boolean> {
+  if (await isSuperadminSession()) {
+    return true;
+  }
+
   if (!user) return false;
   if (user.id !== 'superadmin-root-id') return false;
   const appMetadataRole = normalizeRole(user.app_metadata?.role) as UserRole | null;

@@ -51,7 +51,7 @@ export function SalesSidebar() {
     } catch (error) {
       logger.error('Logout error', { error });
       // Emergency fallback: force redirect even if logout failed
-      window.location.href = '/';
+      window.location.href = '/staff/login';
     }
   };
 

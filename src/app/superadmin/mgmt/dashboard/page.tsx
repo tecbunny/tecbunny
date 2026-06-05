@@ -2,8 +2,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { 
-  ShieldAlert, Settings, Cpu, CreditCard, ClipboardList, 
-  Users, UserCheck, Key, RefreshCw, LogOut, ArrowRight 
+  Cpu, CreditCard, ClipboardList, Users, UserCheck, 
+  Key, ArrowRight, FileText, Share2, Ticket, Wrench, 
+  Globe, Building, Percent, Activity, Sliders
 } from 'lucide-react';
 import { createServiceClient } from '@/lib/supabase/server';
 
@@ -53,56 +54,128 @@ export default async function SuperadminDashboard() {
       .from('security_audit_log')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(5);
+      .limit(4);
     recentLogs = logs || [];
   } catch (e) {
     console.error('Superadmin dashboard data fetch failed:', e);
   }
 
+  const managementBlocks = [
+    {
+      title: 'User Management',
+      description: 'CRUD controls over Admin profiles, Staff accounts, and Customer tables.',
+      href: '/superadmin/mgmt/users',
+      icon: Users,
+      color: 'rose'
+    },
+    {
+      title: 'Product Management',
+      description: 'Comprehensive CRUD authority over store catalogs, dynamic base tiers, and pricing books.',
+      href: '/superadmin/mgmt/products',
+      icon: Wrench,
+      color: 'indigo'
+    },
+    {
+      title: 'Payment Management',
+      description: 'Exclusive access to edit payment gateway credentials, webhook receivers, and keys.',
+      href: '/superadmin/mgmt/payment-settings',
+      icon: CreditCard,
+      color: 'emerald'
+    },
+    {
+      title: 'Website Management',
+      description: 'Authority to modify frontend code constants, asset rendering parameters, and page modules.',
+      href: '/superadmin/mgmt/settings?tab=homepage',
+      icon: Globe,
+      color: 'amber'
+    },
+    {
+      title: 'Brand Management',
+      description: 'Configuration of company logo images, asset paths, and brand identity metadata.',
+      href: '/superadmin/mgmt/settings?tab=identity',
+      icon: Key,
+      color: 'rose'
+    },
+    {
+      title: 'Policies Management',
+      description: 'Content management over legally binding site links (Terms, Privacy, Refund policies).',
+      href: '/superadmin/mgmt/policies',
+      icon: FileText,
+      color: 'indigo'
+    },
+    {
+      title: 'AI Configurations',
+      description: 'Full control over dynamic system prompt definitions, temperatures, and model choices.',
+      href: '/superadmin/mgmt/ai-config',
+      icon: Cpu,
+      color: 'emerald'
+    },
+    {
+      title: 'Social Media Management',
+      description: 'Configurations for integrated external links, tracker pixels, and visual handles.',
+      href: '/superadmin/mgmt/social-media',
+      icon: Share2,
+      color: 'amber'
+    },
+    {
+      title: 'Offers Management',
+      description: 'CRUD over site-wide promotional parameters, automated campaigns, and coupons.',
+      href: '/superadmin/mgmt/offers',
+      icon: Ticket,
+      color: 'rose'
+    },
+    {
+      title: 'Marketing Management',
+      description: 'Access to target configurations, lead tracking engines, and analytical tags.',
+      href: '/superadmin/mgmt/marketing',
+      icon: Activity,
+      color: 'indigo'
+    },
+    {
+      title: 'Company Management',
+      description: 'Adjustments to legal identity details (GSTIN, COI, registered business addresses).',
+      href: '/superadmin/mgmt/settings?tab=business',
+      icon: Building,
+      color: 'emerald'
+    },
+    {
+      title: 'Tax Management',
+      description: 'Control over dynamic multi-tier tax matrices and systemic percentage calculations.',
+      href: '/superadmin/mgmt/settings?tab=advanced',
+      icon: Percent,
+      color: 'amber'
+    },
+    {
+      title: 'All Reports',
+      description: 'System-wide analytical breakdowns, full metrics, and salesperson performance logs.',
+      href: '/superadmin/mgmt/reports',
+      icon: ClipboardList,
+      color: 'rose'
+    },
+    {
+      title: 'Custom Setup Management',
+      description: 'Authority over architectural structures mapping modular custom dynamic configurations.',
+      href: '/superadmin/mgmt/custom-setups',
+      icon: Sliders,
+      color: 'indigo'
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col font-sans">
-      {/* Top Header */}
-      <header className="border-b border-rose-500/20 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ShieldAlert className="h-6 w-6 text-rose-500" />
-            <span className="font-semibold tracking-widest text-sm uppercase text-white">TecBunny Root Console</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-xs px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/20 text-rose-300 font-mono">
-              SYSTEM_ROOT
-            </span>
-            <div className="flex items-center">
-              {/* Force log out path */}
-              <a
-                href="/api/superadmin/logout"
-                className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-rose-400 transition-colors"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                Sign Out
-              </a>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="space-y-8">
+      {/* Header Info */}
+      <div>
+        <h2 className="text-3xl font-extrabold text-white tracking-tight">System Administration</h2>
+        <p className="text-slate-400 text-sm mt-1">Configure parameters, inspect user tables, and mutate core orchestration variables.</p>
+      </div>
 
-      {/* Main Console Panel */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-500/5 rounded-full blur-[120px] pointer-events-none" />
-
-        {/* Dashboard Grid Header */}
-        <div className="lg:col-span-3 mb-2">
-          <h2 className="text-3xl font-extrabold text-white tracking-tight">System Administration</h2>
-          <p className="text-slate-400 text-sm mt-1">Configure parameters, inspect user tables, and mutate core orchestration variables.</p>
-        </div>
-
-        {/* Telemetry/Widgets Panel */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Statistics Grid */}
+      {/* Grid Layout: Stats & Logs */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 shadow-lg">
               <div className="flex items-center justify-between mb-3 text-slate-400">
-                <span className="text-xs uppercase tracking-wider font-semibold">Total User Profiles</span>
+                <span className="text-xs uppercase tracking-wider font-semibold">Total Users</span>
                 <Users className="h-5 w-5 text-indigo-400" />
               </div>
               <span className="text-3xl font-bold text-white font-mono">{userCount}</span>
@@ -118,7 +191,7 @@ export default async function SuperadminDashboard() {
 
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 shadow-lg">
               <div className="flex items-center justify-between mb-3 text-slate-400">
-                <span className="text-xs uppercase tracking-wider font-semibold">Security Settings</span>
+                <span className="text-xs uppercase tracking-wider font-semibold">Security Core</span>
                 <Key className="h-5 w-5 text-emerald-400" />
               </div>
               <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
@@ -126,79 +199,66 @@ export default async function SuperadminDashboard() {
               </span>
             </div>
           </div>
-
-          {/* Quick-Access Control Panels */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* AI Settings */}
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-6 flex flex-col justify-between hover:border-rose-500/30 transition-all group shadow-md">
-              <div>
-                <div className="w-12 h-12 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-5">
-                  <Cpu className="h-6 w-6 text-rose-500" />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2">AI Orchestration Engine</h3>
-                <p className="text-slate-400 text-xs leading-relaxed">
-                  Run-time mutations of AI prompts, temperature thresholds, model mappings, and Gemini API keys.
-                </p>
-              </div>
-              <Link 
-                href="/superadmin/mgmt/ai-config"
-                className="mt-6 inline-flex items-center gap-1.5 text-xs text-rose-400 group-hover:text-white font-semibold transition-colors uppercase tracking-wider"
-              >
-                Configure Prompts <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-
-            {/* Payment Gateways */}
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-6 flex flex-col justify-between hover:border-rose-500/30 transition-all group shadow-md">
-              <div>
-                <div className="w-12 h-12 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-5">
-                  <CreditCard className="h-6 w-6 text-indigo-400" />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2">Payment Gateways</h3>
-                <p className="text-slate-400 text-xs leading-relaxed">
-                  Configure merchant credentials, PayU endpoints, salt strings, and live transaction webhooks.
-                </p>
-              </div>
-              <Link 
-                href="/superadmin/mgmt/payment-settings"
-                className="mt-6 inline-flex items-center gap-1.5 text-xs text-indigo-400 group-hover:text-white font-semibold transition-colors uppercase tracking-wider"
-              >
-                Configure Gateways <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
         </div>
 
-        {/* Audit Log Sidebar */}
-        <div className="bg-slate-950 border border-slate-800 rounded-xl p-6 shadow-lg h-fit">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
+        {/* Audit Log Panel */}
+        <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 shadow-lg row-span-2 h-fit">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
               <ClipboardList className="h-4.5 w-4.5 text-rose-500" />
-              <h3 className="text-md font-bold text-white tracking-wide">System Audit Trails</h3>
-            </div>
-            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono">Live Logs</span>
+              Root Audit Logs
+            </h3>
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono">Live</span>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {recentLogs.length === 0 ? (
-              <p className="text-xs text-slate-500 py-6 text-center italic">No security events recorded in audit engine.</p>
+              <p className="text-xs text-slate-500 py-6 text-center italic">No security events recorded.</p>
             ) : (
               recentLogs.map((log) => (
-                <div key={log.id} className="p-3 bg-slate-900/40 border border-slate-900 rounded-lg space-y-1">
+                <div key={log.id} className="p-2.5 bg-slate-900/40 border border-slate-900 rounded-lg space-y-1 text-xs">
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-rose-400 font-mono uppercase font-semibold">{log.event_type}</span>
                     <span className="text-slate-500 font-mono">{new Date(log.created_at).toLocaleTimeString()}</span>
                   </div>
-                  <p className="text-slate-300 text-xs truncate">
+                  <p className="text-slate-300 truncate">
                     {log.event_data?.setting_key ? `Key: ${log.event_data.setting_key}` : 'Event data modified'}
                   </p>
-                  <span className="text-[9px] text-slate-500 font-mono">Severity: {log.severity || 'low'}</span>
                 </div>
               ))
             )}
           </div>
         </div>
-      </main>
+
+        {/* 14 Management Blocks Grid */}
+        <div className="lg:col-span-2">
+          <h3 className="text-lg font-bold text-white mb-4">Management Consoles</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {managementBlocks.map((block) => {
+              const IconComponent = block.icon;
+              return (
+                <div key={block.title} className="bg-slate-950 border border-slate-800 rounded-xl p-5 flex flex-col justify-between hover:border-rose-500/30 transition-all group shadow-md">
+                  <div>
+                    <div className="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4">
+                      <IconComponent className="h-5 w-5 text-rose-400 group-hover:text-rose-300 transition-colors" />
+                    </div>
+                    <h4 className="text-sm font-bold text-white mb-1">{block.title}</h4>
+                    <p className="text-slate-400 text-xs leading-relaxed">
+                      {block.description}
+                    </p>
+                  </div>
+                  <Link 
+                    href={block.href}
+                    className="mt-4 inline-flex items-center gap-1 text-[11px] text-rose-400 group-hover:text-rose-300 font-semibold transition-colors uppercase tracking-wider"
+                  >
+                    Open Console <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

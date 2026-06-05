@@ -9,6 +9,22 @@ export default function SignOutPage() {
 
   React.useEffect(() => {
     const performSignOut = async () => {
+      let targetRedirect = '/';
+      
+      if (typeof window !== 'undefined') {
+        const referrer = document.referrer || '';
+        const cookieStr = document.cookie || '';
+        
+        const isSuperadmin = referrer.includes('/superadmin') || cookieStr.includes('superadmin-session');
+        const isStaff = referrer.includes('/mgmt') || referrer.includes('/staff');
+        
+        if (isSuperadmin) {
+          targetRedirect = '/superadmin/login';
+        } else if (isStaff) {
+          targetRedirect = '/staff/login';
+        }
+      }
+
       try {
         // Call the signout API
         const response = await fetch('/api/auth/signout', {
@@ -27,8 +43,7 @@ export default function SignOutPage() {
         logger.error('auth.signout_page.error', { error });
       } finally {
         setIsSigningOut(false);
-        // Always redirect to homepage
-        window.location.href = '/';
+        window.location.href = targetRedirect;
       }
     };
 

@@ -85,9 +85,13 @@ export function AdminSidebar() {
     });
   }, [router]);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+      window.location.href = '/staff/login';
+    }
   };
 
   return (

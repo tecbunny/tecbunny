@@ -96,12 +96,13 @@ export async function middleware(request: NextRequest) {
     return res
   }
 
-  // Trace Superadmin claims and lock out from client storefront pages (redirect to dashboard)
+  // Trace Superadmin claims and lock out from client storefront and standard mgmt pages (redirect to dashboard)
   if (isSuperadmin) {
     if (
       pathname.startsWith('/profile') ||
       pathname.startsWith('/cart') ||
-      pathname.startsWith('/checkout')
+      pathname.startsWith('/checkout') ||
+      pathname.startsWith('/mgmt')
     ) {
       return finalizeResponse(NextResponse.redirect(new URL('/superadmin/mgmt/dashboard', request.url)))
     }
@@ -185,17 +186,17 @@ export async function middleware(request: NextRequest) {
       ))
     }
 
-    // API Route Guards for each Role Tier
-    if (pathname.startsWith('/api/admin') && userRole !== 'admin') {
+    // API Route Guards for each Role Tier (allow Superadmin to access admin API routes)
+    if (pathname.startsWith('/api/admin') && userRole !== 'admin' && !isSuperadmin) {
       return finalizeResponse(NextResponse.json({ error: 'Not Found' }, { status: 404 }))
     }
-    if (pathname.startsWith('/api/manager') && userRole !== 'manager') {
+    if (pathname.startsWith('/api/manager') && userRole !== 'manager' && !isSuperadmin) {
       return finalizeResponse(NextResponse.json({ error: 'Not Found' }, { status: 404 }))
     }
-    if (pathname.startsWith('/api/sales-staff') && userRole !== 'sales-staff' && userRole !== 'sales') {
+    if (pathname.startsWith('/api/sales-staff') && userRole !== 'sales-staff' && userRole !== 'sales' && !isSuperadmin) {
       return finalizeResponse(NextResponse.json({ error: 'Not Found' }, { status: 404 }))
     }
-    if (pathname.startsWith('/api/sales-external') && userRole !== 'sales-external') {
+    if (pathname.startsWith('/api/sales-external') && userRole !== 'sales-external' && !isSuperadmin) {
       return finalizeResponse(NextResponse.json({ error: 'Not Found' }, { status: 404 }))
     }
   }
@@ -211,21 +212,39 @@ export async function middleware(request: NextRequest) {
     // Check if the user has a valid staff role
     const STAFF_ROLES = new Set(['admin', 'manager', 'sales', 'sales-staff', 'sales-external', 'service_engineer', 'accounts'])
     if (!userRole || !STAFF_ROLES.has(userRole)) {
-      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
+      return finalizeResponse(new NextResponse('Forbidden', { status: 403 }))
     }
 
-    // Role path segregation
-    if (pathname.startsWith('/mgmt/admin') && userRole !== 'admin') {
-      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
+    // Role path segregation & folder group checks
+    if (pathname.startsWith('/mgmt/admin')) {
+      if (userRole !== 'admin') {
+        return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
+      }
+      
+      // Enforce strict folder guards: Admins can ONLY see staff, inventory, orders, purchase, invoice-lookup, quotes.
+      const allowedAdminPaths = [
+        '/mgmt/admin',
+        '/mgmt/admin/staff',
+        '/mgmt/admin/inventory',
+        '/mgmt/admin/products', // products catalog is also part of inventory
+        '/mgmt/admin/orders',
+        '/mgmt/admin/purchase',
+        '/mgmt/admin/invoice-lookup',
+        '/mgmt/admin/quotes'
+      ];
+      const isAllowed = allowedAdminPaths.some(p => pathname === p || pathname.startsWith(p + '/'));
+      if (!isAllowed) {
+        return finalizeResponse(new NextResponse('Forbidden', { status: 403 }))
+      }
     }
     if (pathname.startsWith('/mgmt/manager') && userRole !== 'manager') {
-      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
+      return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
     }
     if (pathname.startsWith('/mgmt/sales-staff') && userRole !== 'sales-staff' && userRole !== 'sales') {
-      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
+      return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
     }
     if (pathname.startsWith('/mgmt/sales-external') && userRole !== 'sales-external') {
-      return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)))
+      return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
     }
   }
 

@@ -1,13 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
 
 const MINIMAL_FALLBACKS: Record<string, string> = {
-  research: 'Query: {query}\nProduct context: {productContext}\nSource context: {sourceContext}',
-  product_details: 'Schema: {schema}\nExisting: {existingData}\nMetadata: {pageMetadata}\nBody: {bodyText}',
-  generate_description: 'Title: {title}\nCategory: {category}\nBrand: {brand}\nModel: {model_number}\nFeatures: {featureBlock}\nHSN: {hsnNote}\nColor: {accent_color}\nSummary: {hsnSummaryNote}',
-  ai_query: 'Query: {rawQuery}\nContext: {contextData}',
-  product_description: 'Tone: {tone}\nLength: {length}\nData: {productData}',
-  ai_add: 'Note: {imageNote}\nInput: {rawInput}'
+  research: '',
+  product_details: '',
+  generate_description: '',
+  ai_query: '',
+  product_description: '',
+  ai_add: ''
 };
+
 
 export async function getSystemPrompt(promptId: string): Promise<string> {
   // 1. Specific prompt env key

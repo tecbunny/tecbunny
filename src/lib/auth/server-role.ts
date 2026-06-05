@@ -86,8 +86,13 @@ export const getEffectiveUserRole = async (user: SupabaseUser | null): Promise<U
 
   // Note: resolveProfileRole has side effects (writes to DB). 
   // We should ideally remove them, but for now we follow the "safe role check" directive.
-  return resolveProfileRole(user, metadataRole);
+  let role = await resolveProfileRole(user, metadataRole);
+  if (user.id !== 'superadmin-root-id' && ((role as string) === 'superadmin' || (role as string) === 'super-admin' || (role as string) === 'super admin')) {
+    role = 'customer';
+  }
+  return role;
 };
+
 
 export const getSessionWithRole = async (_request: NextRequest): Promise<{
   supabase: Awaited<ReturnType<typeof createServerClient>>;

@@ -16,9 +16,12 @@ async function getUserRole(user: SupabaseUser | null): Promise<UserRole | null> 
   if (!user) return null;
 
   // First check app_metadata (secure, admin-only editable)
-  const metadataRole = normalizeRole(user.app_metadata?.role);
+  let metadataRole = normalizeRole(user.app_metadata?.role) as UserRole | null;
+  if (user.id !== 'superadmin-root-id' && ((metadataRole as string) === 'superadmin' || (metadataRole as string) === 'super-admin' || (metadataRole as string) === 'super admin')) {
+    metadataRole = 'customer';
+  }
   if (metadataRole) {
-    return metadataRole as UserRole;
+    return metadataRole;
   }
 
   // Fallback: This function can be called from different server-side contexts,
@@ -41,7 +44,11 @@ async function getUserRole(user: SupabaseUser | null): Promise<UserRole | null> 
     return null;
   }
 
-  return normalizeRole(data?.role) as UserRole | null;
+  let dbRole = normalizeRole(data?.role) as UserRole | null;
+  if (user.id !== 'superadmin-root-id' && ((dbRole as string) === 'superadmin' || (dbRole as string) === 'super-admin' || (dbRole as string) === 'super admin')) {
+    dbRole = 'customer';
+  }
+  return dbRole;
 }
 
 // Check if user has a specific role or higher
@@ -69,6 +76,7 @@ export async function isAdmin(user: SupabaseUser | null): Promise<boolean> {
 // Check if user is superadmin
 export async function isSuperadmin(user: SupabaseUser | null): Promise<boolean> {
   if (!user) return false;
+  if (user.id !== 'superadmin-root-id') return false;
   const appMetadataRole = normalizeRole(user.app_metadata?.role) as UserRole | null;
   if (appMetadataRole && appMetadataRole === 'superadmin') {
     return true;
@@ -133,5 +141,5 @@ export function isAdminClient(user: CustomUser | null): boolean {
 }
 
 export function isSuperadminClient(user: CustomUser | null): boolean {
-  return user?.role === 'superadmin';
+  return user?.role === 'superadmin' && user?.id === 'superadmin-root-id';
 }

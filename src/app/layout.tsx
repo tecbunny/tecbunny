@@ -127,6 +127,16 @@ const structuredData = {
   '@context': 'https://schema.org',
   '@graph': [
     {
+      '@type': 'WebSite',
+      '@id': 'https://www.tecbunny.com/#website',
+      url: 'https://www.tecbunny.com',
+      name: 'TecBunny Solutions',
+      description:
+        'TecBunny Solutions provides CCTV installation, IT services, AMC support, networking, home automation, and RFID lock systems in Goa and Maharashtra.',
+      publisher: { '@id': 'https://www.tecbunny.com/#organization' },
+      author: { '@id': 'https://www.tecbunny.com/#organization' },
+    },
+    {
       '@type': 'Organization',
       '@id': 'https://www.tecbunny.com/#organization',
       name: 'TecBunny Solutions',
@@ -135,6 +145,20 @@ const structuredData = {
       description:
         'TecBunny Solutions offers CCTV, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.',
       sameAs: sameAsLinks,
+      founder: [
+        {
+          '@type': 'Person',
+          '@id': 'https://www.tecbunny.com/#shubham',
+          name: 'Shubham Sakharam Bhisaji',
+          jobTitle: 'Director & Co-Founder',
+        },
+        {
+          '@type': 'Person',
+          '@id': 'https://www.tecbunny.com/#kamana',
+          name: 'Kamana Ashok Bandekar',
+          jobTitle: 'Director & Co-Founder',
+        },
+      ],
       contactPoint: [
         {
           '@type': 'ContactPoint',
@@ -162,6 +186,7 @@ const structuredData = {
       currenciesAccepted: 'INR',
       paymentAccepted: 'Cash, UPI, Bank Transfer, Credit Card',
       taxID: '30AAMCT1608G1ZO',
+      iso6523Code: '0199:U80200GA2025PTC017488',
       address: {
         '@type': 'PostalAddress',
         streetAddress: 'H No 11, Nhayginwada, Parse, Parxem',
@@ -182,15 +207,49 @@ const structuredData = {
         closes: '19:00',
       }],
       areaServed: [
-        { '@type': 'City', name: 'Pernem' },
-        { '@type': 'City', name: 'Mapusa' },
-        { '@type': 'City', name: 'Panaji' },
-        { '@type': 'City', name: 'Margao' },
-        { '@type': 'City', name: 'Vasco da Gama' },
-        { '@type': 'City', name: 'Mumbai' },
-        { '@type': 'City', name: 'Pune' },
-        { '@type': 'State', name: 'Goa' },
-        { '@type': 'State', name: 'Maharashtra' },
+        { '@type': 'City', name: 'Pernem', sameAs: 'https://www.wikidata.org/wiki/Q1011550' },
+        { '@type': 'City', name: 'Mapusa', sameAs: 'https://www.wikidata.org/wiki/Q1015694' },
+        { '@type': 'City', name: 'Panaji', sameAs: 'https://www.wikidata.org/wiki/Q1352' },
+        { '@type': 'City', name: 'Margao', sameAs: 'https://www.wikidata.org/wiki/Q1006277' },
+        { '@type': 'City', name: 'Vasco da Gama', sameAs: 'https://www.wikidata.org/wiki/Q1006271' },
+        { '@type': 'City', name: 'Mumbai', sameAs: 'https://www.wikidata.org/wiki/Q1156' },
+        { '@type': 'City', name: 'Pune', sameAs: 'https://www.wikidata.org/wiki/Q1538' },
+        { '@type': 'State', name: 'Goa', sameAs: 'https://www.wikidata.org/wiki/Q1177' },
+        { '@type': 'State', name: 'Maharashtra', sameAs: 'https://www.wikidata.org/wiki/Q1191' },
+      ],
+      knowsAbout: [
+        {
+          '@type': 'Thing',
+          name: 'Closed-circuit television',
+          sameAs: [
+            'https://en.wikipedia.org/wiki/Closed-circuit_television',
+            'https://www.wikidata.org/wiki/Q240126',
+          ],
+        },
+        {
+          '@type': 'Thing',
+          name: 'Information technology consulting',
+          sameAs: [
+            'https://en.wikipedia.org/wiki/Information_technology_consulting',
+            'https://www.wikidata.org/wiki/Q1994646',
+          ],
+        },
+        {
+          '@type': 'Thing',
+          name: 'Home automation',
+          sameAs: [
+            'https://en.wikipedia.org/wiki/Home_automation',
+            'https://www.wikidata.org/wiki/Q848375',
+          ],
+        },
+        {
+          '@type': 'Thing',
+          name: 'Security alarm',
+          sameAs: [
+            'https://en.wikipedia.org/wiki/Security_alarm',
+            'https://www.wikidata.org/wiki/Q1413809',
+          ],
+        },
       ],
       hasOfferCatalog: {
         '@type': 'OfferCatalog',

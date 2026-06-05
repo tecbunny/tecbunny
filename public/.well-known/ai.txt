@@ -1,0 +1,18 @@
+# AI Manifest for tecbunny.com
+# Updated: 2026-06-05
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /mgmt/
+Disallow: /auth/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /profile/
+
+# Details
+Name: TecBunny Solutions
+Website: https://www.tecbunny.com
+Description: CCTV installation, IT services, AMC support, and home automation in Goa & Maharashtra.
+Contact: support@tecbunny.com
+LLMs-Map: https://www.tecbunny.com/llms.txt

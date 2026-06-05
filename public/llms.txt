@@ -1,0 +1,25 @@
+# TecBunny Solutions
+
+> CCTV installation, IT services, AMC support, networking, home automation, and RFID lock systems in Goa and Maharashtra.
+
+## Contact Information
+- Website: https://www.tecbunny.com
+- Telephone: +91-9604136010
+- Email: support@tecbunny.com
+- Office Address: Parse, Pernem, North Goa, 403512, Goa, India
+- GSTIN: 30AAMCT1608G1ZO
+- CIN: U80200GA2025PTC017488
+
+## Main Services
+- **CCTV Installation & AMC**: Professional security cameras and support plans.
+- **Computer Repair & Networking**: IT support, repair, upgrading, and structured cabling.
+- **Home Automation**: Smart home systems and retrofitting.
+- **RFID & Access Control**: Secure smart lock installations.
+- **Web Development**: Custom web application development.
+
+## Site Navigation
+- [Homepage](https://www.tecbunny.com/): Official portal and services summary.
+- [About Us](https://www.tecbunny.com/about): Team profile, authorisations, founders, and business info.
+- [Services](https://www.tecbunny.com/services): High-level overview of service offerings and AMC packages.
+- [Contact](https://www.tecbunny.com/contact): Customer service portal with map and details.
+- [Products](https://www.tecbunny.com/products): Browse CP PLUS, Zebronics, and other security and IT hardware.

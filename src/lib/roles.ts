@@ -7,17 +7,17 @@ export const ROLE_HIERARCHY = {
   service_engineer: 2, // lateral to sales
   accounts: 3,
   manager: 4,
-  admin: 5
+  admin: 5,
+  superadmin: 6
 } as const;
 
 export type UserRole = keyof typeof ROLE_HIERARCHY;
 export const ALL_ROLES: UserRole[] = Object.keys(ROLE_HIERARCHY) as UserRole[];
 
 const ROLE_ALIASES: Readonly<Record<string, UserRole>> = {
-  superadmin: 'admin',
-  super_admin: 'admin',
-  'super-admin': 'admin',
-  'super admin': 'admin'
+  super_admin: 'superadmin',
+  'super-admin': 'superadmin',
+  'super admin': 'superadmin'
 };
 
 export function normalizeRole(value: unknown): UserRole | null {
@@ -54,10 +54,13 @@ export const PERMS = {
   INVENTORY_MANAGE: 'inventory:manage',
   SALES_TEAM_MANAGE: 'sales:team:manage',
   SERVICE_ENGINEER_ASSIGN: 'service:engineer:assign',
-  USER_MANAGE: 'user:manage',
-  SETTINGS_MANAGE: 'system:settings',
-  ROLE_MANAGE: 'system:roles',
-  SYSTEM_CONFIG: 'system:config'
+  USER_MANAGE: 'user:manage', // Superadmin full access
+  USER_MANAGE_CUSTOMER: 'user:manage:customer', // Admin customer-only access
+  SETTINGS_MANAGE: 'system:settings', // Superadmin only
+  ROLE_MANAGE: 'system:roles', // Superadmin only
+  SYSTEM_CONFIG: 'system:config', // Superadmin only
+  AUDIT_LOG_VIEW: 'system:audit-logs', // Superadmin only
+  AI_ORCHESTRATION: 'system:ai-config' // Superadmin only
 } as const;
 
 export type Permission = typeof PERMS[keyof typeof PERMS];
@@ -89,14 +92,20 @@ const BASE_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     PERMS.SERVICE_ENGINEER_ASSIGN
   ],
   admin: [
+    PERMS.USER_MANAGE_CUSTOMER,
+    PERMS.REPORT_VIEW // ensure included even if hierarchy shifts
+  ],
+  superadmin: [
     PERMS.USER_MANAGE,
     PERMS.SETTINGS_MANAGE,
     PERMS.ROLE_MANAGE,
-    PERMS.REPORT_VIEW // ensure included even if hierarchy shifts
+    PERMS.SYSTEM_CONFIG,
+    PERMS.AUDIT_LOG_VIEW,
+    PERMS.AI_ORCHESTRATION
   ]
 };
 
-// Compute inherited permissions (customer < sales < accounts < manager < admin)
+// Compute inherited permissions (customer < sales < accounts < manager < admin < superadmin)
 // service_engineer is a lateral branch at level 2, so it inherits customer but not sales' business perms.
 function buildEffectivePermissions(): Record<UserRole, Set<Permission>> {
   const effective: Record<UserRole, Set<Permission>> = {
@@ -105,7 +114,8 @@ function buildEffectivePermissions(): Record<UserRole, Set<Permission>> {
     service_engineer: new Set(),
     accounts: new Set(),
     manager: new Set(),
-    admin: new Set()
+    admin: new Set(),
+    superadmin: new Set()
   };
 
   // Helper to merge
@@ -132,6 +142,10 @@ function buildEffectivePermissions(): Record<UserRole, Set<Permission>> {
   addAll(effective.admin, Array.from(effective.manager));
   addAll(effective.admin, BASE_ROLE_PERMISSIONS.admin);
 
+  // superadmin inherits admin
+  addAll(effective.superadmin, Array.from(effective.admin));
+  addAll(effective.superadmin, BASE_ROLE_PERMISSIONS.superadmin);
+
   return effective;
 }
 
@@ -151,7 +165,8 @@ export const ROLE_DISPLAY_NAME: Record<UserRole, string> = {
   service_engineer: 'Service Engineer',
   accounts: 'Accounts Manager',
   manager: 'Manager',
-  admin: 'Administrator'
+  admin: 'Administrator',
+  superadmin: 'System Super Administrator'
 };
 
 export function getDisplayName(role: UserRole) { return ROLE_DISPLAY_NAME[role]; }

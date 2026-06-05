@@ -22,6 +22,7 @@ import { generateGeminiText } from '@/lib/ai/gemini-service';
 import { requireRole } from '@/lib/auth/guard';
 import { logger } from '@/lib/logger';
 import { getRedis } from '@/lib/redis';
+import { getSystemPrompt } from '@/lib/ai/prompts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Input schema
@@ -44,7 +45,7 @@ const requestSchema = z.object({
 // System prompt
 // ─────────────────────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(input: z.infer<typeof requestSchema>): string {
+async function buildSystemPrompt(input: z.infer<typeof requestSchema>): Promise<string> {
   const { title, category, brand, model_number, feature_hints, hsn_code, accent_color } = input;
 
   const featureBlock = feature_hints && feature_hints.length > 0
@@ -55,64 +56,20 @@ function buildSystemPrompt(input: z.infer<typeof requestSchema>): string {
     ? `HSN Code: ${hsn_code} (include in the summary card as a GST reference note)`
     : '';
 
-  return `You are an expert Indian e-commerce product copywriter specialising in IT hardware and electronics.
+  const hsnSummaryNote = hsn_code
+    ? `<p style="font-size: 0.78rem; color: #555; margin-top: 0.5rem;">📋 <em>GST Reference – HSN Code: ${hsn_code} | Applicable GST rate may vary. Consult your tax advisor.</em></p>`
+    : '';
 
-PRODUCT DETAILS:
-  Title:        ${title}
-  Category:     ${category}
-  Brand:        ${brand || 'N/A'}
-  Model Number: ${model_number || 'N/A'}
-  ${featureBlock}
-  ${hsnNote}
-
-TASK:
-Generate a beautifully styled product description as a self-contained HTML fragment (NO <html>, <head>, or <body> tags).
-
-STRICT FORMATTING RULES — follow exactly, no deviation:
-
-1. HEADER SECTION:
-   <h2 style="color: ${accent_color}; font-family: ''Inter'', ''Segoe UI'', sans-serif; font-size: 1.4rem; margin-bottom: 0.5rem; border-bottom: 2px solid ${accent_color}; padding-bottom: 0.4rem;">
-     [Product Title Here]
-   </h2>
-
-2. INTRO PARAGRAPH:
-   <p style="font-family: ''Inter'', ''Segoe UI'', sans-serif; font-size: 0.95rem; line-height: 1.7; color: #333; margin-bottom: 1rem;">
-     [2-3 sentence punchy overview of what the product does and who it is for]
-   </p>
-
-3. FEATURES SECTION (REQUIRED – use exactly this structure):
-   <h3 style="color: ${accent_color}; font-family: ''Inter'', ''Segoe UI'', sans-serif; font-size: 1.1rem; margin-bottom: 0.5rem;">
-     Key Features
-   </h3>
-   <ul style="font-family: ''Inter'', ''Segoe UI'', sans-serif; font-size: 0.9rem; line-height: 1.8; color: #444; padding-left: 1.2rem; margin-bottom: 1.2rem;">
-     <li><strong>[Feature label]:</strong> [Feature detail]</li>
-     <!-- Minimum 5 feature bullets, maximum 8 -->
-   </ul>
-
-4. APPLICATIONS / USE CASES (optional but preferred):
-   <h3 style="color: ${accent_color}; font-family: ''Inter'', ''Segoe UI'', sans-serif; font-size: 1.1rem; margin-bottom: 0.5rem;">
-     Ideal Applications
-   </h3>
-   <ul style="font-family: ''Inter'', ''Segoe UI'', sans-serif; font-size: 0.9rem; line-height: 1.8; color: #444; padding-left: 1.2rem; margin-bottom: 1.2rem;">
-     <li>[Use case 1]</li>
-     <li>[Use case 2]</li>
-   </ul>
-
-5. SUMMARY CARD (REQUIRED – place at the bottom):
-   <div class="summary" style="background: linear-gradient(135deg, #e8f5e9, #f1f8e9); border-left: 4px solid #28a745; border-radius: 6px; padding: 1rem 1.2rem; margin-top: 1.2rem; font-family: ''Inter'', ''Segoe UI'', sans-serif;">
-     <strong style="color: #28a745; font-size: 1rem;">✅ Why Choose This Product?</strong>
-     <p style="font-size: 0.88rem; color: #2e7d32; margin-top: 0.4rem; line-height: 1.6;">
-       [2-sentence compelling closing pitch]
-     </p>
-     ${hsn_code ? `<p style="font-size: 0.78rem; color: #555; margin-top: 0.5rem;">📋 <em>GST Reference – HSN Code: ${hsn_code} | Applicable GST rate may vary. Consult your tax advisor.</em></p>` : ''}
-   </div>
-
-SQL-SAFETY RULE — CRITICAL:
-All apostrophes in text MUST be escaped as double single-quotes (example: doesn''t, India''s, it''s).
-This prevents SQL string termination failures in raw INSERT statements.
-Never use a single apostrophe inside any text string in the output.
-
-OUTPUT: Return ONLY the HTML fragment. No markdown, no fences, no preamble.`;
+  const systemPrompt = await getSystemPrompt('generate_description');
+  return systemPrompt
+    .replace(/{title}/g, title)
+    .replace(/{category}/g, category)
+    .replace(/{brand}/g, brand || 'N/A')
+    .replace(/{model_number}/g, model_number || 'N/A')
+    .replace(/{featureBlock}/g, featureBlock)
+    .replace(/{hsnNote}/g, hsnNote)
+    .replace(/{accent_color}/g, accent_color || '#d9534f')
+    .replace(/{hsnSummaryNote}/g, hsnSummaryNote);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,7 +129,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ── 4. Call Gemini ───────────────────────────────────────────────────────
-    const prompt = buildSystemPrompt(input);
+    const prompt = await buildSystemPrompt(input);
 
     const rawHtml = await generateGeminiText({
       prompt,

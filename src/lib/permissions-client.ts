@@ -36,3 +36,7 @@ export function hasRoleClient(user: CustomUser | null, requiredRole: UserRole): 
 export function getRoleDisplayName(role: UserRole): string { return ROLE_DISPLAY_NAME[role]; }
 
 export function getUserPermissions(role: UserRole): string[] { return Array.from(EFFECTIVE_PERMISSIONS[role]); }
+
+export function isSuperadminClient(user: CustomUser | null): boolean {
+  return user?.role === 'superadmin';
+}

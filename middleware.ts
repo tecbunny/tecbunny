@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 // Staff roles that are permitted to access the CRM subdomain
-const CRM_STAFF_ROLES = new Set(['admin', 'manager', 'sales', 'service_engineer', 'accounts'])
+const CRM_STAFF_ROLES = new Set(['superadmin', 'admin', 'manager', 'sales', 'service_engineer', 'accounts'])
 
 const SHARED_CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -112,18 +112,46 @@ export async function middleware(request: NextRequest) {
       const { data } = await supabase.auth.getUser()
       user = data.user
 
-      // On CRM subdomain, also fetch role for access gating
-      if (isCrmSubdomain && user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-        userRole = profile?.role ?? null
+      if (user) {
+        // Try getting role from app_metadata first
+        const rawRole = user.app_metadata?.role;
+        if (rawRole && typeof rawRole === 'string') {
+          const norm = rawRole.trim().toLowerCase();
+          userRole = norm === 'superadmin' || norm === 'super-admin' || norm === 'super admin' ? 'superadmin' : norm;
+        }
+
+        // Fallback to database for CRM subdomain or Superadmin paths
+        const needsRoleLookup = !userRole || isCrmSubdomain || pathname.startsWith('/superadmin') || pathname.startsWith('/api/superadmin');
+        if (needsRoleLookup) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+          if (profile?.role && typeof profile.role === 'string') {
+            const norm = profile.role.trim().toLowerCase();
+            userRole = norm === 'superadmin' || norm === 'super-admin' || norm === 'super admin' ? 'superadmin' : norm;
+          }
+        }
       }
     } catch (e) {
       // If Supabase fails, we proceed with user = null
       console.error('Middleware Supabase Error:', e);
+    }
+  }
+
+  // ─── SUPERADMIN PATH PROTECTIONS ───────────────────────────────────────────
+  // Silent rewrite to 404 for unauthorized access to superadmin panel or APIs
+  if (pathname.startsWith('/superadmin') || pathname.startsWith('/api/superadmin')) {
+    const isLoginPath = pathname === '/superadmin/login';
+    if (isLoginPath) {
+      if (user && userRole !== 'superadmin') {
+        return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)));
+      }
+    } else {
+      if (!user || userRole !== 'superadmin') {
+        return finalizeResponse(NextResponse.rewrite(new URL('/404', request.url)));
+      }
     }
   }
 

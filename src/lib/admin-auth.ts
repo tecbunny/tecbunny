@@ -42,3 +42,38 @@ export async function requireAdmin(user: User | null, supabase: SupabaseClient):
 
   return { isAdmin: true };
 }
+
+export async function isUserSuperadmin(user: User, supabase: SupabaseClient): Promise<boolean> {
+  const metadataRole = normalizeRole(user.app_metadata?.role);
+  if (metadataRole && metadataRole === 'superadmin') {
+    return true;
+  }
+
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const profileRole = normalizeRole(profile?.role);
+    return profileRole === 'superadmin';
+  } catch (error) {
+    console.error('Error checking superadmin role:', error);
+    return false;
+  }
+}
+
+export async function requireSuperadmin(user: User | null, supabase: SupabaseClient): Promise<{ isSuperadmin: boolean; error?: string; status?: number }> {
+  if (!user) {
+    return { isSuperadmin: false, error: 'Authentication required', status: 401 };
+  }
+
+  const isSuper = await isUserSuperadmin(user, supabase);
+  
+  if (!isSuper) {
+    return { isSuperadmin: false, error: 'Superadmin access required', status: 403 };
+  }
+
+  return { isSuperadmin: true };
+}

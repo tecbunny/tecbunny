@@ -82,12 +82,30 @@ export async function POST(request: NextRequest) {
       return apiError('RATE_LIMITED', { correlationId });
     }
 
-    // Payment settings are now managed via code/env vars
-    // We skip the DB lookup and use hardcoded defaults + env vars
+    // Fetch settings from database first, fallback to env vars
+    let dbMerchantKey = '';
+    let dbMerchantSalt = '';
+    let dbEnvironment = '';
+    let dbEnabled = 'true';
+    try {
+      const { data: dbSettings } = await supabase
+        .from('settings')
+        .select('key, value')
+        .in('key', ['payu_merchant_key', 'payu_merchant_salt', 'payu_environment', 'payu_enabled']);
+      if (dbSettings) {
+        dbMerchantKey = dbSettings.find(s => s.key === 'payu_merchant_key')?.value || '';
+        dbMerchantSalt = dbSettings.find(s => s.key === 'payu_merchant_salt')?.value || '';
+        dbEnvironment = dbSettings.find(s => s.key === 'payu_environment')?.value || '';
+        dbEnabled = dbSettings.find(s => s.key === 'payu_enabled')?.value || 'true';
+      }
+    } catch (err) {
+      logger.error('Failed to load PayU settings from DB', { error: err, correlationId });
+    }
+
     const payuConfig = {
-      enabled: true,
+      enabled: dbEnabled === 'true',
       config: {
-        environment: process.env.PAYU_ENVIRONMENT || 'test'
+        environment: dbEnvironment || process.env.PAYU_ENVIRONMENT || 'test'
       }
     };
 
@@ -103,6 +121,7 @@ export async function POST(request: NextRequest) {
     const envMerchantSalt = (process.env.PAYU_MERCHANT_SALT || '').trim();
 
     const deriveMerchantKey = (): string => {
+      if (dbMerchantKey) return dbMerchantKey;
       if (typeof rawConfig.merchantKey === 'string' && rawConfig.merchantKey.trim()) {
         return rawConfig.merchantKey.trim();
       }
@@ -117,6 +136,7 @@ export async function POST(request: NextRequest) {
     };
 
     const deriveMerchantSalt = (): string => {
+      if (dbMerchantSalt) return dbMerchantSalt;
       if (typeof rawConfig.merchantSalt === 'string' && rawConfig.merchantSalt.trim()) {
         return rawConfig.merchantSalt.trim();
       }

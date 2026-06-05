@@ -1,0 +1,221 @@
+'use client';
+
+import { useState, useEffect, Suspense, useMemo } from 'react';
+import NextDynamic from 'next/dynamic';
+import { useSearchParams } from 'next/navigation';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, ShieldAlert, Terminal } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { normalizeRole } from '@/lib/roles';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+
+function SuperadminSignInForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const Turnstile = useMemo(
+    () =>
+      NextDynamic(() => import('react-turnstile').then(m => m.default), {
+        ssr: false,
+      }) as unknown as React.ComponentType<any>,
+    []
+  );
+
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+  const supabase = createClient();
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (turnstileSiteKey && !captchaToken) {
+      setError('Please complete the security check.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+
+      const user = data?.user;
+      if (!user) {
+        setError('Sign in failed. Please try again.');
+        return;
+      }
+
+      // Query profiles table to double-verify role
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      const userRole = normalizeRole(user.app_metadata?.role || profile?.role) ?? null;
+
+      if (userRole !== 'superadmin') {
+        // Sign out immediately - unauthorized
+        await supabase.auth.signOut();
+        setError('Access denied. Superadmin credentials required.');
+        return;
+      }
+
+      toast({
+        title: 'System Access Granted',
+        description: 'Authorized as System Super Administrator.',
+      });
+
+      // Clear Turnstile and redirect
+      setCaptchaToken(null);
+      window.location.href = '/superadmin/dashboard';
+    } catch (err) {
+      console.error('Superadmin sign-in error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden">
+      {/* Background radial effects */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-500/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-violet-600/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="relative w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-900 border border-rose-500/30 mb-5 shadow-lg shadow-rose-500/10">
+            <ShieldAlert className="h-8 w-8 text-rose-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-white tracking-widest uppercase">TecBunny Root Console</h1>
+          <p className="text-slate-400 text-xs mt-2 uppercase tracking-wider">System Super Administrator Only</p>
+          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300">
+            <Terminal className="h-3 w-3" />
+            console.tecbunny.internal
+          </div>
+        </div>
+
+        <div className="bg-slate-950/80 backdrop-blur-xl border border-rose-500/20 rounded-2xl p-8 shadow-[0_0_50px_rgba(244,63,94,0.05)]">
+          <form onSubmit={handleSignIn} className="space-y-5">
+            {/* Email */}
+            <div className="relative">
+              <Label htmlFor="superadmin-email" className="text-xs text-slate-400 mb-1.5 block">
+                Superadmin Email
+              </Label>
+              <div className="relative">
+                <Input
+                  id="superadmin-email"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="superadmin@tecbunny.com"
+                  className="w-full bg-slate-900/60 border border-slate-800 rounded-lg px-4 py-3 text-white outline-none focus:border-rose-500 transition-colors pr-10"
+                  required
+                  autoComplete="email"
+                />
+                <Mail className="absolute right-3 top-3.5 h-4 w-4 text-slate-600 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <Label htmlFor="superadmin-password" className="text-xs text-slate-400 mb-1.5 block">
+                Root Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="superadmin-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-900/60 border border-slate-800 rounded-lg px-4 py-3 text-white outline-none focus:border-rose-500 transition-colors pr-12"
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3.5 text-slate-600 hover:text-rose-400 transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-rose-400 mt-0.5 shrink-0" />
+                <span className="text-sm text-rose-300">{error}</span>
+              </div>
+            )}
+
+            {/* Turnstile Captcha */}
+            {turnstileSiteKey && (
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-400">Security Ingestion Check</Label>
+                <Turnstile
+                  sitekey={turnstileSiteKey}
+                  onVerify={(token: string) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(null)}
+                  onError={() => setCaptchaToken(null)}
+                  options={{ action: 'superadmin_signin', theme: 'dark', size: 'normal' }}
+                />
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading || !email || !password}
+              className="group relative w-full py-3 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold tracking-widest uppercase rounded-lg transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(244,63,94,0.2)] overflow-hidden"
+            >
+              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-700" />
+              {isLoading ? (
+                <>
+                  <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  Authenticating...
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Establish Session
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SuperadminSignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-rose-500 border-t-transparent rounded-full" />
+      </div>
+    }>
+      <SuperadminSignInForm />
+    </Suspense>
+  );
+}

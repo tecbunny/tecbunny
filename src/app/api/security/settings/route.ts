@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { logger } from '@/lib/logger';
-import { AdminAuthError, requireAdminContext } from '@/lib/auth/admin-guard';
+import { AdminAuthError, requireSuperadminContext } from '@/lib/auth/admin-guard';
 
 const DEFAULT_SECURITY_SETTINGS: Record<string, { value: string; description: string | null }> = {
   password_min_length: {
@@ -80,7 +80,7 @@ function normalizeSettingsRows(
   }, {} as Record<string, { value: string; description: string | null }>);
 }
 
-async function loadSettingsTableFallback(serviceSupabase: Awaited<ReturnType<typeof requireAdminContext>>['serviceSupabase']) {
+async function loadSettingsTableFallback(serviceSupabase: Awaited<ReturnType<typeof requireSuperadminContext>>['serviceSupabase']) {
   const { data, error } = await serviceSupabase
     .from('settings')
     .select('key, value, description')
@@ -119,7 +119,7 @@ async function loadSettingsTableFallback(serviceSupabase: Awaited<ReturnType<typ
 }
 
 async function persistSettingsTableFallback(
-  serviceSupabase: Awaited<ReturnType<typeof requireAdminContext>>['serviceSupabase'],
+  serviceSupabase: Awaited<ReturnType<typeof requireSuperadminContext>>['serviceSupabase'],
   settingKey: string,
   settingValue: string,
   description: string | null | undefined,
@@ -145,7 +145,7 @@ async function persistSettingsTableFallback(
 
 export async function GET(_: NextRequest) {
   try {
-    const { serviceSupabase } = await requireAdminContext();
+    const { serviceSupabase } = await requireSuperadminContext();
 
     // Get all security settings
     const { data: settings, error } = await serviceSupabase
@@ -204,7 +204,7 @@ export async function GET(_: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { user, role, serviceSupabase } = await requireAdminContext();
+    const { user, role, serviceSupabase } = await requireSuperadminContext();
 
     const body = await request.json();
     const { setting_key, setting_value, description } = body;

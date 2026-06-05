@@ -3,6 +3,7 @@ import { createClient, createServiceClient, isSupabaseServiceConfigured } from '
 import { isAtLeast } from '@/lib/roles';
 import { logger } from '@/lib/logger';
 import { generateGeminiText } from '@/lib/ai/gemini-service';
+import { getSystemPrompt } from '@/lib/ai/prompts';
 
 const ADMIN_REPORT_HINT = `You are the TecBunny admin assistant. Provide concise, factual responses. If data is missing, say so.`;
 const AI_RESPONSE_TIMEOUT_MS = 8000;
@@ -290,7 +291,10 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const prompt = `${ADMIN_REPORT_HINT}\n\nUser query: ${rawQuery}\n\nData:\n${JSON.stringify(contextData, null, 2)}\n\nProvide a short response using only the data above.`;
+      const systemPrompt = await getSystemPrompt('ai_query');
+      const prompt = systemPrompt
+        .replace('{rawQuery}', rawQuery)
+        .replace('{contextData}', JSON.stringify(contextData, null, 2));
       const answer = await withTimeout(
         generateGeminiText({ prompt, temperature: 0.3, maxOutputTokens: 350 }),
         AI_RESPONSE_TIMEOUT_MS,

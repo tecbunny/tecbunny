@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
     const users = [];
     
     // Superadmin seed
-    const superadminEmail = process.env.SEED_SUPERADMIN_EMAIL || process.env.INITIAL_ADMIN_2_EMAIL;
-    const superadminPassword = process.env.SEED_SUPERADMIN_PASSWORD || process.env.INITIAL_ADMIN_2_PASSWORD;
+    const superadminEmail = process.env.SUPERADMIN_SEED_EMAIL || process.env.SEED_SUPERADMIN_EMAIL || process.env.INITIAL_ADMIN_2_EMAIL;
+    const superadminPassword = process.env.SUPERADMIN_SEED_PASSWORD || process.env.SEED_SUPERADMIN_PASSWORD || process.env.INITIAL_ADMIN_2_PASSWORD;
     if (superadminEmail && superadminPassword) {
       users.push({
         email: superadminEmail,
@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Admin seed
-    const adminEmail = process.env.SEED_ADMIN_EMAIL || process.env.INITIAL_ADMIN_1_EMAIL;
-    const adminPassword = process.env.SEED_ADMIN_PASSWORD || process.env.INITIAL_ADMIN_1_PASSWORD;
+    const adminEmail = process.env.ADMIN_SEED_EMAIL || process.env.SEED_ADMIN_EMAIL || process.env.INITIAL_ADMIN_1_EMAIL;
+    const adminPassword = process.env.ADMIN_SEED_PASSWORD || process.env.SEED_ADMIN_PASSWORD || process.env.INITIAL_ADMIN_1_PASSWORD;
     if (adminEmail && adminPassword) {
       users.push({
         email: adminEmail,

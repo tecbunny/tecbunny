@@ -54,6 +54,9 @@ export const ROLE_PERMISSIONS = {
   admin: {
     canManageEverything: true,
   },
+  superadmin: {
+    canManageEverything: true,
+  },
   service_engineer: {
     canViewProducts: true,
     canManageOrders: true,

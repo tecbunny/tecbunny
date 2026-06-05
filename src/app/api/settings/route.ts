@@ -109,8 +109,8 @@ export async function GET(request: NextRequest) {
       if (!isAllowedPublicKey(key)) {
         // Require auth for non-public keys
         const { role } = await getSessionAndRole(request)
-        if (!role) {
-          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!role || role !== 'superadmin') {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
       }
       const { data, error } = await (supabaseAdmin
@@ -136,8 +136,8 @@ export async function GET(request: NextRequest) {
       const protectedKeys = keyArray.filter(k => !isAllowedPublicKey(k))
       if (protectedKeys.length > 0) {
         const { role } = await getSessionAndRole(request)
-        if (!role) {
-          return NextResponse.json({ error: 'Unauthorized for protected keys' }, { status: 401 })
+        if (!role || role !== 'superadmin') {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
       }
       const { data, error } = await (supabaseAdmin
@@ -174,7 +174,11 @@ export async function GET(request: NextRequest) {
         ? jsonWithCache(settings, PUBLIC_SETTINGS_CACHE_CONTROL)
         : NextResponse.json(settings)
     } else {
-      // Get all settings
+      // Get all settings - superadmin only
+      const { role } = await getSessionAndRole(request)
+      if (!role || role !== 'superadmin') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
       const { data, error } = await supabaseAdmin
         .from('settings')
         .select('*')
@@ -209,7 +213,7 @@ export async function POST(request: NextRequest) {
 
     const supabaseAdmin = getSupabaseAdmin();
     const { role } = await getSessionAndRole(request)
-    if (!role || !['admin','manager'].includes(role)) {
+    if (!role || role !== 'superadmin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     const body = await request.json()
@@ -256,7 +260,7 @@ export async function PUT(request: NextRequest) {
 
     const supabaseAdmin = getSupabaseAdmin();
     const { role } = await getSessionAndRole(request)
-    if (!role || !['admin','manager'].includes(role)) {
+    if (!role || role !== 'superadmin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     const body = await request.json()
@@ -310,7 +314,7 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const key = searchParams.get('key')
     const { role } = await getSessionAndRole(request)
-    if (!role || !['admin'].includes(role)) {
+    if (!role || role !== 'superadmin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

@@ -66,6 +66,17 @@ export async function isAdmin(user: SupabaseUser | null): Promise<boolean> {
   return !!role && isAtLeast(role, 'admin');
 }
 
+// Check if user is superadmin
+export async function isSuperadmin(user: SupabaseUser | null): Promise<boolean> {
+  if (!user) return false;
+  const appMetadataRole = normalizeRole(user.app_metadata?.role) as UserRole | null;
+  if (appMetadataRole && appMetadataRole === 'superadmin') {
+    return true;
+  }
+  const role = await getUserRole(user);
+  return role === 'superadmin';
+}
+
 // Check if user is manager or higher
 export async function isManager(user: SupabaseUser | null): Promise<boolean> {
   return hasRole(user, 'manager');
@@ -119,4 +130,8 @@ export function isManagerClient(user: CustomUser | null): boolean {
 export function isAdminClient(user: CustomUser | null): boolean {
   if (!user?.role) return false;
   return roleHierarchy[user.role] >= roleHierarchy.admin;
+}
+
+export function isSuperadminClient(user: CustomUser | null): boolean {
+  return user?.role === 'superadmin';
 }

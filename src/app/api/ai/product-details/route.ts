@@ -7,6 +7,7 @@ import { generateGeminiText } from '@/lib/ai/gemini-service';
 import { requireRole } from '@/lib/auth/guard';
 import { logger } from '@/lib/logger';
 import { getRedis } from '@/lib/redis';
+import { getSystemPrompt } from '@/lib/ai/prompts';
 
 const requestSchema = z.object({
   productUrl: z.string().url(),
@@ -239,14 +240,9 @@ export async function POST(request: NextRequest) {
 
     const pageContext = await fetchPageContext(productUrl);
 
-    const prompt = [
-      'You extract structured product data for TecBunny staff.',
-      'Use the provided product page content to fill product details.',
-      'Return JSON only. Do not include markdown or explanations.',
-      'If a field is unknown, use null. Do not invent HSN codes, barcodes, GST, or prices.',
-      'Prefer concise ecommerce-ready descriptions and Indian retail wording when relevant.',
-      'Schema:',
-      JSON.stringify({
+    const systemPrompt = await getSystemPrompt('product_details');
+    const prompt = systemPrompt
+      .replace('{schema}', JSON.stringify({
         title: 'string | null',
         vendor: 'string | null',
         brand: 'string | null',
@@ -267,20 +263,16 @@ export async function POST(request: NextRequest) {
         handleSuggestion: 'kebab-case string | null',
         imageUrl: 'string | null',
         productUrl: 'string | null',
-      }, null, 2),
-      'Current product data from the form:',
-      JSON.stringify(existingData || {}, null, 2),
-      'Fetched page metadata:',
-      JSON.stringify({
+      }, null, 2))
+      .replace('{existingData}', JSON.stringify(existingData || {}, null, 2))
+      .replace('{pageMetadata}', JSON.stringify({
         productUrl,
         title: pageContext.title,
         ogTitle: pageContext.ogTitle,
         description: pageContext.description,
         imageUrl: pageContext.imageUrl,
-      }, null, 2),
-      'Fetched page text excerpt:',
-      pageContext.bodyText,
-    ].join('\n\n');
+      }, null, 2))
+      .replace('{bodyText}', pageContext.bodyText);
 
     const rawResponse = await generateGeminiText({
       prompt,

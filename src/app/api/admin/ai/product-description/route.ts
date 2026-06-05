@@ -4,6 +4,7 @@ import { createClient, createServiceClient, isSupabaseServiceConfigured } from '
 import { logger } from '@/lib/logger';
 import { requireAdminContext } from '@/lib/auth/admin-guard';
 import { generateGeminiText } from '@/lib/ai/gemini-service';
+import { getSystemPrompt } from '@/lib/ai/prompts';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,15 +36,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to load product details.' }, { status: 500 });
     }
 
-    const prompt = [
-      'You are a product copywriter for TecBunny Solutions.',
-      'Write a clear, persuasive product description for the following product.',
-      'Keep it concise, structured, and avoid markdown bullets unless necessary.',
-      `Tone: ${tone || 'professional, friendly'}.
-Length: ${length || '120-180 words'}.
-`,
-      'Product data:',
-      JSON.stringify({
+    const systemPrompt = await getSystemPrompt('product_description');
+    const prompt = systemPrompt
+      .replace('{tone}', tone || 'professional, friendly')
+      .replace('{length}', length || '120-180 words')
+      .replace('{productData}', JSON.stringify({
         title: product.title,
         category: product.category,
         product_type: product.product_type,
@@ -54,8 +51,7 @@ Length: ${length || '120-180 words'}.
         price: product.price,
         mrp: product.mrp,
         warranty: product.warranty,
-      }, null, 2),
-    ].join('\n');
+      }, null, 2));
 
     const description = await generateGeminiText({
       prompt,

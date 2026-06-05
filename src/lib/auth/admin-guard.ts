@@ -4,7 +4,7 @@ import { createClient, createServiceClient, isSupabaseServiceConfigured } from '
 import { logger } from '@/lib/logger';
 import { normalizeRole as normalizeKnownRole, ROLE_HIERARCHY, type UserRole } from '@/lib/roles';
 
-type AdminRole = 'admin' | 'manager';
+type AdminRole = 'admin' | 'manager' | 'superadmin';
 
 export class AdminAuthError extends Error {
   status: number;
@@ -22,7 +22,7 @@ export interface AdminContext {
 }
 
 function isAdminRole(role: unknown): role is AdminRole {
-  return role === 'admin' || role === 'manager';
+  return role === 'admin' || role === 'manager' || role === 'superadmin';
 }
 
 const METADATA_ROLE_KEYS = ['role', 'default_role', 'app_role', 'user_role'] as const;
@@ -122,4 +122,18 @@ export async function requireAdminContext(): Promise<AdminContext> {
     role: resolvedRole,
     serviceSupabase,
   };
+}
+
+export interface SuperadminContext {
+  user: User;
+  role: 'superadmin';
+  serviceSupabase: ReturnType<typeof createServiceClient>;
+}
+
+export async function requireSuperadminContext(): Promise<SuperadminContext> {
+  const context = await requireAdminContext();
+  if (context.role !== 'superadmin') {
+    throw new AdminAuthError(403, 'Superadmin permissions required');
+  }
+  return context as unknown as SuperadminContext;
 }

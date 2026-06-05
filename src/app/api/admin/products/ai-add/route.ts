@@ -17,6 +17,7 @@ import { generateGeminiText } from '@/lib/ai/gemini-service';
 import { logger } from '@/lib/logger';
 import { createServiceClient, isSupabaseServiceConfigured, createClient } from '@/lib/supabase/server';
 import { getSessionWithRole } from '@/lib/auth/server-role';
+import { getSystemPrompt } from '@/lib/ai/prompts';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -41,46 +42,15 @@ const NOT_NULL_DEFAULTS: Record<string, unknown> = {
 // Gemini system prompt for supplier text → product JSON
 // ─────────────────────────────────────────────────────────────────────────────
 
-function buildIngestionPrompt(rawInput: string, imageBase64?: string): string {
+async function buildIngestionPrompt(rawInput: string, imageBase64?: string): Promise<string> {
   const imageNote = imageBase64
     ? `\nAn image of the product has also been provided (base64 encoded). Use it to infer visual attributes (color, form factor, connector type, etc.).\n`
     : '';
 
-  return `You are a precise product data extraction engine for an Indian IT hardware e-commerce system.
-
-${imageNote}
-INPUT (raw supplier text / model token):
-"""
-${rawInput}
-"""
-
-TASK: Extract structured product data and return ONLY valid JSON. No markdown fences, no explanation.
-
-REQUIRED OUTPUT SCHEMA (all fields optional except noted):
-{
-  "title": "string – clean marketing title (REQUIRED)",
-  "name": "string – same as title or shorter SKU name",
-  "handle": "string – url-slug with hyphens only, lowercase, max 50 chars",
-  "model_number": "string – exact model token if present (e.g. CP-UNC-DA21L3C-LQ-0360)",
-  "vendor": "string – brand or manufacturer name",
-  "category": "string – one of: Networking, Cables, Adapters, UPS, Storage, Accessories, Servers, Printers, General (REQUIRED – default General)",
-  "product_type": "string – same as category or a sub-type",
-  "description": "string – 1-2 sentence plain-text description",
-  "hsn_code": "string – HSN/SAC code if determinable",
-  "tags": ["array", "of", "lowercase", "keyword", "strings"],
-  "price": number (INR, dealer price before markup – 0 if unknown),
-  "mrp": number (INR, retail price – 0 if unknown),
-  "stock_quantity": number (default 0),
-  "status": "active",
-  "gst_rate": number (GST percentage: 5, 12, 18, or 28 – default 18)
-}
-
-RULES:
-- Output ONLY the JSON object. No extra text.
-- If a field cannot be determined, omit it (do NOT output null for strings).
-- category MUST always be present. If uncertain, use "General".
-- All string values must use double single-quotes style (''value'') format ONLY inside SQL context – in this JSON output use regular double-quoted strings.
-- Sanitise the title: remove special characters that break SQL strings.`;
+  const systemPrompt = await getSystemPrompt('ai_add');
+  return systemPrompt
+    .replace('{imageNote}', imageNote)
+    .replace('{rawInput}', rawInput);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -255,7 +225,7 @@ export async function POST(request: NextRequest) {
     logger.info('ai_product_ingestion.start', { correlationId, textLength: rawText.length, hasImage: !!imageBase64 });
 
     // ── 3. Gemini extraction ─────────────────────────────────────────────────
-    const prompt = buildIngestionPrompt(rawText, imageBase64);
+    const prompt = await buildIngestionPrompt(rawText, imageBase64);
 
     let aiRawOutput: string;
     try {

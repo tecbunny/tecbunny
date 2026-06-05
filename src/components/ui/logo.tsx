@@ -14,7 +14,7 @@ interface LogoProps {
 export function Logo({ className, width = 40, height = 40, alt = 'TecBunny Logo' }: LogoProps) {
   return (
     <Image
-      src={BRAND_LOGO_URL}
+      src="/logo.png"
       alt={alt}
       width={width}
       height={height}

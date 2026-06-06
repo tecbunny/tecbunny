@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger';
 
 export async function POST(req: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {

@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
     for await (const record of parser) {
       rowIndex++;
       try {
-        const rowData = Object.fromEntries(
-          Object.entries(record).map(([k, v]) => [k.toLowerCase().trim(), v])
+        const rowData: Record<string, string> = Object.fromEntries(
+          Object.entries(record).map(([k, v]) => [k.toLowerCase().trim(), String(v)])
         );
 
         if (!rowData.name || !rowData.price) {

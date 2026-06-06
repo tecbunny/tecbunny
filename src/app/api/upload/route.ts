@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
         .toBuffer();
       
       const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".webp";
-      optimizedFile = new File([optimizedBuffer], newFileName, { type: 'image/webp' });
+      optimizedFile = new File([new Uint8Array(optimizedBuffer)], newFileName, { type: 'image/webp' });
       logger.info('upload_image_optimized', { correlationId, originalSize: file.size, newSize: optimizedFile.size });
     } catch (err) {
       logger.error('upload_image_optimization_failed', { correlationId, error: err });

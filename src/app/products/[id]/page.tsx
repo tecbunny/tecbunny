@@ -1,7 +1,8 @@
 import { ProductDetailPage } from '@/components/products/ProductDetailPage';
 import { Metadata } from 'next';
 import { cleanMetadataDescription, cleanMetadataTitle, createPageMetadata } from '@/lib/metadata';
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { createSupabaseClient as createPublicSupabaseClient } from '@/lib/supabase-server';
 import { BRAND_LOGO_URL } from '@/components/ui/logo';
 import { stripHtmlToPlainText } from '@/lib/strings';
 import { isPubliclyVisibleProduct } from '@/lib/product-visibility';
@@ -17,7 +18,7 @@ interface ProductPageProps {
 }
 
 async function getCatalogClient() {
-  return isSupabaseServiceConfigured ? createServiceClient() : await createClient();
+  return isSupabaseServiceConfigured ? createServiceClient() : createPublicSupabaseClient();
 }
 
 function serializeJsonLd(value: unknown) {

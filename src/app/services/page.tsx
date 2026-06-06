@@ -2,7 +2,8 @@ import { Metadata } from 'next';
 
 import ServicesPage from '@/components/services-page';
 import { logger } from '@/lib/logger';
-import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
+import { createSupabaseClient as createPublicSupabaseClient } from '@/lib/supabase-server';
 import { createPageMetadata } from '@/lib/metadata';
 import { BRAND_LOGO_URL } from '@/components/ui/logo';
 import { stripHtmlToPlainText } from '@/lib/strings';
@@ -101,7 +102,7 @@ export default async function Page() {
   try {
     const supabase = isSupabaseServiceConfigured
       ? createServiceClient()
-      : await createClient();
+      : createPublicSupabaseClient();
 
     // Select the row shape Supabase exposes and normalize defensively below.
     const { data, error } = await supabase

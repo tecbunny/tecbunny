@@ -18,14 +18,42 @@ interface LogoProps {
   alt?: string;
 }
 
+function canLoadImage(src: string): Promise<boolean> {
+  if (src === BRAND_LOGO_URL) return Promise.resolve(true);
+
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(true);
+    image.onerror = () => resolve(false);
+    image.src = src;
+  });
+}
+
 export function Logo({ className, width = 40, height = 40, alt = 'TecBunny Logo' }: LogoProps) {
   const [logoSrc, setLogoSrc] = React.useState<string>(BRAND_LOGO_URL);
 
   React.useEffect(() => {
+    let isMounted = true;
+
+    const applyLogo = async (rawUrl: string | null | undefined) => {
+      const normalizedUrl = normalizeLogoUrl(rawUrl);
+      const isValid = await canLoadImage(normalizedUrl);
+
+      if (!isMounted) return;
+
+      if (isValid) {
+        setLogoSrc(normalizedUrl);
+        localStorage.setItem('tecbunny_logo_url', normalizedUrl);
+      } else {
+        setLogoSrc(BRAND_LOGO_URL);
+        localStorage.removeItem('tecbunny_logo_url');
+      }
+    };
+
     // Read from cache immediately on client mount to avoid layout shift
     const cachedLogo = localStorage.getItem('tecbunny_logo_url');
     if (cachedLogo) {
-      setLogoSrc(normalizeLogoUrl(cachedLogo));
+      void applyLogo(cachedLogo);
     }
 
     const fetchLogo = async () => {
@@ -33,11 +61,7 @@ export function Logo({ className, width = 40, height = 40, alt = 'TecBunny Logo'
         const res = await fetch('/api/metadata');
         if (res.ok) {
           const data = await res.json();
-          const normUrl = normalizeLogoUrl(data?.logoUrl);
-          if (normUrl && normUrl !== cachedLogo) {
-            setLogoSrc(normUrl);
-            localStorage.setItem('tecbunny_logo_url', normUrl);
-          }
+          await applyLogo(data?.logoUrl);
         }
       } catch (err) {
         console.error('Failed to fetch dynamic brand logo:', err);
@@ -45,6 +69,10 @@ export function Logo({ className, width = 40, height = 40, alt = 'TecBunny Logo'
     };
 
     fetchLogo();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -55,6 +83,12 @@ export function Logo({ className, width = 40, height = 40, alt = 'TecBunny Logo'
       height={height}
       className={`object-contain ${className ?? ''}`}
       loading="eager"
+      onError={() => {
+        if (logoSrc !== BRAND_LOGO_URL) {
+          setLogoSrc(BRAND_LOGO_URL);
+          localStorage.removeItem('tecbunny_logo_url');
+        }
+      }}
     />
   );
 }

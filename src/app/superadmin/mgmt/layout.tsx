@@ -37,9 +37,9 @@ export default async function SuperadminLayout({ children }: { children: React.R
       title: 'Console Core',
       items: [
         { href: '/superadmin/mgmt/dashboard', label: 'Root Console', icon: LayoutDashboard },
-        { href: '/superadmin/mgmt/settings?section=users', label: 'User Management', icon: Users },
-        { href: '/superadmin/mgmt/settings?section=products', label: 'Product Catalog', icon: Wrench },
-        { href: '/superadmin/mgmt/settings?section=custom-setups', label: 'Custom Setups', icon: Settings },
+        { href: '/superadmin/mgmt/users', label: 'User Management', icon: Users },
+        { href: '/superadmin/mgmt/products', label: 'Product Catalog', icon: Wrench },
+        { href: '/superadmin/mgmt/custom-setups', label: 'Custom Setups', icon: Settings },
       ]
     },
     {
@@ -49,10 +49,10 @@ export default async function SuperadminLayout({ children }: { children: React.R
         { href: '/superadmin/mgmt/ai-config', label: 'AI Configurations', icon: Cpu },
         { href: '/superadmin/mgmt/settings?section=website', label: 'Website Settings', icon: Activity },
         { href: '/superadmin/mgmt/settings?section=brand', label: 'Brand Settings', icon: ImageIcon },
-        { href: '/superadmin/mgmt/settings?section=policies', label: 'Policies Management', icon: FileText },
-        { href: '/superadmin/mgmt/settings?section=social', label: 'Social Media', icon: Share2 },
-        { href: '/superadmin/mgmt/settings?section=offers', label: 'Offers & Coupons', icon: Ticket },
-        { href: '/superadmin/mgmt/settings?section=marketing', label: 'Marketing Target', icon: Activity },
+        { href: '/superadmin/mgmt/policies', label: 'Policies Management', icon: FileText },
+        { href: '/superadmin/mgmt/social-media', label: 'Social Media', icon: Share2 },
+        { href: '/superadmin/mgmt/offers', label: 'Offers & Coupons', icon: Ticket },
+        { href: '/superadmin/mgmt/marketing', label: 'Marketing Target', icon: Activity },
       ]
     },
     {
@@ -60,7 +60,7 @@ export default async function SuperadminLayout({ children }: { children: React.R
       items: [
         { href: '/superadmin/mgmt/settings?section=company', label: 'Company Details', icon: Building },
         { href: '/superadmin/mgmt/settings?section=tax', label: 'Tax Configuration', icon: Percent },
-        { href: '/superadmin/mgmt/settings?section=reports', label: 'System Reports', icon: ClipboardList },
+        { href: '/superadmin/mgmt/reports', label: 'System Reports', icon: ClipboardList },
       ]
     }
   ];

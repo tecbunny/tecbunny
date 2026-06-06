@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   BadgeIndianRupee,
   Bot,
@@ -51,7 +52,7 @@ const sections: SettingSection[] = [
     title: 'User Management',
     description: 'Root controls for customer, staff, role, and access workflows.',
     icon: Users,
-    href: '/mgmt/admin/users',
+    href: '/superadmin/mgmt/users',
     fields: [
       { key: 'user_default_role', label: 'Default role', description: 'Role assigned to newly created users.' },
       { key: 'user_onboarding_mode', label: 'Onboarding mode', description: 'Manual, assisted, or open customer onboarding.' },
@@ -62,7 +63,7 @@ const sections: SettingSection[] = [
     title: 'Product Management',
     description: 'Catalog defaults, stock rules, and product display behavior.',
     icon: Package,
-    href: '/mgmt/admin/products',
+    href: '/superadmin/mgmt/products',
     fields: [
       { key: 'partnerBrands', label: 'Partner brands', description: 'Comma-separated brand list used across product pages.', type: 'textarea' },
       { key: 'product_low_stock_threshold', label: 'Low stock threshold', description: 'Default threshold for low-stock warnings.', type: 'number' },
@@ -84,7 +85,7 @@ const sections: SettingSection[] = [
     title: 'Website Management',
     description: 'Public site identity, homepage metadata, and contact defaults.',
     icon: Globe,
-    href: '/mgmt/admin/homepage-settings',
+    href: '/superadmin/mgmt/settings?section=website',
     fields: [
       { key: 'siteName', label: 'Site name', description: 'Browser and metadata site name.' },
       { key: 'siteDescription', label: 'Site description', description: 'Default public SEO description.', type: 'textarea' },
@@ -97,7 +98,7 @@ const sections: SettingSection[] = [
     title: 'Brand Management',
     description: 'Logo, favicon, theme colors, and brand presentation.',
     icon: Palette,
-    href: '/mgmt/admin/settings',
+    href: '/superadmin/mgmt/settings?section=brand',
     fields: [
       { key: 'site_branding', label: 'Brand name', description: 'Short brand label used in the UI.' },
       { key: 'logoUrl', label: 'Logo URL', description: 'Public logo asset path or URL.' },
@@ -110,7 +111,7 @@ const sections: SettingSection[] = [
     title: 'Policies Management',
     description: 'Legal policy publishing controls and public policy defaults.',
     icon: FileText,
-    href: '/mgmt/admin/policies',
+    href: '/superadmin/mgmt/policies',
     fields: [
       { key: 'privacy_policy_summary', label: 'Privacy policy summary', description: 'Short internal summary for privacy policy status.', type: 'textarea' },
       { key: 'returns_policy_summary', label: 'Return policy summary', description: 'Short internal summary for return/refund policy status.', type: 'textarea' },
@@ -132,7 +133,7 @@ const sections: SettingSection[] = [
     title: 'Social Media Management',
     description: 'Public social links and social tracking identifiers.',
     icon: Share2,
-    href: '/mgmt/admin/social-media',
+    href: '/superadmin/mgmt/social-media',
     fields: [
       { key: 'facebookUrl', label: 'Facebook URL', description: 'Public Facebook profile/page link.' },
       { key: 'instagramUrl', label: 'Instagram URL', description: 'Public Instagram profile link.' },
@@ -147,7 +148,7 @@ const sections: SettingSection[] = [
     title: 'Offers Management',
     description: 'Offer, coupon, and discount display controls.',
     icon: Gift,
-    href: '/mgmt/admin/offers',
+    href: '/superadmin/mgmt/offers',
     fields: [
       { key: 'offers_enabled', label: 'Offers enabled', description: 'Use true or false to control offer display.' },
       { key: 'default_coupon_prefix', label: 'Coupon prefix', description: 'Prefix used for generated coupon codes.' },
@@ -158,7 +159,7 @@ const sections: SettingSection[] = [
     title: 'Marketing Management',
     description: 'Campaign, newsletter, WhatsApp, and remarketing controls.',
     icon: Megaphone,
-    href: '/mgmt/admin/analytics',
+    href: '/superadmin/mgmt/marketing',
     fields: [
       { key: 'whatsapp_template_string', label: 'WhatsApp link', description: 'Customer-facing WhatsApp quick contact link.' },
       { key: 'marketing_newsletter_enabled', label: 'Newsletter enabled', description: 'Use true or false for newsletter capture.' },
@@ -191,7 +192,7 @@ const sections: SettingSection[] = [
     title: 'All Reports',
     description: 'Full, manager-wise, and sales-person-wise reporting controls.',
     icon: ClipboardList,
-    href: '/mgmt/admin/analytics',
+    href: '/superadmin/mgmt/reports',
     fields: [
       { key: 'reports_default_range_days', label: 'Default range days', description: 'Default reporting lookback window.', type: 'number' },
       { key: 'reports_export_enabled', label: 'Exports enabled', description: 'Use true or false to allow report downloads.' },
@@ -202,7 +203,7 @@ const sections: SettingSection[] = [
     title: 'Custom Setup Management',
     description: 'Custom setup pricing, quote rules, and service flow defaults.',
     icon: Wrench,
-    href: '/mgmt/admin/custom-setups',
+    href: '/superadmin/mgmt/custom-setups',
     fields: [
       { key: 'custom_setup_discount_percent', label: 'Setup discount percent', description: 'Default discount for custom setup pricing.', type: 'number' },
       { key: 'custom_setup_quote_valid_days', label: 'Quote validity days', description: 'Default validity window for custom setup quotes.', type: 'number' },
@@ -216,9 +217,21 @@ const sectionGroups = [
   { id: 'company', label: 'Company', items: sections.slice(10) },
 ];
 
+const moduleSectionRedirects: Record<string, string> = {
+  users: '/superadmin/mgmt/users',
+  products: '/superadmin/mgmt/products',
+  policies: '/superadmin/mgmt/policies',
+  social: '/superadmin/mgmt/social-media',
+  offers: '/superadmin/mgmt/offers',
+  marketing: '/superadmin/mgmt/marketing',
+  reports: '/superadmin/mgmt/reports',
+  'custom-setups': '/superadmin/mgmt/custom-setups',
+};
+
 type SettingsMap = Record<string, string>;
 
 export default function SuperadminSettingsPage() {
+  const router = useRouter();
   const [values, setValues] = React.useState<SettingsMap>({});
   const [loading, setLoading] = React.useState(true);
   const [savingKey, setSavingKey] = React.useState<string | null>(null);
@@ -229,11 +242,16 @@ export default function SuperadminSettingsPage() {
 
   React.useEffect(() => {
     const requestedSection = new URLSearchParams(window.location.search).get('section');
+    if (requestedSection && moduleSectionRedirects[requestedSection]) {
+      router.replace(moduleSectionRedirects[requestedSection]);
+      return;
+    }
+
     const group = sectionGroups.find((candidate) =>
       candidate.items.some((section) => section.id === requestedSection)
     );
     setActiveGroup(group?.id ?? 'core');
-  }, []);
+  }, [router]);
 
   React.useEffect(() => {
     const loadSettings = async () => {

@@ -576,7 +576,7 @@ export default function CheckoutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white font-tech">Finalize Transmission</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-white font-tech">Confirm Your Order</h1>
               <p className="text-sm text-slate-400">Securely verify details and confirm your order.</p>
             </div>
             <button
@@ -617,7 +617,7 @@ export default function CheckoutPage() {
             <div className="lg:col-span-2 space-y-8">
               <div className="glass-panel p-6 rounded-2xl">
                 <h3 className="text-xl font-bold text-white font-tech mb-6 flex items-center gap-2">
-                  <User className="h-5 w-5 text-purple-300" /> Identity & Billing
+                  <User className="h-5 w-5 text-purple-300" /> Contact & Billing
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="input-group relative">
@@ -684,7 +684,7 @@ export default function CheckoutPage() {
 
               <div className="glass-panel p-6 rounded-2xl">
                 <h3 className="text-xl font-bold text-white font-tech mb-6 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-cyan-300" /> Site Logistics
+                  <MapPin className="h-5 w-5 text-cyan-300" /> Delivery & Installation
                 </h3>
                 <div className="space-y-6">
                   <div className="input-group relative">
@@ -805,7 +805,7 @@ export default function CheckoutPage() {
 
               <div className="glass-panel p-6 rounded-2xl">
                 <h3 className="text-xl font-bold text-white font-tech mb-6 flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-emerald-300" /> Payment Protocol
+                  <Wallet className="h-5 w-5 text-emerald-300" /> Payment Method
                 </h3>
                 <div className="space-y-4">
                   {paymentLoading && (

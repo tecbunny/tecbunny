@@ -219,9 +219,9 @@ export default function ContactPage() {
       <div className="mx-auto max-w-7xl px-4 pb-20 pt-0 sm:px-6 lg:px-8 sm:pt-0">
         <div className="text-center">
           <h1 className="text-4xl font-semibold text-white sm:text-5xl lg:text-6xl">
-            {content?.content?.hero?.title || 'Initialize'}{' '}
+            {content?.content?.hero?.title || 'Contact TecBunny'}{' '}
             <span className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">
-              Protocol.
+              Support.
             </span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-slate-400 sm:text-lg">
@@ -349,7 +349,7 @@ export default function ContactPage() {
             <div className="relative">
               <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-cyan-500/30 via-blue-500/30 to-violet-500/30 blur-xl" />
               <div className="relative rounded-2xl border border-white/10 bg-slate-900/80 p-8">
-                <h3 className="text-2xl font-semibold text-white">Send Transmission</h3>
+                <h3 className="text-2xl font-semibold text-white">Send Request</h3>
                 <p className="mt-2 text-sm text-slate-400">We&apos;ll respond within 24 hours. Use this form for quotes, demos, and site-survey requests.</p>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-6">

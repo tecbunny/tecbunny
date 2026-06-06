@@ -1,7 +1,7 @@
 import { ProductDetailPage } from '@/components/products/ProductDetailPage';
 import { Metadata } from 'next';
-import { createPageMetadata } from '@/lib/metadata';
-import { createClient } from '@/lib/supabase/server';
+import { cleanMetadataDescription, cleanMetadataTitle, createPageMetadata } from '@/lib/metadata';
+import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { BRAND_LOGO_URL } from '@/components/ui/logo';
 import { stripHtmlToPlainText } from '@/lib/strings';
 import { isPubliclyVisibleProduct } from '@/lib/product-visibility';
@@ -16,9 +16,17 @@ interface ProductPageProps {
   params: Promise<{ id: string }>;
 }
 
+async function getCatalogClient() {
+  return isSupabaseServiceConfigured ? createServiceClient() : await createClient();
+}
+
+function serializeJsonLd(value: unknown) {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await getCatalogClient();
   const { data: product } = await supabase.from('products').select('*').eq('id', id).single();
 
   if (!product || !isPubliclyVisibleProduct(product)) {
@@ -29,10 +37,11 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     });
   }
 
-  const title = product.title || product.name || product.sku || 'Product';
-  const rawDesc = product.description || product.details || '';
-  const plainDesc = stripHtmlToPlainText(rawDesc, 160) ||
-    `Buy ${title} at TecBunny. CCTV, IT and automation hardware in Goa.`;
+  const title = cleanMetadataTitle(product.title || product.name || product.sku, 'Premium Product');
+  const plainDesc = cleanMetadataDescription(
+    product.seo_description || product.description || product.details,
+    `Buy ${title} at TecBunny. CCTV, IT and automation hardware in Goa.`,
+  );
 
   return createPageMetadata({
     title,
@@ -45,7 +54,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
 
-  const supabase = await createClient();
+  const supabase = await getCatalogClient();
   const { data: product } = await supabase.from('products').select('*').eq('id', id).single();
 
   if (!product || !isPubliclyVisibleProduct(product)) {
@@ -53,30 +62,35 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const siteUrl = 'https://www.tecbunny.com';
+  const productTitle = cleanMetadataTitle(product.title || product.name || product.sku, 'Premium Product');
+  const productCategory = stripHtmlToPlainText(product.category, 80);
+  const productDescription = stripHtmlToPlainText(product.description || product.details, 500) ||
+    `Quality ${productCategory || 'technology'} hardware available at TecBunny.`;
+  const productImage = product.image || product.image_url || BRAND_LOGO_URL;
+  const productPrice = Number(product.price ?? product.offer_price ?? 0);
 
   // Product JSON-LD — full schema with Offer, shippingDetails, seller reference
   const productJsonLd = product ? {
     '@context': 'https://schema.org',
     '@type': 'Product',
     '@id': `${siteUrl}/products/${id}#product`,
-    name: product.title || product.name || product.sku || 'Product',
+    name: productTitle,
     sku: product.sku || product.handle || id,
     ...(product.model_number ? { mpn: product.model_number } : {}),
     brand: {
       '@type': 'Brand',
       name: product.brand || 'TecBunny',
     },
-    ...(product.category ? { category: product.category } : {}),
-    description: stripHtmlToPlainText(product.description || product.details, 500) ||
-      `Quality ${product.category || 'technology'} hardware available at TecBunny.`,
+    ...(productCategory ? { category: productCategory } : {}),
+    description: productDescription,
     image: [
-      product.image || product.image_url || BRAND_LOGO_URL,
+      productImage,
     ].filter(Boolean),
     offers: {
       '@type': 'Offer',
       url: `${siteUrl}/products/${id}`,
       priceCurrency: 'INR',
-      price: String(product.price ?? 0),
+      price: Number.isFinite(productPrice) ? String(productPrice) : '0',
       priceValidUntil: '2026-12-31',
       availability:
         product.stock_quantity != null && product.stock_quantity > 0
@@ -104,16 +118,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
       { '@type': 'ListItem', position: 2, name: 'Products', item: `${siteUrl}/products` },
-      ...(product.category ? [{
+      ...(productCategory ? [{
         '@type': 'ListItem',
         position: 3,
-        name: product.category,
-        item: `${siteUrl}/products?category=${encodeURIComponent(product.category)}`,
+        name: productCategory,
+        item: `${siteUrl}/products?category=${encodeURIComponent(productCategory)}`,
       }] : []),
       {
         '@type': 'ListItem',
-        position: product.category ? 4 : 3,
-        name: product.title || product.name || 'Product',
+        position: productCategory ? 4 : 3,
+        name: productTitle,
       },
     ],
   } : null;
@@ -123,13 +137,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
       {productJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(productJsonLd) }}
         />
       )}
       {breadcrumbJsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbJsonLd) }}
         />
       )}
       <ProductDetailPage productId={id} initialProduct={product} />
@@ -138,5 +152,5 @@ export default async function ProductPage({ params }: ProductPageProps) {
 }
 
 export async function generateStaticParams() {
-  return [{ id: '1' }];
+  return [];
 }

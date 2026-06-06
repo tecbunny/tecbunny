@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger';
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { createPageMetadata } from '@/lib/metadata';
 import { BRAND_LOGO_URL } from '@/components/ui/logo';
+import { stripHtmlToPlainText } from '@/lib/strings';
 import type { Service } from '@/lib/types';
 
 // Static metadata for better SEO and performance
@@ -16,8 +17,7 @@ export const metadata: Metadata = createPageMetadata({
   image: BRAND_LOGO_URL,
 });
 
-// Always fetch fresh data so admin updates appear immediately
-// export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 type ServiceRow = {
   id: string | number;
@@ -70,15 +70,17 @@ function normalizeService(row: ServiceRow): Service {
     : (typeof statusValue === 'boolean'
         ? statusValue
         : String(statusValue || '').toLowerCase() === 'active');
-  const title = row.title || row.name || 'Service';
-  const description = row.description || row.details || '';
+  const title = stripHtmlToPlainText(row.title || row.name, 90) || 'Service';
+  const description = stripHtmlToPlainText(row.description || row.details, 220);
 
   return {
     id: String(row.id),
     title,
     description,
     icon: row.icon || row.icon_name || 'Wrench',
-    features: parseFeatures(row.features ?? row.feature_list ?? []),
+    features: parseFeatures(row.features ?? row.feature_list ?? [])
+      .map((feature) => stripHtmlToPlainText(feature, 120))
+      .filter((feature) => feature.length > 0),
     badge: row.badge === 'Popular' || row.badge === 'Recommended' || row.badge === 'New' || row.badge === 'Featured'
       ? row.badge
       : null,

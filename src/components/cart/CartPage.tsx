@@ -312,7 +312,7 @@ export default function CartPage() {
                       <Link href="/checkout">REQUEST FORMAL QUOTE</Link>
                     </Button>
                     <p className="text-xs text-center text-slate-500 mt-3">
-                      <Lock className="inline-block h-3.5 w-3.5 mr-1" /> Secure Transmission
+                      <Lock className="inline-block h-3.5 w-3.5 mr-1" /> Secure checkout
                     </p>
                     <Button
                       className="w-full mt-4 border border-white/15 bg-white/5 text-white hover:bg-white/10 hover:border-cyan-300/40"

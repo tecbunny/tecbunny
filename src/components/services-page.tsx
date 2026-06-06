@@ -598,21 +598,6 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
         <section>
           <div className="space-y-8">
-            {hasServiceLoadError && (
-              <div className="reveal-section rounded-2xl border border-amber-400/30 bg-amber-500/10 p-5 text-left is-revealed" data-reveal-id="services-warning">
-                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-200">Live Service Feed Unavailable</p>
-                <p className="mt-2 text-sm text-amber-50/90">
-                  We could not load the latest service catalog right now. You can still request a quote and our team will respond with the right service plan.
-                </p>
-                <Link
-                  href="/contact?subject=sales&intent=service_quote&message=I%20need%20a%20service%20quote.%20Please%20contact%20me%20about%20the%20right%20next%20step."
-                  className="mt-4 inline-flex items-center justify-center rounded-lg border border-amber-300/40 bg-amber-400/10 px-4 py-2 text-sm font-semibold text-amber-100 transition-colors hover:border-amber-300/70"
-                >
-                  Request Service Quote
-                </Link>
-              </div>
-            )}
-
             {!serviceSections.length && !hasServiceLoadError && (
               <div className="reveal-section rounded-2xl border border-white/10 bg-slate-900/60 p-8 text-center is-revealed" data-reveal-id="services-empty">
                 <h2 className="text-xl font-semibold text-white">Service catalog updating</h2>

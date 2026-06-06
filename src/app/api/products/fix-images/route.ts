@@ -5,8 +5,26 @@ import { requireAdmin } from '@/lib/admin-auth';
 import { logger } from '@/lib/logger';
 import { imageJobsQueue } from '@/lib/queue/image-jobs';
 
+function isValidOrigin(request: NextRequest): boolean {
+  const origin = request.headers.get('origin');
+  const host = request.headers.get('host');
+  if (!origin) return true;
+  try {
+    const originUrl = new URL(origin);
+    if (host && originUrl.host === host) return true;
+    if (originUrl.hostname === 'localhost' || originUrl.hostname.endsWith('tecbunny.com')) return true;
+  } catch (e) {
+    return false;
+  }
+  return false;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    if (!isValidOrigin(request)) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
     // Require admin authorization
     const supabaseAuth = await createClient();
     const { data: { user } } = await supabaseAuth.auth.getUser();

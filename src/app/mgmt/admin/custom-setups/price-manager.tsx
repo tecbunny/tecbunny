@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useDeferredValue } from 'react';
 
 import { RefreshCw, Save, Settings2 } from 'lucide-react';
 
@@ -565,6 +565,10 @@ export default function AdminCustomSetupManager() {
   const [templateCurrency, setTemplateCurrency] = useState<string>('INR');
   const [pricingDraft, setPricingDraft] = useState<PricingDraftState>({});
   const [salePricingDraft, setSalePricingDraft] = useState<PricingDraftState>({});
+  
+  const deferredPricingDraft = useDeferredValue(pricingDraft);
+  const deferredSalePricingDraft = useDeferredValue(salePricingDraft);
+
   const [pendingOptionUpdates, setPendingOptionUpdates] = useState<PendingOptionState>({});
   const [_selectionDraft, setSelectionDraft] = useState<SelectionDraft>({
     componentDefaultQuantities: {},
@@ -825,8 +829,8 @@ export default function AdminCustomSetupManager() {
         ?? component.options.find((option) => option.isDefault)?.id
         ?? component.options[0]?.id;
 
-      const mrpOverride = selectedOptionId ? parseDraftCurrency(pricingDraft[selectedOptionId]) : null;
-      const saleOverride = selectedOptionId ? parseDraftCurrency(salePricingDraft[selectedOptionId]) : null;
+      const mrpOverride = selectedOptionId ? parseDraftCurrency(deferredPricingDraft[selectedOptionId]) : null;
+      const saleOverride = selectedOptionId ? parseDraftCurrency(deferredSalePricingDraft[selectedOptionId]) : null;
 
       const componentTotals = calculateComponentTotalsForPricing(
         component,
@@ -854,7 +858,7 @@ export default function AdminCustomSetupManager() {
       discountAmount,
       discountPercent,
     };
-  }, [blueprint, parseDraftCurrency, pricingDraft, salePricingDraft]);
+  }, [blueprint, parseDraftCurrency, deferredPricingDraft, deferredSalePricingDraft]);
 
   const pendingOptionCount = Object.values(pendingOptionUpdates).reduce((count, change) => {
     return change.unitPrice !== undefined || change.metadata !== undefined ? count + 1 : count;

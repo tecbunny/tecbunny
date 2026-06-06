@@ -198,20 +198,19 @@ export const useCartStore = create<CartState>((set, get) => ({
       return;
     }
 
-    const cartKey = getStorageKey('cart', user);
-    const couponKey = getStorageKey('appliedCoupon', user);
-    
-    localStorage.setItem(cartKey, JSON.stringify(state.cartItems));
-    
-    if (state.pricing.appliedCoupon) {
-      localStorage.setItem(couponKey, JSON.stringify(state.pricing.appliedCoupon));
-    } else {
-      localStorage.removeItem(couponKey);
-    }
-    
-    if (state.cartItems.length > 0) {
-      const timestampKey = getStorageKey('cartLastUpdated', user);
-      localStorage.setItem(timestampKey, new Date().toISOString());
+    try {
+      const cartKey = getStorageKey('cart', user);
+      const couponKey = getStorageKey('appliedCoupon', user);
+      
+      localStorage.setItem(cartKey, JSON.stringify(state.cartItems));
+      if (state.pricing.appliedCoupon) {
+        localStorage.setItem(couponKey, JSON.stringify(state.pricing.appliedCoupon));
+      } else {
+        localStorage.removeItem(couponKey);
+      }
+      localStorage.setItem('cartLastUpdated', Date.now().toString());
+    } catch (error) {
+      logger.error("Failed to save cart to localStorage", { error });
     }
   },
 

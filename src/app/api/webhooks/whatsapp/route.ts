@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
 import { createClient } from '@/lib/supabase/server';
+import { validateWebhookSignature } from '@/lib/webhook-validator';
 
 // Handle WhatsApp webhook verification and message events
 export async function GET(request: NextRequest) {
@@ -21,8 +22,16 @@ export async function GET(request: NextRequest) {
 // Handle incoming WhatsApp messages
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const supabase = createClient();
+    const rawBody = await request.text();
+    const signature = request.headers.get('X-Hub-Signature-256') || request.headers.get('x-hub-signature-256');
+    const secret = process.env.WHATSAPP_SECRET || process.env.WHATSAPP_APP_SECRET;
+
+    if (!validateWebhookSignature(signature, rawBody, secret)) {
+      return new Response('Unauthorized Handshake Blocked', { status: 401 });
+    }
+
+    const body = JSON.parse(rawBody);
+    const supabase = await createClient();
 
     // Process WhatsApp webhook events
     for (const entry of body.entry || []) {

@@ -6,8 +6,26 @@ import { imageJobsQueue } from '@/lib/queue/image-jobs';
 
 const ADMIN_ROLES = new Set(['admin', 'manager', 'superadmin']);
 
+function isValidOrigin(request: NextRequest): boolean {
+  const origin = request.headers.get('origin');
+  const host = request.headers.get('host');
+  if (!origin) return true; // Same-origin requests might not have origin header
+  try {
+    const originUrl = new URL(origin);
+    if (host && originUrl.host === host) return true;
+    if (originUrl.hostname === 'localhost' || originUrl.hostname.endsWith('tecbunny.com')) return true;
+  } catch (e) {
+    return false;
+  }
+  return false;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    if (!isValidOrigin(request)) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
     const correlationId = `cleanup-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     // Get session and check permissions

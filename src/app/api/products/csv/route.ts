@@ -2,39 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
-
-// Helper function to parse CSV line with proper quote handling
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = '';
-  let inQuotes = false;
-  
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    
-    if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        // Escaped quote
-        current += '"';
-        i++; // Skip next quote
-      } else {
-        // Toggle quote state
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ',' && !inQuotes) {
-      // Field separator
-      result.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  
-  // Add the last field
-  result.push(current.trim());
-  
-  return result;
-}
+import { parse } from 'csv-parse';
+import { Readable } from 'stream';
 
 interface ImportError {
   row: number;
@@ -47,7 +16,6 @@ interface ImportResult {
   errors: ImportError[];
 }
 
-// Simple CSV import for products - compatible with current schema
 export async function POST(request: NextRequest) {
   try {
     logger.info('Starting CSV import...');
@@ -62,30 +30,6 @@ export async function POST(request: NextRequest) {
 
     logger.info('File received:', { name: file.name, size: file.size });
 
-    const csvText = await file.text();
-    logger.info('CSV length:', { length: csvText.length });
-    
-    // Parse CSV
-    const lines = csvText.split('\n').filter(line => line.trim());
-    logger.info('Total lines:', { count: lines.length });
-    
-    if (lines.length < 2) {
-      return NextResponse.json({ error: 'CSV must have header and at least one data row' }, { status: 400 });
-    }
-    
-    const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
-    logger.debug('Headers:', { headers });
-    
-    // Validate required headers
-    const requiredHeaders = ['name', 'price'];
-    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-    
-    if (missingHeaders.length > 0) {
-      return NextResponse.json({ 
-        error: `Missing required columns: ${missingHeaders.join(', ')}` 
-      }, { status: 400 });
-    }
-
     const supabase = await createClient();
     logger.debug('Supabase client created');
 
@@ -94,46 +38,39 @@ export async function POST(request: NextRequest) {
       errors: []
     };
 
-    const productsToInsert = [];
+    let productsBatch: any[] = [];
+    const BATCH_SIZE = 100;
+    let rowIndex = 0;
 
-    // Process each data line
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
+    const readable = Readable.fromWeb(file.stream() as any);
+    const parser = readable.pipe(parse({ columns: true, skip_empty_lines: true, trim: true }));
 
+    for await (const record of parser) {
+      rowIndex++;
       try {
-        const values = parseCSVLine(line);
-        logger.debug(`Row ${i}:`, { values });
-        
-        // Create row object
-        const rowData: any = {};
-        headers.forEach((header, index) => {
-          rowData[header] = values[index] || '';
-        });
+        const rowData = Object.fromEntries(
+          Object.entries(record).map(([k, v]) => [k.toLowerCase().trim(), v])
+        );
 
-        logger.debug(`Row ${i} data:`, { rowData });
-
-        // Validate required fields
         if (!rowData.name || !rowData.price) {
           results.errors.push({
-            row: i + 1,
+            row: rowIndex,
             field: 'required',
             message: 'Missing required fields: name or price'
           });
           continue;
         }
 
-        // Create product object with proper data types and correct column names
         const product = {
-          name: rowData.name.replace(/"/g, ''),
-          description: rowData.description?.replace(/"/g, '') || '',
+          name: String(rowData.name).replace(/"/g, ''),
+          description: String(rowData.description || '').replace(/"/g, ''),
           price: parseFloat(rowData.price) || 0,
-          category: rowData.category?.replace(/"/g, '') || 'General',
-          image_url: rowData.image?.replace(/"/g, '') || rowData.image_url?.replace(/"/g, '') || '',
+          category: String(rowData.category || 'General').replace(/"/g, ''),
+          image_url: String(rowData.image || rowData.image_url || '').replace(/"/g, ''),
           popularity: parseInt(rowData.popularity) || 0,
           rating: parseFloat(rowData.rating) || 0,
           review_count: parseInt(rowData.reviewcount || rowData.review_count) || 0,
-          brand: rowData.brand?.replace(/"/g, '') || '',
+          brand: String(rowData.brand || '').replace(/"/g, ''),
           offer_price: parseFloat(rowData.mrp) || null,
           hsn_code: rowData.hsncode || rowData.hsn_code || '',
           gst_rate: parseFloat(rowData.gstrate || rowData.gst_rate) || 18,
@@ -142,62 +79,51 @@ export async function POST(request: NextRequest) {
           stock_status: rowData.stock_status || 'in_stock'
         };
 
-        logger.debug(`Product ${i}:`, { product });
-        productsToInsert.push(product);
+        productsBatch.push(product);
+
+        if (productsBatch.length >= BATCH_SIZE) {
+          const { error } = await supabase.from('products').insert(productsBatch);
+          if (error) {
+            logger.error('Batch insert error', { error });
+            results.errors.push({ row: rowIndex, field: 'db', message: 'Batch insert failed' });
+          } else {
+            results.imported += productsBatch.length;
+          }
+          productsBatch = [];
+        }
 
       } catch (rowError) {
-        logger.error(`Row ${i} error:`, { error: rowError });
+        logger.error(`Row ${rowIndex} error:`, { error: rowError });
         results.errors.push({
-          row: i + 1,
+          row: rowIndex,
           field: 'parsing',
-          message: `Error parsing row: ${rowError instanceof Error ? rowError.message : 'Unknown error'}`
+          message: 'Failed to process row'
         });
       }
     }
 
-  logger.info('products.csv_import.ready_to_insert', { count: productsToInsert.length });
-
-    // Insert products in batches
-    if (productsToInsert.length > 0) {
-      try {
-        const { error: insertError } = await supabase
-          .from('products')
-          .insert(productsToInsert);
-
-        if (insertError) {
-          logger.error('Insert error:', { error: insertError });
-          return NextResponse.json({ 
-            error: `Database error: ${insertError.message}` 
-          }, { status: 500 });
-        }
-
-        results.imported = productsToInsert.length;
-        logger.info('Inserted products:', { count: results.imported });
-
-      } catch (insertError) {
-        logger.error('Insert exception:', { error: insertError });
-        return NextResponse.json({ 
-          error: `Insert failed: ${insertError instanceof Error ? insertError.message : 'Unknown error'}` 
-        }, { status: 500 });
+    if (productsBatch.length > 0) {
+      const { error } = await supabase.from('products').insert(productsBatch);
+      if (error) {
+        logger.error('Final batch insert error', { error });
+        results.errors.push({ row: rowIndex, field: 'db', message: 'Final batch insert failed' });
+      } else {
+        results.imported += productsBatch.length;
       }
     }
 
-    logger.info('Import completed:', { results });
+    logger.info('Import complete', { results });
+    return NextResponse.json(results);
 
-    return NextResponse.json({
-      success: true,
-      imported: results.imported,
-      errors: results.errors,
-      message: `Successfully imported ${results.imported} products`
-    });
-
-  } catch (error) {
-    logger.error('CSV import error:', { error });
-    return NextResponse.json({ 
-      error: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
-    }, { status: 500 });
+  } catch (error: any) {
+    logger.error('CSV import error:', error);
+    return NextResponse.json(
+      { error: 'Import failed: ' + error.message },
+      { status: 500 }
+    );
   }
 }
+
 
 // Export products to CSV
 export async function GET() {

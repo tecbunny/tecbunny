@@ -59,6 +59,28 @@ class RuntimeServicesBoundary extends React.Component<React.PropsWithChildren, R
   }
 }
 
+class AnalyticsBoundary extends React.Component<React.PropsWithChildren, RuntimeServicesBoundaryState> {
+  state: RuntimeServicesBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Analytics script failed to load', error);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+
+    return this.props.children;
+  }
+}
+
 export function DeferredRuntimeServices({ gaId, metaPixelId }: DeferredRuntimeServicesProps) {
   const isActivated = useDeferredActivation({ timeout: 8000 });
   const [shouldRender, setShouldRender] = React.useState(false);
@@ -88,25 +110,37 @@ export function DeferredRuntimeServices({ gaId, metaPixelId }: DeferredRuntimeSe
       <CookieConsentBanner onConsentChange={setAnalyticsConsent} />
       {shouldRender ? <Toaster /> : null}
       {shouldRender && gaId && analyticsConsent === 'accepted' ? (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-              strategy="lazyOnload"
-            />
-            <Script
-              id="ga-init"
-              strategy="lazyOnload"
-            >
-              {`window.dataLayer = window.dataLayer || [];
+        <AnalyticsBoundary>
+          <Script
+            src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+            strategy="lazyOnload"
+            onError={(e) => {
+              console.warn('GA failed to load', e);
+            }}
+          />
+          <Script
+            id="ga-init"
+            strategy="lazyOnload"
+            onError={(e) => {
+              console.warn('GA Init failed to load', e);
+            }}
+          >
+            {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);} 
 gtag('js', new Date());
 gtag('config', '${gaId}', { anonymize_ip: true, send_page_view: false });`}
-            </Script>
-          </>
+          </Script>
+        </AnalyticsBoundary>
       ) : null}
       {shouldRender && metaPixelId && analyticsConsent === 'accepted' ? (
-        <>
-          <Script id="meta-pixel-init" strategy="lazyOnload">
+        <AnalyticsBoundary>
+          <Script 
+            id="meta-pixel-init" 
+            strategy="lazyOnload"
+            onError={(e) => {
+              console.warn('Meta Pixel failed to load', e);
+            }}
+          >
             {`!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -127,7 +161,7 @@ fbq('track', 'PageView');`}
               src={`https://www.facebook.com/tr?id=${metaPixelId}&ev=PageView&noscript=1`}
             />
           </noscript>
-        </>
+        </AnalyticsBoundary>
       ) : null}
     </RuntimeServicesBoundary>
   );

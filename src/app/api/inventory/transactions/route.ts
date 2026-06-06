@@ -39,15 +39,6 @@ const MOVEMENT_TYPES = [
   'transfer',          // ±qty  Inter-warehouse or branch movement
 ] as const;
 
-type MovementType = (typeof MOVEMENT_TYPES)[number];
-
-/** Movements that ADD stock */
-const INBOUND_MOVEMENTS = new Set<MovementType>(['purchase_receipt', 'return']);
-/** Movements that REMOVE stock */
-const OUTBOUND_MOVEMENTS = new Set<MovementType>(['walk_in_sale', 'online_sale']);
-/** Movements that SET stock to an absolute value */
-const ABSOLUTE_MOVEMENTS = new Set<MovementType>(['adjustment']);
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Input schema
 // ─────────────────────────────────────────────────────────────────────────────
@@ -173,7 +164,7 @@ export async function POST(request: NextRequest) {
   try {
     const access = await requireApiRole({ allowedRoles: ['sales', 'manager'], minimumRole: 'admin' });
     if ('error' in access) return access.error;
-    const { supabase, session } = access;
+    const { supabase } = access;
 
     const body = await request.json().catch(() => ({}));
     const validation = movementSchema.safeParse(body);
@@ -233,96 +224,18 @@ export async function POST(request: NextRequest) {
         correlationId, error: rpcError.message, code: rpcError.code,
       });
 
-      // ── Graceful fallback: direct update with COALESCE guard ──────────────
-      logger.warn('inventory.transaction.using_fallback', { correlationId });
+      // RPC is required so stock updates remain atomic under concurrent requests.
+      logger.warn('inventory.transaction.rpc_required', { correlationId });
 
-      const currentResult = await supabase
-        .from('products')
-        .select('id, stock_quantity, min_stock_level')
-        .eq('id', product_id)
-        .single();
+      return NextResponse.json(
+        {
+          error: 'Atomic stock movement failed',
+          details: rpcError.message,
+          correlationId,
+        },
+        { status: 409, headers: { 'x-correlation-id': correlationId } }
+      );
 
-      if (currentResult.error || !currentResult.data) {
-        return NextResponse.json(
-          { error: 'Product not found or stock fetch failed', correlationId },
-          { status: 404 }
-        );
-      }
-
-      const current = currentResult.data;
-      const currentQty = Number(current.stock_quantity) || 0;
-      let newQty: number;
-
-      if (INBOUND_MOVEMENTS.has(movement_type)) {
-        newQty = currentQty + quantity;
-      } else if (OUTBOUND_MOVEMENTS.has(movement_type)) {
-        newQty = currentQty - quantity;
-        if (newQty < 0 && !allow_negative) {
-          return NextResponse.json(
-            {
-              error: 'Insufficient stock',
-              current_stock: currentQty,
-              requested: quantity,
-              correlationId,
-            },
-            { status: 409 }
-          );
-        }
-      } else if (ABSOLUTE_MOVEMENTS.has(movement_type)) {
-        newQty = quantity;
-      } else {
-        newQty = currentQty;
-      }
-
-      const minStock = Number(current.min_stock_level) || 5;
-      const newStatus = newQty <= 0 ? 'out_of_stock' : newQty <= minStock ? 'low_stock' : 'in_stock';
-
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({
-          stock_quantity: newQty,
-          stock_status: newStatus,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', product_id);
-
-      if (updateError) {
-        return NextResponse.json(
-          { error: 'Fallback stock update failed', details: updateError.message, correlationId },
-          { status: 500 }
-        );
-      }
-
-      // Manual ledger insert for fallback path (non-fatal — table may not exist yet)
-      try {
-        await supabase.from('stock_movements').insert({
-          product_id,
-          movement_type,
-          quantity_delta: quantity,
-          quantity_before: currentQty,
-          quantity_after: newQty,
-          reference_id:   reference_id || null,
-          reference_type,
-          notes: notes || `${movement_type} via API (fallback)`,
-          created_by: session?.user?.id || null,
-        });
-      } catch {
-        /* Non-fatal: stock_movements table may not exist yet */
-      }
-
-      logger.info('inventory.transaction.fallback_success', {
-        correlationId, product_id, newQty, movement_type,
-      });
-
-      return NextResponse.json({
-        success: true,
-        method: 'fallback',
-        quantity_before: currentQty,
-        quantity_after: newQty,
-        delta: newQty - currentQty,
-        stock_status: newStatus,
-        correlationId,
-      });
     }
 
     // ── RPC succeeded ─────────────────────────────────────────────────────────
@@ -392,21 +305,15 @@ export async function PUT(request: NextRequest) {
     if (error) {
       logger.warn('inventory.absolute_override.rpc_failed', { correlationId, error: error.message });
 
-      // Direct fallback
-      const { error: directErr } = await supabase
-        .from('products')
-        .update({
-          stock_quantity: qty,
-          stock_status: qty === 0 ? 'out_of_stock' : 'in_stock',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', product_id);
+      return NextResponse.json(
+        {
+          error: 'Atomic stock adjustment failed',
+          details: error.message,
+          correlationId,
+        },
+        { status: 409, headers: { 'x-correlation-id': correlationId } }
+      );
 
-      if (directErr) {
-        return NextResponse.json({ error: directErr.message, correlationId }, { status: 500 });
-      }
-
-      return NextResponse.json({ success: true, new_quantity: qty, method: 'direct', correlationId });
     }
 
     return NextResponse.json({

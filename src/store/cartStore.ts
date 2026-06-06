@@ -56,6 +56,7 @@ export interface CartState {
   pricing: CartPricing;
   isSessionExpired: boolean;
   isHydrated: boolean;
+  isMergingAccountCart: boolean;
 
   // Actions
   addToCart: (item: Product, quantity: number, user: any, trackEvent: any) => void;
@@ -66,6 +67,7 @@ export interface CartState {
   removeCoupon: (user: any, customerCategory?: CustomerCategory) => void;
   refreshPricing: (currentAppliedCoupon: Coupon | null | undefined, user: any, customerCategory?: CustomerCategory) => Promise<void>;
   resetGuestSession: () => void;
+  clearCartMemory: () => void;
   
   // Initialization & Sync
   loadCartFromStorage: (user: any) => void;
@@ -115,6 +117,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   pricing: defaultPricing,
   isSessionExpired: false,
   isHydrated: false,
+  isMergingAccountCart: false,
 
   resetGuestSession: () => {
     localStorage.removeItem('guestSessionStart');
@@ -138,6 +141,10 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   loadCartFromStorage: (user: any) => {
     try {
+      if (get().isMergingAccountCart) {
+        return;
+      }
+
       if (user?.role === 'superadmin') {
         set({ cartItems: [], pricing: defaultPricing, isHydrated: true });
         const cartKey = getStorageKey('cart', user);
@@ -184,7 +191,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     if (user?.role === 'superadmin') return;
 
     const state = get();
-    if (!state.isHydrated) return;
+    if (!state.isHydrated || state.isMergingAccountCart) return;
     
     if (!user && isGuestSessionExpired(user)) {
       set({ isSessionExpired: true });
@@ -530,9 +537,11 @@ export const useCartStore = create<CartState>((set, get) => ({
     if (userId === 'superadmin-root-id') return;
 
     try {
+      set({ isMergingAccountCart: true });
       const guestCartKey = 'cart_guest';
       const guestCartRaw = typeof window !== 'undefined' ? localStorage.getItem(guestCartKey) : null;
       const guestItems: CartItem[] = guestCartRaw ? JSON.parse(guestCartRaw) : [];
+      const inMemoryItems = get().cartItems || [];
       
       const user = { id: userId };
       const userCartKey = getStorageKey('cart', user);
@@ -541,24 +550,28 @@ export const useCartStore = create<CartState>((set, get) => ({
 
       const mergedMap = new Map<string, CartItem>();
 
-      // Load existing user items first
-      userItems.forEach(item => {
-        mergedMap.set(item.id, { ...item });
-      });
-
-      // Merge guest items (sum quantities)
-      guestItems.forEach(guestItem => {
-        const existing = mergedMap.get(guestItem.id);
+      const addItemToMerge = (item: CartItem) => {
+        if (!item?.id) return;
+        const normalizedItem = normalizeCartItem(item);
+        const existing = mergedMap.get(normalizedItem.id);
         if (existing) {
-          existing.quantity += guestItem.quantity;
+          const isServiceItem =
+            normalizedItem.product_type === 'service' ||
+            normalizedItem.id?.startsWith('service-') ||
+            normalizedItem.id?.startsWith('pricing-');
+          existing.quantity = isServiceItem ? 1 : existing.quantity + normalizedItem.quantity;
         } else {
-          mergedMap.set(guestItem.id, { ...guestItem });
+          mergedMap.set(normalizedItem.id, { ...normalizedItem });
         }
-      });
+      };
+
+      userItems.forEach(addItemToMerge);
+      guestItems.forEach(addItemToMerge);
+      inMemoryItems.forEach(addItemToMerge);
 
       const mergedItems = Array.from(mergedMap.values());
 
-      set({ cartItems: mergedItems });
+      set({ cartItems: mergedItems, isHydrated: true });
 
       if (typeof window !== 'undefined') {
         // Save to user storage
@@ -576,6 +589,18 @@ export const useCartStore = create<CartState>((set, get) => ({
       logger.info('Cart guest-to-user merge complete', { userId, itemsCount: mergedItems.length });
     } catch (error) {
       logger.error('Failed to merge guest cart with user cart', { error });
+    } finally {
+      set({ isMergingAccountCart: false });
     }
+  },
+
+  clearCartMemory: () => {
+    set({
+      cartItems: [],
+      pricing: defaultPricing,
+      isSessionExpired: false,
+      isHydrated: true,
+      isMergingAccountCart: false,
+    });
   },
 }));

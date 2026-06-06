@@ -33,6 +33,32 @@ type DeferredRuntimeServicesProps = {
   metaPixelId?: string;
 };
 
+type RuntimeServicesBoundaryState = {
+  hasError: boolean;
+};
+
+class RuntimeServicesBoundary extends React.Component<React.PropsWithChildren, RuntimeServicesBoundaryState> {
+  state: RuntimeServicesBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Deferred runtime services failed', error);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+
+    return this.props.children;
+  }
+}
+
 export function DeferredRuntimeServices({ gaId, metaPixelId }: DeferredRuntimeServicesProps) {
   const isActivated = useDeferredActivation({ timeout: 8000 });
   const [shouldRender, setShouldRender] = React.useState(false);
@@ -57,32 +83,28 @@ export function DeferredRuntimeServices({ gaId, metaPixelId }: DeferredRuntimeSe
     }
   }, []);
 
-  if (!shouldRender) {
-    return <CookieConsentBanner onConsentChange={setAnalyticsConsent} />;
-  }
-
   return (
-    <>
+    <RuntimeServicesBoundary>
       <CookieConsentBanner onConsentChange={setAnalyticsConsent} />
-      <Toaster />
-      {gaId && analyticsConsent === 'accepted' ? (
-        <>
-          <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-            strategy="lazyOnload"
-          />
-          <Script
-            id="ga-init"
-            strategy="lazyOnload"
-          >
-            {`window.dataLayer = window.dataLayer || [];
+      {shouldRender ? <Toaster /> : null}
+      {shouldRender && gaId && analyticsConsent === 'accepted' ? (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="lazyOnload"
+            />
+            <Script
+              id="ga-init"
+              strategy="lazyOnload"
+            >
+              {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);} 
 gtag('js', new Date());
 gtag('config', '${gaId}', { anonymize_ip: true, send_page_view: false });`}
-          </Script>
-        </>
+            </Script>
+          </>
       ) : null}
-      {metaPixelId && analyticsConsent === 'accepted' ? (
+      {shouldRender && metaPixelId && analyticsConsent === 'accepted' ? (
         <>
           <Script id="meta-pixel-init" strategy="lazyOnload">
             {`!function(f,b,e,v,n,t,s)
@@ -107,6 +129,6 @@ fbq('track', 'PageView');`}
           </noscript>
         </>
       ) : null}
-    </>
+    </RuntimeServicesBoundary>
   );
 }

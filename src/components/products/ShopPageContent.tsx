@@ -211,6 +211,33 @@ function ProductGridImage({
   );
 }
 
+class ProductTileErrorBoundary extends React.Component<
+  React.PropsWithChildren<{ productId?: string }>,
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    logger.error('ShopPage: product tile render failed', { error, productId: this.props.productId });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex min-h-[320px] flex-col justify-center rounded-2xl border border-dashed border-white/10 bg-slate-900/60 p-4 text-center text-sm text-slate-400">
+          Product unavailable
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 interface ShopPageContentProps {
   initialRawProducts?: any[];
   initialRawAutoOffers?: any[];
@@ -612,8 +639,8 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                   : null;
 
                 return (
-                  <div
-                    key={product.id}
+                  <ProductTileErrorBoundary key={product.id || index} productId={product.id}>
+                    <div
                     className={cn(
                       'reveal-item group flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-4 transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-400/30',
                       revealDelayClass(Math.min(index, 11) * 70)
@@ -656,7 +683,8 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                         +
                       </button>
                     </div>
-                  </div>
+                    </div>
+                  </ProductTileErrorBoundary>
                 );
               })}
             </div>

@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import path from 'path';
-const fontkit = require('fontkit');
 import { PDFDocument, rgb, StandardFonts, type Color } from 'pdf-lib';
 import { logger } from './logger';
 
@@ -116,6 +115,7 @@ export async function buildPdf(options: {
   let customFontReady = false;
   if (fontRegularBuffer) {
     try {
+      const fontkit = await import('fontkit');
       pdfDoc.registerFontkit((fontkit as any).default || fontkit);
       bodyFont = await pdfDoc.embedFont(fontRegularBuffer);
       if (fontBoldBuffer) {
@@ -147,14 +147,12 @@ export async function buildPdf(options: {
   const pan = company?.pan || '';
 
   const logoPath = resolveAssetPath(path.join('public', 'brand.png'));
-  const SUPABASE_BRAND_LOGO_URL = 'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/TecBunny%20Solution/TECBUNNY_SOLUTIONS_PVT_LTD-removebg-preview.png';
-  const supabaseLogoUrl = SUPABASE_BRAND_LOGO_URL;
   const logoUrl =
     company?.logoUrl ||
     company?.logo_url ||
     process.env.BRAND_LOGO_URL ||
     process.env.NEXT_PUBLIC_BRAND_LOGO_URL ||
-    supabaseLogoUrl;
+    null;
   let logoBuffer: Buffer | null = null;
   try {
     if (logoUrl) {
@@ -177,14 +175,6 @@ export async function buildPdf(options: {
       logger.error('quotes.logo_load_failed', { error });
       
       // Remote fetch fallback — use Supabase Storage URL directly
-      try {
-        const response = await fetch(SUPABASE_BRAND_LOGO_URL);
-        if (response.ok) {
-          logoBuffer = Buffer.from(await response.arrayBuffer());
-        }
-      } catch (fallbackError) {
-        logger.error('quotes.logo_remote_fallback_failed', { error: fallbackError });
-      }
     }
   }
   const hasLogo = Boolean(logoBuffer);

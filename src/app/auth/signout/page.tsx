@@ -12,6 +12,17 @@ export default function SignOutPage() {
       let targetRedirect = '/';
       
       if (typeof window !== 'undefined') {
+        try {
+          const [{ useWishlistStore }, { useCartStore }] = await Promise.all([
+            import('@/store/wishlistStore'),
+            import('@/store/cartStore'),
+          ]);
+          useWishlistStore.getState().clearWishlistMemory();
+          useCartStore.getState().clearCartMemory();
+        } catch (error) {
+          logger.error('auth.signout_page.client_state_clear_failed', { error });
+        }
+
         const referrer = document.referrer || '';
         const cookieStr = document.cookie || '';
         

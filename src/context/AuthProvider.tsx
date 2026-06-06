@@ -100,6 +100,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const firstLoginAttemptedRef = useRef<Set<string>>(new Set());
   const { trackEvent } = useAnalytics();
 
+  const syncGuestCartToUser = useCallback(async (userId: string) => {
+    try {
+      const { useCartStore } = await import('@/store/cartStore');
+      await useCartStore.getState().mergeGuestCartWithUserCart(userId, supabase);
+    } catch (err) {
+      logger.error('Failed to sync guest cart on auth event', { error: err });
+    }
+  }, [supabase]);
+
+  const setWishlistOwner = useCallback(async (ownerKey: string) => {
+    try {
+      const { useWishlistStore } = await import('@/store/wishlistStore');
+      useWishlistStore.getState().setWishlistOwner(ownerKey);
+    } catch (err) {
+      logger.error('Failed to switch wishlist owner', { error: err });
+    }
+  }, []);
+
+  const clearSessionScopedClientState = useCallback(async () => {
+    try {
+      const [{ useWishlistStore }, { useCartStore }] = await Promise.all([
+        import('@/store/wishlistStore'),
+        import('@/store/cartStore'),
+      ]);
+      useWishlistStore.getState().clearWishlistMemory();
+      useCartStore.getState().clearCartMemory();
+    } catch (err) {
+      logger.error('Failed to clear session-scoped client state', { error: err });
+    }
+  }, []);
+
   const buildFallbackProfile = useCallback((supabaseUser: SupabaseUser): User => {
     const appMetadataRole = extractRoleFromMetadata(supabaseUser.app_metadata as Record<string, unknown> | undefined);
     // Security note: In client tracking, using user_metadata for UI display is acceptable but not for authorization.
@@ -316,15 +347,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let mounted = true;
-
-    const handleCartSync = async (userId: string) => {
-      try {
-        const { useCartStore } = await import('@/store/cartStore');
-        await useCartStore.getState().mergeGuestCartWithUserCart(userId, supabase);
-      } catch (err) {
-        logger.error('Failed to sync guest cart on auth event', { error: err });
-      }
-    };
     
     const getSession = async () => {
       try {
@@ -361,7 +383,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
         
-          if (session?.user && mounted) {
+        if (session?.user && mounted) {
+            await syncGuestCartToUser(session.user.id);
+            await setWishlistOwner(`user_${session.user.id}`);
+
             const fallbackProfile = buildFallbackProfile(session.user);
             setUser(fallbackProfile);
             setLoading(false);
@@ -392,12 +417,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               sessionManager.registerSessionStart(sessionStart);
             }
 
-            // Sync guest cart to user cart
-            void handleCartSync(session.user.id);
-          } else if (mounted) {
+        } else if (mounted) {
+            await clearSessionScopedClientState();
             setUser(null);
             setLoading(false);
-          }
+        }
       } catch (err) {
         logger.error('Session retrieval error', { error: err });
         if (mounted) {
@@ -424,6 +448,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+        await syncGuestCartToUser(session.user.id);
+        await setWishlistOwner(`user_${session.user.id}`);
+
         const fallbackProfile = buildFallbackProfile(session.user);
         if (mounted) {
           setUser(fallbackProfile);
@@ -443,9 +470,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sessionManager.registerSessionStart(sessionStart);
         }
 
-        // Sync guest cart to user cart
-        void handleCartSync(session.user.id);
       } else if (event === 'SIGNED_OUT') {
+        await clearSessionScopedClientState();
         if (mounted) {
           setUser(null);
           setLoading(false);
@@ -458,7 +484,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
       subscription?.unsubscribe();
     };
-  }, [supabase.auth, fetchUserProfile, sessionManager, triggerFirstLoginWhatsApp, buildFallbackProfile]);
+  }, [supabase.auth, fetchUserProfile, sessionManager, triggerFirstLoginWhatsApp, buildFallbackProfile, syncGuestCartToUser, setWishlistOwner, clearSessionScopedClientState]);
 
   const login = async (identifier: string, password: string): Promise<AuthResponse> => {
     try {
@@ -501,6 +527,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data.session.user) {
         const profile = await fetchUserProfile(data.session.user);
+        await syncGuestCartToUser(data.session.user.id);
+        await setWishlistOwner(`user_${data.session.user.id}`);
         setUser(profile);
         void triggerFirstLoginWhatsApp(profile);
         trackEvent('login', { userId: profile.id, email: profile.email });
@@ -550,6 +578,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     sessionManager.clearSessionTracking();
+    await clearSessionScopedClientState();
 
     try {
       const response = await fetch('/api/auth/signout', {

@@ -140,7 +140,7 @@ export default function PurchaseEntryPage() {
             }
         }
 
-        const { error: purchaseError } = await supabase
+        const { data: purchase, error: purchaseError } = await supabase
             .from('purchases')
             .insert({
                 supplier_name: supplierName,
@@ -156,20 +156,29 @@ export default function PurchaseEntryPage() {
             return;
         }
         
-        // This should be a transaction in a real application
         for (const item of purchaseItems) {
-            const { data: invItem } = await supabase.from('inventory').select('*').eq('product_id', item.id).single();
-            if (invItem) {
-                 await supabase.from('inventory').update({
-                    stock: invItem.stock + item.quantity,
-                    serial_numbers: [...(invItem.serial_numbers || []), ...(item.serialNumbers || [])]
-                }).eq('product_id', item.id);
-            } else {
-                 await supabase.from('inventory').insert({
+            const response = await fetch('/api/inventory/transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     product_id: item.id,
-                    stock: item.quantity,
+                    movement_type: 'purchase_receipt',
+                    quantity: item.quantity,
                     serial_numbers: item.serialNumbers || [],
+                    reference_id: purchase?.id || supplierInvoice,
+                    reference_type: 'purchase_order',
+                    notes: `Purchase receipt from ${supplierName}`,
+                }),
+            });
+
+            if (!response.ok) {
+                const payload = await response.json().catch(() => null);
+                toast({
+                    variant: 'destructive',
+                    title: 'Purchase Saved, Inventory Update Failed',
+                    description: payload?.error || `Unable to update inventory for ${item.name}.`,
                 });
+                return;
             }
         }
         

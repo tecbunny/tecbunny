@@ -8,14 +8,19 @@ import { useCartStore } from '../store/cartStore';
 import { useAnalytics } from '../hooks/use-analytics';
 
 export const useWishlist = () => {
-  const store = useWishlistStore();
+  const { wishlistItems, toggleWishlist, isInWishlist, wishlistCount, setWishlistOwner } = useWishlistStore();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    setWishlistOwner(user?.id ? `user_${user.id}` : 'guest');
+  }, [setWishlistOwner, user?.id]);
   
   // Return the same interface as the old WishlistContext
   return {
-    wishlistItems: store.wishlistItems,
-    toggleWishlist: store.toggleWishlist,
-    isInWishlist: store.isInWishlist,
-    wishlistCount: store.wishlistCount,
+    wishlistItems,
+    toggleWishlist,
+    isInWishlist,
+    wishlistCount,
   };
 };
 

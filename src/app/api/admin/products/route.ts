@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
-import { isAdmin } from '@/lib/permissions';
+import { isAdmin, isSuperadminSession } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
 import { getProductDisplayImage } from '@/lib/image-utils';
 export { POST, PUT } from '@/app/api/products/route';
@@ -37,11 +37,13 @@ export async function GET(request: NextRequest) {
       error: userError
     } = await supabase.auth.getUser();
 
-    if (userError || !user) {
+    const isSuperadmin = await isSuperadminSession();
+
+    if ((userError || !user) && !isSuperadmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!(await isAdmin(user))) {
+    if (!isSuperadmin && !(await isAdmin(user))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

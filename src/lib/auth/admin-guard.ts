@@ -68,6 +68,13 @@ const pickHighestRole = (...roles: Array<UserRole | null | undefined>): UserRole
 };
 
 export async function requireAdminContext(): Promise<AdminContext> {
+  try {
+    const superadminContext = await requireSuperadminContext();
+    return superadminContext;
+  } catch {
+    // Fall through to the standard Supabase-backed admin flow.
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -136,7 +143,7 @@ export async function requireSuperadminContext(): Promise<SuperadminContext> {
     const cookieStore = await cookies();
     const superadminCookie = cookieStore.get('superadmin-session')?.value;
     if (superadminCookie) {
-      const correctEmail = process.env.SUPERADMIN_USER_ID;
+      const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
       const correctPassword = process.env.SUPERADMIN_PASSWORD;
       if (correctEmail && correctPassword) {
         const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';

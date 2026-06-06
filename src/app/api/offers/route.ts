@@ -5,7 +5,7 @@ import { getSessionWithRole } from '@/lib/auth/server-role';
 
 import { logger } from '@/lib/logger';
 
-const ADMIN_ROLES = new Set(['admin', 'manager']);
+const ADMIN_ROLES = new Set(['admin', 'manager', 'superadmin']);
 
 interface OfferFilters {
   activeOnly: boolean;

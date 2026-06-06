@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { createServiceClient, createClient as createServerClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
-import { isAdmin } from '@/lib/permissions';
+import { isAdmin, isSuperadminSession } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
 import type { ContactMessage } from '@/lib/types';
 
@@ -29,12 +29,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const supabase = await createServerClient();
     const { data: auth } = await supabase.auth.getUser();
 
-    if (!auth?.user) {
+    const isSuperadmin = await isSuperadminSession();
+
+    if (!auth?.user && !isSuperadmin) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    const isUserAdmin = await isAdmin(auth.user);
-    if (!isUserAdmin) {
+    const isUserAdmin = auth.user ? await isAdmin(auth.user) : false;
+    if (!isSuperadmin && !isUserAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -50,10 +52,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     const adminDisplayName =
-      (auth.user.user_metadata?.full_name as string | undefined)?.trim() || auth.user.email || auth.user.id;
+      (auth.user?.user_metadata?.full_name as string | undefined)?.trim() || auth.user?.email || auth.user?.id || 'System Super Administrator';
 
     const updateData: Record<string, unknown> = {
-      handled_by: auth.user.id,
+      handled_by: auth.user?.id || 'superadmin-root-id',
       handled_by_name: adminDisplayName,
     };
 

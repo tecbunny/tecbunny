@@ -94,13 +94,50 @@ export const getEffectiveUserRole = async (user: SupabaseUser | null): Promise<U
 };
 
 
-export const getSessionWithRole = async (_request: NextRequest): Promise<{
+const verifySuperadminRequest = async (request: NextRequest): Promise<Session | null> => {
+  const superadminCookie = request.cookies.get('superadmin-session')?.value;
+  if (!superadminCookie) return null;
+
+  const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
+  const correctPassword = process.env.SUPERADMIN_PASSWORD;
+  if (!correctEmail || !correctPassword) return null;
+
+  const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
+  const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  if (superadminCookie !== expectedToken) return null;
+
+  return {
+    access_token: superadminCookie,
+    refresh_token: '',
+    expires_in: 60 * 60 * 24,
+    token_type: 'bearer',
+    user: {
+      id: 'superadmin-root-id',
+      email: correctEmail,
+      app_metadata: { role: 'superadmin' },
+      user_metadata: {},
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+    },
+  } as Session;
+};
+
+export const getSessionWithRole = async (request: NextRequest): Promise<{
   supabase: Awaited<ReturnType<typeof createServerClient>>;
   session: Session | null;
   role: UserRole | null;
 }> => {
   const supabase = await createServerClient();
   try {
+    const superadminSession = await verifySuperadminRequest(request);
+    if (superadminSession) {
+      return { supabase, session: superadminSession, role: 'superadmin' };
+    }
+
     // Security: use getUser() not getSession(). getSession() reads cookies without
     // server-side JWT validation. getUser() verifies the token with Supabase auth server.
     const { data: { user }, error } = await supabase.auth.getUser();

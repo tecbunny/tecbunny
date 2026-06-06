@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 import { getProductDisplayImage } from '@/lib/image-utils';
 import { classifyProductTax, TaxClassificationError } from '@/lib/ai/tax-classification';
 
-const ADMIN_ROLES = new Set(['admin', 'manager']);
+const ADMIN_ROLES = new Set(['admin', 'manager', 'superadmin']);
 
 function pickFirst(...values: unknown[]) {
   return values.find((value) => {

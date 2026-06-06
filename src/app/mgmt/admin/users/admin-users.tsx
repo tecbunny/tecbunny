@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import { MoreHorizontal, Settings, Percent, Crown, Star, User as UserIcon, Shield, UserCog, Users, Briefcase, Headphones, RefreshCcw, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 
@@ -36,6 +37,7 @@ import { useDebounce } from '../../../../hooks/use-debounce';
 const ROLE_SENTINEL_NONE = '__none__';
 
 export default function UserManagementPage() {
+  const pathname = usePathname();
   const [users, setUsers] = React.useState<User[]>([]);
   const [totalUsers, setTotalUsers] = React.useState(0);
   const [totalsBreakdown, setTotalsBreakdown] = React.useState({
@@ -66,6 +68,9 @@ export default function UserManagementPage() {
   const totalPages = Math.max(1, Math.ceil(totalUsers / pageSize) || 1);
   const rangeStart = totalUsers === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = totalUsers === 0 ? 0 : Math.min(page * pageSize, totalUsers);
+  const userAnalyticsBasePath = pathname?.startsWith('/superadmin')
+    ? '/superadmin/mgmt/users'
+    : '/mgmt/admin/users';
   
   const roleFiltersFromTab = React.useMemo(() => {
     switch (activeTab) {
@@ -573,7 +578,7 @@ export default function UserManagementPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Link href={`/mgmt/admin/users/${user.id}/analytics`}>
+                        <Link href={`${userAnalyticsBasePath}/${user.id}/analytics`}>
                           <Button variant="ghost" size="icon" title="View Analytics">
                             <Activity className="h-4 w-4" />
                           </Button>

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { createServiceClient, createClient as createServerClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
-import { isAdmin } from '@/lib/permissions';
+import { isAdmin, isSuperadminSession } from '@/lib/permissions';
 import type { ContactMessage, ContactMessageStatus } from '@/lib/types';
 
 const CONTACT_RATE_LIMIT = {
@@ -106,12 +106,14 @@ export async function GET(request: NextRequest) {
     const supabase = await createServerClient();
     const { data: auth } = await supabase.auth.getUser();
 
-    if (!auth?.user) {
+    const isSuperadmin = await isSuperadminSession();
+
+    if (!auth?.user && !isSuperadmin) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    const isUserAdmin = await isAdmin(auth.user);
-    if (!isUserAdmin) {
+    const isUserAdmin = auth.user ? await isAdmin(auth.user) : false;
+    if (!isSuperadmin && !isUserAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

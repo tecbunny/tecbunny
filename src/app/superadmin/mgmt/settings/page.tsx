@@ -228,6 +228,13 @@ const moduleSectionRedirects: Record<string, string> = {
   'custom-setups': '/superadmin/mgmt/custom-setups',
 };
 
+const legacyTabSections: Record<string, string> = {
+  homepage: 'website',
+  identity: 'brand',
+  business: 'company',
+  advanced: 'tax',
+};
+
 type SettingsMap = Record<string, string>;
 
 export default function SuperadminSettingsPage() {
@@ -241,10 +248,17 @@ export default function SuperadminSettingsPage() {
   const allFields = React.useMemo(() => sections.flatMap((section) => section.fields), []);
 
   React.useEffect(() => {
-    const requestedSection = new URLSearchParams(window.location.search).get('section');
+    const searchParams = new URLSearchParams(window.location.search);
+    const requestedTab = searchParams.get('tab');
+    const requestedSection = searchParams.get('section') || (requestedTab ? legacyTabSections[requestedTab] : null);
+
     if (requestedSection && moduleSectionRedirects[requestedSection]) {
       router.replace(moduleSectionRedirects[requestedSection]);
       return;
+    }
+
+    if (requestedTab && requestedSection) {
+      router.replace(`/superadmin/mgmt/settings?section=${requestedSection}`);
     }
 
     const group = sectionGroups.find((candidate) =>

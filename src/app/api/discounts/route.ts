@@ -5,7 +5,7 @@ import { getSessionWithRole } from '@/lib/auth/server-role';
 import { createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 
-const ADMIN_ROLES = new Set(['admin', 'manager']);
+const ADMIN_ROLES = new Set(['admin', 'manager', 'superadmin']);
 
 const ensureAdmin = (session: any, role: string | null) => {
   if (!session) {

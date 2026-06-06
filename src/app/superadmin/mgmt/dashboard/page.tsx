@@ -85,14 +85,14 @@ export default async function SuperadminDashboard() {
     {
       title: 'Website Management',
       description: 'Authority to modify frontend code constants, asset rendering parameters, and page modules.',
-      href: '/superadmin/mgmt/settings?tab=homepage',
+      href: '/superadmin/mgmt/settings?section=website',
       icon: Globe,
       color: 'amber'
     },
     {
       title: 'Brand Management',
       description: 'Configuration of company logo images, asset paths, and brand identity metadata.',
-      href: '/superadmin/mgmt/settings?tab=identity',
+      href: '/superadmin/mgmt/settings?section=brand',
       icon: Key,
       color: 'rose'
     },
@@ -134,14 +134,14 @@ export default async function SuperadminDashboard() {
     {
       title: 'Company Management',
       description: 'Adjustments to legal identity details (GSTIN, COI, registered business addresses).',
-      href: '/superadmin/mgmt/settings?tab=business',
+      href: '/superadmin/mgmt/settings?section=company',
       icon: Building,
       color: 'emerald'
     },
     {
       title: 'Tax Management',
       description: 'Control over dynamic multi-tier tax matrices and systemic percentage calculations.',
-      href: '/superadmin/mgmt/settings?tab=advanced',
+      href: '/superadmin/mgmt/settings?section=tax',
       icon: Percent,
       color: 'amber'
     },

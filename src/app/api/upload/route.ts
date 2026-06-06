@@ -14,6 +14,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 import { uploadToSupabase, uploadFavicon, uploadLogo, uploadProductImage } from '@/lib/supabase-storage';
 import { uploadHeroBanner, isS3Configured } from '@/lib/s3-storage';
+import sharp from 'sharp';
 
 export async function POST(request: NextRequest) {
   const correlationId = request.headers.get('x-correlation-id');
@@ -79,7 +80,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Magic bytes validation (PNG/JPEG/WebP/GIF)
-    const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+    const arrayBuffer = await file.arrayBuffer();
+    const head = new Uint8Array(arrayBuffer.slice(0, 16));
     const isPng = head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47;
     const isJpeg = head[0] === 0xff && head[1] === 0xd8;
     const isWebp = head[0] === 0x52 && head[1] === 0x49 && head[2] === 0x46 && head[3] === 0x46; // RIFF
@@ -88,7 +90,24 @@ export async function POST(request: NextRequest) {
       logger.warn('upload_invalid_magic_bytes', { correlationId, head: Array.from(head.slice(0,8)) });
       return apiError('VALIDATION_ERROR', { overrideMessage: 'Invalid image file', correlationId });
     }
-    logger.info('upload_validation_passed', { correlationId, mime: file.type, size: file.size });
+
+    // Optimize image using sharp (WebP transformation)
+    let optimizedFile = file;
+    try {
+      const buffer = Buffer.from(arrayBuffer);
+      const optimizedBuffer = await sharp(buffer)
+        .webp({ quality: 80, effort: 4 })
+        .toBuffer();
+      
+      const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".webp";
+      optimizedFile = new File([optimizedBuffer], newFileName, { type: 'image/webp' });
+      logger.info('upload_image_optimized', { correlationId, originalSize: file.size, newSize: optimizedFile.size });
+    } catch (err) {
+      logger.error('upload_image_optimization_failed', { correlationId, error: err });
+      // Fallback to original file if optimization fails
+    }
+
+    logger.info('upload_validation_passed', { correlationId, mime: optimizedFile.type, size: optimizedFile.size });
 
     let result;
 
@@ -96,31 +115,29 @@ export async function POST(request: NextRequest) {
     switch (type) {
       case 'favicon':
         logger.debug('upload_variant', { correlationId, variant: 'favicon' });
-        result = await uploadFavicon(file); break;
+        result = await uploadFavicon(optimizedFile); break;
       case 'logo':
         logger.debug('upload_variant', { correlationId, variant: 'logo' });
-        result = await uploadLogo(file); break;
+        result = await uploadLogo(optimizedFile); break;
       case 'brand':
         logger.debug('upload_variant', { correlationId, variant: 'brand' });
-        result = await uploadToSupabase(file, 'partner-brands', { publicAccess: true });
+        result = await uploadToSupabase(optimizedFile, 'partner-brands', { publicAccess: true });
         break;
       case 'product':
         logger.debug('upload_variant', { correlationId, variant: 'product' });
-        result = await uploadProductImage(file); break;
+        result = await uploadProductImage(optimizedFile); break;
       case 'hero':
         logger.debug('upload_variant', { correlationId, variant: 'hero', pathParam });
         if (isS3Configured) {
-          // Use S3 helper when available
-          result = await uploadHeroBanner(file, pathParam || 'hero-banners');
+          result = await uploadHeroBanner(optimizedFile, pathParam || 'hero-banners');
         } else {
-          // Fallback to Supabase storage for environments without S3
           logger.debug('upload_variant_hero_fallback_supabase', { correlationId, folder: pathParam || 'hero-banners' });
-          result = await uploadToSupabase(file, pathParam || 'hero-banners', { publicAccess: true });
+          result = await uploadToSupabase(optimizedFile, pathParam || 'hero-banners', { publicAccess: true });
         }
         break;
       default:
         logger.debug('upload_variant', { correlationId, variant: 'general' });
-        result = await uploadToSupabase(file);
+        result = await uploadToSupabase(optimizedFile);
     }
 
     if (!result || (!result.secure_url && !result.url)) {

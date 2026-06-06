@@ -31,6 +31,8 @@ import { useToast } from '../../hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
 import { logger } from '@/lib/logger';
 import { normalizeRole } from '@/lib/roles';
+import { useCartStore } from '@/store/cartStore';
+import { useWishlistStore } from '@/store/wishlistStore';
 
 const loginSchema = z.object({
   identifier: z.string().min(10, { message: 'Mobile number must be at least 10 digits.' }),
@@ -121,6 +123,18 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
       // Wait for auth state to be fully updated before redirecting
       if (loginResult?.data?.user?.id) {
         try {
+          // Merge guest cart/wishlist before redirecting
+          const cartItems = useCartStore.getState().cartItems || [];
+          const wishlistItems = useWishlistStore.getState().wishlistItems || [];
+          
+          if (cartItems.length > 0 || wishlistItems.length > 0) {
+            await fetch('/api/cart/merge', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ cartItems, wishlistItems })
+            }).catch(e => logger.error('Failed to merge client state', e));
+          }
+
           const supabase = createClient();
           const userId = loginResult.data?.user?.id;
           if (!userId) return;

@@ -50,6 +50,13 @@ export const useWishlistStore = create<WishlistState>()((set, get) => ({
     set({ wishlistItems: items, wishlistCount: items.length, _hasHydrated: true });
   },
   clearWishlistMemory: () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const owner = get().ownerKey;
+        window.localStorage.removeItem(getWishlistStorageKey(owner));
+        window.localStorage.removeItem(getWishlistStorageKey('guest'));
+      } catch (e) {}
+    }
     set({ wishlistItems: [], wishlistCount: 0, ownerKey: 'guest', _hasHydrated: true });
   },
   toggleWishlist: (item) => {

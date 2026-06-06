@@ -595,6 +595,11 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   clearCartMemory: () => {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem('tecbunny_cart_guest');
+      } catch (e) {}
+    }
     set({
       cartItems: [],
       pricing: defaultPricing,

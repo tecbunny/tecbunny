@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
@@ -51,10 +51,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const result = await processPaymentReceived(supabase, body, source);
-    await logWebhookEvent(supabase, 'payment_received', body, source, true, undefined, startTime, eventId);
+    // Use Next.js after() to process the webhook asynchronously
+    after(async () => {
+      try {
+        const backgroundSupabase = await createClient();
+        await processPaymentReceived(backgroundSupabase, body, source);
+        await logWebhookEvent(backgroundSupabase, 'payment_received', body, source, true, undefined, startTime, eventId);
+      } catch (err: any) {
+        logger.error('Background payment webhook processing error:', { error: err.message, correlationId });
+      }
+    });
     
-    return NextResponse.json(result);
+    // Instantly return 200 OK
+    return NextResponse.json({ success: true, message: 'Webhook queued' }, { status: 200 });
 
   } catch (error: any) {
     logger.error('Payment received webhook error:', { error: error.message, correlationId });

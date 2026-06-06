@@ -4,6 +4,8 @@ import { createPageMetadata } from '@/lib/metadata';
 import { createClient } from '@/lib/supabase/server';
 import { BRAND_LOGO_URL } from '@/components/ui/logo';
 import { stripHtmlToPlainText } from '@/lib/strings';
+import { isPubliclyVisibleProduct } from '@/lib/product-visibility';
+import { notFound } from 'next/navigation';
 
 // ISR: revalidate every 5 minutes — dramatically reduces TTFB on product pages
 export const revalidate = 300;
@@ -19,7 +21,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const supabase = await createClient();
   const { data: product } = await supabase.from('products').select('*').eq('id', id).single();
 
-  if (!product) {
+  if (!product || !isPubliclyVisibleProduct(product)) {
     return createPageMetadata({
       title: 'Product Not Found',
       description: 'The requested product could not be found.',
@@ -45,6 +47,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const supabase = await createClient();
   const { data: product } = await supabase.from('products').select('*').eq('id', id).single();
+
+  if (!product || !isPubliclyVisibleProduct(product)) {
+    notFound();
+  }
 
   const siteUrl = 'https://www.tecbunny.com';
 

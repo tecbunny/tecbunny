@@ -4,6 +4,7 @@ import { createClient, createServiceClient, isSupabaseServiceConfigured } from '
 import { getSessionWithRole } from '@/lib/auth/server-role';
 import { logger } from '@/lib/logger';
 import { getProductDisplayImage } from '@/lib/image-utils';
+import { isPubliclyVisibleProduct } from '@/lib/product-visibility';
 import { classifyProductTax, TaxClassificationError } from '@/lib/ai/tax-classification';
 
 const ADMIN_ROLES = new Set(['admin', 'manager', 'superadmin']);
@@ -223,6 +224,7 @@ export async function GET(
     }
 
     const { supabase: authClient, role } = await getSessionWithRole(request);
+    const isPrivilegedRequest = Boolean(role && ADMIN_ROLES.has(role));
     const supabase = role && ADMIN_ROLES.has(role) && isSupabaseServiceConfigured
       ? createServiceClient()
       : authClient ?? await createClient();
@@ -242,6 +244,13 @@ export async function GET(
       
       return NextResponse.json(
         { success: false, error: error.message },
+        { status: 404 }
+      );
+    }
+
+    if (!isPrivilegedRequest && !isPubliclyVisibleProduct(data)) {
+      return NextResponse.json(
+        { success: false, error: 'Product not found' },
         { status: 404 }
       );
     }

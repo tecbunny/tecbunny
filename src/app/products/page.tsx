@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { ShopPageContent } from '@/components/products/ShopPageContent';
 import { createPageMetadata } from '@/lib/metadata';
 import { createClient } from '@/lib/supabase/server';
+import { filterPubliclyVisibleProducts } from '@/lib/product-visibility';
 
 // ISR: revalidate every 5 minutes (300 seconds)
 export const revalidate = 300;
@@ -68,7 +69,7 @@ export default async function Page() {
       .order('priority', { ascending: false }),
   ]);
 
-  const rawProducts = productsRes.data || [];
+  const rawProducts = filterPubliclyVisibleProducts(productsRes.data || []);
   const rawOffers = offersRes.data || [];
 
   return (

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getProductDisplayImage } from '@/lib/image-utils';
+import { filterPubliclyVisibleProducts } from '@/lib/product-visibility';
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -49,9 +50,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ recentlyViewed: [], recommended: [] });
   }
 
+  const visibleViewedProducts = filterPubliclyVisibleProducts(viewedProducts);
+
+  if (visibleViewedProducts.length === 0) {
+    return NextResponse.json({ recentlyViewed: [], recommended: [] });
+  }
+
   // 3. Find Categories/Types to Recommend
-  const categories = [...new Set(viewedProducts.map(p => p.category).filter(Boolean))];
-  const types = [...new Set(viewedProducts.map(p => p.product_type).filter(Boolean))];
+  const categories = [...new Set(visibleViewedProducts.map(p => p.category).filter(Boolean))];
+  const types = [...new Set(visibleViewedProducts.map(p => p.product_type).filter(Boolean))];
 
   // 4. Fetch Recommendations (Same Category/Type, excluding viewed)
   let recommendationQuery = supabase
@@ -71,13 +78,14 @@ export async function GET(request: NextRequest) {
   }
 
   const { data: recommendedProducts } = await recommendationQuery;
+  const visibleRecommendedProducts = filterPubliclyVisibleProducts(recommendedProducts || []);
 
-  const normalizedViewed = (viewedProducts || []).map(p => ({
+  const normalizedViewed = visibleViewedProducts.map(p => ({
     ...p,
     image: getProductDisplayImage(p) || p.image || null
   }));
 
-  const normalizedRecommended = (recommendedProducts || []).map(p => ({
+  const normalizedRecommended = visibleRecommendedProducts.map(p => ({
     ...p,
     image: getProductDisplayImage(p) || p.image || null
   }));

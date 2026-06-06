@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { filterPubliclyVisibleProducts } from '@/lib/product-visibility';
 import { isSupabasePublicConfigured, requireSupabasePublicEnv } from '@/lib/supabase/env';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -18,12 +19,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
       const { data: products } = await supabase
         .from('products')
-        .select('id, updated_at')
+        .select('*')
         .eq('status', 'active')
         .eq('is_deleted', false);
 
       if (products) {
-        productRoutes = products.map((product) => ({
+        productRoutes = filterPubliclyVisibleProducts(products).map((product) => ({
           url: `${baseUrl}/products/${product.id}`,
           lastModified: product.updated_at ? new Date(product.updated_at) : now,
           changeFrequency: 'weekly' as const,

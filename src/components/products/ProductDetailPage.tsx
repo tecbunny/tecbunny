@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { WishlistButton } from '@/components/wishlist/WishlistButton';
 import { logger } from '@/lib/logger';
 import { createClient } from '@/lib/supabase/client';
+import { isPubliclyVisibleProduct } from '@/lib/product-visibility';
 import type { Product } from '@/lib/types';
 import { useAnalytics } from '../../hooks/use-analytics';
 import { useToast } from '../../hooks/use-toast';
@@ -209,6 +210,9 @@ export function ProductDetailPage({ productId, initialProduct }: ProductDetailPa
 
       if (error) {
         logger.error('Error fetching product:', { error });
+      } else if (!isPubliclyVisibleProduct(data)) {
+        logger.warn('Hidden public product fetch rejected:', { productId });
+        setProduct(null);
       } else {
         logger.info('Fetched product data:', {
           id: data.id,

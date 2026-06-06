@@ -6,6 +6,7 @@ import { createClient, createServiceClient, isSupabaseServiceConfigured } from '
 import { getSessionWithRole } from '@/lib/auth/server-role';
 import { logger } from '@/lib/logger';
 import { getProductDisplayImage } from '@/lib/image-utils';
+import { filterPubliclyVisibleProducts, isPubliclyVisibleProduct } from '@/lib/product-visibility';
 import { classifyProductTax, TaxClassificationError, type ProductTaxClassification } from '@/lib/ai/tax-classification';
 
 const HANDLE_MAX_LENGTH = 60;
@@ -303,6 +304,7 @@ export async function GET(request: NextRequest) {
     const include_options = searchParams.get('include_options') === 'true';
 
     const { supabase: authClient, role } = await getSessionWithRole(request);
+    const isPrivilegedRequest = Boolean(role && ADMIN_ROLES.has(role));
     const supabase = role && ADMIN_ROLES.has(role) && isSupabaseServiceConfigured
       ? createServiceClient()
       : authClient ?? await createClient();
@@ -338,6 +340,10 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         }
         product = list[0];
+      }
+
+      if (!isPrivilegedRequest && !isPubliclyVisibleProduct(product)) {
+        return NextResponse.json({ error: 'Product not found' }, { status: 404 });
       }
 
       // Get variants if requested (skip if table doesn't exist)
@@ -489,14 +495,16 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      const visibleProducts = isPrivilegedRequest ? products : filterPubliclyVisibleProducts(products);
+
       return jsonWithCache({
         success: true,
-        data: products.map(normalizeProductRecord),
+        data: visibleProducts.map(normalizeProductRecord),
         pagination: {
           page,
           limit,
-          total: count || 0,
-          pages: Math.ceil((count || 0) / limit)
+          total: isPrivilegedRequest ? count || 0 : visibleProducts.length,
+          pages: Math.ceil((isPrivilegedRequest ? count || 0 : visibleProducts.length) / limit)
         },
         warnings: warnings.length ? warnings : undefined
       }, PUBLIC_PRODUCTS_CACHE_CONTROL);

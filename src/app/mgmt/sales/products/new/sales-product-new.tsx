@@ -211,8 +211,12 @@ export default function NewProductPage() {
 
         const newProductData = {
             ...data,
+            title: data.name,
+            vendor: data.brand,
+            product_type: data.category,
             gstRate: data.gstRate ? parseFloat(data.gstRate) : undefined,
             image: imagePreview || '',
+            images: [imagePreview, ...additionalImages].filter(Boolean),
             additional_images: additionalImages,
             specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
           installation_applicable: data.installation_applicable,
@@ -222,8 +226,15 @@ export default function NewProductPage() {
             reviewCount: 0,
         };
         
-        const { error } = await supabase.from('products').insert(newProductData);
-        if (error) throw error;
+        const response = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newProductData),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to create product');
+        }
         
         toast({
             title: "Product Created",

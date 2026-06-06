@@ -4,8 +4,31 @@ import { createClient, createServiceClient, isSupabaseServiceConfigured } from '
 import { getSessionWithRole } from '@/lib/auth/server-role';
 import { logger } from '@/lib/logger';
 import { getProductDisplayImage } from '@/lib/image-utils';
+import { classifyProductTax, TaxClassificationError } from '@/lib/ai/tax-classification';
 
 const ADMIN_ROLES = new Set(['admin', 'manager']);
+
+function pickFirst(...values: unknown[]) {
+  return values.find((value) => {
+    if (typeof value === 'string') return value.trim().length > 0;
+    return value !== undefined && value !== null;
+  });
+}
+
+function taxErrorResponse(error: unknown) {
+  if (error instanceof TaxClassificationError) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: error.statusCode }
+    );
+  }
+
+  logger.error('product_patch_tax_classification_unhandled', { error });
+  return NextResponse.json(
+    { success: false, error: 'Tax classification failed' },
+    { status: 502 }
+  );
+}
 
 // Update individual product (PATCH)
 export async function PATCH(
@@ -37,6 +60,27 @@ export async function PATCH(
 
     // Parse request body
     const updateData = await request.json();
+
+    const { data: existingProduct, error: existingProductError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .maybeSingle();
+
+    if (existingProductError) {
+      logger.error('product_patch_existing_fetch_failed', { productId, error: existingProductError.message });
+      return NextResponse.json(
+        { success: false, error: 'Failed to load existing product' },
+        { status: 500 }
+      );
+    }
+
+    if (!existingProduct) {
+      return NextResponse.json(
+        { success: false, error: 'Product not found' },
+        { status: 404 }
+      );
+    }
     
     // Media validation gatekeeper check
     const targetStatus = updateData.status;
@@ -47,11 +91,6 @@ export async function PATCH(
         const normalizedImages = updateData.images.map((img: any) => typeof img === 'string' ? img : img?.url).filter(Boolean);
         activeImagesCount = normalizedImages.length;
       } else {
-        const { data: existingProduct } = await supabase
-          .from('products')
-          .select('images')
-          .eq('id', productId)
-          .single();
         activeImagesCount = Array.isArray(existingProduct?.images) ? existingProduct.images.length : 0;
       }
 
@@ -62,6 +101,36 @@ export async function PATCH(
           { status: 422 }
         );
       }
+    }
+
+    const mergedProductForTax = { ...existingProduct, ...updateData };
+    try {
+      const taxClassification = await classifyProductTax({
+        title: pickFirst(mergedProductForTax.title, mergedProductForTax.name),
+        description: mergedProductForTax.description,
+        category: mergedProductForTax.category,
+        productType: mergedProductForTax.product_type,
+        targetIndustry: pickFirst(
+          mergedProductForTax.target_industry,
+          mergedProductForTax.industry,
+          mergedProductForTax.industryType
+        ),
+        brand: pickFirst(mergedProductForTax.brand, mergedProductForTax.vendor),
+        modelNumber: mergedProductForTax.model_number,
+        specifications: mergedProductForTax.specifications,
+      });
+      updateData.hsn_code = taxClassification.hsn_code;
+      updateData.gst_rate = taxClassification.gst_rate;
+      updateData.tax_ai_confidence = taxClassification.confidence_score;
+      updateData.tax_ai_justification = taxClassification.justification;
+      updateData.tax_ai_model = 'gemini-2.5-flash-lite';
+      updateData.tax_ai_classified_at = new Date().toISOString();
+      updateData.tax_ai_requested_by = session.user.id;
+      updateData.tax_ai_reviewed = false;
+      updateData.tax_ai_reviewed_by = null;
+      updateData.tax_ai_reviewed_at = null;
+    } catch (error) {
+      return taxErrorResponse(error);
     }
 
     logger.info('product_update_request', { 

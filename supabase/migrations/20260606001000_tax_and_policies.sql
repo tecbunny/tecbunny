@@ -84,35 +84,90 @@ SELECT '8544', id, 18.00, 'Insulated wire, cable and other conductors' FROM publ
 ON CONFLICT (code) DO NOTHING;
 
 -- 7. Seed default settings keys
-INSERT INTO public.settings (key, value, description, updated_at)
-VALUES
+ALTER TABLE public.settings
+  ADD COLUMN IF NOT EXISTS description TEXT,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+WITH seed_settings(key, value_text, description, updated_at) AS (
+  VALUES
   ('phone', '+91 96041 36010', 'Primary Support Phone Number', NOW()),
   ('support_email', 'support@tecbunny.com', 'Primary Support Email Address', NOW()),
   ('whatsapp_template_string', 'https://wa.me/919604136010', 'WhatsApp Contact Quick Link', NOW()),
   ('facebook_pixel_id', '1234567890', 'Facebook Tracking Pixel ID', NOW()),
   ('default_gst_rate', '18.00', 'Standard fallback GST percentage rate', NOW())
+)
+INSERT INTO public.settings (key, value, description, updated_at)
+SELECT key::text, to_json(value_text::text), description::text, updated_at
+FROM seed_settings
 ON CONFLICT (key) DO NOTHING;
 
 -- 8. Populate policies table from page_content table if it exists
 DO $$
+DECLARE
+  key_expr TEXT;
+  title_expr TEXT;
+  content_expr TEXT;
+  status_expr TEXT;
+  created_expr TEXT;
+  updated_expr TEXT;
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'page_content') THEN
-    INSERT INTO public.policies (key, title, content, is_published, created_at, updated_at)
-    SELECT 
-      COALESCE(page_key, key),
-      title,
-      content::jsonb,
-      CASE WHEN status = 'published' THEN true ELSE false END,
-      created_at,
-      updated_at
-    FROM public.page_content
-    WHERE page_key IN ('privacy_policy', 'terms_of_service', 'refund_cancellation_policy', 'shipping_policy', 'return_policy')
-       OR key IN ('privacy_policy', 'terms_of_service', 'refund_cancellation_policy', 'shipping_policy', 'return_policy')
-    ON CONFLICT (key) DO UPDATE SET
-      title = EXCLUDED.title,
-      content = EXCLUDED.content,
-      is_published = EXCLUDED.is_published,
-      updated_at = EXCLUDED.updated_at;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'page_content' AND column_name = 'page_key') THEN
+      key_expr := 'page_key';
+    ELSIF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'page_content' AND column_name = 'key') THEN
+      key_expr := '"key"';
+    ELSE
+      key_expr := NULL;
+    END IF;
+
+    IF key_expr IS NOT NULL THEN
+      title_expr := CASE
+        WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'page_content' AND column_name = 'title')
+          THEN 'COALESCE(title::text, ' || key_expr || '::text)'
+        ELSE key_expr || '::text'
+      END;
+
+      content_expr := CASE
+        WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'page_content' AND column_name = 'content')
+          THEN 'to_jsonb(content)'
+        ELSE '''{}''::jsonb'
+      END;
+
+      status_expr := CASE
+        WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'page_content' AND column_name = 'status')
+          THEN 'CASE WHEN COALESCE(status::text, ''published'') = ''published'' THEN true ELSE false END'
+        ELSE 'true'
+      END;
+
+      created_expr := CASE
+        WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'page_content' AND column_name = 'created_at')
+          THEN 'COALESCE(created_at, NOW())'
+        ELSE 'NOW()'
+      END;
+
+      updated_expr := CASE
+        WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'page_content' AND column_name = 'updated_at')
+          THEN 'COALESCE(updated_at, NOW())'
+        ELSE 'NOW()'
+      END;
+
+      EXECUTE '
+        INSERT INTO public.policies (key, title, content, is_published, created_at, updated_at)
+        SELECT
+          ' || key_expr || '::text,
+          ' || title_expr || ',
+          ' || content_expr || ',
+          ' || status_expr || ',
+          ' || created_expr || ',
+          ' || updated_expr || '
+        FROM public.page_content
+        WHERE ' || key_expr || '::text IN (''privacy_policy'', ''terms_of_service'', ''refund_cancellation_policy'', ''shipping_policy'', ''return_policy'')
+        ON CONFLICT (key) DO UPDATE SET
+          title = EXCLUDED.title,
+          content = EXCLUDED.content,
+          is_published = EXCLUDED.is_published,
+          updated_at = EXCLUDED.updated_at';
+    END IF;
   END IF;
 END $$;
 

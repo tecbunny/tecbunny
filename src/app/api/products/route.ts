@@ -6,6 +6,7 @@ import { createClient, createServiceClient, isSupabaseServiceConfigured } from '
 import { getSessionWithRole } from '@/lib/auth/server-role';
 import { logger } from '@/lib/logger';
 import { getProductDisplayImage } from '@/lib/image-utils';
+import { classifyProductTax, TaxClassificationError, type ProductTaxClassification } from '@/lib/ai/tax-classification';
 
 const HANDLE_MAX_LENGTH = 60;
 const PUBLIC_PRODUCTS_CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalidate=900';
@@ -36,6 +37,11 @@ const PUBLIC_PRODUCT_COLUMNS = [
   'hsncode',
   'hsn',
   'hsn_sac',
+  'gst_rate',
+  'gst_percentage',
+  'tax_ai_confidence',
+  'tax_ai_justification',
+  'tax_ai_classified_at',
   'mrp',
   'maximum_retail_price',
   'list_price',
@@ -75,6 +81,7 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   seo_title: ['seo_title', 'meta_title'],
   seo_description: ['seo_description', 'meta_description'],
   hsnCode: ['hsn_code', 'hsncode'],
+  gstRate: ['gst_rate', 'gst_percentage'],
   product_url: ['product_url'],
   mrp: ['mrp', 'maximum_retail_price', 'list_price'],
   price: ['price', 'selling_price', 'unit_price'],
@@ -196,6 +203,60 @@ function buildPublicProductSelect(columns: Set<string> | null) {
     .filter((column) => columns.has(column));
 
   return requestedColumns.length > 0 ? requestedColumns.join(',') : '*';
+}
+
+function pickFirst(...values: unknown[]) {
+  return values.find((value) => {
+    if (typeof value === 'string') return value.trim().length > 0;
+    return value !== undefined && value !== null;
+  });
+}
+
+function stripUnknownPayloadColumns(
+  payload: Record<string, any>,
+  columns: Set<string> | null,
+  warnings: string[]
+) {
+  if (!columns) return;
+
+  for (const key of Object.keys(payload)) {
+    if (!columns.has(key)) {
+      delete payload[key];
+      warnings.push(`${key} column missing; ignored`);
+    }
+  }
+}
+
+function applyTaxClassificationToPayload(
+  payload: Record<string, any>,
+  classification: ProductTaxClassification,
+  userId: string
+) {
+  payload.hsnCode = classification.hsn_code;
+  payload.gstRate = classification.gst_rate;
+  payload.tax_ai_confidence = classification.confidence_score;
+  payload.tax_ai_justification = classification.justification;
+  payload.tax_ai_model = 'gemini-2.5-flash-lite';
+  payload.tax_ai_classified_at = new Date().toISOString();
+  payload.tax_ai_reviewed = false;
+  payload.tax_ai_reviewed_by = null;
+  payload.tax_ai_reviewed_at = null;
+  payload.tax_ai_requested_by = userId;
+}
+
+function taxErrorResponse(error: unknown, correlationId?: string) {
+  if (error instanceof TaxClassificationError) {
+    return NextResponse.json(
+      { error: error.message, correlationId },
+      { status: error.statusCode }
+    );
+  }
+
+  logger.error('products.tax_classification_unhandled', { correlationId, error });
+  return NextResponse.json(
+    { error: 'Tax classification failed', correlationId },
+    { status: 502 }
+  );
 }
 
 async function ensureProductColumns(supabase: any): Promise<Set<string> | null> {
@@ -466,14 +527,21 @@ export async function POST(request: NextRequest) {
     };
     const { 
       handle, 
+      name,
       title, 
       description, 
       vendor, 
+      brand,
       product_type, 
       category,
+      target_industry,
+      industry,
+      industryType,
       tags, 
       status, 
       images, 
+      image,
+      additional_images,
       seo_title, 
       seo_description,
       options,
@@ -482,6 +550,9 @@ export async function POST(request: NextRequest) {
       price,
       product_url,
       hsnCode,
+      gstRate,
+      specifications,
+      model_number,
       stock_quantity,
       min_stock_level,
       max_stock_level,
@@ -489,9 +560,15 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Normalize images to an array of URL strings (supports legacy object shape {url})
-    const normalizedImages = Array.isArray(images)
-      ? images.map((img: any) => typeof img === 'string' ? img : img?.url).filter(Boolean)
-      : [];
+    const normalizedImages = [
+      ...(Array.isArray(images)
+        ? images.map((img: any) => typeof img === 'string' ? img : img?.url).filter(Boolean)
+        : []),
+      ...(typeof image === 'string' && image.trim() ? [image.trim()] : []),
+      ...(Array.isArray(additional_images)
+        ? additional_images.map((img: any) => typeof img === 'string' ? img : img?.url).filter(Boolean)
+        : []),
+    ];
 
     const { supabase: authClient, session, role } = await getSessionWithRole(request);
     if (!session) {
@@ -516,7 +593,8 @@ export async function POST(request: NextRequest) {
 
     // Create product; now that handle is available, prefer upsert on handle (or closest alias), with safe fallback
     let product: any = null;
-    const normalizedTitle = typeof title === 'string' && title.trim() ? title.trim() : undefined;
+    const normalizedTitleSource = pickFirst(title, name);
+    const normalizedTitle = typeof normalizedTitleSource === 'string' && normalizedTitleSource.trim() ? normalizedTitleSource.trim() : undefined;
     const normalizedHandle = typeof handle === 'string' && handle.trim() ? handle.trim() : undefined;
     const normalizedProductType = typeof product_type === 'string' && product_type.trim() ? product_type.trim() : undefined;
     const normalizedCategory = typeof category === 'string' && category.trim() ? category.trim() : undefined;
@@ -530,15 +608,19 @@ export async function POST(request: NextRequest) {
       handle: derivedHandle,
       title: normalizedTitle,
       description,
-      vendor,
+      vendor: pickFirst(vendor, brand),
       product_type: normalizedProductType,
       category: resolvedCategory,
       tags,
       status: status || 'active',
       images: normalizedImages,
+      image: normalizedImages[0],
+      additional_images: normalizedImages.slice(1),
       seo_title,
       seo_description,
       product_url,
+      specifications,
+      model_number,
       created_by: user.id,
       updated_by: user.id,
     };
@@ -567,6 +649,9 @@ export async function POST(request: NextRequest) {
     if (hsnCode !== undefined) {
       basePayload.hsnCode = hsnCode;
     }
+    if (gstRate !== undefined) {
+      basePayload.gstRate = gstRate;
+    }
 
     Object.keys(basePayload).forEach((key) => {
       if (basePayload[key] === undefined) {
@@ -579,6 +664,22 @@ export async function POST(request: NextRequest) {
     const columnSet = cols ?? null;
     if (!cols) {
       postWarnings.push('product schema metadata unavailable; attempted insert without column validation');
+    }
+
+    try {
+      const taxClassification = await classifyProductTax({
+        title: normalizedTitle,
+        description,
+        category: resolvedCategory,
+        productType: normalizedProductType,
+        targetIndustry: pickFirst(target_industry, industry, industryType),
+        brand: pickFirst(brand, vendor),
+        modelNumber: model_number,
+        specifications,
+      }, request.headers.get('x-correlation-id') || undefined);
+      applyTaxClassificationToPayload(basePayload, taxClassification, user.id);
+    } catch (error) {
+      return taxErrorResponse(error, request.headers.get('x-correlation-id') || undefined);
     }
 
     const applyAlias = (inputKey: string, warningKey?: string) => {
@@ -602,6 +703,7 @@ export async function POST(request: NextRequest) {
 
     ['handle', 'title', 'description', 'vendor', 'product_type', 'category', 'images', 'seo_title', 'seo_description', 'mrp', 'price', 'product_url'].forEach((key) => applyAlias(key));
     applyAlias('hsnCode', 'hsn_code');
+    applyAlias('gstRate', 'gst_rate');
 
     if (cols) {
       if (Object.prototype.hasOwnProperty.call(basePayload, 'tags') && !cols.has('tags')) {
@@ -640,6 +742,7 @@ export async function POST(request: NextRequest) {
         delete basePayload.product_type;
         postWarnings.push('product_type column missing; product type ignored');
       }
+      stripUnknownPayloadColumns(basePayload, cols, postWarnings);
     }
 
     const handleColumn = resolveColumnName(columnSet, 'handle');
@@ -857,6 +960,22 @@ export async function PUT(request: NextRequest) {
       : authClient;
     const user = session.user;
 
+    const { data: existingProduct, error: existingProductError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (existingProductError) {
+      logger.error('product_update_existing_fetch_failed', { correlationId, id, error: existingProductError.message });
+      return NextResponse.json({ error: 'Failed to load existing product', correlationId }, { status: 500, headers: { 'x-correlation-id': correlationId } });
+    }
+
+    if (!existingProduct) {
+      logger.warn('product_update_existing_not_found', { correlationId, id });
+      return NextResponse.json({ error: 'Product not found', correlationId }, { status: 404, headers: { 'x-correlation-id': correlationId } });
+    }
+
     // Media validation gatekeeper check
     const targetStatus = updateData.status;
     if (targetStatus === 'active' || targetStatus === 'published') {
@@ -866,12 +985,6 @@ export async function PUT(request: NextRequest) {
         const normalizedImages = images.map((img: any) => typeof img === 'string' ? img : img?.url).filter(Boolean);
         activeImagesCount = normalizedImages.length;
       } else {
-        // Query database for existing images
-        const { data: existingProduct } = await supabase
-          .from('products')
-          .select('images')
-          .eq('id', id)
-          .single();
         activeImagesCount = Array.isArray(existingProduct?.images) ? existingProduct.images.length : 0;
       }
 
@@ -926,6 +1039,27 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    const mergedProductForTax = { ...existingProduct, ...updateData };
+    try {
+      const taxClassification = await classifyProductTax({
+        title: pickFirst(mergedProductForTax.title, mergedProductForTax.name),
+        description: mergedProductForTax.description,
+        category: mergedProductForTax.category,
+        productType: mergedProductForTax.product_type,
+        targetIndustry: pickFirst(
+          mergedProductForTax.target_industry,
+          mergedProductForTax.industry,
+          mergedProductForTax.industryType
+        ),
+        brand: pickFirst(mergedProductForTax.brand, mergedProductForTax.vendor),
+        modelNumber: mergedProductForTax.model_number,
+        specifications: mergedProductForTax.specifications,
+      }, correlationId);
+      applyTaxClassificationToPayload(updateData as Record<string, any>, taxClassification, user.id);
+    } catch (error) {
+      return taxErrorResponse(error, correlationId);
+    }
+
     const updateColumns = updateCols ? new Set<string>(updateCols) : null;
     Object.keys(COLUMN_ALIASES).forEach((inputKey) => {
       if (Object.prototype.hasOwnProperty.call(updateData, inputKey)) {
@@ -946,6 +1080,8 @@ export async function PUT(request: NextRequest) {
 
     // Remove undefined keys to avoid PostgREST rejecting explicit undefined
     Object.keys(updateData).forEach(k => (updateData as any)[k] === undefined && delete (updateData as any)[k]);
+
+    stripUnknownPayloadColumns(updateData as Record<string, any>, updateColumns, putWarnings);
 
   logger.debug('product_update_payload', { correlationId, id, keys: Object.keys(updateData), imagesCount: (updateData as any).images?.length, tagsType: typeof (updateData as any).tags });
 

@@ -4,6 +4,7 @@ import { createClient, createServiceClient, isSupabaseServiceConfigured } from '
 import { isAdmin } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
 import { getProductDisplayImage } from '@/lib/image-utils';
+export { POST, PUT } from '@/app/api/products/route';
 
 // export const dynamic = 'force-dynamic';
 

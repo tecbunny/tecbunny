@@ -274,21 +274,26 @@ export default function EditProductPage() {
         const updateData = {
             ...data,
             title: data.name, // Map name to title for database compatibility
+            vendor: data.brand,
+            product_type: data.category,
             gstRate: data.gstRate ? parseFloat(data.gstRate) : undefined,
             image: imagePreview || product.image,
+            images: [imagePreview || product.image, ...additionalImages].filter(Boolean),
             additional_images: additionalImages,
             specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
           installation_applicable: data.installation_applicable,
           installation_charge: data.installation_charge ?? 0,
         };
         
-        const { error } = await supabase
-            .from('products')
-            .update(updateData)
-            .eq('id', product.id);
+        const response = await fetch('/api/products', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: product.id, ...updateData }),
+        });
+        const result = await response.json().catch(() => ({}));
 
-        if (error) {
-            throw new Error(`Failed to update product: ${error.message}`);
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to update product');
         }
         
         toast({

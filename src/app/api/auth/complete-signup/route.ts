@@ -109,17 +109,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Delete the verified OTP record immediately to prevent replay attacks
-    const { error: deleteOtpError } = await supabaseAdmin
+    // Atomically consume the verified OTP record to prevent concurrent replay.
+    const { data: consumedOtpRecord, error: consumeOtpError } = await supabaseAdmin
       .from('otp_verifications')
       .delete()
-      .eq('id', otpId);
+      .eq('id', otpId)
+      .eq('verified', true)
+      .gte('verified_at', new Date(Date.now() - 15 * 60 * 1000).toISOString())
+      .select('id')
+      .maybeSingle();
 
-    if (deleteOtpError) {
-      logger.error('complete_signup.otp_cleanup_failed', { error: deleteOtpError, otpId });
+    if (consumeOtpError) {
+      logger.error('complete_signup.otp_consume_failed', { error: consumeOtpError, otpId });
       return NextResponse.json(
         { error: 'Internal system error clearing session token' },
         { status: 500 }
+      );
+    }
+
+    if (!consumedOtpRecord) {
+      logger.warn('complete_signup.otp_already_consumed', { otpId });
+      return NextResponse.json(
+        { error: 'OTP verification session has already been used. Please request a new code.' },
+        { status: 400 }
       );
     }
 

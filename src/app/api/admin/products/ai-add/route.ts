@@ -18,6 +18,7 @@ import { logger } from '@/lib/logger';
 import { createServiceClient, isSupabaseServiceConfigured, createClient } from '@/lib/supabase/server';
 import { getSessionWithRole } from '@/lib/auth/server-role';
 import { getSystemPrompt } from '@/lib/ai/prompts';
+import { classifyProductTax, TaxClassificationError } from '@/lib/ai/tax-classification';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -37,6 +38,21 @@ const NOT_NULL_DEFAULTS: Record<string, unknown> = {
   popularity: 0,
   rating: 0,
 };
+
+function taxErrorResponse(error: unknown, correlationId: string) {
+  if (error instanceof TaxClassificationError) {
+    return NextResponse.json(
+      { error: error.message, correlationId },
+      { status: error.statusCode, headers: { 'x-correlation-id': correlationId } }
+    );
+  }
+
+  logger.error('ai_product_ingestion.tax_classification_unhandled', { correlationId, error });
+  return NextResponse.json(
+    { error: 'Tax classification failed', correlationId },
+    { status: 502, headers: { 'x-correlation-id': correlationId } }
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Gemini system prompt for supplier text → product JSON
@@ -288,6 +304,31 @@ export async function POST(request: NextRequest) {
     };
 
     // ── 8. Strip any AI hallucinated columns not in the live schema ───────────
+    try {
+      const taxClassification = await classifyProductTax({
+        title: payload.title ?? payload.name,
+        description: payload.description,
+        category: payload.category,
+        productType: payload.product_type,
+        targetIndustry: payload.target_industry ?? payload.industry,
+        brand: payload.brand ?? payload.vendor,
+        modelNumber: payload.model_number,
+        specifications: payload.specifications,
+      }, correlationId);
+      payload.hsn_code = taxClassification.hsn_code;
+      payload.gst_rate = taxClassification.gst_rate;
+      payload.tax_ai_confidence = taxClassification.confidence_score;
+      payload.tax_ai_justification = taxClassification.justification;
+      payload.tax_ai_model = 'gemini-2.5-flash-lite';
+      payload.tax_ai_classified_at = new Date().toISOString();
+      payload.tax_ai_requested_by = session.user.id;
+      payload.tax_ai_reviewed = false;
+      payload.tax_ai_reviewed_by = null;
+      payload.tax_ai_reviewed_at = null;
+    } catch (error) {
+      return taxErrorResponse(error, correlationId);
+    }
+
     const { clean: finalPayload, stripped: strippedCols } = stripUnknownColumns(payload, dbColumns);
 
     if (strippedCols.length) {

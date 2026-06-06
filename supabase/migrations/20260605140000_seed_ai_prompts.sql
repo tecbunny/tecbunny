@@ -2,8 +2,12 @@
 -- Date: 2026-06-05
 -- Purpose: Seeds the default prompt configurations into the settings table so that they are no longer hardcoded in Next.js codebase.
 
-INSERT INTO public.settings (key, value, description, updated_at)
-VALUES
+ALTER TABLE public.settings
+  ADD COLUMN IF NOT EXISTS description TEXT,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+WITH seed_settings(key, value_text, description, updated_at) AS (
+  VALUES
 (
   'ai_prompt_research',
   'You are a knowledgeable, professional AI research assistant. Your goal is to provide comprehensive, accurate, and actionable information in a friendly, conversational tone. Focus on being helpful and informative rather than sales-oriented.
@@ -220,6 +224,10 @@ RULES:
   'Raw Product Ingestion Engine Prompt',
   NOW()
 )
+)
+INSERT INTO public.settings (key, value, description, updated_at)
+SELECT key::text, to_json(value_text::text), description::text, updated_at
+FROM seed_settings
 ON CONFLICT (key)
 DO UPDATE SET
   value = EXCLUDED.value,

@@ -409,7 +409,10 @@ export default function SiteSettingsPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
         logger.error('Upload response error:', { error: errorData });
-        throw new Error(errorData.error || `Upload failed: ${response.statusText}`);
+        const errMsg = typeof errorData.error === 'object' && errorData.error?.message
+          ? errorData.error.message
+          : (typeof errorData.error === 'string' ? errorData.error : `Upload failed: ${response.statusText}`);
+        throw new Error(errMsg);
       }
       
       const data = await response.json();

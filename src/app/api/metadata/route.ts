@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 
-import { createServiceClient , isSupabaseServiceConfigured , createClient } from '@/lib/supabase/server';
+import { createServiceClient, isSupabaseServiceConfigured, createClient } from '@/lib/supabase/server';
+
+const BRAND_LOGO_URL = 'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/TecBunny%20Solution/TECBUNNY_SOLUTIONS_PVT_LTD-removebg-preview.png';
 
 export async function GET() {
   try {
@@ -23,10 +25,21 @@ export async function GET() {
       settingsMap.set(setting.key, setting.value);
     });
     
+    const rawLogoUrl = settingsMap.get('logoUrl');
+    let logoUrl = BRAND_LOGO_URL;
+    if (rawLogoUrl && typeof rawLogoUrl === 'string') {
+      const trimmed = rawLogoUrl.trim();
+      if (trimmed && trimmed !== 'logo.png' && trimmed !== '/logo.png') {
+        logoUrl = trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/')
+          ? trimmed
+          : '/' + trimmed;
+      }
+    }
+
     const metadata = {
       siteName: settingsMap.get('siteName') || 'TecBunny - Your Tech Store',
       description: settingsMap.get('siteDescription') || 'Discover the latest technology with beautiful design and exceptional user experience.',
-      logoUrl: settingsMap.get('logoUrl') || '/logo.png',
+      logoUrl,
       faviconUrl: settingsMap.get('faviconUrl') || '/favicon.ico',
     };
     
@@ -39,7 +52,7 @@ export async function GET() {
     return NextResponse.json({
       siteName: 'TecBunny - Your Tech Store',
       description: 'Discover the latest technology with beautiful design and exceptional user experience.',
-      logoUrl: '/logo.png',
+      logoUrl: BRAND_LOGO_URL,
       faviconUrl: '/favicon.ico',
     });
   }

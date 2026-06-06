@@ -1,8 +1,16 @@
 import * as React from 'react';
-import Image from 'next/image';
 
 export const BRAND_LOGO_URL =
   'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/TecBunny%20Solution/TECBUNNY_SOLUTIONS_PVT_LTD-removebg-preview.png';
+
+export function normalizeLogoUrl(url: string | null | undefined): string {
+  if (!url) return BRAND_LOGO_URL;
+  const trimmed = url.trim();
+  if (!trimmed || trimmed === 'logo.png' || trimmed === '/logo.png') return BRAND_LOGO_URL;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  if (trimmed.startsWith('/')) return trimmed;
+  return '/' + trimmed;
+}
 
 interface LogoProps {
   className?: string;
@@ -12,13 +20,13 @@ interface LogoProps {
 }
 
 export function Logo({ className, width = 40, height = 40, alt = 'TecBunny Logo' }: LogoProps) {
-  const [logoSrc, setLogoSrc] = React.useState<string>('/logo.png');
+  const [logoSrc, setLogoSrc] = React.useState<string>(BRAND_LOGO_URL);
 
   React.useEffect(() => {
     // Read from cache immediately on client mount to avoid layout shift
     const cachedLogo = localStorage.getItem('tecbunny_logo_url');
     if (cachedLogo) {
-      setLogoSrc(cachedLogo);
+      setLogoSrc(normalizeLogoUrl(cachedLogo));
     }
 
     const fetchLogo = async () => {
@@ -26,9 +34,10 @@ export function Logo({ className, width = 40, height = 40, alt = 'TecBunny Logo'
         const res = await fetch('/api/metadata');
         if (res.ok) {
           const data = await res.json();
-          if (data?.logoUrl && data.logoUrl !== (cachedLogo || '/logo.png')) {
-            setLogoSrc(data.logoUrl);
-            localStorage.setItem('tecbunny_logo_url', data.logoUrl);
+          const normUrl = normalizeLogoUrl(data?.logoUrl);
+          if (normUrl && normUrl !== cachedLogo) {
+            setLogoSrc(normUrl);
+            localStorage.setItem('tecbunny_logo_url', normUrl);
           }
         }
       } catch (err) {
@@ -40,13 +49,13 @@ export function Logo({ className, width = 40, height = 40, alt = 'TecBunny Logo'
   }, []);
 
   return (
-    <Image
+    <img
       src={logoSrc}
       alt={alt}
       width={width}
       height={height}
       className={`object-contain ${className ?? ''}`}
-      priority
+      loading="eager"
     />
   );
 }

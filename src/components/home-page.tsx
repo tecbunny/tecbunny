@@ -175,8 +175,13 @@ export default function HomePage() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const hasFinePointer = useFinePointer();
   const [featuredProducts, setFeaturedProducts] = React.useState<DbProduct[]>([]);
-  const [partnerBrands, setPartnerBrands] = React.useState<string[]>([
-    'CP PLUS', 'HIKVISION', 'DAHUA', 'UBIQUITI', 'CISCO', 'TP-LINK'
+  const [partnerBrands, setPartnerBrands] = React.useState<Array<{ name: string; logoUrl: string }>>([
+    { name: 'CP PLUS', logoUrl: '' },
+    { name: 'HIKVISION', logoUrl: '' },
+    { name: 'DAHUA', logoUrl: '' },
+    { name: 'UBIQUITI', logoUrl: '' },
+    { name: 'CISCO', logoUrl: '' },
+    { name: 'TP-LINK', logoUrl: '' },
   ]);
   const [productsLoading, setProductsLoading] = React.useState(true);
   const [productsError, setProductsError] = React.useState<string | null>(null);
@@ -205,10 +210,26 @@ export default function HomePage() {
           const data = await res.json();
           const brandsStr = data?.value;
           if (brandsStr && typeof brandsStr === 'string' && isMounted) {
-            const list = brandsStr
-              .split(',')
-              .map((b: string) => b.trim())
-              .filter(Boolean);
+            const trimmed = brandsStr.trim();
+            let list: Array<{ name: string; logoUrl: string }> = [];
+            if (trimmed.startsWith('[')) {
+              try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) {
+                  list = parsed.map(item => ({
+                    name: typeof item === 'object' && item?.name ? String(item.name) : '',
+                    logoUrl: typeof item === 'object' && item?.logoUrl ? String(item.logoUrl) : '',
+                  }));
+                }
+              } catch (e) {
+                console.error('Failed to parse partnerBrands JSON on home:', e);
+              }
+            } else {
+              list = trimmed
+                .split(',')
+                .map(b => ({ name: b.trim(), logoUrl: '' }))
+                .filter(b => b.name.length > 0);
+            }
             if (list.length > 0) {
               setPartnerBrands(list);
             }
@@ -525,9 +546,19 @@ export default function HomePage() {
             Authorized Solutions & Brand Partnerships
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 md:gap-x-16 opacity-65">
-            {partnerBrands.map((brand) => (
-              <span key={brand} className="text-sm font-bold tracking-widest text-slate-400 font-tech hover:text-cyan-400 transition-colors">
-                {brand}
+            {partnerBrands.map((brand, idx) => (
+              <span key={idx} className="flex items-center justify-center transition-all hover:scale-105 duration-200">
+                {brand.logoUrl ? (
+                  <img
+                    src={brand.logoUrl}
+                    alt={brand.name}
+                    className="h-8 md:h-10 w-auto object-contain max-w-[120px] filter brightness-75 contrast-125 hover:brightness-100 transition-all duration-200"
+                  />
+                ) : (
+                  <span className="text-sm font-bold tracking-widest text-slate-400 font-tech hover:text-cyan-400 transition-colors">
+                    {brand.name}
+                  </span>
+                )}
               </span>
             ))}
           </div>

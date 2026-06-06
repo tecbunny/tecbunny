@@ -100,6 +100,10 @@ export async function POST(request: NextRequest) {
       case 'logo':
         logger.debug('upload_variant', { correlationId, variant: 'logo' });
         result = await uploadLogo(file); break;
+      case 'brand':
+        logger.debug('upload_variant', { correlationId, variant: 'brand' });
+        result = await uploadToSupabase(file, 'partner-brands', { publicAccess: true });
+        break;
       case 'product':
         logger.debug('upload_variant', { correlationId, variant: 'product' });
         result = await uploadProductImage(file); break;

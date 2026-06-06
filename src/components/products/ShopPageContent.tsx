@@ -634,7 +634,11 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                   fallbackSize: '400x400',
                 });
                 const basePrice = typeof product.price === 'number' ? product.price : Number(product.price) || 0;
-                const activeTierPrice = (product as any)?.pricing?.tiers?.[0]?.discount ?? basePrice;
+                
+                // Ensure proper numeric parsing to avoid NaN rendering crashes if unstructured tier text leaks through
+                const tierVal = (product as any)?.pricing?.tiers?.[0]?.discount;
+                const activeTierPrice = tierVal != null ? Number(tierVal) || basePrice : basePrice;
+
                 let offerPrice = typeof product.offer_price === 'number' && product.offer_price > 0 && product.offer_price < basePrice
                   ? product.offer_price
                   : null;

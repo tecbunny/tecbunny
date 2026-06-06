@@ -4,6 +4,8 @@ import { createServiceClient, isSupabaseServiceConfigured } from '../supabase/se
 import { logger } from '../logger';
 import { isValidImageUrl } from '../image-utils';
 
+import pLimit from 'p-limit';
+
 const redisUrl = process.env.REDIS_URL;
 
 export let imageJobsQueue: any;
@@ -24,9 +26,11 @@ async function processCleanupJob(job: Job) {
 
   let updatedCount = 0;
   let cleanedImages = 0;
-  const cleanupResults = [];
+  const cleanupResults: any[] = [];
 
-  for (const product of products || []) {
+  const limit = pLimit(5);
+
+  const cleanupTasks = (products || []).map((product) => limit(async () => {
     let needsUpdate = false;
     const cleanupInfo: any = {
       id: product.id,
@@ -90,7 +94,9 @@ async function processCleanupJob(job: Job) {
     if (needsUpdate || cleanupInfo.error) {
       cleanupResults.push(cleanupInfo);
     }
-  }
+  }));
+
+  await Promise.all(cleanupTasks);
 
   return {
     totalProducts: products?.length || 0,

@@ -30,6 +30,13 @@ function taxErrorResponse(error: unknown) {
   );
 }
 
+function getUuidAuditUserId(userId: string | undefined): string | null {
+  if (!userId || userId === 'superadmin-root-id') return null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)
+    ? userId
+    : null;
+}
+
 // Update individual product (PATCH)
 export async function PATCH(
   request: NextRequest,
@@ -57,6 +64,7 @@ export async function PATCH(
 
     // Use service client for admin operations
     const supabase = isSupabaseServiceConfigured ? createServiceClient() : authClient;
+    const auditUserId = getUuidAuditUserId(session.user.id);
 
     // Parse request body
     const updateData = await request.json();
@@ -125,7 +133,9 @@ export async function PATCH(
       updateData.tax_ai_justification = taxClassification.justification;
       updateData.tax_ai_model = 'gemini-2.5-flash-lite';
       updateData.tax_ai_classified_at = new Date().toISOString();
-      updateData.tax_ai_requested_by = session.user.id;
+      if (auditUserId) {
+        updateData.tax_ai_requested_by = auditUserId;
+      }
       updateData.tax_ai_reviewed = false;
       updateData.tax_ai_reviewed_by = null;
       updateData.tax_ai_reviewed_at = null;

@@ -38,6 +38,13 @@ const restoreSchema = z.object({
   id: z.string().uuid('Product ID must be a valid UUID'),
 });
 
+function getUuidAuditUserId(userId: string | undefined): string | null {
+  if (!userId || userId === 'superadmin-root-id') return null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)
+    ? userId
+    : null;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Auth + client helper
 // ─────────────────────────────────────────────────────────────────────────────
@@ -68,6 +75,7 @@ export async function POST(request: NextRequest) {
     const auth = await getAdminClient(request);
     if ('authError' in auth) return auth.authError;
     const { supabase, session } = auth;
+    const auditUserId = getUuidAuditUserId(session.user.id);
 
     const body = await request.json().catch(() => ({}));
     const validation = archiveSchema.safeParse(body);
@@ -86,7 +94,7 @@ export async function POST(request: NextRequest) {
     // ── Call the atomic PostgreSQL archive function ────────────────────────────
     const { data: rpcResult, error: rpcError } = await supabase.rpc('soft_delete_product', {
       p_product_id: id,
-      p_deleted_by: session.user.id,
+      p_deleted_by: auditUserId,
       p_reason: reason,
     });
 
@@ -118,9 +126,9 @@ export async function POST(request: NextRequest) {
           is_deleted: true,
           status: 'archived',
           deleted_at: new Date().toISOString(),
-          deleted_by: session.user.id,
+          deleted_by: auditUserId,
           archived_at: new Date().toISOString(),
-          archived_by: session.user.id,
+          archived_by: auditUserId,
           archive_reason: reason,
           updated_at: new Date().toISOString(),
         })
@@ -174,6 +182,7 @@ export async function DELETE(request: NextRequest) {
     const auth = await getAdminClient(request);
     if ('authError' in auth) return auth.authError;
     const { supabase, session } = auth;
+    const auditUserId = getUuidAuditUserId(session.user.id);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -185,7 +194,7 @@ export async function DELETE(request: NextRequest) {
 
     const { data: rpcResult, error: rpcError } = await supabase.rpc('soft_delete_product', {
       p_product_id: id,
-      p_deleted_by: session.user.id,
+      p_deleted_by: auditUserId,
       p_reason: reason,
     });
 
@@ -197,7 +206,7 @@ export async function DELETE(request: NextRequest) {
           is_deleted: true,
           status: 'archived',
           deleted_at: new Date().toISOString(),
-          deleted_by: session.user.id,
+          deleted_by: auditUserId,
           archive_reason: reason,
           updated_at: new Date().toISOString(),
         })
@@ -240,6 +249,7 @@ export async function PUT(request: NextRequest) {
     const auth = await getAdminClient(request);
     if ('authError' in auth) return auth.authError;
     const { supabase, session } = auth;
+    const auditUserId = getUuidAuditUserId(session.user.id);
 
     const body = await request.json().catch(() => ({}));
     const validation = restoreSchema.safeParse(body);
@@ -257,7 +267,7 @@ export async function PUT(request: NextRequest) {
 
     const { data: rpcResult, error: rpcError } = await supabase.rpc('restore_product', {
       p_product_id: id,
-      p_restored_by: session.user.id,
+      p_restored_by: auditUserId,
     });
 
     if (rpcError) {
@@ -275,7 +285,7 @@ export async function PUT(request: NextRequest) {
           archived_by: null,
           archive_reason: null,
           updated_at: new Date().toISOString(),
-          updated_by: session.user.id,
+          updated_by: auditUserId,
         })
         .eq('id', id)
         .select('id, title, status, updated_at')

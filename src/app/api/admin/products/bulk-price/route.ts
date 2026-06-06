@@ -34,6 +34,13 @@ const MRP_BUFFER = 1.15;
 /** Max products processed per batch request */
 const MAX_BATCH_SIZE = 500;
 
+function getUuidAuditUserId(userId: string | undefined): string | null {
+  if (!userId || userId === 'superadmin-root-id') return null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)
+    ? userId
+    : null;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Psychological rounding engine
 //
@@ -155,8 +162,11 @@ export async function PATCH(request: NextRequest) {
     // Pass through any other valid fields from caller
     Object.assign(updateFields, rest);
 
+    const auditUserId = getUuidAuditUserId(session.user.id);
     updateFields.updated_at = new Date().toISOString();
-    updateFields.updated_by = session.user.id;
+    if (auditUserId) {
+      updateFields.updated_by = auditUserId;
+    }
 
     // Remove undefined fields
     for (const k of Object.keys(updateFields)) {
@@ -263,6 +273,7 @@ export async function POST(request: NextRequest) {
 
     // ── Batch upsert using individual updates (Supabase JS SDK lacks bulk UPDATE) ──
     const results: { id: string; success: boolean; error?: string }[] = [];
+    const auditUserId = getUuidAuditUserId(session.user.id);
 
     // Process in chunks of 50 to avoid overwhelming the connection pool
     const CHUNK_SIZE = 50;
@@ -271,14 +282,18 @@ export async function POST(request: NextRequest) {
 
       await Promise.all(
         chunk.map(async calc => {
+          const updateFields: Record<string, unknown> = {
+            price: calc.final_price,
+            mrp: calc.mrp,
+            updated_at: new Date().toISOString(),
+          };
+          if (auditUserId) {
+            updateFields.updated_by = auditUserId;
+          }
+
           const { error } = await supabase
             .from('products')
-            .update({
-              price: calc.final_price,
-              mrp: calc.mrp,
-              updated_at: new Date().toISOString(),
-              updated_by: session.user.id,
-            })
+            .update(updateFields)
             .eq('id', calc.id);
 
           results.push({ id: calc.id, success: !error, error: error?.message });

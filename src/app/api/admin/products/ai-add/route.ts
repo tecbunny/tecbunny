@@ -27,6 +27,13 @@ import { classifyProductTax, TaxClassificationError } from '@/lib/ai/tax-classif
 const ADMIN_ROLES = new Set(['admin', 'manager', 'superadmin']);
 const HANDLE_MAX = 60;
 
+function getUuidAuditUserId(userId: string | undefined): string | null {
+  if (!userId || userId === 'superadmin-root-id') return null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)
+    ? userId
+    : null;
+}
+
 /** Fallback values that satisfy every known NOT NULL constraint on public.products */
 const NOT_NULL_DEFAULTS: Record<string, unknown> = {
   status: 'active',
@@ -206,6 +213,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = isSupabaseServiceConfigured ? createServiceClient() : authClient ?? await createClient();
+    const auditUserId = getUuidAuditUserId(session.user.id);
 
     // ── 2. Parse request ─────────────────────────────────────────────────────
     let rawText: string = '';
@@ -299,8 +307,8 @@ export async function POST(request: NextRequest) {
     const payload: Record<string, unknown> = {
       ...withDefaults,
       handle: uniqueHandle,
-      created_by: session.user.id,
-      updated_by: session.user.id,
+      created_by: auditUserId,
+      updated_by: auditUserId,
     };
 
     // ── 8. Strip any AI hallucinated columns not in the live schema ───────────
@@ -321,7 +329,9 @@ export async function POST(request: NextRequest) {
       payload.tax_ai_justification = taxClassification.justification;
       payload.tax_ai_model = 'gemini-2.5-flash-lite';
       payload.tax_ai_classified_at = new Date().toISOString();
-      payload.tax_ai_requested_by = session.user.id;
+      if (auditUserId) {
+        payload.tax_ai_requested_by = auditUserId;
+      }
       payload.tax_ai_reviewed = false;
       payload.tax_ai_reviewed_by = null;
       payload.tax_ai_reviewed_at = null;

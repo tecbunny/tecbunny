@@ -230,7 +230,7 @@ function stripUnknownPayloadColumns(
 function applyTaxClassificationToPayload(
   payload: Record<string, any>,
   classification: ProductTaxClassification,
-  userId: string
+  userId: string | null
 ) {
   payload.hsnCode = classification.hsn_code;
   payload.gstRate = classification.gst_rate;
@@ -241,7 +241,16 @@ function applyTaxClassificationToPayload(
   payload.tax_ai_reviewed = false;
   payload.tax_ai_reviewed_by = null;
   payload.tax_ai_reviewed_at = null;
-  payload.tax_ai_requested_by = userId;
+  if (userId) {
+    payload.tax_ai_requested_by = userId;
+  }
+}
+
+function getUuidAuditUserId(userId: string | undefined): string | null {
+  if (!userId || userId === 'superadmin-root-id') return null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)
+    ? userId
+    : null;
 }
 
 function taxErrorResponse(error: unknown, correlationId?: string) {
@@ -590,6 +599,7 @@ export async function POST(request: NextRequest) {
       ? createServiceClient()
       : authClient;
     const user = session.user;
+    const auditUserId = getUuidAuditUserId(user.id);
 
     // Create product; now that handle is available, prefer upsert on handle (or closest alias), with safe fallback
     let product: any = null;
@@ -621,8 +631,8 @@ export async function POST(request: NextRequest) {
       product_url,
       specifications,
       model_number,
-      created_by: user.id,
-      updated_by: user.id,
+      created_by: auditUserId,
+      updated_by: auditUserId,
     };
 
     if (mrp !== undefined) {
@@ -677,7 +687,7 @@ export async function POST(request: NextRequest) {
         modelNumber: model_number,
         specifications,
       }, request.headers.get('x-correlation-id') || undefined);
-      applyTaxClassificationToPayload(basePayload, taxClassification, user.id);
+      applyTaxClassificationToPayload(basePayload, taxClassification, auditUserId);
     } catch (error) {
       return taxErrorResponse(error, request.headers.get('x-correlation-id') || undefined);
     }
@@ -959,6 +969,7 @@ export async function PUT(request: NextRequest) {
       ? createServiceClient()
       : authClient;
     const user = session.user;
+    const auditUserId = getUuidAuditUserId(user.id);
 
     const { data: existingProduct, error: existingProductError } = await supabase
       .from('products')
@@ -1055,7 +1066,7 @@ export async function PUT(request: NextRequest) {
         modelNumber: mergedProductForTax.model_number,
         specifications: mergedProductForTax.specifications,
       }, correlationId);
-      applyTaxClassificationToPayload(updateData as Record<string, any>, taxClassification, user.id);
+      applyTaxClassificationToPayload(updateData as Record<string, any>, taxClassification, auditUserId);
     } catch (error) {
       return taxErrorResponse(error, correlationId);
     }
@@ -1086,7 +1097,7 @@ export async function PUT(request: NextRequest) {
   logger.debug('product_update_payload', { correlationId, id, keys: Object.keys(updateData), imagesCount: (updateData as any).images?.length, tagsType: typeof (updateData as any).tags });
 
   const updateFields: any = { ...updateData };
-  if (!updateCols || updateCols.has('updated_by')) updateFields.updated_by = user.id;
+  if (auditUserId && (!updateCols || updateCols.has('updated_by'))) updateFields.updated_by = auditUserId;
   if (!updateCols || updateCols.has('updated_at')) updateFields.updated_at = new Date().toISOString();
 
     const { data: product, error } = await supabase

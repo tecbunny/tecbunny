@@ -12,13 +12,8 @@ import {AppProvider} from '../context/AppProvider';
 import {OrderProvider} from '../context/OrderProvider';
 import {ThemeProvider} from '@/components/providers/ThemeProvider';
 import {DeferredFloatingAIAssistant} from '@/components/layout/DeferredFloatingAIAssistant';
-import dynamic from 'next/dynamic';
+import {DeferredRuntimeServices} from '@/components/layout/DeferredRuntimeServices';
 import { SpeedInsights } from "@vercel/speed-insights/next";
-
-const DeferredRuntimeServices = dynamic(
-  () => import('@/components/layout/DeferredRuntimeServices').then(m => m.DeferredRuntimeServices),
-  { ssr: false }
-);
 
 const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;
 const xHandle = process.env.NEXT_PUBLIC_X_HANDLE;

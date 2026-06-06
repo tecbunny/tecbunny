@@ -27,7 +27,7 @@ import { getSessionWithRole } from '@/lib/auth/server-role';
 // Constants & schemas
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ADMIN_ROLES = new Set(['admin', 'manager']);
+const ADMIN_ROLES = new Set(['admin', 'manager', 'superadmin']);
 
 const archiveSchema = z.object({
   id: z.string().uuid('Product ID must be a valid UUID'),

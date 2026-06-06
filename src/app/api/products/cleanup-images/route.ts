@@ -4,7 +4,7 @@ import { getSessionWithRole } from '@/lib/auth/server-role';
 import { logger } from '@/lib/logger';
 import { imageJobsQueue } from '@/lib/queue/image-jobs';
 
-const ADMIN_ROLES = new Set(['admin', 'manager']);
+const ADMIN_ROLES = new Set(['admin', 'manager', 'superadmin']);
 
 export async function POST(request: NextRequest) {
   try {

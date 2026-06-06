@@ -24,7 +24,7 @@ import { classifyProductTax, TaxClassificationError } from '@/lib/ai/tax-classif
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ADMIN_ROLES = new Set(['admin', 'manager']);
+const ADMIN_ROLES = new Set(['admin', 'manager', 'superadmin']);
 const HANDLE_MAX = 60;
 
 /** Fallback values that satisfy every known NOT NULL constraint on public.products */

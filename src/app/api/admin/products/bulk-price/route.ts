@@ -23,7 +23,7 @@ import { getSessionWithRole } from '@/lib/auth/server-role';
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ADMIN_ROLES = new Set(['admin', 'manager']);
+const ADMIN_ROLES = new Set(['admin', 'manager', 'superadmin']);
 
 /** Combined multiplier: 20% dealer margin × 18% GST = ×1.416 */
 const PRICE_MULTIPLIER = 1.416;

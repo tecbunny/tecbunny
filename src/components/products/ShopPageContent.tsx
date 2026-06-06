@@ -329,7 +329,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
   
   const [localSearchQuery, setLocalSearchQuery] = React.useState(searchQuery);
   const { addToCart } = useCart();
-  useRevealSections();
+  useRevealSections('[data-reveal-id]', filteredProducts.length);
   
   // Update URL parameters
   const updateUrlParams = React.useCallback((params: Record<string, string>) => {

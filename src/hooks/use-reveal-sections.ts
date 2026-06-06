@@ -4,7 +4,7 @@ import * as React from 'react';
 
 import { usePrefersReducedMotion } from './use-prefers-reduced-motion';
 
-export function useRevealSections(selector = '[data-reveal-id]') {
+export function useRevealSections(selector = '[data-reveal-id]', refreshKey?: React.DependencyList[number]) {
   const prefersReducedMotion = usePrefersReducedMotion();
 
   React.useEffect(() => {
@@ -35,7 +35,17 @@ export function useRevealSections(selector = '[data-reveal-id]') {
       }
     );
 
-    elements.forEach((element) => observer.observe(element));
+    elements.forEach((element) => {
+      const rect = element.getBoundingClientRect();
+      const isInViewport = rect.top < window.innerHeight && rect.bottom > 0;
+
+      if (isInViewport) {
+        element.classList.add('is-revealed');
+        return;
+      }
+
+      observer.observe(element);
+    });
     return () => observer.disconnect();
-  }, [prefersReducedMotion, selector]);
+  }, [prefersReducedMotion, selector, refreshKey]);
 }

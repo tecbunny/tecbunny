@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
 import { Palette, Building, FileText, Globe, Settings } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 import {
   Card,
@@ -41,6 +42,7 @@ const settingsSchema = z.object({
   tagline: z.string().optional(),
   logoUrl: z.string().optional(),
   faviconUrl: z.string().optional(),
+  partnerBrands: z.string().optional(),
   
   // Color Scheme
   primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Must be a valid hex color"),
@@ -110,6 +112,7 @@ const createDefaultSettings = (): SettingsFormValues => ({
   tagline: 'Your Tech Store',
   logoUrl: '',
   faviconUrl: '',
+  partnerBrands: 'CP PLUS, HIKVISION, DAHUA, UBIQUITI, CISCO, TP-LINK',
   primaryColor: '#3b82f6',
   secondaryColor: '#64748b',
   accentColor: '#f59e0b',
@@ -160,6 +163,18 @@ async function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number, messag
 }
 
 export default function SiteSettingsPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="container mx-auto p-6 flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+      </div>
+    }>
+      <SiteSettingsPageContent />
+    </React.Suspense>
+  );
+}
+
+function SiteSettingsPageContent() {
   const { toast } = useToast();
   const supabase = React.useMemo(() => createClient(), []);
   const [loading, setLoading] = React.useState(true);
@@ -167,6 +182,16 @@ export default function SiteSettingsPage() {
   const [logoPreview, setLogoPreview] = React.useState('');
   const [faviconPreview, setFaviconPreview] = React.useState('');
   const [products, setProducts] = React.useState<any[]>([]);
+
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = React.useState('identity');
+
+  React.useEffect(() => {
+    if (tabParam && ['identity', 'homepage', 'appearance', 'business', 'advanced'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   const form = useForm<SettingsFormInput, any, SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -249,6 +274,7 @@ export default function SiteSettingsPage() {
         tagline: getString('tagline', defaults.tagline ?? ''),
         logoUrl: getString('logoUrl', defaults.logoUrl ?? ''),
         faviconUrl: getString('faviconUrl', defaults.faviconUrl ?? ''),
+        partnerBrands: getString('partnerBrands', defaults.partnerBrands ?? ''),
         primaryColor: getString('primaryColor', defaults.primaryColor),
         secondaryColor: getString('secondaryColor', defaults.secondaryColor),
         accentColor: getString('accentColor', defaults.accentColor),
@@ -494,7 +520,7 @@ export default function SiteSettingsPage() {
         </Alert>
       )}
 
-      <Tabs defaultValue="identity" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="identity" className="flex items-center gap-2">
             <Building className="h-4 w-4" />
@@ -613,6 +639,37 @@ export default function SiteSettingsPage() {
                       </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Partner Brands</CardTitle>
+                  <CardDescription>
+                    Configure the product partner brands displayed on the homepage solutions strip (comma-separated).
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="partnerBrands"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Brand List</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="e.g. CP PLUS, HIKVISION, DAHUA, UBIQUITI, CISCO, TP-LINK" 
+                            className="min-h-[100px] font-mono text-sm"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Specify the brands shown on the homepage strip, separated by commas.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

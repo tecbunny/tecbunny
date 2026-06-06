@@ -13,7 +13,7 @@ export async function GET() {
     const { data: settings, error } = await supabase
       .from('settings')
       .select('key, value')
-      .in('key', ['siteName', 'siteDescription', 'logoUrl', 'faviconUrl']);
+      .in('key', ['siteName', 'siteDescription', 'logoUrl', 'faviconUrl', 'partnerBrands']);
     
     if (error) {
       console.error('Error fetching settings:', error);
@@ -41,6 +41,7 @@ export async function GET() {
       description: settingsMap.get('siteDescription') || 'Discover the latest technology with beautiful design and exceptional user experience.',
       logoUrl,
       faviconUrl: settingsMap.get('faviconUrl') || '/favicon.ico',
+      partnerBrands: settingsMap.get('partnerBrands') || 'CP PLUS, HIKVISION, DAHUA, UBIQUITI, CISCO, TP-LINK',
     };
     
     return NextResponse.json(metadata);
@@ -54,6 +55,7 @@ export async function GET() {
       description: 'Discover the latest technology with beautiful design and exceptional user experience.',
       logoUrl: BRAND_LOGO_URL,
       faviconUrl: '/favicon.ico',
+      partnerBrands: 'CP PLUS, HIKVISION, DAHUA, UBIQUITI, CISCO, TP-LINK',
     });
   }
 }

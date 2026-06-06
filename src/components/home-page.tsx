@@ -175,6 +175,9 @@ export default function HomePage() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const hasFinePointer = useFinePointer();
   const [featuredProducts, setFeaturedProducts] = React.useState<DbProduct[]>([]);
+  const [partnerBrands, setPartnerBrands] = React.useState<string[]>([
+    'CP PLUS', 'HIKVISION', 'DAHUA', 'UBIQUITI', 'CISCO', 'TP-LINK'
+  ]);
   const [productsLoading, setProductsLoading] = React.useState(true);
   const [productsError, setProductsError] = React.useState<string | null>(null);
   const [enableAmbientEffects, setEnableAmbientEffects] = React.useState(false);
@@ -192,6 +195,34 @@ export default function HomePage() {
 
     return scheduleWhenIdle(() => setEnableAmbientEffects(true), 4000);
   }, [prefersReducedMotion]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch('/api/settings?key=partnerBrands');
+        if (res.ok) {
+          const data = await res.json();
+          const brandsStr = data?.value;
+          if (brandsStr && typeof brandsStr === 'string' && isMounted) {
+            const list = brandsStr
+              .split(',')
+              .map((b: string) => b.trim())
+              .filter(Boolean);
+            if (list.length > 0) {
+              setPartnerBrands(list);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch partner brands:', err);
+      }
+    };
+    fetchBrands();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!shouldLoadHardware) {
@@ -493,8 +524,8 @@ export default function HomePage() {
           <p className="text-center text-xs font-semibold uppercase tracking-[0.35em] text-slate-500 mb-6">
             Authorized Solutions & Brand Partnerships
           </p>
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-6 items-center justify-items-center opacity-65">
-            {['CP PLUS', 'HIKVISION', 'DAHUA', 'UBIQUITI', 'CISCO', 'TP-LINK'].map((brand) => (
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 md:gap-x-16 opacity-65">
+            {partnerBrands.map((brand) => (
               <span key={brand} className="text-sm font-bold tracking-widest text-slate-400 font-tech hover:text-cyan-400 transition-colors">
                 {brand}
               </span>

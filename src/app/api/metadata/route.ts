@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createServiceClient, isSupabaseServiceConfigured, createClient } from '@/lib/supabase/server';
 
-const BRAND_LOGO_URL = 'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/TecBunny%20Solution/TECBUNNY_SOLUTIONS_PVT_LTD-removebg-preview.png';
+const BRAND_LOGO_URL = '/logo.png';
 
 export async function GET() {
   try {

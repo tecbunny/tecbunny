@@ -4,6 +4,10 @@ import { enhancedCommissionService } from './enhanced-commission-service';
 import type { CartItem, Product, CustomerCategory, Coupon, AutoOffer } from './types';
 import { logger } from './logger';
 
+const toPaise = (value: number) => Math.round((Number.isFinite(value) ? value : 0) * 100);
+const fromPaise = (value: number) => value / 100;
+const roundMoney = (value: number) => fromPaise(toPaise(value));
+
 export interface CheckoutEngineRequest {
   items: CartItem[];
   userId?: string;
@@ -108,7 +112,7 @@ export class CheckoutEngine {
         };
       });
 
-      grossSubtotal = pricedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      grossSubtotal = fromPaise(pricedItems.reduce((sum, item) => sum + toPaise(item.price * item.quantity), 0));
 
       // 3. Discount Application
       let appliedCoupon: Coupon | null = null;
@@ -128,7 +132,7 @@ export class CheckoutEngine {
       let finalSubtotal = 0;
       let gstAmount = 0;
       let finalTotal = 0;
-      const totalDiscountApplied = discountResult.totalDiscount;
+      const totalDiscountApplied = roundMoney(discountResult.totalDiscount);
 
       // Prepare items list for discount distribution
       const itemsToDistribute = pricedItems.map(item => ({
@@ -140,20 +144,26 @@ export class CheckoutEngine {
         const totalGross = itemsToDistribute.reduce((sum, item) => sum + item.gross, 0);
         if (totalGross === 0 || totalDiscountApplied === 0) return itemsToDistribute.map(() => 0);
 
-        const discounts = itemsToDistribute.map(item => {
-          return Math.floor((item.gross / totalGross) * totalDiscountApplied * 100) / 100;
+        const totalDiscountPaise = toPaise(totalDiscountApplied);
+        const rawShares = itemsToDistribute.map((item, index) => {
+          const exactShare = (item.gross / totalGross) * totalDiscountPaise;
+          const paise = Math.floor(exactShare);
+          return { index, paise, remainder: exactShare - paise };
         });
 
-        const sumDiscounts = discounts.reduce((sum, d) => sum + d, 0);
-        let remainder = Math.round((totalDiscountApplied - sumDiscounts) * 100) / 100;
+        let allocated = rawShares.reduce((sum, share) => sum + share.paise, 0);
+        rawShares
+          .sort((a, b) => b.remainder - a.remainder)
+          .forEach((share) => {
+            if (allocated < totalDiscountPaise) {
+              share.paise += 1;
+              allocated += 1;
+            }
+          });
 
-        // Distribute remainder (due to rounding) starting from the first items
-        for (let i = 0; i < itemsToDistribute.length && remainder > 0.001; i++) {
-          discounts[i] = Math.round((discounts[i] + 0.01) * 100) / 100;
-          remainder = Math.round((remainder - 0.01) * 100) / 100;
-        }
-
-        return discounts;
+        return rawShares
+          .sort((a, b) => a.index - b.index)
+          .map((share) => fromPaise(share.paise));
       })();
 
       const itemPricesWithTaxes = pricedItems.map((item, index) => {
@@ -162,13 +172,16 @@ export class CheckoutEngine {
         const gstRateRaw = dbProd?.gstRate ?? dbProd?.gst_rate ?? 18;
         const gstRate = typeof gstRateRaw === 'number' ? gstRateRaw : parseFloat(gstRateRaw) || 18;
 
-        const itemGrossInclusive = item.price * item.quantity;
+        const itemGrossInclusive = roundMoney(item.price * item.quantity);
         const itemDiscountInclusive = distributedDiscounts[index];
         const itemNetInclusive = Math.max(0, itemGrossInclusive - itemDiscountInclusive);
 
         // Compute forward: base net exclusive, then GST as the remainder to match net inclusive exactly
-        const itemNetExclusive = Math.round((itemNetInclusive / (1 + (gstRate / 100))) * 100) / 100;
-        const itemGst = Math.round((itemNetInclusive - itemNetExclusive) * 100) / 100;
+        const itemNetInclusivePaise = toPaise(itemNetInclusive);
+        const itemNetExclusivePaise = toPaise(itemNetInclusive / (1 + (gstRate / 100)));
+        const itemGstPaise = itemNetInclusivePaise - itemNetExclusivePaise;
+        const itemNetExclusive = fromPaise(itemNetExclusivePaise);
+        const itemGst = fromPaise(itemGstPaise);
 
         finalSubtotal += itemNetExclusive;
         gstAmount += itemGst;
@@ -202,7 +215,7 @@ export class CheckoutEngine {
           const defaultRate = agent?.commission_rate || 5;
           commissionEstimate = {
             agent_id: salesAgentId,
-            commission_amount: Math.round((preTaxAmount * defaultRate) / 100 * 100) / 100,
+            commission_amount: roundMoney((preTaxAmount * defaultRate) / 100),
             commission_rate: defaultRate
           };
         } catch (err) {
@@ -211,12 +224,12 @@ export class CheckoutEngine {
       }
 
       return {
-        subtotal: Math.max(0, finalSubtotal),
+        subtotal: Math.max(0, roundMoney(finalSubtotal)),
         totalDiscount: totalDiscountApplied,
-        autoOfferDiscount: discountResult.offerDiscount,
-        couponDiscount: discountResult.couponDiscount,
-        gstAmount: Math.max(0, gstAmount),
-        finalTotal: Math.max(0, finalTotal),
+        autoOfferDiscount: roundMoney(discountResult.offerDiscount),
+        couponDiscount: roundMoney(discountResult.couponDiscount),
+        gstAmount: Math.max(0, roundMoney(gstAmount)),
+        finalTotal: Math.max(0, roundMoney(finalTotal)),
         bestOffer: discountResult.bestOffer,
         appliedCoupon,
         availableCoupons: discountResult.availableCoupons,

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { Badge } from '../ui/badge';
 import type { OrderStatus, OrderType } from '@/lib/types';
+import { formatPlaceOfSupply, resolveIndianStateInfo, TECBUNNY_REGISTERED_STATE } from '@/lib/indian-tax';
 
 const PICKUP_STORES = [
   {
@@ -170,6 +171,8 @@ export default function CheckoutPage() {
     } else if (field === 'state' && orderType === 'Delivery') {
       if (!value.trim()) {
         error = 'State is required';
+      } else if (!resolveIndianStateInfo(value)) {
+        error = 'Enter a valid Indian state or union territory';
       }
     }
 
@@ -332,6 +335,9 @@ export default function CheckoutPage() {
       }
 
       const pickupAddress = selectedPickupStore ? selectedPickupStore.address : '';
+      const destinationState = orderType === 'Delivery'
+        ? resolveIndianStateInfo(customerInfo.state)
+        : TECBUNNY_REGISTERED_STATE;
 
       // Convert cart items to order items format
       const orderItems = cartItems.map(item => ({
@@ -372,6 +378,11 @@ export default function CheckoutPage() {
           `${customerInfo.address}, ${customerInfo.city}, ${customerInfo.state} - ${customerInfo.pincode}` : 
           pickupAddress || undefined,
         pickup_store: orderType === 'Pickup' && !serviceOnlyCart ? pickupAddress : undefined,
+        customer_state: destinationState?.name || customerInfo.state,
+        customer_state_code: destinationState?.code,
+        place_of_supply: formatPlaceOfSupply(destinationState, customerInfo.state),
+        place_of_supply_state_code: destinationState?.code,
+        seller_state_code: TECBUNNY_REGISTERED_STATE.code,
         notes: appendedNotes,
         status: initialStatus,
         payment_method: paymentMethod,

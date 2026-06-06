@@ -183,9 +183,33 @@ WHERE
   AND is_deleted = FALSE;
 
 -- Now add Foreign Keys for tables referencing products
-ALTER TABLE public.stock_movements ADD CONSTRAINT stock_movements_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
-ALTER TABLE public.inventory ADD CONSTRAINT inventory_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
-ALTER TABLE public.product_pricing ADD CONSTRAINT product_pricing_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'stock_movements_product_id_fkey' 
+    AND table_name = 'stock_movements'
+  ) THEN
+    ALTER TABLE public.stock_movements ADD CONSTRAINT stock_movements_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'inventory_product_id_fkey' 
+    AND table_name = 'inventory'
+  ) THEN
+    ALTER TABLE public.inventory ADD CONSTRAINT inventory_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'product_pricing_product_id_fkey' 
+    AND table_name = 'product_pricing'
+  ) THEN
+    ALTER TABLE public.product_pricing ADD CONSTRAINT product_pricing_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+  END IF;
+END;
+$$;
 
 -- Optimize indexation on orders and webhooks
 CREATE INDEX IF NOT EXISTS idx_orders_active_created ON public.orders (created_at DESC) WHERE status != 'Cancelled' AND status != 'Rejected';
@@ -1317,6 +1341,13 @@ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'otp_verifications' AND column_name = 'email') THEN
       CREATE INDEX IF NOT EXISTS idx_otp_verifications_email ON public.otp_verifications(email);
     END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'otp_verifications' AND column_name = 'identifier') THEN
+      CREATE INDEX IF NOT EXISTS idx_otp_verifications_identifier ON public.otp_verifications(identifier);
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'otp_verifications' AND column_name = 'verified') THEN
+      CREATE INDEX IF NOT EXISTS idx_otp_verifications_unverified_expires ON public.otp_verifications(expires_at)
+      WHERE verified = false;
+    END IF;
   END IF;
 END;
 $$;
@@ -1761,6 +1792,13 @@ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'otp_verifications') THEN
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'otp_verifications' AND column_name = 'code') THEN
       CREATE INDEX IF NOT EXISTS idx_otp_verifications_code ON public.otp_verifications(code);
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'otp_verifications' AND column_name = 'identifier') THEN
+      CREATE INDEX IF NOT EXISTS idx_otp_verifications_identifier ON public.otp_verifications(identifier);
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'otp_verifications' AND column_name = 'verified') THEN
+      CREATE INDEX IF NOT EXISTS idx_otp_verifications_unverified_code ON public.otp_verifications(code, expires_at)
+      WHERE verified = false;
     END IF;
   END IF;
 

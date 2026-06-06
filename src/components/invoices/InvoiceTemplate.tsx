@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
 import { formatInvoiceDate, formatOrderNumber } from '@/lib/order-utils';
+import { formatPlaceOfSupply, resolveIndianStateFromText, resolveIndianStateInfo, TECBUNNY_REGISTERED_STATE } from '@/lib/indian-tax';
 
 export interface CompanySettings {
     name: string;
@@ -67,6 +68,16 @@ export function InvoiceTemplate({ order, settings, autoPrint }: InvoiceTemplateP
         supportEmail: companyInfo?.supportEmail || settings.supportEmail,
         supportPhone: companyInfo?.supportPhone || settings.supportPhone,
     };
+    const sellerState = resolveIndianStateInfo(order.seller_state_code) ?? TECBUNNY_REGISTERED_STATE;
+    const supplyState = resolveIndianStateInfo(order.place_of_supply_state_code)
+        ?? resolveIndianStateInfo(order.customer_state_code)
+        ?? resolveIndianStateInfo(order.customer_state)
+        ?? resolveIndianStateFromText(order.delivery_address)
+        ?? (order.type === 'Pickup' ? sellerState : null);
+    const isIntraStateSupply = Boolean(supplyState && supplyState.code === sellerState.code);
+    const taxColumnCount = isIntraStateSupply ? 4 : 2;
+    const serialColSpan = 5 + taxColumnCount + 1;
+    const money = (value: number) => value.toFixed(2);
 
     const handlePrint = () => {
         const printContent = invoiceRef.current;
@@ -138,6 +149,7 @@ export function InvoiceTemplate({ order, settings, autoPrint }: InvoiceTemplateP
                              <div>
                                 <h3 className="mb-2 font-semibold text-primary">Bill To</h3>
                                 <p className="font-medium">{order.customer_name}</p>
+                                <p className="text-sm text-gray-500">Place of Supply: {order.place_of_supply || formatPlaceOfSupply(supplyState, order.customer_state)}</p>
                             </div>
                             <div className="text-left sm:text-right">
                                 <h3 className="mb-2 font-semibold text-primary">Invoice Date</h3>
@@ -145,15 +157,27 @@ export function InvoiceTemplate({ order, settings, autoPrint }: InvoiceTemplateP
                             </div>
                         </div>
                         <div className="overflow-x-auto">
-                        <Table className="min-w-[720px]">
+                        <Table className="min-w-[900px]">
                             <TableHeader>
                                 <TableRow className="bg-primary/10 hover:bg-primary/10">
-                                    <TableHead className="w-[40%] text-primary">Item Description</TableHead>
+                                    <TableHead className="w-[30%] text-primary">Item Description</TableHead>
                                     <TableHead className="text-center text-primary">HSN/SAC</TableHead>
                                     <TableHead className="text-center text-primary">Qty</TableHead>
                                     <TableHead className="text-right text-primary">Rate</TableHead>
                                     <TableHead className="text-right text-primary">Taxable Value</TableHead>
-                                    <TableHead className="text-right text-primary">GST</TableHead>
+                                    {isIntraStateSupply ? (
+                                        <>
+                                            <TableHead className="text-right text-primary">CGST Rate</TableHead>
+                                            <TableHead className="text-right text-primary">CGST Amt</TableHead>
+                                            <TableHead className="text-right text-primary">SGST Rate</TableHead>
+                                            <TableHead className="text-right text-primary">SGST Amt</TableHead>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <TableHead className="text-right text-primary">IGST Rate</TableHead>
+                                            <TableHead className="text-right text-primary">IGST Amt</TableHead>
+                                        </>
+                                    )}
                                     <TableHead className="text-right text-primary">Total</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -162,20 +186,35 @@ export function InvoiceTemplate({ order, settings, autoPrint }: InvoiceTemplateP
                                     const gstRate = item.gstRate || 0;
                                     const basePrice = item.price / (1 + (gstRate / 100));
                                     const taxableValue = basePrice * item.quantity;
+                                    const taxAmount = (item.price * item.quantity) - taxableValue;
+                                    const splitRate = gstRate / 2;
+                                    const splitTax = taxAmount / 2;
                                     return (
                                         <React.Fragment key={item.productId}>
                                             <TableRow>
                                                 <TableCell className="font-medium">{item.name}</TableCell>
                                                 <TableCell className="text-center">{item.hsnCode || 'N/A'}</TableCell>
                                                 <TableCell className="text-center">{item.quantity}</TableCell>
-                                                <TableCell className="text-right">₹{basePrice.toFixed(2)}</TableCell>
-                                                <TableCell className="text-right">₹{taxableValue.toFixed(2)}</TableCell>
-                                                <TableCell className="text-right">{gstRate}%</TableCell>
-                                                <TableCell className="text-right font-medium">₹{(item.price * item.quantity).toFixed(2)}</TableCell>
+                                                <TableCell className="text-right">₹{money(basePrice)}</TableCell>
+                                                <TableCell className="text-right">₹{money(taxableValue)}</TableCell>
+                                                {isIntraStateSupply ? (
+                                                    <>
+                                                        <TableCell className="text-right">{money(splitRate)}%</TableCell>
+                                                        <TableCell className="text-right">₹{money(splitTax)}</TableCell>
+                                                        <TableCell className="text-right">{money(splitRate)}%</TableCell>
+                                                        <TableCell className="text-right">₹{money(splitTax)}</TableCell>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <TableCell className="text-right">{money(gstRate)}%</TableCell>
+                                                        <TableCell className="text-right">₹{money(taxAmount)}</TableCell>
+                                                    </>
+                                                )}
+                                                <TableCell className="text-right font-medium">₹{money(item.price * item.quantity)}</TableCell>
                                             </TableRow>
                                             {item.serialNumbers && item.serialNumbers.length > 0 && (
                                                 <TableRow className="bg-muted/50">
-                                                    <TableCell colSpan={7} className="py-1 px-6 text-xs text-muted-foreground">
+                                                    <TableCell colSpan={serialColSpan} className="py-1 px-6 text-xs text-muted-foreground">
                                                         Serial Numbers: {item.serialNumbers.join(', ')}
                                                     </TableCell>
                                                 </TableRow>
@@ -195,14 +234,23 @@ export function InvoiceTemplate({ order, settings, autoPrint }: InvoiceTemplateP
                                     <span>Taxable Amount</span>
                                     <span>₹{order.subtotal.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span>CGST (9%)</span>
-                                    <span>₹{(order.gst_amount / 2).toFixed(2)}</span>
-                                </div>
-                                 <div className="flex justify-between">
-                                    <span>SGST (9%)</span>
-                                    <span>₹{(order.gst_amount / 2).toFixed(2)}</span>
-                                </div>
+                                {isIntraStateSupply ? (
+                                    <>
+                                        <div className="flex justify-between">
+                                            <span>CGST</span>
+                                            <span>₹{money(order.gst_amount / 2)}</span>
+                                        </div>
+                                         <div className="flex justify-between">
+                                            <span>SGST</span>
+                                            <span>₹{money(order.gst_amount / 2)}</span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex justify-between">
+                                        <span>IGST</span>
+                                        <span>₹{money(order.gst_amount)}</span>
+                                    </div>
+                                )}
                                 {order.shipping_amount != null && order.shipping_amount > 0 && (
                                     <div className="flex justify-between">
                                         <span>Shipping Charges</span>

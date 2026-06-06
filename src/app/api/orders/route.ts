@@ -14,6 +14,7 @@ import { otpService } from '@/lib/otp-service';
 import { enhancedCommissionService } from '@/lib/enhanced-commission-service';
 import { emailHelpers } from '@/lib/email';
 import { checkoutEngine } from '@/lib/checkout-engine';
+import { formatPlaceOfSupply, resolveIndianStateFromText, resolveIndianStateInfo, TECBUNNY_REGISTERED_STATE } from '@/lib/indian-tax';
 
 const RATE_LIMIT = 5; // 5 orders
 const RATE_WINDOW_MS = 60 * 1000; // per minute
@@ -212,6 +213,15 @@ export async function POST(request: NextRequest) {
     const pickupStore = orderType === 'Pickup'
       ? (orderData.pickup_store || orderData.delivery_address || null)
       : null;
+    const destinationState = resolveIndianStateInfo(orderData.place_of_supply_state_code)
+      ?? resolveIndianStateInfo(orderData.customer_state_code)
+      ?? resolveIndianStateInfo(orderData.customer_state)
+      ?? resolveIndianStateFromText(orderData.delivery_address)
+      ?? (orderType === 'Pickup' ? TECBUNNY_REGISTERED_STATE : null);
+    const placeOfSupply = formatPlaceOfSupply(
+      destinationState,
+      typeof orderData.place_of_supply === 'string' ? orderData.place_of_supply : orderData.customer_state,
+    );
 
     // Full JSONB payload stored in the orders.items column by the RPC so the entire
     // customer context (phone, email, address) is recoverable from the row alone.
@@ -221,6 +231,11 @@ export async function POST(request: NextRequest) {
       customer_phone: orderData.customer_phone,
       delivery_address: orderData.delivery_address,
       pickup_store: pickupStore,
+      customer_state: destinationState?.name || orderData.customer_state || null,
+      customer_state_code: destinationState?.code || orderData.customer_state_code || null,
+      place_of_supply: placeOfSupply,
+      place_of_supply_state_code: destinationState?.code || orderData.place_of_supply_state_code || null,
+      seller_state_code: TECBUNNY_REGISTERED_STATE.code,
       payment_method: orderData.payment_method,
       customer_notes: orderData.notes,
       agent_id: orderData.agent_id || null, // Store agent info if this is an agent order
@@ -271,6 +286,11 @@ export async function POST(request: NextRequest) {
       customer_email: createdOrder.customer_email || orderItemsData.customer_email,
       customer_phone: createdOrder.customer_phone || orderItemsData.customer_phone,
       delivery_address: createdOrder.delivery_address || orderItemsData.delivery_address,
+      customer_state: orderItemsData.customer_state,
+      customer_state_code: orderItemsData.customer_state_code,
+      place_of_supply: orderItemsData.place_of_supply,
+      place_of_supply_state_code: orderItemsData.place_of_supply_state_code,
+      seller_state_code: orderItemsData.seller_state_code,
       payment_method: createdOrder.payment_method || orderItemsData.payment_method,
       notes: createdOrder.notes || orderItemsData.customer_notes,
       items: orderItemsData.cart_items || [],

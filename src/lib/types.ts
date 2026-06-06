@@ -198,6 +198,11 @@ export interface Order {
   type: OrderType;
   delivery_address?: string;
   pickup_store?: string;
+  customer_state?: string;
+  customer_state_code?: string;
+  place_of_supply?: string;
+  place_of_supply_state_code?: string;
+  seller_state_code?: string;
   notes?: string;
   payment_method?: string;
   payment_status?: string;

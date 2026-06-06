@@ -1,5 +1,38 @@
 import { logger } from '@/lib/logger';
 
+const WEBHOOK_LOG_RETRIES = 2;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function runWithRetry<T>(operation: () => Promise<T>, context: Record<string, unknown>): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= WEBHOOK_LOG_RETRIES; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      logger.warn('webhook_log_retryable_failure', {
+        ...context,
+        attempt: attempt + 1,
+        maxAttempts: WEBHOOK_LOG_RETRIES + 1,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      if (attempt < WEBHOOK_LOG_RETRIES) {
+        await sleep(100 * (attempt + 1));
+      }
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
+}
+
+type SupabaseWriteResult = {
+  error: { message: string } | null;
+};
+
 // Shared webhook event logging utility
 export async function logWebhookEvent(
   supabase: any,
@@ -40,9 +73,12 @@ export async function logWebhookEvent(
       event_id: eventId || null
     };
  
-    const { error } = await supabase
-      .from('webhook_events')
-      .insert(webhookEvent);
+    const { error } = await runWithRetry<SupabaseWriteResult>(
+      () => supabase
+        .from('webhook_events')
+        .insert(webhookEvent),
+      { eventType, source, eventId: eventId || null },
+    );
  
     if (error) {
       logger.error('Failed to log webhook event to database:', { 
@@ -50,6 +86,7 @@ export async function logWebhookEvent(
         eventType,
         source 
       });
+      throw new Error(`Webhook event log insert failed: ${error.message}`);
     } else {
       logger.debug('Webhook event logged successfully:', { 
         eventType, 
@@ -65,6 +102,7 @@ export async function logWebhookEvent(
       eventType,
       source 
     });
+    throw error;
   }
 }
 
@@ -87,16 +125,19 @@ export async function updateWebhookEventStatus(
       status = 'failed';
     }
 
-    const { error } = await supabase
-      .from('webhook_events')
-      .update({
-        processed,
-        status,
-        error_message: errorMessage,
-        processed_at: processed ? now.toISOString() : null,
-        updated_at: now.toISOString()
-      })
-      .eq('id', eventId);
+    const { error } = await runWithRetry<SupabaseWriteResult>(
+      () => supabase
+        .from('webhook_events')
+        .update({
+          processed,
+          status,
+          error_message: errorMessage,
+          processed_at: processed ? now.toISOString() : null,
+          updated_at: now.toISOString()
+        })
+        .eq('id', eventId),
+      { eventId, status },
+    );
 
     if (error) {
       logger.error('Failed to update webhook event status:', { 
@@ -104,6 +145,7 @@ export async function updateWebhookEventStatus(
         eventId,
         status 
       });
+      throw new Error(`Webhook event status update failed: ${error.message}`);
     }
 
   } catch (error: any) {
@@ -111,6 +153,7 @@ export async function updateWebhookEventStatus(
       error: error.message,
       eventId 
     });
+    throw error;
   }
 }
 

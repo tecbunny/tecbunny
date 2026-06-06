@@ -184,6 +184,11 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         customer_phone: customerPhone || null,
         delivery_address: orderData.delivery_address || null,
         pickup_store: orderData.pickup_store || null,
+        customer_state: orderData.customer_state || null,
+        customer_state_code: orderData.customer_state_code || null,
+        place_of_supply: orderData.place_of_supply || null,
+        place_of_supply_state_code: orderData.place_of_supply_state_code || null,
+        seller_state_code: orderData.seller_state_code || null,
         notes: orderData.notes || null,
         payment_method: orderData.payment_method || null,
         payment_status: orderData.payment_status || null,
@@ -229,6 +234,11 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         customer_phone: createdOrder.customer_phone ?? customerPhone,
         pickup_store: createdOrder.pickup_store ?? (orderData.pickup_store as string | undefined) ?? undefined,
         delivery_address: createdOrder.delivery_address ?? (orderData.delivery_address as string | undefined) ?? undefined,
+        customer_state: createdOrder.customer_state ?? orderData.customer_state ?? undefined,
+        customer_state_code: createdOrder.customer_state_code ?? orderData.customer_state_code ?? undefined,
+        place_of_supply: createdOrder.place_of_supply ?? orderData.place_of_supply ?? undefined,
+        place_of_supply_state_code: createdOrder.place_of_supply_state_code ?? orderData.place_of_supply_state_code ?? undefined,
+        seller_state_code: createdOrder.seller_state_code ?? orderData.seller_state_code ?? undefined,
       };
 
       setCurrentOrder(hydratedOrder);

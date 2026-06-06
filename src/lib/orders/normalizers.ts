@@ -32,6 +32,11 @@ type RawItemsPayload = {
   customer_phone?: string;
   delivery_address?: string;
   pickup_store?: string;
+  customer_state?: string;
+  customer_state_code?: string;
+  place_of_supply?: string;
+  place_of_supply_state_code?: string;
+  seller_state_code?: string;
   payment_method?: string;
   customer_notes?: string;
   discount_amount?: unknown;
@@ -167,6 +172,11 @@ export function deserializeOrder(rawOrder: any): Order {
     customer_phone: itemsPayload.customer_phone ?? rawOrder?.customer_phone ?? undefined,
     delivery_address: itemsPayload.delivery_address ?? rawOrder?.delivery_address ?? undefined,
     pickup_store: itemsPayload.pickup_store ?? rawOrder?.pickup_store ?? undefined,
+    customer_state: itemsPayload.customer_state ?? rawOrder?.customer_state ?? undefined,
+    customer_state_code: itemsPayload.customer_state_code ?? rawOrder?.customer_state_code ?? undefined,
+    place_of_supply: itemsPayload.place_of_supply ?? rawOrder?.place_of_supply ?? undefined,
+    place_of_supply_state_code: itemsPayload.place_of_supply_state_code ?? rawOrder?.place_of_supply_state_code ?? undefined,
+    seller_state_code: itemsPayload.seller_state_code ?? rawOrder?.seller_state_code ?? undefined,
     payment_method: itemsPayload.payment_method ?? rawOrder?.payment_method ?? undefined,
     notes: itemsPayload.customer_notes ?? rawOrder?.notes ?? undefined,
   } as Order;

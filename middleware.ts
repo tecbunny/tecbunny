@@ -246,6 +246,16 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith('/mgmt/sales-external') && userRole !== 'sales-external') {
       return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
     }
+    if (pathname.startsWith('/mgmt/sales') && pathname !== '/mgmt/sales-staff' && !pathname.startsWith('/mgmt/sales-staff/') && pathname !== '/mgmt/sales-external' && !pathname.startsWith('/mgmt/sales-external/')) {
+      if (userRole !== 'sales' && userRole !== 'sales-staff') {
+        return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
+      }
+    }
+    if (pathname.startsWith('/mgmt/accounts')) {
+      if (userRole !== 'accounts') {
+        return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
+      }
+    }
   }
 
   return finalizeResponse(response)

@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 export function createSupabaseClient() {
   // Trim whitespace from environment variables to prevent Invalid URL errors
   const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
-  const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+  const supabaseKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
   
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Missing Supabase configuration');

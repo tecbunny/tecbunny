@@ -413,7 +413,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!mounted) return;
       
       // If we are currently a superadmin, do not let standard Supabase auth state change overwrite our session
-      if (userRef.current?.role === 'superadmin') {
+      const isSuperadminCookiePresent = typeof document !== 'undefined' && document.cookie.includes('superadmin-session=');
+      if (userRef.current?.role === 'superadmin' || isSuperadminCookiePresent) {
         return;
       }
       

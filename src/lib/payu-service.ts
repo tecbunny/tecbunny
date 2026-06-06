@@ -37,7 +37,7 @@ const GATEWAY_URL: Record<PayuEnvironment, string> = {
 
 export const sanitizeHashValue = (val: string | number | undefined | null): string => {
   if (val === undefined || val === null) return '';
-  return String(val).replace(/\|/g, '').trim();
+  return String(val).replace(/\|/g, '').trim().replace(/\s+/g, ' ');
 };
 
 function normaliseValue(value: string | number | null | undefined): string {

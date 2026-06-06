@@ -266,23 +266,27 @@ export const useCartStore = create<CartState>((set, get) => ({
     } catch (error) {
       logger.error('Error calculating pricing', { error });
 
-      const grossSubtotal = state.cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-      const gstAmount = state.cartItems.reduce((total, item) => {
+      let calculatedSubtotal = 0;
+      let calculatedGstAmount = 0;
+      state.cartItems.forEach((item) => {
         const gstRate = typeof item.gstRate === 'number' ? item.gstRate : 18;
         const itemTotal = item.price * item.quantity;
-        const basePrice = itemTotal / (1 + (gstRate / 100));
-        return total + (itemTotal - basePrice);
-      }, 0);
+        const basePrice = Math.round((itemTotal / (1 + (gstRate / 100))) * 100) / 100;
+        const itemGst = Math.round((itemTotal - basePrice) * 100) / 100;
+        calculatedSubtotal += basePrice;
+        calculatedGstAmount += itemGst;
+      });
+      const grossSubtotal = state.cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
       set({
         pricing: {
-          subtotal: Math.max(0, grossSubtotal - gstAmount),
+          subtotal: Math.max(0, calculatedSubtotal),
           autoOffer: null,
           autoOfferDiscount: 0,
           appliedCoupon,
           couponDiscount: 0,
           totalDiscount: 0,
-          gstAmount,
+          gstAmount: calculatedGstAmount,
           finalTotal: Math.max(0, grossSubtotal),
           availableCoupons: [],
           canCombineDiscounts: false,

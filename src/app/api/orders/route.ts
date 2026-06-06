@@ -134,8 +134,8 @@ export async function POST(request: NextRequest) {
       // GST_RATE is a fraction (e.g. 0.18), product columns store percentage (e.g. 18)
       const gstRateRaw = dbProduct.gst_rate ?? dbProduct.gst_percentage ?? (GST_RATE * 100);
       const gstRate = typeof gstRateRaw === 'number' ? gstRateRaw : parseFloat(gstRateRaw) || 18;
-      const itemBase = itemInclusiveTotal / (1 + (gstRate / 100));
-      const itemGst = itemInclusiveTotal - itemBase;
+      const itemBase = Math.round((itemInclusiveTotal / (1 + (gstRate / 100))) * 100) / 100;
+      const itemGst = Math.round((itemInclusiveTotal - itemBase) * 100) / 100;
 
       calculatedExclusiveSubtotal += itemBase;
       calculatedGstAmount += itemGst;

@@ -6,9 +6,10 @@ import { logger } from '@/lib/logger';
 
 // Generic order delayed webhook handler
 export async function POST(request: NextRequest) {
+  let body: any = null;
   try {
     const supabase = await createClient();
-    const body = await request.json();
+    body = await request.json();
     
     logger.info('Order delayed webhook received:', { body: JSON.stringify(body) });
 
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     
     try {
       const supabase = await createClient();
-      await logWebhookEvent(supabase, 'order_delayed', await request.json(), 'unknown', false, error.message);
+      await logWebhookEvent(supabase, 'order_delayed', body, 'unknown', false, error.message);
     } catch (logError: any) {
       logger.error('Failed to log webhook error:', { error: logError.message });
     }

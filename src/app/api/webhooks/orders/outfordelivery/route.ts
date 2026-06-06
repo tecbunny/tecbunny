@@ -6,9 +6,10 @@ import { logger } from '@/lib/logger';
 
 // Generic order out for delivery webhook handler
 export async function POST(request: NextRequest) {
+  let body: any = null;
   try {
     const supabase = await createClient();
-    const body = await request.json();
+    body = await request.json();
     
     logger.info('Order out for delivery webhook received:', { body: JSON.stringify(body) });
 
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     
     try {
       const supabase = await createClient();
-      await logWebhookEvent(supabase, 'order_out_for_delivery', await request.json(), 'unknown', false, error.message);
+      await logWebhookEvent(supabase, 'order_out_for_delivery', body, 'unknown', false, error.message);
     } catch (logError: any) {
       logger.error('Failed to log webhook error:', { error: logError.message });
     }

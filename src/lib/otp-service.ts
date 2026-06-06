@@ -163,13 +163,51 @@ export class OtpService {
       if (!this.supabase) {
         return { success: false, error: 'Supabase service client is not configured' };
       }
-      // Get OTP record
+
+      // Atomic update first
+      const { data: updatedRecords, error: updateError } = await this.supabase
+        .from('order_otp_verifications')
+        .update({
+          verified: true,
+          verified_at: new Date().toISOString()
+        })
+        .eq('order_id', verification.order_id)
+        .eq('customer_phone', verification.customer_phone)
+        .eq('otp_code', verification.otp_code)
+        .eq('verified', false)
+        .gt('expires_at', new Date().toISOString())
+        .lt('attempts', this.MAX_ATTEMPTS)
+        .select();
+
+      if (updateError) {
+        logger.error('Error verifying OTP atomically', { error: updateError, verification });
+        return { success: false, error: 'Failed to verify OTP' };
+      }
+
+      if (updatedRecords && updatedRecords.length > 0) {
+        const record = updatedRecords[0];
+        // Increment attempts count for the record
+        const newAttempts = record.attempts + 1;
+        await this.supabase
+          .from('order_otp_verifications')
+          .update({ attempts: newAttempts })
+          .eq('id', record.id);
+
+        // Update order with OTP verification status
+        await this.updateOrderOtpStatus(verification.order_id, true);
+
+        return {
+          success: true,
+          verified: true
+        };
+      }
+
+      // If update returned 0 rows, check failure reason
       const { data: otpRecord, error: fetchError } = await this.supabase
         .from('order_otp_verifications')
         .select('*')
         .eq('order_id', verification.order_id)
         .eq('customer_phone', verification.customer_phone)
-        .eq('verified', false)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
@@ -181,7 +219,13 @@ export class OtpService {
         };
       }
 
-      // Check if OTP is expired
+      if (otpRecord.verified) {
+        return {
+          success: false,
+          error: 'OTP already verified'
+        };
+      }
+
       if (new Date(otpRecord.expires_at) < new Date()) {
         return {
           success: false,
@@ -189,7 +233,6 @@ export class OtpService {
         };
       }
 
-      // Check if maximum attempts exceeded
       if (otpRecord.attempts >= this.MAX_ATTEMPTS) {
         return {
           success: false,
@@ -197,56 +240,21 @@ export class OtpService {
         };
       }
 
-      // Increment attempts
+      // If we got here, the code was invalid. Increment attempts.
       const newAttempts = otpRecord.attempts + 1;
-      
-      // Verify OTP code
-      const isValid = otpRecord.otp_code === verification.otp_code;
+      await this.supabase
+        .from('order_otp_verifications')
+        .update({ attempts: newAttempts })
+        .eq('id', otpRecord.id);
 
-      if (isValid) {
-        // Mark as verified atomically
-        const { data: updatedRecord, error: updateError } = await this.supabase
-          .from('order_otp_verifications')
-          .update({
-            verified: true,
-            verified_at: new Date().toISOString(),
-            attempts: newAttempts
-          })
-          .eq('id', otpRecord.id)
-          .eq('verified', false)
-          .select();
+      const attemptsLeft = this.MAX_ATTEMPTS - newAttempts;
 
-        if (updateError || !updatedRecord || updatedRecord.length === 0) {
-          logger.error('Error updating OTP verification or already verified', { error: updateError, verification });
-          return {
-            success: false,
-            error: 'OTP already verified'
-          };
-        }
-
-        // Update order with OTP verification status
-        await this.updateOrderOtpStatus(verification.order_id, true);
-
-        return {
-          success: true,
-          verified: true
-        };
-      } else {
-        // Update attempts count
-        await this.supabase
-          .from('order_otp_verifications')
-          .update({ attempts: newAttempts })
-          .eq('id', otpRecord.id);
-
-        const attemptsLeft = this.MAX_ATTEMPTS - newAttempts;
-
-        return {
-          success: false,
-          verified: false,
-          error: 'Invalid OTP code',
-          attempts_left: Math.max(0, attemptsLeft)
-        };
-      }
+      return {
+        success: false,
+        verified: false,
+        error: 'Invalid OTP code',
+        attempts_left: Math.max(0, attemptsLeft)
+      };
 
     } catch (error) {
       logger.error('Error in verifyOtp', { error, verification });

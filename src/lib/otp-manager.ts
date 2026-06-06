@@ -294,35 +294,42 @@ export class OTPManager {
           return { success: true, message: 'OTP verified successfully' };
         }
 
-        const { data: otpRecord, error } = await supabaseClient
-          .from('otp_verifications')
-          .select('*')
-          .eq('id', verification.otpId)
-          .single();
-
-        if (error || !otpRecord) return { success: false, message: 'Invalid OTP ID' };
-        if (new Date(otpRecord.expires_at) < new Date()) return { success: false, message: 'OTP has expired' };
-        if (otpRecord.verified) return { success: false, message: 'OTP already used' };
-
-        if (otpRecord.attempts >= otpRecord.max_attempts) {
-          return { success: false, message: 'Maximum verification attempts exceeded.', canRetry: false };
-        }
-
-        if (otpRecord.code !== verification.code) {
-          const newAttempts = otpRecord.attempts + 1;
-          await supabaseClient.from('otp_verifications').update({ attempts: newAttempts, last_attempt_at: new Date().toISOString() }).eq('id', verification.otpId);
-          return { success: false, message: `Invalid OTP. ${otpRecord.max_attempts - newAttempts} attempts remaining.`, canRetry: true };
-        }
-
         const { data: updatedRecord, error: updateError } = await supabaseClient
           .from('otp_verifications')
           .update({ verified: true, verified_at: new Date().toISOString() })
           .eq('id', verification.otpId)
+          .eq('code', verification.code)
           .eq('verified', false)
+          .gt('expires_at', new Date().toISOString())
+          .lt('attempts', 3)
           .select();
 
         if (updateError || !updatedRecord || updatedRecord.length === 0) {
-          return { success: false, message: 'OTP already verified or session expired.' };
+          // Atomic update failed. Find out why and increment attempts if applicable.
+          const { data: otpRecord } = await supabaseClient
+            .from('otp_verifications')
+            .select('*')
+            .eq('id', verification.otpId)
+            .maybeSingle();
+
+          if (!otpRecord) return { success: false, message: 'Invalid OTP ID' };
+          if (otpRecord.verified) return { success: false, message: 'OTP already used' };
+          if (new Date(otpRecord.expires_at) < new Date()) return { success: false, message: 'OTP has expired' };
+          if (otpRecord.attempts >= otpRecord.max_attempts) {
+            return { success: false, message: 'Maximum verification attempts exceeded.', canRetry: false };
+          }
+          
+          const newAttempts = otpRecord.attempts + 1;
+          await supabaseClient
+            .from('otp_verifications')
+            .update({ attempts: newAttempts, last_attempt_at: new Date().toISOString() })
+            .eq('id', verification.otpId);
+
+          return { 
+            success: false, 
+            message: `Invalid OTP. ${otpRecord.max_attempts - newAttempts} attempts remaining.`, 
+            canRetry: newAttempts < otpRecord.max_attempts 
+          };
         }
         return { success: true, message: 'OTP verified successfully' };
       } catch (error) {
@@ -341,44 +348,36 @@ export class OTPManager {
         let otpRecord: OTPData | null = null;
         let error: { code?: string; message?: string } | null = null;
         if (supabase) {
-          logger.debug('Checking database for legacy OTP record', { email: normalizedEmail, type });
-          const resp = await supabase
+          logger.debug('Attempting atomic legacy OTP verification', { email: normalizedEmail, type });
+          const { data: updatedRecords, error: updateError } = await supabase
             .from('otp_codes')
-            .select('*')
+            .update({ used: true } as any)
             .eq('email', normalizedEmail)
             .eq('type', type)
             .eq('used', false)
             .gte('expires_at', new Date().toISOString())
             .or(`otp.eq.${otp},otp_code.eq.${otp}`)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-          otpRecord = resp.data;
-          error = resp.error;
-        }
+            .select();
 
-        if (error && error.code === '42P01') {
-          logger.warn('OTP table missing; falling back to memory verification', { normalizedEmail, type });
-          return this.verifyOTPFromMemory(normalizedEmail, otp, type);
-        } else if (error || !otpRecord) {
+          if (updateError) {
+            if (updateError.code === '42P01') {
+              logger.warn('OTP table missing; falling back to memory verification', { normalizedEmail, type });
+              return this.verifyOTPFromMemory(normalizedEmail, otp, type);
+            }
+            logger.error('Error verifying legacy OTP atomically', { email: normalizedEmail, type, error: updateError });
+            return { success: false, message: 'Failed to verify OTP' };
+          }
+
+          if (updatedRecords && updatedRecords.length > 0) {
+            return { success: true, message: 'OTP verified successfully' };
+          }
+
           const memoryResult = this.verifyOTPFromMemory(normalizedEmail, otp, type);
           if (memoryResult.success) {
             return memoryResult;
           }
           return { success: false, message: 'Invalid or expired OTP' };
         }
-
-        const { error: updateError } = await supabase!
-          .from('otp_codes')
-          .update({ used: true } as any)
-          .eq('id', otpRecord.id);
-
-        if (updateError) {
-          logger.error('Error marking legacy OTP as used', { normalizedEmail, type, otpId: otpRecord.id, error: updateError });
-          return { success: false, message: 'Failed to verify OTP' };
-        }
-
-        return { success: true, message: 'OTP verified successfully' };
       } catch (error) {
         logger.error('Error verifying legacy OTP', { email, type, error });
         return this.verifyOTPFromMemory(normalizedEmail, otp, type);

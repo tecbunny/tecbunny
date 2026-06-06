@@ -6,9 +6,10 @@ import { logger } from '@/lib/logger';
 
 // Generic payment failed webhook handler
 export async function POST(request: NextRequest) {
+  let body: any = null;
   try {
     const supabase = await createClient();
-    const body = await request.json();
+    body = await request.json();
     
     logger.info('Payment failed webhook received:', { body: JSON.stringify(body) });
 
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     
     try {
       const supabase = await createClient();
-      await logWebhookEvent(supabase, 'payment_failed', await request.json(), 'unknown', false, error.message);
+      await logWebhookEvent(supabase, 'payment_failed', body, 'unknown', false, error.message);
     } catch (logError: any) {
       logger.error('Failed to log webhook error:', { error: logError.message });
     }

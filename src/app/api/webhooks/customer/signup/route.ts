@@ -6,9 +6,10 @@ import { logger } from '@/lib/logger';
 
 // Generic customer signup webhook handler
 export async function POST(request: NextRequest) {
+  let body: any = null;
   try {
     const supabase = await createClient();
-    const body = await request.json();
+    body = await request.json();
     
     logger.info('Customer signup webhook received:', { body: JSON.stringify(body) });
 
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     // Log failed webhook event
     try {
       const supabase = await createClient();
-      await logWebhookEvent(supabase, 'customer_signup', await request.json(), 'unknown', false, error.message);
+      await logWebhookEvent(supabase, 'customer_signup', body, 'unknown', false, error.message);
     } catch (logError: any) {
       logger.error('Failed to log webhook error:', { error: logError.message });
     }

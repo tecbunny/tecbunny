@@ -130,13 +130,13 @@ export function Footer() {
   };
 
   React.useEffect(() => {
-    const loadSocialLinks = async () => {
+    const loadSettings = async () => {
       try {
         const response = await fetch(
-          '/api/settings?keys=facebookUrl,twitterUrl,instagramUrl,linkedinUrl,youtubeUrl,websiteUrl'
+          '/api/settings?keys=facebookUrl,twitterUrl,instagramUrl,linkedinUrl,youtubeUrl,websiteUrl,phone,support_email'
         );
         if (!response.ok) {
-          logger.error('Footer: failed to load social media links from api', { status: response.status });
+          logger.error('Footer: failed to load settings from api', { status: response.status });
           setSocialLinks(FALLBACK_SOCIAL_LINKS);
           return;
         }
@@ -144,7 +144,7 @@ export function Footer() {
         const data = await response.json();
         const links: Record<string, string> = {};
         Object.keys(data).forEach((key) => {
-          if (data[key]) {
+          if (data[key] && !['phone', 'support_email'].includes(key)) {
             links[key] = data[key] as string;
           }
         });
@@ -153,13 +153,21 @@ export function Footer() {
           ...FALLBACK_SOCIAL_LINKS,
           ...links,
         });
+
+        if (data.phone || data.support_email) {
+          setCompanyInfo((current) => ({
+            ...current,
+            supportPhone: data.phone ? String(data.phone).trim() : current.supportPhone,
+            supportEmail: data.support_email ? String(data.support_email).trim() : current.supportEmail,
+          }));
+        }
       } catch (error) {
-        logger.error('Footer: unexpected error while loading social media links', { error });
+        logger.error('Footer: unexpected error while loading settings', { error });
         setSocialLinks(FALLBACK_SOCIAL_LINKS);
       }
     };
 
-    loadSocialLinks();
+    loadSettings();
   }, []);
 
   const supportEmail = companyInfo.supportEmail || DEFAULT_COMPANY_INFO.supportEmail;

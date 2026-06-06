@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import PolicyPage from '@/components/policy-page';
-import { getPageContentServer } from '@/lib/page-content';
+import { getPolicyContent } from '@/lib/settings';
 
 export const revalidate = 300;
 
@@ -11,6 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default async function ShippingPolicyPage() {
-  const content = await getPageContentServer('shipping_policy');
+  const content = await getPolicyContent('shipping_policy', 'Shipping Policy');
   return <PolicyPage pageKey="shipping_policy" defaultTitle="Shipping Policy" initialContent={content} />;
 }

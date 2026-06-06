@@ -62,7 +62,7 @@ export function Header() {
   const [desktopSubmenuOpen, setDesktopSubmenuOpen] = React.useState<string | null>(null);
   const [topInfo, setTopInfo] = React.useState({
     location: 'Goa',
-    phone: '+91 96041 36010',
+    phone: process.env.NEXT_PUBLIC_SUPPORT_PHONE || '+91 96041 36010',
     hours: '',
   });
 
@@ -81,15 +81,30 @@ export function Header() {
 
     const loadCompanyInfo = async () => {
       try {
-        const response = await fetch('/company-info.json', { cache: 'no-store', signal: controller.signal });
-        if (!response.ok) return;
-        const data = await response.json();
+        let dbPhone = undefined;
+        try {
+          const settingsRes = await fetch('/api/settings?key=phone', { signal: controller.signal });
+          if (settingsRes.ok) {
+            const settingsData = await settingsRes.json();
+            if (settingsData && settingsData.value) {
+              dbPhone = String(settingsData.value).trim();
+            }
+          }
+        } catch {
+          // Ignore settings fetch error
+        }
 
-        const supportPhone = typeof data?.supportPhone === 'string' && data.supportPhone.trim()
+        const response = await fetch('/company-info.json', { cache: 'no-store', signal: controller.signal });
+        let data: any = {};
+        if (response.ok) {
+          data = await response.json();
+        }
+
+        const supportPhone = dbPhone || (typeof data?.supportPhone === 'string' && data.supportPhone.trim()
           ? data.supportPhone.trim()
           : typeof data?.phone === 'string' && data.phone.trim()
             ? data.phone.trim()
-            : undefined;
+            : undefined);
 
         const supportHours = typeof data?.supportHours === 'string' && data.supportHours.trim()
           ? data.supportHours.trim()

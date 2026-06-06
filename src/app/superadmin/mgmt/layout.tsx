@@ -16,11 +16,11 @@ export default async function SuperadminLayout({ children }: { children: React.R
   const superadminCookie = cookieStore.get('superadmin-session')?.value;
   let isSuperadmin = false;
   if (superadminCookie) {
-    const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
+    const correctUserId = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
     const correctPassword = process.env.SUPERADMIN_PASSWORD;
-    if (correctEmail && correctPassword) {
+    if (correctUserId && correctPassword) {
       const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-      const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
+      const msgBuffer = new TextEncoder().encode(`${correctUserId}:${correctPassword}:${secret}`);
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -37,9 +37,9 @@ export default async function SuperadminLayout({ children }: { children: React.R
       title: 'Console Core',
       items: [
         { href: '/superadmin/mgmt/dashboard', label: 'Root Console', icon: LayoutDashboard },
-        { href: '/superadmin/mgmt/users', label: 'User Management', icon: Users },
-        { href: '/superadmin/mgmt/products', label: 'Product Catalog', icon: Wrench },
-        { href: '/superadmin/mgmt/custom-setups', label: 'Custom Setups', icon: Settings },
+        { href: '/superadmin/mgmt/settings?section=users', label: 'User Management', icon: Users },
+        { href: '/superadmin/mgmt/settings?section=products', label: 'Product Catalog', icon: Wrench },
+        { href: '/superadmin/mgmt/settings?section=custom-setups', label: 'Custom Setups', icon: Settings },
       ]
     },
     {
@@ -47,20 +47,20 @@ export default async function SuperadminLayout({ children }: { children: React.R
       items: [
         { href: '/superadmin/mgmt/payment-settings', label: 'Payment Settings', icon: CreditCard },
         { href: '/superadmin/mgmt/ai-config', label: 'AI Configurations', icon: Cpu },
-        { href: '/superadmin/mgmt/settings?tab=homepage', label: 'Website Settings', icon: Activity },
-        { href: '/superadmin/mgmt/settings?tab=identity', label: 'Brand Settings', icon: ImageIcon },
-        { href: '/superadmin/mgmt/policies', label: 'Policies Management', icon: FileText },
-        { href: '/superadmin/mgmt/social-media', label: 'Social Media', icon: Share2 },
-        { href: '/superadmin/mgmt/offers', label: 'Offers & Coupons', icon: Ticket },
-        { href: '/superadmin/mgmt/marketing', label: 'Marketing Target', icon: Activity },
+        { href: '/superadmin/mgmt/settings?section=website', label: 'Website Settings', icon: Activity },
+        { href: '/superadmin/mgmt/settings?section=brand', label: 'Brand Settings', icon: ImageIcon },
+        { href: '/superadmin/mgmt/settings?section=policies', label: 'Policies Management', icon: FileText },
+        { href: '/superadmin/mgmt/settings?section=social', label: 'Social Media', icon: Share2 },
+        { href: '/superadmin/mgmt/settings?section=offers', label: 'Offers & Coupons', icon: Ticket },
+        { href: '/superadmin/mgmt/settings?section=marketing', label: 'Marketing Target', icon: Activity },
       ]
     },
     {
       title: 'Corporate & Finance',
       items: [
-        { href: '/superadmin/mgmt/settings?tab=business', label: 'Company Details', icon: Building },
-        { href: '/superadmin/mgmt/settings?tab=advanced', label: 'Tax Configuration', icon: Percent },
-        { href: '/superadmin/mgmt/reports', label: 'System Reports', icon: ClipboardList },
+        { href: '/superadmin/mgmt/settings?section=company', label: 'Company Details', icon: Building },
+        { href: '/superadmin/mgmt/settings?section=tax', label: 'Tax Configuration', icon: Percent },
+        { href: '/superadmin/mgmt/settings?section=reports', label: 'System Reports', icon: ClipboardList },
       ]
     }
   ];

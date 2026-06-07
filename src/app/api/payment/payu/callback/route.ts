@@ -16,6 +16,22 @@ const supabase = createClient(
   SUPABASE_SERVICE_ROLE_KEY
 );
 
+// Simple in-memory cache for settings to reduce DB load on high-frequency callbacks
+const SETTINGS_CACHE: Record<string, { value: string, expiry: number }> = {};
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getCachedSetting(key: string): Promise<string> {
+  const cached = SETTINGS_CACHE[key];
+  if (cached && cached.expiry > Date.now()) {
+    return cached.value;
+  }
+  return '';
+}
+
+function setCachedSetting(key: string, value: string) {
+  SETTINGS_CACHE[key] = { value, expiry: Date.now() + CACHE_TTL };
+}
+
 function resolveEnvironmentPreference(envs: Array<string | null | undefined>): PayuEnvironment {
   const normalisedValues = envs
     .filter((candidate): candidate is string => typeof candidate === 'string' && candidate.trim().length > 0)
@@ -56,24 +72,37 @@ export async function POST(request: NextRequest) {
     const txnId = payload.txnid || '';
     const status = (payload.status || '').toLowerCase();
 
-    // Fetch settings from database first, fallback to env vars
-    let dbMerchantKey = '';
-    let dbMerchantSalt = '';
-    let dbEnvironment = '';
-    let dbEnabled = 'true';
-    try {
-      const { data: dbSettings } = await supabase
-        .from('settings')
-        .select('key, value')
-        .in('key', ['payu_merchant_key', 'payu_merchant_salt', 'payu_environment', 'payu_enabled']);
-      if (dbSettings) {
-        dbMerchantKey = dbSettings.find(s => s.key === 'payu_merchant_key')?.value || '';
-        dbMerchantSalt = dbSettings.find(s => s.key === 'payu_merchant_salt')?.value || '';
-        dbEnvironment = dbSettings.find(s => s.key === 'payu_environment')?.value || '';
-        dbEnabled = dbSettings.find(s => s.key === 'payu_enabled')?.value || 'true';
+    // Fetch settings with caching to reduce DB pressure
+    let dbMerchantKey = await getCachedSetting('payu_merchant_key');
+    let dbMerchantSalt = await getCachedSetting('payu_merchant_salt');
+    let dbEnvironment = await getCachedSetting('payu_environment');
+    let dbEnabled = await getCachedSetting('payu_enabled') || 'true';
+
+    if (!dbMerchantKey || !dbMerchantSalt) {
+      try {
+        const { data: dbSettings } = await supabase
+          .from('settings')
+          .select('key, value')
+          .in('key', ['payu_merchant_key', 'payu_merchant_salt', 'payu_environment', 'payu_enabled']);
+        if (dbSettings) {
+          const k = dbSettings.find(s => s.key === 'payu_merchant_key')?.value || '';
+          const s = dbSettings.find(s => s.key === 'payu_merchant_salt')?.value || '';
+          const e = dbSettings.find(s => s.key === 'payu_environment')?.value || '';
+          const en = dbSettings.find(s => s.key === 'payu_enabled')?.value || 'true';
+          
+          if (k) setCachedSetting('payu_merchant_key', k);
+          if (s) setCachedSetting('payu_merchant_salt', s);
+          if (e) setCachedSetting('payu_environment', e);
+          setCachedSetting('payu_enabled', en);
+          
+          dbMerchantKey = k;
+          dbMerchantSalt = s;
+          dbEnvironment = e;
+          dbEnabled = en;
+        }
+      } catch (err) {
+        logger.error('Failed to load PayU settings from DB', { error: err, correlationId });
       }
-    } catch (err) {
-      logger.error('Failed to load PayU settings from DB', { error: err, correlationId });
     }
 
     const payuConfig = {

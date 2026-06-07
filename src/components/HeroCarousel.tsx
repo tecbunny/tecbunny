@@ -144,7 +144,7 @@ export default function HeroCarousel({ pageKey, intervalMs = 6000, className }: 
     >
       <div className="container mx-auto px-4">
         <div
-          className="relative overflow-hidden rounded-3xl bg-gray-900 text-white shadow-xl"
+          className="relative min-h-[340px] sm:min-h-[420px] overflow-hidden rounded-3xl bg-gray-900 text-white shadow-xl"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >

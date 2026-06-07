@@ -23,20 +23,19 @@ export function formatInvoiceDate(value: string | Date | null | undefined): stri
 
 /**
  * Converts a UUID order ID to a short, human-readable order number
- * Format: TB + 4 characters + 2 characters of entropy
+ * Format: TB + 8 characters of entropy (reduced collision risk)
  */
 export function formatOrderNumber(orderId: string): string {
   if (!orderId || typeof orderId !== 'string') {
-    return 'TB0000';
+    return 'TB00000000';
   }
 
   // Remove hyphens, convert to uppercase
   const cleanId = orderId.replace(/-/g, '').toUpperCase();
-  // Take first 4 characters and last 2 for increased entropy and reduced collision risk
-  const shortCode = cleanId.slice(0, 4);
-  const entropy = cleanId.slice(-2);
+  // Take first 8 characters for increased entropy ($4.2$ billion combinations)
+  const shortCode = cleanId.slice(0, 8);
   
-  return `TB${shortCode}${entropy}`;
+  return `TB${shortCode}`;
 }
 
 /**

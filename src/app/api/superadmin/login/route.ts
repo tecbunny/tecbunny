@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyCaptcha } from '@/lib/captcha/captcha-service';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
+import { createSuperadminSessionToken, SUPERADMIN_SESSION_TTL_SECONDS } from '@/lib/auth/superadmin-session';
 
 function getClientIp(request: Request) {
   const headers = request.headers;
@@ -50,12 +51,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid superadmin credentials.' }, { status: 401 });
     }
 
-    // Generate secure session token (SHA-256 hash of credentials + secret salt)
-    const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-    const msgBuffer = new TextEncoder().encode(`${correctUserId}:${correctPassword}:${secret}`);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const token = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const token = await createSuperadminSessionToken(correctUserId.trim());
 
     logger.info('superadmin_login.success', { userId: submittedUserId, ip });
 
@@ -67,7 +63,7 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
-      maxAge: 60 * 60 * 24 // 24 hours
+      maxAge: SUPERADMIN_SESSION_TTL_SECONDS
     });
 
     return response;

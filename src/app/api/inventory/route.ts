@@ -150,6 +150,9 @@ export async function PUT(request: NextRequest) {
     if ('error' in access) {
       return access.error;
     }
+    if (!access.role || !['manager', 'admin', 'superadmin'].includes(access.role)) {
+      return NextResponse.json({ error: 'Only managers and administrators can perform absolute stock adjustments' }, { status: 403 });
+    }
     const supabase = isSupabaseServiceConfigured ? createServiceClient() : access.supabase;
     const { product_id, new_quantity } = await request.json();
 

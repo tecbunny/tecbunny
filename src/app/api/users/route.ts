@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { resolveSiteUrl } from '@/lib/site-url';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { getEffectiveUserRole } from '@/lib/auth/server-role';
+import { verifySuperadminSessionToken } from '@/lib/auth/superadmin-session';
 import { logger } from '@/lib/logger';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.local';
@@ -77,24 +78,13 @@ async function getUserTotals() {
 async function createAuthenticatedClient(request: NextRequest) {
   // Check superadmin session cookie first
   const superadminCookie = request.cookies.get('superadmin-session')?.value;
-  if (superadminCookie) {
-    const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
-    const correctPassword = process.env.SUPERADMIN_PASSWORD;
-    if (correctEmail && correctPassword) {
-      const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-      const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      
-      if (superadminCookie === expectedToken) {
-        return {
-          supabase: supabaseAdmin,
-          session: { user: { id: 'superadmin-root-id', email: correctEmail } } as any,
-          role: 'superadmin'
-        };
-      }
-    }
+  const superadminPayload = await verifySuperadminSessionToken(superadminCookie);
+  if (superadminPayload) {
+    return {
+      supabase: supabaseAdmin,
+      session: { user: { id: 'superadmin-root-id', email: superadminPayload.email } } as any,
+      role: 'superadmin'
+    };
   }
 
   const authHeader = request.headers.get('authorization');

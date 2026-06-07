@@ -149,29 +149,6 @@ export async function POST(request: NextRequest) {
     // STRICT PAYMENT CHECK: Terminate immediately if hash verification fails to prevent spoofing
     if (!isHashValid) {
       logger.error('payu_callback.signature_verification_failed', { correlationId, orderId, txnId });
-      
-      // Update transaction ledger with warning details
-      await supabase
-        .from('payment_transactions')
-        .upsert({
-          order_id: orderId || null,
-          transaction_id: txnId || crypto.randomUUID(),
-          payment_method: 'payu',
-          status: 'failed',
-          gateway_response: { ...payload, hash_verified: false, security_alert: 'Signature validation failed (possible tampering).' },
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'transaction_id' });
-
-      if (orderId) {
-        await supabase
-          .from('orders')
-          .update({
-            payment_status: 'Payment Failed',
-            notes: 'PayU webhook failed cryptographic hash check.',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', orderId);
-      }
 
       const failureUrl = new URL(`/payment/failed`, siteUrl);
       failureUrl.searchParams.set('orderId', orderId);
@@ -180,10 +157,52 @@ export async function POST(request: NextRequest) {
     }
 
     const isSuccess = isGatewayReportedSuccess;
+    const amountNumber = Number(payload.amount);
+
+    if (!orderId || !txnId || !Number.isFinite(amountNumber) || amountNumber <= 0) {
+      logger.warn('payu_callback.missing_or_invalid_reference', { correlationId, orderId, txnId, amount: payload.amount });
+      const fallbackUrl = new URL(`/payment/failed`, siteUrl);
+      fallbackUrl.searchParams.set('reason', 'Invalid payment reference.');
+      return NextResponse.redirect(fallbackUrl, 303);
+    }
+
+    const { data: existingTxn, error: existingTxnError } = await supabase
+      .from('payment_transactions')
+      .select('order_id, amount, status')
+      .eq('transaction_id', txnId)
+      .maybeSingle();
+
+    if (existingTxnError || !existingTxn) {
+      logger.warn('payu_callback.unknown_transaction', { correlationId, orderId, txnId, error: existingTxnError?.message });
+      const failureUrl = new URL(`/payment/failed`, siteUrl);
+      failureUrl.searchParams.set('orderId', orderId);
+      failureUrl.searchParams.set('reason', 'Unknown payment transaction.');
+      return NextResponse.redirect(failureUrl, 303);
+    }
+
+    const expectedAmount = Number(existingTxn.amount);
+    if (
+      existingTxn.order_id !== orderId ||
+      !Number.isFinite(expectedAmount) ||
+      Math.abs(expectedAmount - amountNumber) > 0.01
+    ) {
+      logger.error('payu_callback.transaction_mismatch', {
+        correlationId,
+        orderId,
+        txnId,
+        expectedOrderId: existingTxn.order_id,
+        expectedAmount,
+        receivedAmount: amountNumber,
+      });
+      const failureUrl = new URL(`/payment/failed`, siteUrl);
+      failureUrl.searchParams.set('orderId', orderId);
+      failureUrl.searchParams.set('reason', 'Payment transaction mismatch.');
+      return NextResponse.redirect(failureUrl, 303);
+    }
 
     const transactionUpsert = {
-      order_id: orderId || null,
-      transaction_id: txnId || crypto.randomUUID(),
+      order_id: orderId,
+      transaction_id: txnId,
       payment_method: 'payu',
       status: isSuccess ? 'success' : 'failed',
       gateway_response: { ...payload, hash_verified: true },

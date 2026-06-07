@@ -268,6 +268,8 @@ const structuredData = {
   ],
 };
 
+const serializeJsonLd = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
+
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -290,9 +292,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.instagram.com" />
         <link rel="dns-prefetch" href="https://maps.googleapis.com" />
         <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-        />
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
+          />
       </head>
       <body className={`${inter.variable} font-body antialiased`}>
         <ThemeProvider>

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { verifySuperadminSessionToken } from '@/lib/auth/superadmin-session'
 
 const SHARED_CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -29,6 +30,7 @@ export async function middleware(request: NextRequest) {
     { path: '/api/products', methods: ['GET'] }, // Public product catalog
     { path: '/api/analytics' }, // Public analytics tracking
     { path: '/api/captcha' },  // Public captcha config/verification
+    { path: '/api/payment/payu/callback', methods: ['POST'] }, // Signed gateway callback
   ]
   
   // Check if the current path is in the public API routes
@@ -46,19 +48,7 @@ export async function middleware(request: NextRequest) {
 
   // Superadmin session validation via Edge Runtime Web Crypto
   const superadminCookie = request.cookies.get('superadmin-session')?.value
-  let isSuperadmin = false
-  if (superadminCookie) {
-    const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL
-    const correctPassword = process.env.SUPERADMIN_PASSWORD
-    if (correctEmail && correctPassword) {
-      const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default'
-      const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`)
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
-      const hashArray = Array.from(new Uint8Array(hashBuffer))
-      const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-      isSuperadmin = (superadminCookie === expectedToken)
-    }
-  }
+  const isSuperadmin = Boolean(await verifySuperadminSessionToken(superadminCookie))
 
   let response = NextResponse.next({ request: { headers: requestHeaders } })
 

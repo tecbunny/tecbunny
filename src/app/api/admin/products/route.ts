@@ -10,6 +10,16 @@ export { POST, PUT } from '@/app/api/products/route';
 
 const MAX_LIMIT = 250;
 
+function cleanSearchText(value: string | null | undefined, maxLength = 80) {
+  if (!value) return '';
+  return value
+    .trim()
+    .replace(/[%_*]/g, '')
+    .replace(/[(),]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .slice(0, maxLength);
+}
+
 async function resolveProductColumns(supabase: any): Promise<Set<string>> {
   try {
     const { data, error } = await supabase
@@ -50,7 +60,7 @@ export async function GET(request: NextRequest) {
     const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     
     const searchParams = new URL(request.url).searchParams;
-    const search = searchParams.get('search')?.trim();
+    const search = cleanSearchText(searchParams.get('search'));
     const includeInactive = searchParams.get('includeInactive') === 'true';
     const limitParam = parseInt(searchParams.get('limit') || '100', 10);
     const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), MAX_LIMIT) : 100;
@@ -70,9 +80,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      if (availableColumns.has('title') && availableColumns.has('name')) {
-        query = query.or(`title.ilike.%${search}%,name.ilike.%${search}%`);
-      } else if (availableColumns.has('title')) {
+      if (availableColumns.has('title')) {
         query = query.ilike('title', `%${search}%`);
       } else if (availableColumns.has('name')) {
         query = query.ilike('name', `%${search}%`);

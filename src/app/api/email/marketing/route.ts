@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { emailHelpers } from '@/lib/email';
 import { rateLimit } from '@/lib/rate-limit';
-import { createClient as createServerClient } from '@/lib/supabase/server';
+import { requireApiRole } from '@/lib/server-role-guard';
 
 // Marketing emails: stricter (2 per 30m) due to bulk nature
 const LIMIT = 2;
@@ -10,6 +10,11 @@ const WINDOW_MS = 30 * 60 * 1000;
 
 export async function POST(request: NextRequest) {
   try {
+    const access = await requireApiRole({ allowedRoles: ['manager'], minimumRole: 'admin' });
+    if ('error' in access) {
+      return access.error;
+    }
+
     const payload = await request.json();
     const { to, campaignTitle, campaignBody, ctaText, ctaUrl, bannerImageUrl, discountCode } = payload || {};
     if (!to) {
@@ -20,15 +25,8 @@ export async function POST(request: NextRequest) {
     if (recipients.some(e => typeof e !== 'string' || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))) {
       return NextResponse.json({ error: 'Invalid recipient email(s)' }, { status: 400 });
     }
-    // Auth (optional) to tighten rate key
-    let userId: string | null = null;
-    try {
-      const supabase = await createServerClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      userId = user?.id || null;
-    } catch(_ignoreErr) {}
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const rateKey = userId ? `user:${userId}` : `ip:${ip}`;
+    const rateKey = access.session?.user.id ? `user:${access.session.user.id}` : `ip:${ip}`;
     if (!rateLimit(rateKey, 'email_marketing', { limit: LIMIT, windowMs: WINDOW_MS })) {
       return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
     }

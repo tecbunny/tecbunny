@@ -117,7 +117,7 @@ export class OTPManager {
     });
   }
 
-  // Generate a secure 4-digit OTP code
+  // Generate a secure 6-digit OTP code
   generateOTPCode(): string {
     if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
       try {
@@ -125,7 +125,7 @@ export class OTPManager {
         window.crypto.getRandomValues(array);
         const value = array[0];
         if (value !== undefined) {
-          return (1000 + (value % 9000)).toString();
+          return (100000 + (value % 900000)).toString();
         }
       } catch (error) {
         logger.warn('Browser crypto entropy failed; falling back to Node.js crypto', { error });
@@ -136,13 +136,13 @@ export class OTPManager {
       try {
         const bytes = randomBytes(4);
         const num = bytes.readUInt32BE(0);
-        return (1000 + (num % 9000)).toString();
+        return (100000 + (num % 900000)).toString();
       } catch (error) {
         logger.warn('Node crypto failed; falling back to Math.random', { error });
-        return Math.floor(1000 + Math.random() * 9000).toString();
+        return Math.floor(100000 + Math.random() * 900000).toString();
       }
     } else {
-      return Math.floor(1000 + Math.random() * 9000).toString();
+      return Math.floor(100000 + Math.random() * 900000).toString();
     }
   }
 
@@ -342,6 +342,9 @@ export class OTPManager {
       const type = arg3 || 'signup';
 
       const normalizedEmail = email.trim().toLowerCase();
+      if (!/^\d{4,6}$/.test(otp || '')) {
+        return { success: false, message: 'Invalid or expired OTP' };
+      }
       logger.debug('Starting legacy OTP verification', { email: normalizedEmail, type });
 
       try {

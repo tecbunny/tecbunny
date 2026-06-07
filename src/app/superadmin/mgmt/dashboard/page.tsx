@@ -7,25 +7,14 @@ import {
   Globe, Building, Percent, Activity, Sliders
 } from 'lucide-react';
 import { createServiceClient } from '@/lib/supabase/server';
+import { verifySuperadminSessionToken } from '@/lib/auth/superadmin-session';
 
 export const dynamic = 'force-dynamic';
 
 export default async function SuperadminDashboard() {
   const cookieStore = await cookies();
   const superadminCookie = cookieStore.get('superadmin-session')?.value;
-  let isSuperadmin = false;
-  if (superadminCookie) {
-    const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
-    const correctPassword = process.env.SUPERADMIN_PASSWORD;
-    if (correctEmail && correctPassword) {
-      const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-      const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      isSuperadmin = (superadminCookie === expectedToken);
-    }
-  }
+  const isSuperadmin = Boolean(await verifySuperadminSessionToken(superadminCookie));
 
   if (!isSuperadmin) {
     redirect('/superadmin/login');

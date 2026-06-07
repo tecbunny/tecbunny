@@ -15,6 +15,7 @@ import { enhancedCommissionService } from '@/lib/enhanced-commission-service';
 import { emailHelpers } from '@/lib/email';
 import { checkoutEngine } from '@/lib/checkout-engine';
 import { formatPlaceOfSupply, resolveIndianStateFromText, resolveIndianStateInfo, TECBUNNY_REGISTERED_STATE } from '@/lib/indian-tax';
+import { verifySuperadminSessionToken } from '@/lib/auth/superadmin-session';
 
 const RATE_LIMIT = 5; // 5 orders
 const RATE_WINDOW_MS = 60 * 1000; // per minute
@@ -25,23 +26,11 @@ export async function POST(request: NextRequest) {
 
     // Check superadmin session cookie first to block order placements
     const superadminCookie = request.cookies.get('superadmin-session')?.value;
-    if (superadminCookie) {
-      const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
-      const correctPassword = process.env.SUPERADMIN_PASSWORD;
-      if (correctEmail && correctPassword) {
-        const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-        const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        
-        if (superadminCookie === expectedToken) {
-          return apiError('FORBIDDEN', { 
-            correlationId, 
-            overrideMessage: '403 Forbidden - System Configuration Accounts Cannot Place Orders.' 
-          });
-        }
-      }
+    if (await verifySuperadminSessionToken(superadminCookie)) {
+      return apiError('FORBIDDEN', {
+        correlationId,
+        overrideMessage: '403 Forbidden - System Configuration Accounts Cannot Place Orders.'
+      });
     }
 
     // Support both cookie-based auth (SSR) and Authorization: Bearer token (client fetch)

@@ -132,9 +132,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!/^\d{4}$/.test(finalCode)) {
+    if (!/^\d{6}$/.test(finalCode)) {
       return NextResponse.json(
-        { error: 'OTP code must be 4 digits' },
+        { error: 'OTP code must be 6 digits' },
         { status: 400 }
       );
     }

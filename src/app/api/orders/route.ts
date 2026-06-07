@@ -123,8 +123,6 @@ export async function POST(request: NextRequest) {
     }));
     
     const normalizeOrderType = (value: unknown): string => {
-    
-    const normalizeOrderType = (value: unknown): string => {
       if (typeof value !== 'string') return '';
       const key = value.trim().toLowerCase();
       if (['pickup', 'pick-up', 'store pickup', 'store-pickup'].includes(key)) return 'Pickup';

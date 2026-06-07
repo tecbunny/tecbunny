@@ -607,7 +607,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
           )}
         </div>
 
-        <div className="reveal-section mt-12" data-reveal-id="products-grid">
+        <div className="reveal-section is-revealed mt-12" data-reveal-id="products-grid">
           {loading ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 min-h-[400px]">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -651,8 +651,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                   <ProductTileErrorBoundary key={product.id || index} productId={product.id}>
                     <div
                     className={cn(
-                      'reveal-item group flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-4 transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-400/30',
-                      revealDelayClass(Math.min(index, 11) * 70)
+                      'group flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-4 opacity-100 transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-400/30'
                     )}
                   >
                     <Link href={`/products/${product.id}`} className="block">

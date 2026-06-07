@@ -47,8 +47,8 @@ class ImprovedEmailService {
           pass: process.env.SMTP_PASS,
         },
         tls: {
-          // Only allow unauthorized certificates in non-production environments
-          rejectUnauthorized: process.env.NODE_ENV !== 'production'
+          // Reject unauthorized certificates in production for security
+          rejectUnauthorized: process.env.NODE_ENV === 'production'
         },
         pool: true,
         maxConnections: 5,
@@ -496,46 +496,9 @@ class ImprovedEmailService {
       text: `${subject}\n\n${message}\n\nTimestamp: ${new Date().toISOString()}`
     });
   }
-
-  // Clean up old rate limit entries periodically
-  cleanupRateLimiter() {
-    const now = Date.now();
-    const oneDay = 24 * 60 * 60 * 1000;
-    
-    for (const [email, data] of this.rateLimiter.entries()) {
-      if (now - data.firstSentAt > oneDay) {
-        this.rateLimiter.delete(email);
-      }
-    }
-  }
-
-  // Get rate limit info for an email
-  getRateLimitInfo(email: string): {
-    count: number;
-    canSend: boolean;
-    waitTime?: number;
-    nextAvailable?: Date;
-  } {
-    const rateLimitCheck = this.checkRateLimit(email);
-    const userLimit = this.rateLimiter.get(email);
-    
-    return {
-      count: userLimit?.count || 0,
-      canSend: rateLimitCheck.allowed,
-      waitTime: rateLimitCheck.waitTime,
-      nextAvailable: rateLimitCheck.waitTime 
-        ? new Date(Date.now() + (rateLimitCheck.waitTime * 1000))
-        : undefined
-    };
-  }
 }
 
 // Export singleton instance
 const improvedEmailService = new ImprovedEmailService();
-
-// Clean up rate limiter every hour
-setInterval(() => {
-  improvedEmailService.cleanupRateLimiter();
-}, 60 * 60 * 1000);
 
 export default improvedEmailService;

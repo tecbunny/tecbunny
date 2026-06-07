@@ -164,10 +164,15 @@ BEGIN
   ) RETURNING id INTO v_order_id;
 
   -- 2. Process items and lock stock using the specialized atomic movement function
-  -- p_items is expected to be a JSONB array of { product_id, quantity } or similar
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) AS x
+  -- p_items is expected to be a JSONB object containing cart_items array
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items->'cart_items') AS x
   LOOP
     v_product_id := (v_item.value->>'product_id')::UUID;
+    -- Fallback to 'id' if 'product_id' is missing in the item object
+    IF v_product_id IS NULL THEN
+      v_product_id := (v_item.value->>'id')::UUID;
+    END IF;
+    
     v_qty := (v_item.value->>'quantity')::INTEGER;
 
     IF v_product_id IS NOT NULL AND v_qty > 0 THEN
@@ -199,6 +204,15 @@ $$;
 -- ============================================================================
 -- 4. Permissions
 -- ============================================================================
+
+-- Fix: Missing RLS policies for orders table to allow customers to view history
+DROP POLICY IF EXISTS "Customers can view own orders" ON public.orders;
+CREATE POLICY "Customers can view own orders" ON public.orders
+  FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Staff can view all orders" ON public.orders;
+CREATE POLICY "Staff can view all orders" ON public.orders
+  FOR SELECT TO authenticated USING (public.is_staff_member());
 
 GRANT EXECUTE ON FUNCTION public.verify_order_otp_atomic(UUID, TEXT, TEXT, INTEGER) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.allocate_order_inventory_atomic(

@@ -163,7 +163,10 @@ export class OTPManager {
 
   // Hash OTP code for secure storage with salt and internal pepper to prevent pre-computation
   private hashOTP(code: string, salt: string = 'tecbunny_static_salt'): string {
-    const pepper = process.env.OTP_SECRET_PEPPER || 'tecbunny_default_pepper_7722';
+    const pepper = process.env.OTP_SECRET_PEPPER;
+    if (!pepper) {
+      throw new Error('CRITICAL: OTP_SECRET_PEPPER is not configured in the environment.');
+    }
     return createHash('sha256').update(code + salt + pepper).digest('hex');
   }
 

@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       customerType
     } = await request.json();
 
-    // Validate required fields
+    // Validate required fields and data types rigorously
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         { error: 'Items array is required' },
@@ -25,16 +25,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Defensive type casting for all incoming items to prevent string comparison logic failures
+    const validatedItems = items.map(item => ({
+      ...item,
+      id: String(item.id || item.productId || ''),
+      price: Number(item.price) || 0,
+      quantity: Number(item.quantity) || 1,
+      mrp: item.mrp != null ? Number(item.mrp) : null,
+      offer_price: item.offer_price != null ? Number(item.offer_price) : null
+    }));
+
     // Get customer pricing context
     const context = await pricingService.getCustomerPricingContext(customerId);
     
     // Override context if specific customer type is provided
     if (customerType) {
-      context.customer_type = customerType;
+      context.customer_type = String(customerType) as any;
     }
 
-    // Calculate pricing
-    const pricing = await pricingService.calculateCartTotal(items, context);
+    // Calculate pricing using validated numeric inputs
+    const pricing = await pricingService.calculateCartTotal(validatedItems, context);
 
     return NextResponse.json({
       success: true,

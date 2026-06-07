@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { checkoutEngine } from '@/lib/checkout-engine';
 import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
+import type { CustomerCategory } from '@/lib/types';
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,17 +34,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid items payload' }, { status: 400 });
     }
 
+    // Defensive type casting for items to prevent variable type coercion failures in the checkout engine
+    const validatedItems = items.map(item => ({
+      ...item,
+      id: String(item.id || item.productId || ''),
+      price: Number(item.price) || 0,
+      quantity: Number(item.quantity) || 1,
+      mrp: item.mrp != null ? Number(item.mrp) : null
+    }));
+
     // Get user id from session if available
     const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
 
     const result = await checkoutEngine.calculate({
-      items,
+      items: validatedItems,
       userId,
-      customerCategory,
-      couponCode,
-      salesAgentId
+      customerCategory: customerCategory ? String(customerCategory) as CustomerCategory : undefined,
+      couponCode: couponCode ? String(couponCode) : undefined,
+      salesAgentId: salesAgentId ? String(salesAgentId) : undefined
     });
 
     return NextResponse.json(result);

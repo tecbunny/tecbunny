@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     const { orderId, agentId } = await request.json();
 
-    // Validate required fields
+    // Validate required fields and types rigorously
     if (!orderId || !agentId) {
       return NextResponse.json(
         { error: 'Order ID and agent ID are required' },
@@ -30,8 +30,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculate commission
-    const result = await enhancedCommissionService.calculateOrderCommission(orderId, agentId);
+    const safeOrderId = String(orderId);
+    const safeAgentId = String(agentId);
+
+    // Calculate commission using safe string identifiers
+    const result = await enhancedCommissionService.calculateOrderCommission(safeOrderId, safeAgentId);
 
     if (!result.success) {
       return NextResponse.json(
@@ -72,16 +75,24 @@ export async function PUT(request: NextRequest) {
 
     const calculation = await request.json();
 
-    // Validate required fields
-    if (!calculation.order_id || !calculation.agent_id || !calculation.commission_amount) {
+    // Validate required fields and types rigorously
+    if (!calculation.order_id || !calculation.agent_id || calculation.commission_amount == null) {
       return NextResponse.json(
         { error: 'Calculation object with order_id, agent_id, and commission_amount is required' },
         { status: 400 }
       );
     }
 
-    // Save commission record
-    const result = await enhancedCommissionService.saveCommissionRecord(calculation);
+    const safeCalculation = {
+      ...calculation,
+      order_id: String(calculation.order_id),
+      agent_id: String(calculation.agent_id),
+      commission_amount: Number(calculation.commission_amount) || 0,
+      points_awarded: calculation.points_awarded != null ? Number(calculation.points_awarded) : undefined
+    };
+
+    // Save commission record using validated numeric inputs
+    const result = await enhancedCommissionService.saveCommissionRecord(safeCalculation);
 
     if (!result.success) {
       return NextResponse.json(

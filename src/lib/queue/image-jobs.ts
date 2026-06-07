@@ -28,7 +28,7 @@ async function processCleanupJob(job: Job) {
   let cleanedImages = 0;
   const cleanupResults: any[] = [];
 
-  const limit = pLimit(5);
+  const limit = pLimit(10);
 
   const cleanupTasks = (products || []).map((product) => limit(async () => {
     let needsUpdate = false;

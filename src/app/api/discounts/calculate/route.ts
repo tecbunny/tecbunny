@@ -38,24 +38,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         discounts: [],
         totalDiscount: 0,
-        finalAmount: parseFloat(orderValue || '0')
+        finalAmount: Number(orderValue) || 0
       });
     }
 
-    const orderAmount = parseFloat(orderValue || '0');
+    const orderAmount = Number(orderValue) || 0;
     const discounts = [];
     let totalDiscountPercentage = 0;
 
     // Add category-based discount
-    if (user.customer_category && user.discount_percentage > 0) {
+    const userDiscountPct = Number(user.discount_percentage) || 0;
+    if (user.customer_category && userDiscountPct > 0) {
       discounts.push({
         type: 'category',
         title: `${user.customer_category} Customer Discount`,
-        percentage: user.discount_percentage,
-        amount: (orderAmount * user.discount_percentage) / 100,
+        percentage: userDiscountPct,
+        amount: (orderAmount * userDiscountPct) / 100,
         description: `Automatic discount for ${user.customer_category} customers`
       });
-      totalDiscountPercentage += user.discount_percentage;
+      totalDiscountPercentage += userDiscountPct;
     }
 
     // Get active offers for this customer category
@@ -70,28 +71,32 @@ export async function GET(request: NextRequest) {
 
     if (!offersError && offers) {
       for (const offer of offers) {
+        const minOrder = Number(offer.minimum_order_value) || 0;
+        const offerDiscountPct = Number(offer.discount_percentage) || 0;
+        const maxDiscount = Number(offer.max_discount_amount) || Infinity;
+
         // Check minimum order value
-        if (offer.minimum_order_value && orderAmount < offer.minimum_order_value) {
+        if (minOrder > 0 && orderAmount < minOrder) {
           continue;
         }
 
-        let discountAmount = (orderAmount * offer.discount_percentage) / 100;
+        let discountAmount = (orderAmount * offerDiscountPct) / 100;
         
         // Apply max discount limit if specified
-        if (offer.max_discount_amount && discountAmount > offer.max_discount_amount) {
-          discountAmount = offer.max_discount_amount;
+        if (maxDiscount > 0 && discountAmount > maxDiscount) {
+          discountAmount = maxDiscount;
         }
 
         discounts.push({
           type: 'offer',
-          title: offer.title,
-          percentage: offer.discount_percentage,
+          title: String(offer.title),
+          percentage: offerDiscountPct,
           amount: discountAmount,
-          description: offer.description,
+          description: String(offer.description || ''),
           validUntil: offer.valid_to
         });
 
-        totalDiscountPercentage += offer.discount_percentage;
+        totalDiscountPercentage += offerDiscountPct;
       }
     }
 

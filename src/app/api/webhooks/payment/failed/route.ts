@@ -3,21 +3,64 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
 import { logger } from '@/lib/logger';
+import { validateWebhookSignature } from '@/lib/webhook-validator';
+import { logWebhookEvent } from '@/lib/webhook-logger';
+import { getRedis } from '@/lib/redis';
 
 // Generic payment failed webhook handler
 export async function POST(request: NextRequest) {
-  let body: any = null;
+  const correlationId = request.headers.get('x-correlation-id') || null;
+  const startTime = new Date();
+  let rawBody = '';
+
   try {
     const supabase = await createClient();
-    body = await request.json();
+    rawBody = await request.text();
+    let body: any;
+    try {
+      body = JSON.parse(rawBody);
+    } catch (e) {
+      logger.error('Failed to parse payment failed webhook body', { error: e });
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    }
     
-    logger.info('Payment failed webhook received:', { body: JSON.stringify(body) });
+    logger.info('Payment failed webhook received:', { body: JSON.stringify(body), correlationId });
 
     const signature = request.headers.get('x-webhook-signature');
     const source = request.headers.get('x-webhook-source') || 'unknown';
     
-    if (!validateWebhookSignature(signature, body, source)) {
+    const secret = source === 'razorpay'
+      ? process.env.RAZORPAY_WEBHOOK_SECRET
+      : process.env.TECBUNNY_WEBHOOK_SECRET;
+
+    if (!secret || !validateWebhookSignature(signature, rawBody, secret)) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
+    // Idempotency: Check if this event was already processed via Redis deduplication
+    const eventId = body.id || body.event_id || body.payment_id || body.transaction_id;
+    if (eventId) {
+      const redis = getRedis();
+      if (redis) {
+        const idempotencyKey = `webhook:payment:failed:${eventId}`;
+        const isNewEvent = await redis.set(idempotencyKey, 'processing', 'EX', 86400, 'NX');
+        
+        if (!isNewEvent) {
+          logger.info('Duplicate payment failed webhook event (Redis cache hit), skipping execution', { eventId, correlationId });
+          return NextResponse.json({ success: true, message: 'Event already processed (duplicate)' }, { status: 200 });
+        }
+      }
+
+      const { data: existingEvent } = await supabase
+        .from('webhook_events')
+        .select('id')
+        .eq('event_id', eventId)
+        .maybeSingle();
+
+      if (existingEvent) {
+        logger.info('Duplicate payment failed webhook event (DB hit), skipping execution', { eventId, correlationId });
+        return NextResponse.json({ success: true, message: 'Event already processed (duplicate)' }, { status: 200 });
+      }
     }
 
     const result = await processPaymentFailed(supabase, body, source);
@@ -26,13 +69,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
 
   } catch (error: any) {
-    logger.error('Payment failed webhook error:', { error: error.message });
+    logger.error('Payment failed webhook error:', { error: error.message, correlationId });
     
     try {
       const supabase = await createClient();
-      await logWebhookEvent(supabase, 'payment_failed', body, 'unknown', false, error.message);
+      let parsedBody = {};
+      try {
+        parsedBody = rawBody ? JSON.parse(rawBody) : {};
+      } catch {}
+      const eventId = (parsedBody as any).id || (parsedBody as any).event_id || (parsedBody as any).payment_id || (parsedBody as any).transaction_id;
+      await logWebhookEvent(supabase, 'payment_failed', parsedBody, 'unknown', false, error.message);
     } catch (logError: any) {
-      logger.error('Failed to log webhook error:', { error: logError.message });
+      logger.error('Failed to log webhook error:', { error: logError.message, correlationId });
     }
     
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -254,43 +302,6 @@ Action: Follow up with customer! 📞
     }
   } catch (error: any) {
     logger.error('Failed to send team notification:', { error: error.message });
-  }
-}
-
-function validateWebhookSignature(signature: string | null, body: any, source: string): boolean {
-  if (process.env.NODE_ENV === 'development') {
-    return true;
-  }
-
-  if (!signature) {
-    logger.warn('No webhook signature provided:', { source });
-    return false;
-  }
-
-  return true;
-}
-
-async function logWebhookEvent(
-  supabase: any, 
-  eventType: string, 
-  payload: any, 
-  source: string, 
-  processed: boolean, 
-  errorMessage?: string
-) {
-  try {
-    await supabase
-      .from('webhook_events')
-      .insert({
-        source,
-        event_type: eventType,
-        payload,
-        processed,
-        error_message: errorMessage,
-        created_at: new Date().toISOString()
-      });
-  } catch (error: any) {
-    logger.error('Failed to log webhook event:', { error: error.message });
   }
 }
 

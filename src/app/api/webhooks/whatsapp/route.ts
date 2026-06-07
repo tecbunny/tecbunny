@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
 import { createClient } from '@/lib/supabase/server';
 import { validateWebhookSignature } from '@/lib/webhook-validator';
+import { getRedis } from '@/lib/redis';
+import { logger } from '@/lib/logger';
 
 // Handle WhatsApp webhook verification and message events
 export async function GET(request: NextRequest) {
@@ -31,6 +33,34 @@ export async function POST(request: NextRequest) {
     }
 
     const body = JSON.parse(rawBody);
+    
+    // Idempotency: Check if these messages have already been processed
+    const redis = getRedis();
+    const messageIds: string[] = [];
+    for (const entry of body.entry || []) {
+      for (const change of entry.changes || []) {
+        if (change.field === 'messages') {
+          for (const message of change.value.messages || []) {
+            if (message.id) messageIds.push(message.id);
+          }
+        }
+      }
+    }
+
+    if (redis && messageIds.length > 0) {
+      // Check for existing message IDs in Redis
+      const processedCount = await Promise.all(messageIds.map(id => redis.get(`webhook:whatsapp:msg:${id}`)));
+      const allProcessed = processedCount.every(val => val !== null);
+      
+      if (allProcessed) {
+        logger.info('Duplicate WhatsApp webhook event, skipping execution', { messageIds });
+        return NextResponse.json({ status: 'already_processed' });
+      }
+
+      // Mark as processing
+      await Promise.all(messageIds.map(id => redis.set(`webhook:whatsapp:msg:${id}`, 'processed', 'EX', 86400)));
+    }
+
     const supabase = await createClient();
 
     // Process WhatsApp webhook events

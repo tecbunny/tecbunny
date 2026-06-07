@@ -82,10 +82,11 @@ export async function POST(request: NextRequest) {
         productsBatch.push(product);
 
         if (productsBatch.length >= BATCH_SIZE) {
-          const { error } = await supabase.from('products').insert(productsBatch);
+          // Use upsert with onConflict: 'name' to prevent race conditions and duplicates during re-imports
+          const { error } = await supabase.from('products').upsert(productsBatch, { onConflict: 'name' });
           if (error) {
-            logger.error('Batch insert error', { error });
-            results.errors.push({ row: rowIndex, field: 'db', message: 'Batch insert failed' });
+            logger.error('Batch upsert error', { error });
+            results.errors.push({ row: rowIndex, field: 'db', message: 'Batch upsert failed' });
           } else {
             results.imported += productsBatch.length;
           }
@@ -103,10 +104,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (productsBatch.length > 0) {
-      const { error } = await supabase.from('products').insert(productsBatch);
+      // Use upsert with onConflict: 'name' to prevent race conditions and duplicates during re-imports
+      const { error } = await supabase.from('products').upsert(productsBatch, { onConflict: 'name' });
       if (error) {
-        logger.error('Final batch insert error', { error });
-        results.errors.push({ row: rowIndex, field: 'db', message: 'Final batch insert failed' });
+        logger.error('Final batch upsert error', { error });
+        results.errors.push({ row: rowIndex, field: 'db', message: 'Final batch upsert failed' });
       } else {
         results.imported += productsBatch.length;
       }

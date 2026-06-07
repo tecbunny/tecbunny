@@ -1,18 +1,22 @@
 import { NextResponse } from 'next/server'
 
-import { createServiceClient , isSupabaseServiceConfigured , createClient } from '@/lib/supabase/server'
+import { AdminAuthError, requireAdminContext } from '@/lib/auth/admin-guard'
 
 // export const dynamic = 'force-dynamic'
 
 // GET /api/admin/agents/list?status=pending|approved
 export async function GET(request: Request) {
-  const token = process.env.INTERNAL_API_TOKEN
-  const provided = new Headers(request.headers).get('x-internal-token') || ''
-  if (!token || provided !== token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  let context
+  try {
+    context = await requireAdminContext()
+  } catch (error) {
+    const statusCode = error instanceof AdminAuthError ? error.status : 401
+    return NextResponse.json({ error: 'Unauthorized' }, { status: statusCode })
+  }
 
   const url = new URL(request.url)
   const status = url.searchParams.get('status') || undefined
-  const supabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient()
+  const supabase = context.serviceSupabase
   let query = supabase.from('sales_agents').select('*')
   if (status) query = query.eq('status', status)
   const { data, error } = await query.order('created_at', { ascending: false })

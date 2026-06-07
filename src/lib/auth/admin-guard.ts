@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
-import { ALL_ROLES, normalizeRole as normalizeKnownRole, ROLE_HIERARCHY, type UserRole } from '@/lib/roles';
+import { ALL_ROLES, normalizeRole as normalizeKnownRole, type UserRole } from '@/lib/roles';
 
 type AdminRole = 'admin' | 'manager' | 'superadmin';
 
@@ -64,17 +64,6 @@ const extractRoleFromMetadata = (metadata: Record<string, unknown> | undefined |
   return null;
 };
 
-const pickHighestRole = (...roles: Array<UserRole | null | undefined>): UserRole => {
-  let best: UserRole = 'customer';
-  for (const role of roles) {
-    if (!role) continue;
-    if (ROLE_HIERARCHY[role] > ROLE_HIERARCHY[best]) {
-      best = role;
-    }
-  }
-  return best;
-};
-
 export async function requireAdminContext(): Promise<AdminContext> {
   try {
     const superadminContext = await requireSuperadminContext();
@@ -120,9 +109,9 @@ export async function requireAdminContext(): Promise<AdminContext> {
   // Security fix: Do not trust user_metadata for admin roles.
   const metadataRole =
     extractRoleFromMetadata(user.app_metadata as Record<string, unknown> | undefined);
-    
+     
   const profileRole = normalizeRole(profile?.role);
-  let resolvedRole = pickHighestRole(metadataRole, profileRole);
+  let resolvedRole = metadataRole ?? profileRole ?? 'customer';
 
   // Strip superadmin claim from standard database-backed accounts
   if (resolvedRole === 'superadmin') {

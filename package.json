@@ -65,7 +65,7 @@
     "ioredis": "5.7.0",
     "lucide-react": "0.542.0",
     "nanoid": "^5.0.9",
-    "next": "^15.5.15",
+    "next": "^16.2.4",
     "next-themes": "0.4.6",
     "nodemailer": "^8.0.4",
     "p-limit": "^7.3.0",
@@ -86,7 +86,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",
-    "@next/eslint-plugin-next": "^15.5.15",
+    "@next/eslint-plugin-next": "^16.2.4",
     "@tailwindcss/aspect-ratio": "0.4.2",
     "@tailwindcss/cli": "4.1.13",
     "@tailwindcss/forms": "0.5.10",
@@ -100,12 +100,12 @@
     "autoprefixer": "10.4.21",
     "cross-env": "10.0.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "^15.5.15",
+    "eslint-config-next": "^16.2.4",
     "postcss": "8.5.14",
     "tailwindcss": "4.1.13",
     "typescript": "5.9.2",
     "vite": "^7.3.3",
-    "vitest": "4.0.14"
+    "vitest": "^4.1.5"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.1.12",
@@ -147,7 +147,7 @@
       "minimatch": "^3.1.5"
     },
     "axios": ">=1.13.5",
-    "brace-expansion": ">=1.1.13",
+    "brace-expansion": "5.0.6",
     "diff": "^4.0.4",
     "electron": ">=39.8.5",
     "flatted": "^3.4.2",

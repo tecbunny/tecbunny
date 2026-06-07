@@ -54,7 +54,9 @@ export class EmailService {
       secure: config.secure,
       auth: config.auth,
       tls: {
-        rejectUnauthorized: false // For development only
+        rejectUnauthorized: process.env.NODE_ENV === 'production'
+          ? true
+          : process.env.SMTP_TLS_REJECT_UNAUTHORIZED !== 'false'
       }
     });
   }
@@ -91,7 +93,7 @@ export class EmailService {
       const template = generateEmailTemplate(templateType, templateData);
       
       const mailOptions = {
-        from: `${this.config.from.name} <${this.config.from.email}>`,
+        from: { name: this.config.from.name, address: this.config.from.email },
         to: Array.isArray(to) ? to.join(', ') : to,
         cc: options?.cc ? (Array.isArray(options.cc) ? options.cc.join(', ') : options.cc) : undefined,
         bcc: options?.bcc ? (Array.isArray(options.bcc) ? options.bcc.join(', ') : options.bcc) : undefined,
@@ -133,7 +135,7 @@ export class EmailService {
   ): Promise<boolean> {
     try {
       const mailOptions = {
-        from: `${this.config.from.name} <${this.config.from.email}>`,
+        from: { name: this.config.from.name, address: this.config.from.email },
         to: Array.isArray(to) ? to.join(', ') : to,
         cc: options?.cc ? (Array.isArray(options.cc) ? options.cc.join(', ') : options.cc) : undefined,
         bcc: options?.bcc ? (Array.isArray(options.bcc) ? options.bcc.join(', ') : options.bcc) : undefined,

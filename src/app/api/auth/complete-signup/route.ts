@@ -7,6 +7,12 @@ import { sendWelcomeNotification } from '@/lib/whatsapp-service';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.local';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const PASSWORD_POLICY_MESSAGE = 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number and one special character';
+
+function isStrongPassword(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(value);
+}
 
 // Use admin client for user operations
 const supabaseAdmin = createClient(
@@ -37,6 +43,13 @@ export async function POST(request: NextRequest) {
     if (!password || !name || !mobile) {
       return NextResponse.json(
         { error: 'Mobile, password, and name are required' },
+        { status: 400 }
+      );
+    }
+
+    if (!isStrongPassword(password)) {
+      return NextResponse.json(
+        { error: PASSWORD_POLICY_MESSAGE },
         { status: 400 }
       );
     }

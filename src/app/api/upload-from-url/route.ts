@@ -1,4 +1,5 @@
 import dns from 'dns/promises';
+import net from 'net';
 
 import { NextRequest } from 'next/server';
 
@@ -8,6 +9,91 @@ import { uploadHeroBanner, isS3Configured } from '@/lib/s3-storage';
 import { logger } from '@/lib/logger';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/admin-auth';
+
+const MAX_REMOTE_IMAGE_BYTES = 4 * 1024 * 1024;
+const ALLOWED_REMOTE_IMAGE_PROTOCOLS = new Set(['http:', 'https:']);
+const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+
+function isBlockedIPv4(ip: string) {
+  const octets = ip.split('.').map((part) => Number(part));
+  if (octets.length !== 4 || octets.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+    return true;
+  }
+
+  const [first, second] = octets;
+  return first === 0
+    || first === 10
+    || first === 127
+    || first === 169 && second === 254
+    || first === 172 && second >= 16 && second <= 31
+    || first === 192 && second === 168
+    || first === 100 && second >= 64 && second <= 127
+    || first >= 224;
+}
+
+function isBlockedIPv6(ip: string) {
+  const normalized = ip.toLowerCase();
+  return normalized === '::1'
+    || normalized === '::'
+    || normalized.startsWith('fc')
+    || normalized.startsWith('fd')
+    || normalized.startsWith('fe80:')
+    || normalized.startsWith('ff');
+}
+
+function isBlockedIp(ip: string) {
+  const version = net.isIP(ip);
+  if (version === 4) return isBlockedIPv4(ip);
+  if (version === 6) return isBlockedIPv6(ip);
+  return true;
+}
+
+async function validatePublicRemoteUrl(url: URL) {
+  if (!ALLOWED_REMOTE_IMAGE_PROTOCOLS.has(url.protocol)) {
+    return false;
+  }
+
+  if (url.username || url.password) {
+    return false;
+  }
+
+  const hostname = url.hostname;
+  if (!hostname) {
+    return false;
+  }
+
+  const literalIpVersion = net.isIP(hostname);
+  if (literalIpVersion && isBlockedIp(hostname)) {
+    return false;
+  }
+
+  const records = await dns.lookup(hostname, { all: true, verbatim: true });
+  return records.length > 0 && records.every((record) => !isBlockedIp(record.address));
+}
+
+async function readResponseWithLimit(response: Response, limitBytes: number) {
+  if (!response.body) {
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  const reader = response.body.getReader();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > limitBytes) {
+      await reader.cancel();
+      throw new Error('REMOTE_IMAGE_TOO_LARGE');
+    }
+    chunks.push(value);
+  }
+
+  return Buffer.concat(chunks);
+}
 
 export async function POST(request: NextRequest) {
   const correlationId = `upload-url-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -39,21 +125,17 @@ export async function POST(request: NextRequest) {
       return apiError('VALIDATION_ERROR', { overrideMessage: 'Invalid URL format', correlationId });
     }
 
-    // SSRF Protection: Resolve DNS and check for private IPs
+    if (!ALLOWED_REMOTE_IMAGE_PROTOCOLS.has(imageUrl.protocol)) {
+      logger.warn('upload_from_url_invalid_protocol', { correlationId, protocol: imageUrl.protocol });
+      return apiError('VALIDATION_ERROR', { overrideMessage: 'URL must use http or https', correlationId });
+    }
+
+    // SSRF Protection: Resolve DNS and check for private, loopback, link-local, and multicast ranges.
     try {
-      const hostname = imageUrl.hostname;
-      const addresses = await dns.resolve(hostname);
-      for (const ip of addresses) {
-        // Simple check for private ranges (10.x, 192.168.x, 172.16-31.x, 127.x)
-        if (
-          ip.startsWith('10.') || 
-          ip.startsWith('192.168.') || 
-          ip.startsWith('127.') ||
-          /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ip)
-        ) {
-           logger.warn('upload_from_url_ssrf_attempt', { correlationId, url, ip });
-           return apiError('VALIDATION_ERROR', { overrideMessage: 'Invalid URL target', correlationId });
-        }
+      const isPublicTarget = await validatePublicRemoteUrl(imageUrl);
+      if (!isPublicTarget) {
+        logger.warn('upload_from_url_ssrf_attempt', { correlationId, url });
+        return apiError('VALIDATION_ERROR', { overrideMessage: 'Invalid URL target', correlationId });
       }
     } catch (_dnsError) {
        // If DNS fails, we can't verify, so we block
@@ -62,11 +144,10 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if URL points to an image
-    const validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
     const urlPath = imageUrl.pathname.toLowerCase();
-    const hasValidExtension = validExtensions.some(ext => urlPath.includes(ext));
+    const hasValidExtension = ALLOWED_IMAGE_EXTENSIONS.some(ext => urlPath.endsWith(ext));
     
-    if (!hasValidExtension && !url.startsWith('data:image/')) {
+    if (!hasValidExtension) {
       logger.warn('upload_from_url_invalid_image', { correlationId, url: urlPath });
       return apiError('VALIDATION_ERROR', { overrideMessage: 'URL does not appear to be an image', correlationId });
     }
@@ -76,10 +157,16 @@ export async function POST(request: NextRequest) {
     // Fetch the image from the URL
     const response = await fetch(imageUrl.href, {
       method: 'GET',
+      redirect: 'manual',
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
       }
     });
+
+    if (response.status >= 300 && response.status < 400) {
+      logger.warn('upload_from_url_redirect_blocked', { correlationId, status: response.status, url: imageUrl.href });
+      return apiError('VALIDATION_ERROR', { overrideMessage: 'Redirecting image URLs are not allowed', correlationId });
+    }
     
     if (!response.ok) {
       logger.warn('upload_from_url_fetch_failed', { correlationId, status: response.status, url: imageUrl.href });
@@ -91,13 +178,27 @@ export async function POST(request: NextRequest) {
       logger.warn('upload_from_url_invalid_content_type', { correlationId, contentType, url: imageUrl.href });
       return apiError('VALIDATION_ERROR', { overrideMessage: 'URL does not serve an image', correlationId });
     }
+
+    const contentLength = Number(response.headers.get('content-length') ?? 0);
+    if (Number.isFinite(contentLength) && contentLength > MAX_REMOTE_IMAGE_BYTES) {
+      logger.warn('upload_from_url_too_large_header', { correlationId, size: contentLength });
+      return apiError('VALIDATION_ERROR', { overrideMessage: 'Image is too large (max 4MB)', correlationId });
+    }
     
     // Get the image data as a buffer
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    let buffer: Buffer;
+    try {
+      buffer = await readResponseWithLimit(response, MAX_REMOTE_IMAGE_BYTES);
+    } catch (readError) {
+      if (readError instanceof Error && readError.message === 'REMOTE_IMAGE_TOO_LARGE') {
+        logger.warn('upload_from_url_too_large_stream', { correlationId });
+        return apiError('VALIDATION_ERROR', { overrideMessage: 'Image is too large (max 4MB)', correlationId });
+      }
+      throw readError;
+    }
     
     // Validate file size (4MB max)
-    if (buffer.length > 4 * 1024 * 1024) {
+    if (buffer.length > MAX_REMOTE_IMAGE_BYTES) {
       logger.warn('upload_from_url_too_large', { correlationId, size: buffer.length });
       return apiError('VALIDATION_ERROR', { overrideMessage: 'Image is too large (max 4MB)', correlationId });
     }

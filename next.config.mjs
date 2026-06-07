@@ -3,9 +3,6 @@ const isStaticExport = process.env.NEXT_OUTPUT_MODE === 'export';
 
 const nextConfig = {
   ...(isStaticExport ? { output: 'export' } : {}),
-  eslint: {
-    dirs: ['src'],
-  },
   experimental: {
     optimizeCss: true,
   },

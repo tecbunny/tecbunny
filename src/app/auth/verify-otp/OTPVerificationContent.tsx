@@ -299,6 +299,7 @@ export function OTPVerificationContent() {
               password: signupData.password,
               name: signupData.name,
               mobile: signupData.mobile,
+              otpId,
               otpVerified: true
             }),
           });
@@ -346,7 +347,7 @@ export function OTPVerificationContent() {
         } catch (accountCreationError) {
           logger.error('Account creation error:', { accountCreationError });
           toast.error(accountCreationError instanceof Error ? accountCreationError.message : 'Failed to create account');
-          // Clean up and let user retry
+          setVerified(false);
           setIsLoading(false);
           return;
         }
@@ -365,6 +366,7 @@ export function OTPVerificationContent() {
         logger.error('Error details:', { error: JSON.stringify(error, null, 2) });
       }
       toast.error(error instanceof Error ? error.message : 'Verification failed');
+      setVerified(false);
     } finally {
       setIsLoading(false);
     }

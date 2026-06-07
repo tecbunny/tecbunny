@@ -44,6 +44,13 @@ function normaliseValue(value: string | number | null | undefined): string {
   if (value == null) {
     return '';
   }
+  // Normalize numeric strings to 2 decimal places for cryptographic consistency
+  if (typeof value === 'number') {
+    return value.toFixed(2);
+  }
+  if (typeof value === 'string' && !isNaN(parseFloat(value)) && isFinite(value as any)) {
+    return parseFloat(value).toFixed(2);
+  }
   return sanitizeHashValue(value);
 }
 

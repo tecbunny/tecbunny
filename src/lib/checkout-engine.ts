@@ -149,7 +149,7 @@ export class CheckoutEngine {
       // Distribute total discount proportionally across all items down to the exact paisa (2 decimal places)
       const distributedDiscounts = (() => {
         const totalGross = itemsToDistribute.reduce((sum, item) => sum + item.gross, 0);
-        if (totalGross === 0 || totalDiscountApplied === 0) return itemsToDistribute.map(() => 0);
+        if (totalGross <= 0 || totalDiscountApplied === 0) return itemsToDistribute.map(() => 0);
 
         const totalDiscountPaise = toPaise(totalDiscountApplied);
         const rawShares = itemsToDistribute.map((item, index) => {

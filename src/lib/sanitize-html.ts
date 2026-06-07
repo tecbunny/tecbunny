@@ -9,7 +9,7 @@ export function sanitizeHtml(input: string): string {
       'span', 'div', 'section', 'article', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
       'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'blockquote'
     ],
-    ALLOWED_ATTRS: ['href', 'title', 'target', 'rel', 'class'],
+    ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'class'],
     ADD_ATTR: ['target', 'rel'],
     FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
     FORBID_ATTR: ['onerror', 'onclick', 'onload']

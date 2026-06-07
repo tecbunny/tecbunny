@@ -82,65 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Security: Recalculate totals server-side to prevent price tampering
-    const itemIds = (orderData.items || [])
-      .map((item: any) => item.id || item.productId)
-      .filter((id: any) => typeof id === 'string' && id.length > 0);
-
-    if (itemIds.length === 0) {
-      return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: 'No valid items in order' });
-    }
-
-    const { data: dbProducts, error: productsError } = await serviceSupabase
-      .from('products')
-      .select('id, price, stock_quantity, gst_rate, gst_percentage')
-      .in('id', itemIds);
-
-    if (productsError || !dbProducts) {
-       logger.error('order_product_validation_failed', { error: productsError, itemIds });
-       return apiError('INTERNAL_ERROR', { correlationId, overrideMessage: 'Failed to validate products' });
-    }
-
-    let calculatedSubtotal = 0; // Inclusive subtotal
-    let calculatedExclusiveSubtotal = 0; // Exclusive subtotal
-    let calculatedGstAmount = 0; // Dynamic GST Amount
-    const validatedItems = [];
-
-    for (const item of (orderData.items || [])) {
-      const itemId = item.id || item.productId;
-      const dbProduct = dbProducts.find(p => p.id === itemId);
-      if (!dbProduct) {
-         return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: `Product not found: ${itemId}` });
-      }
-      
-      // Check stock
-      if ((dbProduct.stock_quantity || 0) < item.quantity) {
-         return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: `Insufficient stock for product: ${item.name}` });
-      }
-
-      const price = dbProduct.price;
-      const itemInclusiveTotal = price * item.quantity;
-      calculatedSubtotal += itemInclusiveTotal;
-
-      // GST_RATE is a fraction (e.g. 0.18), product columns store percentage (e.g. 18)
-      const gstRateRaw = dbProduct.gst_rate ?? dbProduct.gst_percentage ?? (GST_RATE * 100);
-      const gstRate = typeof gstRateRaw === 'number' ? gstRateRaw : parseFloat(gstRateRaw) || 18;
-      const itemBase = Math.round((itemInclusiveTotal / (1 + (gstRate / 100))) * 100) / 100;
-      const itemGst = Math.round((itemInclusiveTotal - itemBase) * 100) / 100;
-
-      calculatedExclusiveSubtotal += itemBase;
-      calculatedGstAmount += itemGst;
-      
-      validatedItems.push({
-        ...item,
-        id: itemId, // Ensure ID is present for stock deduction
-        price, // Enforce server price
-      });
-    }
-
-    const subtotal = calculatedExclusiveSubtotal; // Exclusive subtotal
-    const gst_amount = calculatedGstAmount; // Dynamically calculated GST
-    
-    // Security: Validate discount_amount against server-side coupon and auto-offer calculations
+    // We now rely solely on the CheckoutEngine for the final source of truth for taxes and totals
     const checkoutResult = await checkoutEngine.calculate({
       items: (orderData.items || []).map((item: any) => ({
         id: item.id || item.productId,
@@ -164,11 +106,23 @@ export async function POST(request: NextRequest) {
       return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: 'Invalid discount amount' });
     }
 
-    const discount_amount = clientDiscountPaise / 100;
+    const subtotal = checkoutResult.subtotal;
+    const gst_amount = checkoutResult.gstAmount;
+    const discount_amount = checkoutResult.totalDiscount;
     const shipping_amount = Math.max(0, orderData.shipping_amount || 0);
+    const total = checkoutResult.finalTotal + shipping_amount;
+
+    // Re-map validated items from checkout engine for the RPC
+    const validatedItems = checkoutResult.itemPrices.map(item => ({
+      id: item.product_id,
+      productId: item.product_id,
+      quantity: item.quantity,
+      price: item.unit_price,
+      total_price: item.total_price,
+      discount_amount: item.discount_amount
+    }));
     
-    // Total is subtotal (inclusive) + shipping - discount
-    const total = calculatedSubtotal + shipping_amount - discount_amount;
+    const normalizeOrderType = (value: unknown): string => {
     
     const normalizeOrderType = (value: unknown): string => {
       if (typeof value !== 'string') return '';

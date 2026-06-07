@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, RefreshCw, Share2, Shield, Truck } from 'lucide-react';
-import DOMPurify from 'dompurify';
+import { sanitizeHtml } from '@/lib/sanitize-html';
 
 import { AddToCartButton } from '@/components/cart/AddToCartButton';
 import { Button } from '@/components/ui/button';
@@ -152,9 +152,7 @@ export function ProductDetailPage({ productId, initialProduct }: ProductDetailPa
       ? product.description
       : `<p>${fallbackText}</p>`;
 
-    return DOMPurify.sanitize(rawDescription, {
-      USE_PROFILES: { html: true }
-    });
+    return sanitizeHtml(rawDescription);
   }, [product, displayName]);
 
   const pricing = useMemo(() => {

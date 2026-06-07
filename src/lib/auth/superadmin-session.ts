@@ -97,6 +97,21 @@ export async function verifySuperadminSessionToken(token: string | undefined | n
     return null;
   }
 
+  // Revocation check via Redis
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(encodedPayload))) as SuperadminSessionPayload;
+    const redis = getRedis();
+    if (redis && payload.jti) {
+      const isRevoked = await redis.get(`revoked_superadmin_jti:${payload.jti}`);
+      if (isRevoked) {
+        logger.warn('Revoked superadmin token attempt detected', { jti: payload.jti, email: payload.email });
+        return null;
+      }
+    }
+  } catch (err) {
+    return null;
+  }
+
   const expectedSignature = await hmacSha256(encodedPayload, secret);
   let actualSignature: Uint8Array;
   try {

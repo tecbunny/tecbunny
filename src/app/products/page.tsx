@@ -3,8 +3,8 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
 import { ShopPageContent } from '@/components/products/ShopPageContent';
+import { logger } from '@/lib/logger';
 import { createPageMetadata } from '@/lib/metadata';
-import { createClient } from '@/lib/supabase/server';
 import { filterPubliclyVisibleProducts } from '@/lib/product-visibility';
 
 // ISR: revalidate every 5 minutes (300 seconds)
@@ -17,6 +17,41 @@ export const metadata: Metadata = createPageMetadata({
   path: '/products',
   image: '/brand.png',
 });
+
+function getSiteOrigin() {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` ||
+    process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}` ||
+    'https://www.tecbunny.com'
+  ).replace(/\/$/, '');
+}
+
+async function fetchJsonArray(pathname: string, dataKey = 'data') {
+  try {
+    const response = await fetch(`${getSiteOrigin()}${pathname}`, {
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    });
+
+    if (!response.ok) {
+      logger.warn('products.page.initial_fetch_failed', {
+        pathname,
+        status: response.status,
+      });
+      return [];
+    }
+
+    const payload = await response.json();
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.[dataKey])) return payload[dataKey];
+    return [];
+  } catch (error) {
+    logger.error('products.page.initial_fetch_error', { pathname, error });
+    return [];
+  }
+}
 
 function ProductsPageSkeleton() {
   return (
@@ -52,25 +87,13 @@ function ProductsPageSkeleton() {
 }
 
 export default async function Page() {
-  const supabase = await createClient();
-
-  // Fetch active products and active auto offers server-side
-  const [productsRes, offersRes] = await Promise.all([
-    supabase
-      .from('products')
-      .select('*')
-      .eq('status', 'active')
-      .eq('is_deleted', false)
-      .limit(200),
-    supabase
-      .from('auto_offers')
-      .select('*')
-      .eq('is_active', true)
-      .order('priority', { ascending: false }),
+  const [products, offers] = await Promise.all([
+    fetchJsonArray('/api/products?status=active&limit=200'),
+    fetchJsonArray('/api/auto-offers?active=true'),
   ]);
 
-  const rawProducts = filterPubliclyVisibleProducts(productsRes.data || []);
-  const rawOffers = offersRes.data || [];
+  const rawProducts = filterPubliclyVisibleProducts(products);
+  const rawOffers = offers;
 
   return (
     <Suspense fallback={<ProductsPageSkeleton />}>

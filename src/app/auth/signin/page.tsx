@@ -378,13 +378,18 @@ function SignInForm() {
                     <Label className="text-sm font-medium text-slate-300">Security Check</Label>
                     <Turnstile
                       sitekey={turnstileSiteKey}
+                      action="signin"
+                      theme="dark"
+                      size="normal"
+                      retry="auto"
+                      refreshExpired="auto"
+                      appearance="always"
                       onVerify={(token: string) => setCaptchaToken(token)}
                       onExpire={() => setCaptchaToken(null)}
-                      onError={() => setCaptchaToken(null)}
-                      options={{
-                        action: 'signin',
-                        theme: 'dark',
-                        size: 'normal'
+                      onError={(captchaError: unknown) => {
+                        setCaptchaToken(null);
+                        console.error('Turnstile render failed:', captchaError);
+                        setError('Security check failed to load. Please refresh the page or disable browser tracking protection for this site.');
                       }}
                     />
                   </div>

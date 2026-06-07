@@ -468,13 +468,18 @@ export default function SignUpPage() {
                   <div className="mt-1">
                     <Turnstile
                       sitekey={turnstileSiteKey}
+                      action="signup"
+                      theme="dark"
+                      size="normal"
+                      retry="auto"
+                      refreshExpired="auto"
+                      appearance="always"
                       onVerify={(token: string) => setCaptchaToken(token)}
                       onExpire={() => setCaptchaToken(null)}
-                      onError={() => setCaptchaToken(null)}
-                      options={{
-                        action: 'signup',
-                        theme: 'dark',
-                        size: 'normal'
+                      onError={(captchaError: unknown) => {
+                        setCaptchaToken(null);
+                        logger.error('signup.turnstile_render_failed', { error: captchaError });
+                        setError('Security check failed to load. Please refresh the page or disable browser tracking protection for this site.');
                       }}
                     />
                   </div>

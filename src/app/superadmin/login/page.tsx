@@ -158,10 +158,19 @@ function SuperadminSignInForm() {
                 <Label className="text-xs text-slate-400">Security Ingestion Check</Label>
                 <Turnstile
                   sitekey={turnstileSiteKey}
+                  action="superadmin_signin"
+                  theme="dark"
+                  size="normal"
+                  retry="auto"
+                  refreshExpired="auto"
+                  appearance="always"
                   onVerify={(token: string) => setCaptchaToken(token)}
                   onExpire={() => setCaptchaToken(null)}
-                  onError={() => setCaptchaToken(null)}
-                  options={{ action: 'superadmin_signin', theme: 'dark', size: 'normal' }}
+                  onError={(captchaError: unknown) => {
+                    setCaptchaToken(null);
+                    console.error('Turnstile render failed:', captchaError);
+                    setError('Security check failed to load. Please refresh the page or disable browser tracking protection for this site.');
+                  }}
                 />
               </div>
             )}

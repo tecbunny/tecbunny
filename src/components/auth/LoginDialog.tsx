@@ -302,9 +302,23 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
               <div className="mt-3">
                 <Turnstile
                   sitekey={turnstileSiteKey}
+                  action="login_dialog"
+                  theme="auto"
+                  size="normal"
+                  retry="auto"
+                  refreshExpired="auto"
+                  appearance="always"
                   onVerify={(token: string) => setCaptchaToken(token)}
                   onExpire={() => setCaptchaToken(null)}
-                  onError={() => setCaptchaToken(null)}
+                  onError={(captchaError: unknown) => {
+                    setCaptchaToken(null);
+                    logger.error('login_dialog.turnstile_render_failed', { error: captchaError });
+                    toast({
+                      variant: 'destructive',
+                      title: 'Security Check Unavailable',
+                      description: 'Refresh the page or disable browser tracking protection for this site.',
+                    });
+                  }}
                 />
               </div>
             )}

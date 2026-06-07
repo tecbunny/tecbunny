@@ -9,24 +9,8 @@ const MAX_QUOTE_PDF_BYTES = 5 * 1024 * 1024;
 const MAX_REMOTE_ASSET_BYTES = 1.5 * 1024 * 1024;
 const REMOTE_ASSET_TIMEOUT_MS = 5000;
 
-// Helper to search for public assets at multiple levels to accommodate Vercel deployment/subfolder structures
-function resolveAssetPath(relativePath: string): string {
-  const pathsToTry = [
-    path.join(process.cwd(), relativePath),
-    path.join(process.cwd(), '..', relativePath),
-    path.join(__dirname, relativePath),
-    path.join(__dirname, '..', relativePath),
-    path.join(__dirname, '..', '..', relativePath),
-  ];
-  for (const p of pathsToTry) {
-    try {
-      const stat = require('fs').statSync(p);
-      if (stat.isFile()) {
-        return p;
-      }
-    } catch (_) {}
-  }
-  return path.join(process.cwd(), relativePath); // default fallback
+function publicAssetPath(...segments: string[]): string {
+  return path.join(process.cwd(), 'public', ...segments);
 }
 
 async function fetchBoundedBuffer(url: string, label: string): Promise<Buffer | null> {
@@ -68,7 +52,7 @@ function truncateQuoteText(value: unknown): string {
 
 export async function loadCompanyInfo() {
   try {
-    const filePath = resolveAssetPath(path.join('public', 'company-info.json'));
+    const filePath = publicAssetPath('company-info.json');
     const raw = await fs.readFile(filePath, 'utf8');
     return JSON.parse(raw) as Record<string, any>;
   } catch (error) {
@@ -105,8 +89,8 @@ export async function buildPdf(options: {
   const today = new Date();
   const expiry = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const fontRegularPath = resolveAssetPath(path.join('public', 'fonts', 'NotoSans-Regular.ttf'));
-  const fontBoldPath = resolveAssetPath(path.join('public', 'fonts', 'NotoSans-Bold.ttf'));
+  const fontRegularPath = publicAssetPath('fonts', 'NotoSans-Regular.ttf');
+  const fontBoldPath = publicAssetPath('fonts', 'NotoSans-Bold.ttf');
   const remoteFontUrl =
     process.env.BRAND_FONT_URL ||
     'https://fonts.gstatic.com/s/notosans/v35/o-0IIpQlx3QUlC5A4PNr6DRAW_0.ttf';
@@ -171,7 +155,7 @@ export async function buildPdf(options: {
   const cin = company?.cin || '';
   const pan = company?.pan || '';
 
-  const logoPath = resolveAssetPath(path.join('public', 'brand.png'));
+  const logoPath = publicAssetPath('brand.png');
   const logoUrl =
     company?.logoUrl ||
     company?.logo_url ||

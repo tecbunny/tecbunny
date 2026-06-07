@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID, randomInt } from 'crypto';
+import { randomBytes, randomUUID, randomInt, createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
 import { logger } from './logger';
@@ -130,6 +130,11 @@ export class OTPManager {
     }
   }
 
+  // Hash OTP code for secure storage
+  private hashOTP(code: string): string {
+    return createHash('sha256').update(code).digest('hex');
+  }
+
   private async sendEmailOTP(email: string, code: string, purpose: string): Promise<ChannelSendSuccess> {
     try {
       const mailOptions = {
@@ -181,6 +186,7 @@ export class OTPManager {
 
     try {
       const code = this.generateOTPCode();
+      const hashedCode = this.hashOTP(code);
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
       const hasPhone = !!request.phone;
       const hasEmail = !!request.email;
@@ -199,7 +205,7 @@ export class OTPManager {
         const { data, error } = await supabaseClient
           .from('otp_verifications')
           .insert([{
-            code,
+            code: hashedCode, // Store hashed code
             phone: request.phone,
             email: request.email,
             purpose: request.purpose,
@@ -219,7 +225,7 @@ export class OTPManager {
       } else {
         otpId = randomUUID();
         inMemoryOTPStore.set(otpId, {
-          id: otpId, code, phone: request.phone, email: request.email, purpose: request.purpose,
+          id: otpId, code: hashedCode, phone: request.phone, email: request.email, purpose: request.purpose,
           channel: preferredChannel, attempts: 0, max_attempts: 3, verified: false,
           expires_at: expiresAt.toISOString(), user_id: request.userId, order_id: request.orderId,
           fallback_channels: [], created_at: new Date().toISOString()
@@ -252,6 +258,8 @@ export class OTPManager {
     if (typeof arg1 === 'object' && arg1 !== null) {
       // New verification path (OTPVerification)
       const verification = arg1 as OTPVerification;
+      const hashedInput = this.hashOTP(verification.code);
+
       try {
         const supabaseClient = supabase;
         if (!supabaseClient) {
@@ -264,7 +272,7 @@ export class OTPManager {
             return { success: false, message: 'Maximum verification attempts exceeded.', canRetry: false };
           }
 
-          if (otpRecord.code !== verification.code) {
+          if (otpRecord.code !== hashedInput) {
             const newAttempts = otpRecord.attempts + 1;
             otpRecord.attempts = newAttempts;
             inMemoryOTPStore.set(verification.otpId, otpRecord);
@@ -281,7 +289,7 @@ export class OTPManager {
           .from('otp_verifications')
           .update({ verified: true, verified_at: new Date().toISOString() })
           .eq('id', verification.otpId)
-          .eq('code', verification.code)
+          .eq('code', hashedInput)
           .eq('verified', false)
           .gt('expires_at', new Date().toISOString())
           .lt('attempts', 3)
@@ -328,6 +336,8 @@ export class OTPManager {
       if (!/^\d{4,6}$/.test(otp || '')) {
         return { success: false, message: 'Invalid or expired OTP' };
       }
+      
+      const hashedInput = this.hashOTP(otp);
       logger.debug('Starting legacy OTP verification', { email: normalizedEmail, type });
 
       try {
@@ -342,7 +352,7 @@ export class OTPManager {
             .eq('type', type)
             .eq('used', false)
             .gte('expires_at', new Date().toISOString())
-            .or(`otp.eq.${otp},otp_code.eq.${otp}`)
+            .or(`otp.eq.${hashedInput},otp_code.eq.${hashedInput}`)
             .select();
 
           if (updateError) {
@@ -374,9 +384,10 @@ export class OTPManager {
   // Legacy functions
   async storeOTP(email: string, otp: string, type: 'signup' | 'recovery' = 'signup'): Promise<boolean> {
     const normalizedEmail = email.trim().toLowerCase();
+    const hashedCode = this.hashOTP(otp);
     try {
       if (!supabase) {
-        return this.storeOTPInMemory(normalizedEmail, otp, type);
+        return this.storeOTPInMemory(normalizedEmail, hashedCode, type);
       }
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + 15);
@@ -384,7 +395,7 @@ export class OTPManager {
       const attemptInsert = async () => {
         const insertData: OTPInsertData = {
           email: normalizedEmail,
-          otp,
+          otp: hashedCode,
           expires_at: expiresAt.toISOString(),
           type,
           used: false,
@@ -400,8 +411,8 @@ export class OTPManager {
       }
 
       if (error?.code === '42P01') {
-        logger.warn('OTP table not found; using memory storage fallback', { email, type });
-        return this.storeOTPInMemory(normalizedEmail, otp, type);
+        logger.warn('OTP table not found; using memory storage fallback', { email: type });
+        return this.storeOTPInMemory(normalizedEmail, hashedCode, type);
       }
 
       const columnMissing =
@@ -411,7 +422,7 @@ export class OTPManager {
       if (columnMissing) {
         const legacyData: OTPInsertData = {
           email: normalizedEmail,
-          otp_code: otp,
+          otp_code: hashedCode,
           expires_at: expiresAt.toISOString(),
           type,
           used: false,
@@ -424,14 +435,14 @@ export class OTPManager {
           return true;
         }
         logger.error('Error storing OTP using legacy column', { error: legacyError });
-        return this.storeOTPInMemory(normalizedEmail, otp, type);
+        return this.storeOTPInMemory(normalizedEmail, hashedCode, type);
       }
 
       logger.error('Error storing OTP', { error, normalizedEmail, type });
-      return this.storeOTPInMemory(normalizedEmail, otp, type);
+      return this.storeOTPInMemory(normalizedEmail, hashedCode, type);
     } catch (error) {
       logger.error('Failed to store OTP', { error, normalizedEmail, type });
-      return this.storeOTPInMemory(normalizedEmail, otp, type);
+      return this.storeOTPInMemory(normalizedEmail, hashedCode, type);
     }
   }
 

@@ -1,4 +1,5 @@
 import { logger } from '../logger';
+import { getRedis } from '../redis';
 
 const SUPERADMIN_SESSION_TTL_SECONDS = 60 * 60 * 24;
 
@@ -123,9 +124,45 @@ export async function verifySuperadminSessionToken(token: string | undefined | n
       return null;
     }
 
+    // Check if JTI is in blocklist (for revocation/logout)
+    if (payload.jti) {
+      const redis = getRedis();
+      if (redis) {
+        const isBlocked = await redis.get(`blocklist:jti:${payload.jti}`);
+        if (isBlocked) {
+          logger.warn('Superadmin session revocation check: JTI is blocked', { jti: payload.jti });
+          return null;
+        }
+      }
+    }
+
     return payload as SuperadminSessionPayload;
   } catch {
     return null;
+  }
+}
+
+export async function revokeSuperadminSessionToken(token: string) {
+  const [version, encodedPayload] = token.split('.');
+  if (version !== 'v1' || !encodedPayload) return;
+
+  try {
+    const payloadText = new TextDecoder().decode(base64UrlDecode(encodedPayload));
+    const payload = JSON.parse(payloadText) as Partial<SuperadminSessionPayload>;
+    
+    if (payload.jti && payload.exp) {
+      const redis = getRedis();
+      if (redis) {
+        const now = Math.floor(Date.now() / 1000);
+        const ttl = payload.exp - now;
+        if (ttl > 0) {
+          await redis.set(`blocklist:jti:${payload.jti}`, '1', 'EX', ttl);
+          logger.info('Superadmin session revoked', { jti: payload.jti });
+        }
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to revoke superadmin session', { error });
   }
 }
 

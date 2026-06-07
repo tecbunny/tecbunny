@@ -118,14 +118,23 @@ export function rateLimit(
             await redis.pexpire(windowKey, windowMs)
           }
           const remainingValue = Math.max(0, limit - count)
-          return { allowed: count <= limit, remaining: remainingValue, reset: now + windowMs }
+          const allowed = count <= limit
+          
+          if (!allowed) {
+            logger.warn('rate_limit_exceeded', { key, count, limit })
+          }
+
+          return { allowed, remaining: remainingValue, reset: now + windowMs }
         } catch (err) {
           logger.warn('rate_limit_redis_failed', { error: (err as Error).message })
           // fall through to memory
         }
       }
 
-      // memory fallback for async variant
+      // memory fallback for async variant (Warning: not shared across serverless instances)
+      if (process.env.NODE_ENV === 'production' && !redis) {
+        logger.error('rate_limit_no_redis_production', { key })
+      }
       const arr = memoryBuckets.get(key) || []
       const kept = arr.filter(ts => ts > windowStart)
       kept.push(now)

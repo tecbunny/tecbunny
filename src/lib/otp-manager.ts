@@ -161,9 +161,10 @@ export class OTPManager {
     }
   }
 
-  // Hash OTP code for secure storage with salt to prevent pre-computation
+  // Hash OTP code for secure storage with salt and internal pepper to prevent pre-computation
   private hashOTP(code: string, salt: string = 'tecbunny_static_salt'): string {
-    return createHash('sha256').update(code + salt).digest('hex');
+    const pepper = process.env.OTP_SECRET_PEPPER || 'tecbunny_default_pepper_7722';
+    return createHash('sha256').update(code + salt + pepper).digest('hex');
   }
 
   private async sendEmailOTP(email: string, code: string, purpose: string): Promise<ChannelSendSuccess> {

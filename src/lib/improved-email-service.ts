@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 
 import { logger } from './logger';
+import { rateLimit } from './rate-limit';
 
 export interface EmailOptions {
   to: string;
@@ -23,12 +24,6 @@ class ImprovedEmailService {
     from: string;
     fromName: string;
   };
-  private rateLimiter: Map<string, { 
-    count: number; 
-    firstSentAt: number; 
-    lastSentAt: number;
-    cooldownUntil?: number;
-  }> = new Map();
   private lastSendTime: number = 0;
   private isMainServiceDown: boolean = false;
   private isBackupServiceDown: boolean = false;
@@ -123,110 +118,38 @@ class ImprovedEmailService {
     };
   }
 
-  private checkRateLimit(email: string): { 
+  private async checkRateLimit(email: string): Promise<{ 
     allowed: boolean; 
     message?: string; 
     waitTime?: number;
     resetCooldown?: boolean;
-  } {
+  }> {
     // In local development, skip rate limiting to avoid blocking iterative testing
     if (process.env.NODE_ENV !== 'production') {
       return { allowed: true };
     }
-    const now = Date.now();
-    const oneHour = 60 * 60 * 1000;
-    const fiveMinutes = 5 * 60 * 1000;
-    
-    // Global rate limiting: max 1 email per 500ms for faster OTP delivery
-    if (now - this.lastSendTime < 500) {
-      return { 
-        allowed: false, 
-        message: 'Please wait a moment before sending another email',
-        waitTime: Math.ceil((500 - (now - this.lastSendTime)) / 1000)
+
+    // Unified rate limit: 10 emails per 1 hour per recipient
+    const result = await rateLimit(`email_rl:${email}`, 10, 3600000);
+    if (!result.allowed) {
+      const waitMinutes = Math.ceil(((result.reset || 0) - Date.now()) / 60000);
+      return {
+        allowed: false,
+        message: `Too many email requests. Please wait ${waitMinutes} minutes.`,
+        waitTime: Math.ceil(((result.reset || 0) - Date.now()) / 1000)
       };
     }
-    
-    const userLimit = this.rateLimiter.get(email);
-    
-    if (!userLimit) {
-      // First email for this user
-      this.rateLimiter.set(email, { 
-        count: 1, 
-        firstSentAt: now, 
-        lastSentAt: now 
-      });
-      return { allowed: true };
-    }
-    
-    // Check if user is in cooldown period
-    if (userLimit.cooldownUntil && now < userLimit.cooldownUntil) {
-      const remainingCooldown = Math.ceil((userLimit.cooldownUntil - now) / 1000);
-      return { 
-        allowed: false, 
-        message: `Account temporarily restricted. Please wait ${Math.ceil(remainingCooldown / 60)} minutes before requesting another email.`,
-        waitTime: remainingCooldown
+
+    // Secondary burst limit: 2 emails per 1 minute
+    const burstResult = await rateLimit(`email_burst:${email}`, 2, 60000);
+    if (!burstResult.allowed) {
+      return {
+        allowed: false,
+        message: 'Please wait a minute before requesting another email.',
+        waitTime: 60
       };
     }
-    
-    // Reset cooldown if time has passed
-    if (userLimit.cooldownUntil && now >= userLimit.cooldownUntil) {
-      userLimit.cooldownUntil = undefined;
-      userLimit.count = 0;
-      userLimit.firstSentAt = now;
-    }
-    
-    // Check if it's been more than an hour since the first email
-    if (now - userLimit.firstSentAt > oneHour) {
-      // Reset the counter
-      this.rateLimiter.set(email, { 
-        count: 1, 
-        firstSentAt: now, 
-        lastSentAt: now 
-      });
-      return { allowed: true };
-    }
-    
-    // Progressive rate limiting based on count (relaxed for OTP)
-    let maxEmails = 10; // Allow more OTP attempts
-    let minInterval = 10000; // 10 seconds
-    
-    if (userLimit.count >= 5) {
-      maxEmails = 15;
-      minInterval = 30000; // 30 seconds
-    }
-    
-    if (userLimit.count >= 10) {
-      maxEmails = 20;
-      minInterval = 60000; // 1 minute
-    }
-    
-    // Check if user has exceeded limit
-    if (userLimit.count >= maxEmails) {
-      // Set cooldown period
-      userLimit.cooldownUntil = now + fiveMinutes;
-      this.rateLimiter.set(email, userLimit);
-      return { 
-        allowed: false, 
-        message: `Too many email requests. Please wait 5 minutes before trying again.`,
-        waitTime: 300
-      };
-    }
-    
-    // Check minimum time between emails
-    if (now - userLimit.lastSentAt < minInterval) {
-      const waitTime = Math.ceil((minInterval - (now - userLimit.lastSentAt)) / 1000);
-      return { 
-        allowed: false, 
-        message: `Please wait ${waitTime} seconds before requesting another email`,
-        waitTime
-      };
-    }
-    
-    // Update the counter
-    userLimit.count++;
-    userLimit.lastSentAt = now;
-    this.rateLimiter.set(email, userLimit);
-    
+
     return { allowed: true };
   }
 
@@ -317,7 +240,7 @@ class ImprovedEmailService {
       logger.info('sendEmail.start', { to: options.to, subject: options.subject });
       
       // Check rate limiting first
-      const rateLimitCheck = this.checkRateLimit(options.to);
+      const rateLimitCheck = await this.checkRateLimit(options.to);
       if (!rateLimitCheck.allowed) {
         logger.warn('sendEmail.rate_limited', { to: options.to, waitTime: rateLimitCheck.waitTime });
         return { 

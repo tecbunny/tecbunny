@@ -254,8 +254,7 @@ export class OTPManager {
         message: `Sent via ${preferredChannel}`,
         fallbackAvailable: false,
         provider: primaryResult.provider,
-        providerMessageId: primaryResult.providerMessageId,
-        providerResponse: primaryResult.raw
+        providerMessageId: primaryResult.providerMessageId
       };
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };

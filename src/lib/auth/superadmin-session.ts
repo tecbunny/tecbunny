@@ -1,3 +1,5 @@
+import { logger } from '../logger';
+
 const SUPERADMIN_SESSION_TTL_SECONDS = 60 * 60 * 24;
 
 type SuperadminSessionPayload = {
@@ -30,7 +32,12 @@ function base64UrlDecode(value: string) {
 }
 
 function getSessionSecret() {
-  return process.env.SUPERADMIN_SESSION_SECRET || process.env.SUPERADMIN_PASSWORD || null;
+  const secret = process.env.SUPERADMIN_SESSION_SECRET;
+  if (!secret) {
+    logger.error('SUPERADMIN_SESSION_SECRET is not configured. Superadmin session operations will fail.');
+    return null;
+  }
+  return secret;
 }
 
 async function hmacSha256(data: string, secret: string) {

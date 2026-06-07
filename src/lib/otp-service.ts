@@ -75,7 +75,6 @@ export class OtpService {
         return {
           success: true,
           otp_id: existingOtp.id,
-          otp_code: existingOtp.otp_code,
           expires_at: existingOtp.expires_at
         };
       }
@@ -137,7 +136,6 @@ export class OtpService {
       return {
         success: true,
         otp_id: otpRecord.id,
-        otp_code: otpCode,
         expires_at: expiresAt.toISOString()
       };
 

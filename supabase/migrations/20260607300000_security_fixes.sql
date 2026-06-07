@@ -128,7 +128,7 @@ DECLARE
 BEGIN
   -- 1. Create the order record with pessimistic intent
   INSERT INTO public.orders (
-    user_id, 
+    customer_id, 
     customer_name, 
     customer_email, 
     customer_phone,
@@ -137,7 +137,7 @@ BEGIN
     payment_method,
     subtotal,
     gst_amount,
-    total_amount,
+    total,
     discount_amount,
     shipping_amount,
     payment_status,
@@ -208,7 +208,7 @@ $$;
 -- Fix: Missing RLS policies for orders table to allow customers to view history
 DROP POLICY IF EXISTS "Customers can view own orders" ON public.orders;
 CREATE POLICY "Customers can view own orders" ON public.orders
-  FOR SELECT TO authenticated USING (auth.uid() = user_id);
+  FOR SELECT TO authenticated USING (auth.uid() = customer_id);
 
 DROP POLICY IF EXISTS "Staff can view all orders" ON public.orders;
 CREATE POLICY "Staff can view all orders" ON public.orders

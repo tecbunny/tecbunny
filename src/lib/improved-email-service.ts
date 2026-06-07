@@ -47,8 +47,8 @@ class ImprovedEmailService {
           pass: process.env.SMTP_PASS,
         },
         tls: {
-          // Reject unauthorized certificates in production for security
-          rejectUnauthorized: process.env.NODE_ENV === 'production'
+          // Hardened: Always reject unauthorized certificates to prevent MitM attacks
+          rejectUnauthorized: true
         },
         pool: true,
         maxConnections: 5,
@@ -70,8 +70,8 @@ class ImprovedEmailService {
           pass: process.env.BACKUP_SMTP_PASS,
         },
         tls: {
-          // Only allow unauthorized certificates in non-production environments
-          rejectUnauthorized: process.env.NODE_ENV !== 'production'
+          // Hardened: Always reject unauthorized certificates to prevent MitM attacks
+          rejectUnauthorized: true
         },
       });
     }

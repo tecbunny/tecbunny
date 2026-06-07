@@ -152,18 +152,19 @@ export async function POST(request: NextRequest) {
       salesAgentId: orderData.agent_id || undefined,
     });
 
-    const serverDiscount = checkoutResult.totalDiscount;
-    const discount_amount = Math.max(0, orderData.discount_amount || 0);
+    const serverDiscountPaise = Math.round(checkoutResult.totalDiscount * 100);
+    const clientDiscountPaise = Math.round(Math.max(0, orderData.discount_amount || 0) * 100);
 
-    if (discount_amount > serverDiscount + 1) { // 1 INR tolerance
+    if (clientDiscountPaise > serverDiscountPaise + 100) { // 100 Paise (1 INR) tolerance
       logger.warn('order_discount_tampered', {
         userId: user.id,
-        clientDiscount: discount_amount,
-        serverDiscount
+        clientDiscount: clientDiscountPaise / 100,
+        serverDiscount: serverDiscountPaise / 100
       });
       return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: 'Invalid discount amount' });
     }
 
+    const discount_amount = clientDiscountPaise / 100;
     const shipping_amount = Math.max(0, orderData.shipping_amount || 0);
     
     // Total is subtotal (inclusive) + shipping - discount

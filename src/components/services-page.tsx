@@ -510,88 +510,44 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
           <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(0))}>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-cyan-500/10 text-cyan-300 flex items-center justify-center">
-                <Cctv className="h-5 w-5" />
+                <Wrench className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">CCTV New Setup</h3>
-                <p className="text-sm text-slate-400">Site survey, design, and deployment with a tailored quote.</p>
+                <h3 className="text-lg font-semibold text-white">Custom Solutions</h3>
+                <p className="text-sm text-slate-400">Tailored technology solutions designed for your specific needs.</p>
               </div>
             </div>
             <Button
               variant="outline"
               className="justify-center border-cyan-400/40 text-cyan-200 hover:border-cyan-400/70 hover:bg-cyan-500/10"
               onClick={() => {
-                void trackEvent('services_cta_click', { cta: 'cctv_site_survey', destination: '/cctv-goa' });
-                router.push('/cctv-goa');
+                void trackEvent('services_cta_click', { cta: 'custom_setup', destination: '/customised-setups' });
+                router.push('/customised-setups');
               }}
             >
-              Request CCTV Site Survey
+              Explore Custom Setups
             </Button>
           </div>
  
           <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(80))}>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-300 flex items-center justify-center">
-                <Cpu className="h-5 w-5" />
+                <Shield className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">Computer and AMC Support</h3>
-                <p className="text-sm text-slate-400">Capture requirements for workstation builds, support coverage, or ongoing maintenance.</p>
+                <h3 className="text-lg font-semibold text-white">Professional Support</h3>
+                <p className="text-sm text-slate-400">Reliable technology services and ongoing technical support.</p>
               </div>
             </div>
             <Button
               variant="outline"
               className="justify-center border-blue-400/40 text-blue-200 hover:border-blue-400/70 hover:bg-blue-500/10"
               onClick={() => {
-                void trackEvent('services_cta_click', { cta: 'amc_quote', destination: '/amc-goa' });
-                router.push('/amc-goa');
+                void trackEvent('services_cta_click', { cta: 'get_support', destination: '/contact' });
+                router.push('/contact');
               }}
             >
-              Request AMC Quote
-            </Button>
-          </div>
- 
-          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(160))}>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-300 flex items-center justify-center">
-                <Shield className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white">Home Automation</h3>
-                <p className="text-sm text-slate-400">Plan lighting, access, and smart-control workflows for the right kind of space.</p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              className="justify-center border-emerald-400/40 text-emerald-200 hover:border-emerald-400/70 hover:bg-emerald-500/10"
-              onClick={() => {
-                void trackEvent('services_cta_click', { cta: 'automation_consultation', destination: '/smarthome-goa' });
-                router.push('/smarthome-goa');
-              }}
-            >
-              Book Automation Consultation
-            </Button>
-          </div>
- 
-          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(240))}>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-violet-500/10 text-violet-300 flex items-center justify-center">
-                <Shield className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white">RFID and Access Control</h3>
-                <p className="text-sm text-slate-400">Review guest, staff, and restricted-access workflows before installation.</p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              className="justify-center border-violet-400/40 text-violet-200 hover:border-violet-400/70 hover:bg-violet-500/10"
-              onClick={() => {
-                void trackEvent('services_cta_click', { cta: 'rfid_demo', destination: '/rfid-goa' });
-                router.push('/rfid-goa');
-              }}
-            >
-              Request RFID Demo
+              Get Support
             </Button>
           </div>
         </section>

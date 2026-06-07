@@ -10,17 +10,16 @@ import { createPageMetadata } from '@/lib/metadata';
 
 // Homepage metadata for SEO
 export const metadata: Metadata = createPageMetadata({
-  title: 'TecBunny Solutions | CCTV, Computers & AMC Services in Goa',
+  title: 'TecBunny Solutions | Technology Services & Custom Tech Setups',
   description:
-    'CCTV installation, computer hardware, AMC services, and custom tech setups in Goa from TecBunny Solutions. Get trusted support for homes and businesses.',
+    'TecBunny Solutions provides custom technology services, hardware solutions, and technical support for businesses and homes.',
   keywords: [
-    'CCTV Goa',
-    'computer hardware Goa',
-    'AMC services',
-    'security systems',
     'tech services',
-    'networking',
-    'biometric systems',
+    'custom setup',
+    'technology support',
+    'hardware solutions',
+    'technical services',
+    'IT support',
     'TecBunny',
   ],
   path: '/',

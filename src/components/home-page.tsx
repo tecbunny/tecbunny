@@ -430,18 +430,10 @@ export default function HomePage() {
         <div className="relative z-10 w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8 mx-auto">
           <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
             <div className="reveal-section space-y-8 is-revealed" data-reveal-id="hero-copy">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#06b6d4]/30 bg-[#06b6d4]/5 px-3 py-1 text-xs font-bold tracking-wider text-[#06b6d4] font-tech">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#06b6d4] opacity-75"></span>
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#06b6d4]"></span>
-                </span>
-                OPERATIONAL IN GOA & MH
-              </div>
-
-              <h1 className="text-4xl font-bold leading-[1.12] text-white sm:text-5xl md:text-6xl xl:text-7xl font-tech" aria-label="CCTV, IT services, and home automation in Goa and Maharashtra">
-                <span className="glitch-text block pb-2" data-text="CCTV, IT & Automation">CCTV, IT & Automation</span>
+              <h1 className="text-4xl font-bold leading-[1.12] text-white sm:text-5xl md:text-6xl xl:text-7xl font-tech" aria-label="Technology Solutions and Services">
+                <span className="glitch-text block pb-2" data-text="Technology">Technology</span>
                 <span className="block bg-gradient-to-r from-[#06b6d4] via-blue-500 to-[#8b5cf6] bg-clip-text pt-1 text-transparent">
-                  for Goa & MH
+                  Solutions & Services
                 </span>
               </h1>
 
@@ -457,7 +449,7 @@ export default function HomePage() {
               </div>
 
               <p className="max-w-lg text-lg leading-relaxed text-slate-400">
-                TecBunny Solutions installs CCTV systems, manages IT infrastructure, delivers AMC support, and builds home automation and RFID access control setups across Goa and Maharashtra.
+                TecBunny Solutions provides professional technology services and custom solutions tailored to your business needs.
               </p>
 
               <div className="flex flex-wrap gap-4">

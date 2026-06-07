@@ -6,9 +6,9 @@ import { createPageMetadata } from '@/lib/metadata';
 
 // Static metadata for better SEO and performance
 export const metadata: Metadata = createPageMetadata({
-  title: 'Contact TecBunny Solutions for CCTV, IT & Automation Quotes',
-  description: 'Contact TecBunny Solutions for CCTV installation, IT support, AMC services, home automation, and RFID lock system quotes in Goa and Maharashtra.',
-  keywords: ['contact TecBunny', 'CCTV quote Goa', 'IT support Goa', 'home automation contact Goa', 'AMC support Maharashtra'],
+  title: 'Contact TecBunny Solutions',
+  description: 'Get in touch with TecBunny Solutions for technology services, custom solutions, and technical support.',
+  keywords: ['contact TecBunny', 'technology support', 'technical services', 'customer support'],
   path: '/contact',
   image: '/brand.png',
 });

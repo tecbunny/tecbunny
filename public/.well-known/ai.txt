@@ -13,6 +13,6 @@ Disallow: /profile/
 # Details
 Name: TecBunny Solutions
 Website: https://www.tecbunny.com
-Description: CCTV installation, IT services, AMC support, and home automation in Goa & Maharashtra.
+Description: Technology services and professional technical solutions.
 Contact: support@tecbunny.com
 LLMs-Map: https://www.tecbunny.com/llms.txt

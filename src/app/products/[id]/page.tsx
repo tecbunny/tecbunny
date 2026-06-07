@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const title = cleanMetadataTitle(product.title || product.name || product.sku, 'Premium Product');
   const plainDesc = cleanMetadataDescription(
     product.seo_description || product.description || product.details,
-    `Buy ${title} at TecBunny. CCTV, IT and automation hardware in Goa.`,
+    `Buy ${title} at TecBunny. Technology solutions and professional hardware.`,
   );
 
   return createPageMetadata({

@@ -11,9 +11,9 @@ import type { Service } from '@/lib/types';
 
 // Static metadata for better SEO and performance
 export const metadata: Metadata = createPageMetadata({
-  title: 'CCTV, IT Services, RFID Lock & Home Automation in Goa & Maharashtra',
-  description: 'TecBunny Solutions delivers CCTV installation, AMC support, networking, RFID lock systems, computer services, and home automation for homes and businesses in Goa and Maharashtra.',
-  keywords: ['CCTV services Goa', 'IT services Goa', 'AMC services Goa', 'home automation Goa', 'RFID lock system Goa', 'TecBunny services'],
+  title: 'Professional Technology Services | TecBunny Solutions',
+  description: 'TecBunny Solutions offers professional technology services and custom solutions tailored to your needs.',
+  keywords: ['technology services', 'IT support', 'custom solutions', 'professional services', 'technical support', 'TecBunny'],
   path: '/services',
   image: BRAND_LOGO_URL,
 });

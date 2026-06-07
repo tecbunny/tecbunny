@@ -4,7 +4,7 @@ import { stripHtmlToPlainText } from './strings';
 const siteUrl = 'https://www.tecbunny.com';
 const defaultOgImage = 'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/TecBunny%20Solution/TECBUNNY_SOLUTIONS_PVT_LTD-removebg-preview.png';
 const xHandle = process.env.NEXT_PUBLIC_X_HANDLE;
-const defaultDescription = 'TecBunny Solutions provides CCTV installation, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.';
+const defaultDescription = 'TecBunny Solutions provides technology services, custom setups, and technical support.';
 
 interface PageMetaInput {
   title: string;

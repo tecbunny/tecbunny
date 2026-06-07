@@ -246,6 +246,9 @@ export class CheckoutEngine {
       };
 
     } catch (error) {
+      if (error instanceof Error && (error.message.includes('Insufficient stock') || error.message.includes('invalid or no longer'))) {
+        throw error;
+      }
       logger.error('Checkout Engine Calculation Failed', { error });
       throw new Error('Checkout engine calculation failed due to internal execution errors.');
     }

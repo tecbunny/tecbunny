@@ -26,6 +26,7 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
   },
+  serverExternalPackages: ['jsdom', 'isomorphic-dompurify'],
   poweredByHeader: false,
   images: {
     unoptimized: isStaticExport,

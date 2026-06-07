@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useState, useCallback, useContext } from 'react';
+import React, { createContext, useState, useCallback, useContext, useRef } from 'react';
 
 import type { CartItem, Order, OrderItem, OrderStatus } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
@@ -113,7 +113,11 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   }, [supabase]);
 
+  const isProcessingRef = useRef(false);
+
   const createOrder = useCallback(async (orderData: Partial<Order>): Promise<Order | null> => {
+    if (isProcessingRef.current) return null;
+    isProcessingRef.current = true;
     setIsProcessingOrder(true);
     try {
       if (!user) {
@@ -265,6 +269,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
       return null;
     } finally {
+      isProcessingRef.current = false;
       setIsProcessingOrder(false);
     }
   }, [cartItems, clearCart, toast, user, hydrateCartItemsWithProductData, supabase.auth]);

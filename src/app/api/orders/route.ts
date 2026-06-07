@@ -41,21 +41,12 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
-    if (bearerToken) {
-      // Verify the bearer token directly with Supabase
-      const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
-      const supabaseVerifier = createSupabaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { auth: { autoRefreshToken: false, persistSession: false } }
-      );
-      const { data: { user: tokenUser } } = await supabaseVerifier.auth.getUser(bearerToken);
-      user = tokenUser;
-    }
-
-    // Fallback: cookie-based session (standard SSR path)
     const supabase = await createServerClient();
-    if (!user) {
+    
+    if (bearerToken) {
+      const { data: { user: tokenUser } } = await supabase.auth.getUser(bearerToken);
+      user = tokenUser;
+    } else {
       const { data: { user: cookieUser } } = await supabase.auth.getUser();
       user = cookieUser;
     }
@@ -67,7 +58,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Rate limit by user id
-  if (!rateLimit(user.id, 'api_orders_create', { limit: RATE_LIMIT, windowMs: RATE_WINDOW_MS })) {
+    const limitCheck = await rateLimit(user.id, RATE_LIMIT, RATE_WINDOW_MS);
+    if (!limitCheck.allowed) {
       logger.warn('orders_rate_limited', { userId: user.id });
       return apiError('RATE_LIMITED', { correlationId });
     }
@@ -109,7 +101,7 @@ export async function POST(request: NextRequest) {
     const subtotal = checkoutResult.subtotal;
     const gst_amount = checkoutResult.gstAmount;
     const discount_amount = checkoutResult.totalDiscount;
-    const shipping_amount = Math.max(0, orderData.shipping_amount || 0);
+    const shipping_amount = 0; // Fix: calculate shipping rules definitively here instead of trusting client
     const total = checkoutResult.finalTotal + shipping_amount;
 
     // Re-map validated items from checkout engine for the RPC

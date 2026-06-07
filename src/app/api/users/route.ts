@@ -28,17 +28,22 @@ function isSupabaseConfigured() {
   return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && SUPABASE_ANON_KEY);
 }
 
-// Create admin client for user management
-const supabaseAdmin = createClient(
-  SUPABASE_URL!,
-  SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
+// Create admin client for user management lazily
+const getSupabaseAdmin = () => {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured');
   }
-);
+  return createClient(
+    SUPABASE_URL!,
+    SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
+};
 
 const createAnonClient = () => createClient(
   SUPABASE_URL!,
@@ -61,10 +66,10 @@ const parseCsvParam = (value: string | null) =>
 
 async function getUserTotals() {
   const [totalRes, staffRes, customerRes, salesRes] = await Promise.all([
-    supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }),
-    supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }).in('role', STAFF_ROLES),
-    supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer'),
-    supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'sales')
+    getSupabaseAdmin().from('profiles').select('id', { count: 'exact', head: true }),
+    getSupabaseAdmin().from('profiles').select('id', { count: 'exact', head: true }).in('role', STAFF_ROLES),
+    getSupabaseAdmin().from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer'),
+    getSupabaseAdmin().from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'sales')
   ]);
 
   return {
@@ -82,7 +87,7 @@ async function createAuthenticatedClient(request: NextRequest) {
   const superadminPayload = await verifySuperadminSessionToken(superadminCookie);
   if (superadminPayload) {
     return {
-      supabase: supabaseAdmin,
+      supabase: getSupabaseAdmin(),
       session: { user: { id: 'superadmin-root-id', email: superadminPayload.email } } as any,
       role: 'superadmin'
     };
@@ -153,7 +158,7 @@ export async function GET(request: NextRequest) {
         if (role === 'superadmin') {
           totals = await getUserTotals();
         } else {
-          const customerRes = await supabaseAdmin.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer');
+          const customerRes = await getSupabaseAdmin().from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer');
           const customerCount = customerRes.count ?? 0;
           totals = {
             total: customerCount,
@@ -182,7 +187,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    let profileQuery = supabaseAdmin
+    let profileQuery = getSupabaseAdmin()
       .from('profiles')
       .select('*', { count: 'exact' });
 
@@ -226,9 +231,9 @@ export async function GET(request: NextRequest) {
     }
 
     const authUsers = await Promise.all(
-      (profiles || []).map(async (profile) => {
+      (profiles || []).map(async (profile: any) => {
         try {
-          const { data, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+          const { data, error: userError } = await getSupabaseAdmin().auth.admin.getUserById(profile.id);
           if (userError || !data?.user) {
             logger.warn('users.auth_lookup_failed', { userId: profile.id, error: userError });
             return null;
@@ -241,7 +246,7 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    const combinedUsers = (profiles || []).map((profile, index) => {
+    const combinedUsers = (profiles || []).map((profile: any, index: number) => {
       const authUser = authUsers[index];
       return {
         id: profile.id,
@@ -316,7 +321,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user with admin client, mark email as confirmed
-    const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: userData, error: createError } = await getSupabaseAdmin().auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -335,7 +340,7 @@ export async function POST(request: NextRequest) {
 
     // Create or update profile with additional fields
     if (userData.user) {
-      const { error: profileError } = await supabaseAdmin
+      const { error: profileError } = await getSupabaseAdmin()
         .from('profiles')
         .upsert({
           id: userData.user.id,
@@ -350,7 +355,7 @@ export async function POST(request: NextRequest) {
       if (profileError) {
         logger.error('Error creating profile:', { error: profileError });
         // Try to clean up the auth user if profile creation failed
-        await supabaseAdmin.auth.admin.deleteUser(userData.user.id);
+        await getSupabaseAdmin().auth.admin.deleteUser(userData.user.id);
         return NextResponse.json({ 
           error: 'Failed to create user profile' 
         }, { status: 500 });
@@ -421,7 +426,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Fetch target profile first to enforce RBAC limits
-    const { data: targetProfile, error: fetchError } = await supabaseAdmin
+    const { data: targetProfile, error: fetchError } = await getSupabaseAdmin()
       .from('profiles')
       .select('role')
       .eq('id', userId)
@@ -453,7 +458,7 @@ export async function PUT(request: NextRequest) {
       if (updates.password) authUpdates.password = updates.password;
       if (updates.email_confirm !== undefined) authUpdates.email_confirm = updates.email_confirm;
 
-      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(userId, authUpdates);
+      const { error: authError } = await getSupabaseAdmin().auth.admin.updateUserById(userId, authUpdates);
       
       if (authError) {
         logger.error('Error updating auth user:', { error: authError });
@@ -485,7 +490,7 @@ export async function PUT(request: NextRequest) {
       profileUpdates.updated_at = new Date().toISOString();
 
       if (Object.keys(profileUpdates).length > 0) {
-        const { error: profileError } = await supabaseAdmin
+        const { error: profileError } = await getSupabaseAdmin()
           .from('profiles')
           .update(profileUpdates)
           .eq('id', userId);
@@ -538,7 +543,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Fetch target profile first to enforce RBAC limits
-    const { data: targetProfile, error: fetchError } = await supabaseAdmin
+    const { data: targetProfile, error: fetchError } = await getSupabaseAdmin()
       .from('profiles')
       .select('role')
       .eq('id', userId)
@@ -556,7 +561,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete user (this will cascade to profile due to foreign key)
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    const { error: deleteError } = await getSupabaseAdmin().auth.admin.deleteUser(userId);
     
     if (deleteError) {
       logger.error('Error deleting user:', { error: deleteError });

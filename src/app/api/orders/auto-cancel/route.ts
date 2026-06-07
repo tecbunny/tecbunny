@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient as createServerClient, createServiceClient , isSupabaseServiceConfigured , createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
-import { isAtLeast } from '@/lib/roles';
-import type { UserRole } from '@/lib/types';
+import { isAtLeast, normalizeRole } from '@/lib/roles';
 
 // export const dynamic = 'force-dynamic';
 
@@ -16,6 +15,7 @@ const STALE_PAYMENT_STATUSES = [
   'Payment Cancelled'
 ];
 const AUTO_CANCEL_REASON = 'Automatically cancelled after 24 hours without payment confirmation.';
+const AUTO_CANCEL_BATCH_LIMIT = 100;
 
 export async function POST(_request: NextRequest) {
   try {
@@ -36,8 +36,8 @@ export async function POST(_request: NextRequest) {
         .eq('id', user.id)
         .maybeSingle();
 
-      const role = (profile?.role as UserRole | undefined)
-        ?? ((user.app_metadata as Record<string, unknown> | undefined)?.role as UserRole | undefined)
+      const role = normalizeRole(profile?.role)
+        ?? normalizeRole((user.app_metadata as Record<string, unknown> | undefined)?.role)
         ?? 'customer';
 
       if (!isAtLeast(role, 'manager')) {
@@ -58,7 +58,8 @@ export async function POST(_request: NextRequest) {
           .map((status) => `payment_status.eq.${encodeURIComponent(status)}`)
           .concat('payment_status.is.null')
           .join(',')
-      );
+      )
+      .limit(AUTO_CANCEL_BATCH_LIMIT);
 
     if (fetchError) {
       logger.error('orders_auto_cancel_fetch_error', { error: fetchError.message });
@@ -74,16 +75,24 @@ export async function POST(_request: NextRequest) {
       return NextResponse.json({ success: true, cancelled: 0 });
     }
 
-    const nowIso = new Date().toISOString();
-    const { error: updateError } = await serviceClient
+    const { data: cancelledOrders, error: updateError } = await serviceClient
       .from('orders')
       .update({
         status: 'Cancelled',
         payment_status: 'Payment Cancelled',
         cancellation_reason: AUTO_CANCEL_REASON,
-        updated_at: nowIso
+        updated_at: new Date().toISOString()
       })
-      .in('id', staleIds);
+      .in('id', staleIds)
+      .in('status', STALE_STATUSES)
+      .lte('created_at', cutoffIso)
+      .or(
+        STALE_PAYMENT_STATUSES
+          .map((status) => `payment_status.eq.${encodeURIComponent(status)}`)
+          .concat('payment_status.is.null')
+          .join(',')
+      )
+      .select('id, items');
 
     if (updateError) {
       logger.error('orders_auto_cancel_update_error', {
@@ -93,9 +102,12 @@ export async function POST(_request: NextRequest) {
       return NextResponse.json({ error: 'Failed to cancel stale orders' }, { status: 500 });
     }
 
+    const cancelledIds = new Set((cancelledOrders ?? []).map((order) => order.id));
+    const skippedByRace = staleIds.length - cancelledIds.size;
+
     // Restore stock for cancelled orders
     let restoredCount = 0;
-    for (const order of staleOrders) {
+    for (const order of cancelledOrders ?? []) {
       const items = (order.items as any)?.cart_items || [];
       if (Array.isArray(items)) {
         for (const item of items) {
@@ -115,18 +127,6 @@ export async function POST(_request: NextRequest) {
                  orderId: order.id,
                  productId 
                });
-               // Fallback: Try direct update if RPC fails (e.g. function not deployed yet)
-               // Note: This is less safe but better than losing stock
-               try {
-                 const { data: prod } = await serviceClient.from('products').select('stock_quantity').eq('id', productId).single();
-                 if (prod) {
-                   await serviceClient.from('products')
-                     .update({ stock_quantity: (prod.stock_quantity || 0) + quantity })
-                     .eq('id', productId);
-                 }
-               } catch (e) {
-                 logger.error('orders_auto_cancel_stock_fallback_error', { error: e });
-               }
             } else {
               restoredCount++;
             }
@@ -135,8 +135,19 @@ export async function POST(_request: NextRequest) {
       }
     }
 
-    logger.info('orders_auto_cancel_success', { count: staleIds.length, restoredItems: restoredCount });
-    return NextResponse.json({ success: true, cancelled: staleIds.length, restoredItems: restoredCount });
+    logger.info('orders_auto_cancel_success', {
+      evaluated: staleIds.length,
+      cancelled: cancelledIds.size,
+      skippedByRace,
+      restoredItems: restoredCount
+    });
+    return NextResponse.json({
+      success: true,
+      evaluated: staleIds.length,
+      cancelled: cancelledIds.size,
+      skippedByRace,
+      restoredItems: restoredCount
+    });
   } catch (error) {
     logger.error('orders_auto_cancel_unhandled', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

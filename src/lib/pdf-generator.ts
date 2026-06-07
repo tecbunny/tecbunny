@@ -3,6 +3,12 @@ import path from 'path';
 import { PDFDocument, rgb, StandardFonts, type Color } from 'pdf-lib';
 import { logger } from './logger';
 
+const MAX_QUOTE_ITEMS = 150;
+const MAX_QUOTE_TEXT_LENGTH = 4000;
+const MAX_QUOTE_PDF_BYTES = 5 * 1024 * 1024;
+const MAX_REMOTE_ASSET_BYTES = 1.5 * 1024 * 1024;
+const REMOTE_ASSET_TIMEOUT_MS = 5000;
+
 // Helper to search for public assets at multiple levels to accommodate Vercel deployment/subfolder structures
 function resolveAssetPath(relativePath: string): string {
   const pathsToTry = [
@@ -21,6 +27,43 @@ function resolveAssetPath(relativePath: string): string {
     } catch (_) {}
   }
   return path.join(process.cwd(), relativePath); // default fallback
+}
+
+async function fetchBoundedBuffer(url: string, label: string): Promise<Buffer | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REMOTE_ASSET_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) {
+      logger.warn(`${label}_fetch_failed`, { status: response.status, url });
+      return null;
+    }
+
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > MAX_REMOTE_ASSET_BYTES) {
+      logger.warn(`${label}_fetch_too_large`, { contentLength, maxBytes: MAX_REMOTE_ASSET_BYTES, url });
+      return null;
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    if (arrayBuffer.byteLength > MAX_REMOTE_ASSET_BYTES) {
+      logger.warn(`${label}_fetch_too_large`, { byteLength: arrayBuffer.byteLength, maxBytes: MAX_REMOTE_ASSET_BYTES, url });
+      return null;
+    }
+
+    return Buffer.from(arrayBuffer);
+  } catch (error) {
+    logger.error(`${label}_fetch_failed`, { error, url });
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function truncateQuoteText(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value.length > MAX_QUOTE_TEXT_LENGTH ? `${value.slice(0, MAX_QUOTE_TEXT_LENGTH)}...` : value;
 }
 
 export async function loadCompanyInfo() {
@@ -85,29 +128,11 @@ export async function buildPdf(options: {
   }
 
   if (!fontRegularBuffer) {
-    try {
-      const response = await fetch(remoteFontUrl);
-      if (response.ok) {
-        fontRegularBuffer = Buffer.from(await response.arrayBuffer());
-      } else {
-        logger.warn('quotes.font_remote_failed', { status: response.status, remoteFontUrl });
-      }
-    } catch (error) {
-      logger.error('quotes.font_remote_failed', { error, remoteFontUrl });
-    }
+    fontRegularBuffer = await fetchBoundedBuffer(remoteFontUrl, 'quotes.font_remote');
   }
 
   if (!fontBoldBuffer && remoteFontBoldUrl) {
-    try {
-      const response = await fetch(remoteFontBoldUrl);
-      if (response.ok) {
-        fontBoldBuffer = Buffer.from(await response.arrayBuffer());
-      } else {
-        logger.warn('quotes.font_bold_remote_failed', { status: response.status, remoteFontBoldUrl });
-      }
-    } catch (error) {
-      logger.error('quotes.font_bold_remote_failed', { error, remoteFontBoldUrl });
-    }
+    fontBoldBuffer = await fetchBoundedBuffer(remoteFontBoldUrl, 'quotes.font_bold_remote');
   }
 
   let bodyFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -156,13 +181,7 @@ export async function buildPdf(options: {
   let logoBuffer: Buffer | null = null;
   try {
     if (logoUrl) {
-      const response = await fetch(logoUrl);
-      if (response.ok) {
-        const arrayBuffer = await response.arrayBuffer();
-        logoBuffer = Buffer.from(arrayBuffer);
-      } else {
-        logger.warn('quotes.logo_fetch_failed', { status: response.status, logoUrl });
-      }
+      logoBuffer = await fetchBoundedBuffer(logoUrl, 'quotes.logo');
     }
   } catch (error) {
     logger.error('quotes.logo_fetch_failed', { error, logoUrl });
@@ -289,7 +308,7 @@ export async function buildPdf(options: {
   page.drawText(customerEmail, { x: margin, y: cursorY, size: 10, font: bodyFont, color: rgb(0.20, 0.25, 0.33) });
 
   cursorY -= 18;
-  const summaryText = sanitizeText(summary || 'Customised setup request');
+  const summaryText = sanitizeText(truncateQuoteText(summary) || 'Customised setup request');
   const summaryBoxHeight = 50;
   page.drawRectangle({ x: margin, y: cursorY - summaryBoxHeight, width: pageWidth - margin * 2, height: summaryBoxHeight, color: rgb(0.97, 0.98, 0.99) });
   page.drawText('Project Summary', { x: margin + 12, y: cursorY - 16, size: 10, font: boldFont, color: rgb(0.06, 0.09, 0.16) });
@@ -299,9 +318,13 @@ export async function buildPdf(options: {
   const items: Array<{ description: string; mrp?: number | null; sale?: number | null }> = Array.isArray(selections?.items)
     ? selections.items.map((item: any) => ({
         ...item,
-        description: sanitizeText(item?.description ?? ''),
+        description: sanitizeText(truncateQuoteText(item?.description)),
       }))
     : [];
+
+  if (items.length > MAX_QUOTE_ITEMS) {
+    throw new Error(`Quote contains too many line items. Maximum allowed is ${MAX_QUOTE_ITEMS}.`);
+  }
 
   if (!items.length) {
     items.push({
@@ -364,10 +387,14 @@ export async function buildPdf(options: {
     cursorY -= 18;
     page.drawText('System Breakdown', { x: margin, y: cursorY, size: 9, font: boldFont, color: rgb(0.06, 0.09, 0.16) });
     cursorY -= 12;
-    const breakdownText = sanitizeText(selections.breakdown.join(' • '));
+    const breakdownText = sanitizeText(truncateQuoteText(selections.breakdown.join(' • ')));
     drawWrappedText(breakdownText, margin, cursorY, pageWidth - margin * 2, bodyFont, 8, rgb(0.39, 0.45, 0.52));
   }
 
   const pdfBytes = await pdfDoc.save();
+  if (pdfBytes.byteLength > MAX_QUOTE_PDF_BYTES) {
+    throw new Error(`Generated quote PDF exceeds ${MAX_QUOTE_PDF_BYTES} bytes.`);
+  }
+
   return Buffer.from(pdfBytes);
 }

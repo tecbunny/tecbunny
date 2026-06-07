@@ -54,6 +54,15 @@ function collectUdfValues(source: Record<string, string | undefined>): string[] 
   });
 }
 
+function timingSafeSha512HexEqual(expectedHex: string, candidateHex: string | undefined): boolean {
+  const expected = Buffer.from(expectedHex, 'hex');
+  const cleanCandidate = candidateHex?.trim().toLowerCase() ?? '';
+  const isValidSha512Hex = /^[a-f0-9]{128}$/.test(cleanCandidate);
+  const candidate = Buffer.from(isValidSha512Hex ? cleanCandidate : '0'.repeat(128), 'hex');
+
+  return isValidSha512Hex && crypto.timingSafeEqual(expected, candidate);
+}
+
 export function getPayuPaymentUrl(environment: PayuEnvironment): string {
   return GATEWAY_URL[environment] ?? GATEWAY_URL.test;
 }
@@ -160,8 +169,5 @@ export function verifyPayuHash(config: PayuConfig, response: Record<string, stri
     : baseSequence.map(sanitizeHashValue).join('|');
 
   const expectedHash = crypto.createHash('sha512').update(hashSequence).digest('hex');
-  const a = Buffer.from(expectedHash, 'utf8');
-  const b = Buffer.from(response.hash.toLowerCase(), 'utf8');
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
+  return timingSafeSha512HexEqual(expectedHash, response.hash);
 }

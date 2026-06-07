@@ -48,28 +48,38 @@ export async function POST(request: NextRequest) {
     }
 
     if (redis && messageIds.length > 0) {
-      // Check for existing message IDs in Redis
-      const processedCount = await Promise.all(messageIds.map(id => redis.get(`webhook:whatsapp:msg:${id}`)));
-      const allProcessed = processedCount.every(val => val !== null);
-      
-      if (allProcessed) {
+      const claimResults = await Promise.all(
+        messageIds.map(id => redis.set(`webhook:whatsapp:msg:${id}`, 'processing', 'EX', 86400, 'NX'))
+      );
+      const claimedMessageIds = new Set(
+        messageIds.filter((_, index) => claimResults[index])
+      );
+
+      if (claimedMessageIds.size === 0) {
         logger.info('Duplicate WhatsApp webhook event, skipping execution', { messageIds });
         return NextResponse.json({ status: 'already_processed' });
       }
-
-      // Mark as processing
-      await Promise.all(messageIds.map(id => redis.set(`webhook:whatsapp:msg:${id}`, 'processed', 'EX', 86400)));
+      body.__claimedMessageIds = claimedMessageIds;
+    } else if (messageIds.length > 0) {
+      body.__claimedMessageIds = new Set(messageIds);
     }
 
     const supabase = await createClient();
+    const claimedMessageIds: Set<string> | undefined = body.__claimedMessageIds;
 
     // Process WhatsApp webhook events
     for (const entry of body.entry || []) {
       for (const change of entry.changes || []) {
         if (change.field === 'messages') {
-          await processWhatsAppMessage(supabase, change.value);
+          await processWhatsAppMessage(supabase, change.value, claimedMessageIds);
         }
       }
+    }
+
+    if (redis && claimedMessageIds?.size) {
+      await Promise.all(
+        [...claimedMessageIds].map(id => redis.set(`webhook:whatsapp:msg:${id}`, 'processed', 'EX', 86400))
+      );
     }
 
     return NextResponse.json({ status: 'processed' });
@@ -79,13 +89,32 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function processWhatsAppMessage(supabase: any, messageData: any) {
+async function processWhatsAppMessage(supabase: any, messageData: any, claimedMessageIds?: Set<string>) {
   const { messages, contacts } = messageData;
 
   for (const message of messages || []) {
     const phoneNumber = message.from;
     const messageId = message.id;
     const timestamp = new Date(parseInt(message.timestamp) * 1000);
+
+    if (!messageId || (claimedMessageIds && !claimedMessageIds.has(messageId))) {
+      continue;
+    }
+
+    const { data: existingMessage, error: existingMessageError } = await supabase
+      .from('whatsapp_messages')
+      .select('id')
+      .eq('whatsapp_message_id', messageId)
+      .maybeSingle();
+
+    if (existingMessageError) {
+      logger.warn('Failed to check WhatsApp message idempotency', { error: existingMessageError, messageId });
+    }
+
+    if (existingMessage) {
+      logger.info('Duplicate WhatsApp message skipped from database idempotency check', { messageId });
+      continue;
+    }
 
     // Find or create customer
     let { data: customer } = await supabase

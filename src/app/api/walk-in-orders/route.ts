@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
 import { logger } from '@/lib/logger';
 import { requireApiRole, type RoleCheckOptions } from '@/lib/server-role-guard';
@@ -56,6 +57,33 @@ const mapPaymentStatusToOrderStatus = (paymentStatus?: string) => {
   }
   return undefined;
 };
+
+const walkInOrderItemSchema = z.object({
+  product_id: z.string().uuid().optional(),
+  productId: z.string().uuid().optional(),
+  name: z.string().optional(),
+  productName: z.string().optional(),
+  quantity: z.coerce.number().int().positive().max(1000)
+}).refine((item) => item.product_id || item.productId, {
+  message: 'Product ID is required'
+});
+
+const createWalkInOrderSchema = z.object({
+  customer_name: z.string().optional(),
+  customer_email: z.string().email().optional().or(z.literal('')),
+  customer_phone: z.string().optional(),
+  customerInfo: z.object({
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    phone: z.string().optional(),
+    email: z.string().email().optional().or(z.literal('')),
+    address: z.string().optional()
+  }).optional(),
+  items: z.array(walkInOrderItemSchema).min(1).max(100),
+  payment_method: z.string().optional(),
+  paymentMethod: z.string().optional(),
+  notes: z.string().max(2000).optional().nullable()
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -251,18 +279,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    if (action === 'create-order') {
-      const { customer_name, customer_email, customer_phone, items, payment_method, notes } = data;
+    if (action === 'create-order' || action === 'create-walk-in-order') {
+      const parsedOrder = createWalkInOrderSchema.safeParse(data);
+      if (!parsedOrder.success) {
+        return NextResponse.json(
+          { error: 'Invalid order payload', details: parsedOrder.error.flatten() },
+          { status: 400 }
+        );
+      }
+
+      const {
+        customerInfo,
+        items,
+        payment_method,
+        paymentMethod,
+        notes
+      } = parsedOrder.data;
+      const customer_name = parsedOrder.data.customer_name
+        || [customerInfo?.firstName, customerInfo?.lastName].filter(Boolean).join(' ').trim()
+        || 'Walk-in Customer';
+      const customer_email = parsedOrder.data.customer_email || customerInfo?.email || null;
+      const customer_phone = parsedOrder.data.customer_phone || customerInfo?.phone || null;
+      const delivery_address = customerInfo?.address || null;
+      const resolvedPaymentMethod = payment_method || paymentMethod || null;
 
       if (!items || !Array.isArray(items) || items.length === 0) {
         return NextResponse.json({ error: 'No items in order' }, { status: 400 });
       }
 
       // Look up and verify item base rates on the server side using canonical database values
-      const productIds = items.map((item: any) => item.product_id).filter(Boolean);
+      const normalizedItems = items.map((item) => ({
+        product_id: item.product_id || item.productId,
+        name: item.name || item.productName,
+        quantity: item.quantity
+      }));
+      const productIds = [...new Set(normalizedItems.map((item) => item.product_id).filter(Boolean))];
       const { data: dbProducts, error: dbError } = await supabase
         .from('products')
-        .select('id, price, gst_rate, gst_percentage')
+        .select('id, name, title, price, gst_rate, gst_percentage')
         .in('id', productIds);
 
       if (dbError || !dbProducts) {
@@ -274,7 +328,7 @@ export async function POST(request: NextRequest) {
       let gst_amount = 0;
       const validatedItems = [];
 
-      for (const clientItem of items) {
+      for (const clientItem of normalizedItems) {
         const dbProduct = dbProducts.find((p: any) => p.id === clientItem.product_id);
         if (!dbProduct) {
           return NextResponse.json({ error: `Product not found: ${clientItem.product_id}` }, { status: 400 });
@@ -292,7 +346,10 @@ export async function POST(request: NextRequest) {
         gst_amount += itemGst;
 
         validatedItems.push({
-          ...clientItem,
+          id: clientItem.product_id,
+          product_id: clientItem.product_id,
+          name: (dbProduct as any).name || (dbProduct as any).title || clientItem.name || 'Product',
+          quantity: clientItem.quantity,
           price, // enforce server price
           gst_rate: gstRate
         });
@@ -300,35 +357,62 @@ export async function POST(request: NextRequest) {
 
       const total = subtotal + gst_amount; // inclusive total
 
-      // Create the order
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          customer_name,
-          customer_email,
-          customer_phone,
-          status: 'Pending',
-          type: 'Walk-in',
-          subtotal: Math.round(subtotal * 100) / 100,
-          gst_amount: Math.round(gst_amount * 100) / 100,
-          total: Math.round(total * 100) / 100,
-          payment_method,
-          notes,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+      const rpcItems = validatedItems.map((item) => ({
+        id: item.product_id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        gst_rate: item.gst_rate
+      }));
 
-      if (orderError) {
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('allocate_order_inventory_atomic', {
+        p_customer_name: customer_name,
+        p_customer_id: null,
+        p_customer_email: customer_email,
+        p_customer_phone: customer_phone,
+        p_delivery_address: delivery_address,
+        p_notes: notes || null,
+        p_payment_method: resolvedPaymentMethod,
+        p_subtotal: Math.round(subtotal * 100) / 100,
+        p_gst_amount: Math.round(gst_amount * 100) / 100,
+        p_total: Math.round(total * 100) / 100,
+        p_discount_amount: 0,
+        p_shipping_amount: 0,
+        p_payment_status: null,
+        p_order_type: 'Walk-in',
+        p_items: rpcItems,
+        p_agent_id: access.session?.user?.id || null
+      });
+
+      if (rpcError) {
+        logger.error('walk_in_order.atomic_create_failed', { error: rpcError, productIds });
+        const message = rpcError.message || 'Failed to allocate stock and create order';
+        const status = message.toLowerCase().includes('insufficient stock') ? 409 : 500;
         return NextResponse.json(
-          { error: 'Failed to create order', details: orderError.message },
+          { error: 'Failed to create order', details: message },
+          { status }
+        );
+      }
+
+      const createdOrder = rpcResult?.order;
+      if (!rpcResult?.success || !createdOrder?.id) {
+        logger.error('walk_in_order.atomic_create_invalid_response', { rpcResult });
+        return NextResponse.json(
+          { error: 'Failed to create order', details: 'Invalid allocation engine response' },
           { status: 500 }
         );
       }
 
-      // Create order items using validatedItems
+      const { data: order } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', createdOrder.id)
+        .single();
+
+      // Keep the reporting table in sync for existing admin views. Inventory and order creation
+      // have already completed atomically inside PostgreSQL.
       const orderItems = validatedItems.map((item: any) => ({
-        order_id: order.id,
+        order_id: createdOrder.id,
         product_id: item.product_id,
         name: item.name,
         quantity: item.quantity,
@@ -341,42 +425,13 @@ export async function POST(request: NextRequest) {
         .insert(orderItems);
 
       if (itemsError) {
-        // Rollback order if items creation fails
-        await supabase.from('orders').delete().eq('id', order.id);
-        return NextResponse.json(
-          { error: 'Failed to create order items', details: itemsError.message },
-          { status: 500 }
-        );
+        logger.warn('walk_in_order.order_items_mirror_failed', {
+          error: itemsError,
+          orderId: createdOrder.id
+        });
       }
 
-      // Record atomic stock movements for each item to ensure inventory consistency
-      // and prevent race conditions via the SELECT FOR UPDATE inside the RPC.
-      for (const item of validatedItems) {
-        const { error: stockError } = await supabase.rpc(
-          'record_atomic_stock_movement',
-          {
-            p_product_id: item.product_id,
-            p_movement_type: 'walk_in_sale',
-            p_quantity: item.quantity,
-            p_reference_id: order.id,
-            p_reference_type: 'order',
-            p_notes: `Walk-in order #${order.order_number || order.id}`,
-            p_requested_serials: item.serial_numbers || null
-          }
-        );
-
-        if (stockError) {
-          logger.error('walk_in_order.stock_update_failed', { 
-            error: stockError, 
-            orderId: order.id, 
-            productId: item.product_id 
-          });
-          // Note: In a production system, we might want a full transaction rollback here.
-          // Since Supabase RPCs and REST calls are separate, we log and alert.
-        }
-      }
-
-      return NextResponse.json({ order, items: orderItems });
+      return NextResponse.json({ order: order || createdOrder, items: orderItems });
     }
 
     return NextResponse.json(

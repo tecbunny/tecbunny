@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server';
+import crypto from 'crypto';
 
 import { createClient } from '@/lib/supabase/server';
 import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
@@ -6,6 +7,17 @@ import { logger } from '@/lib/logger';
 import { validateWebhookSignature } from '@/lib/webhook-validator';
 import { logWebhookEvent } from '@/lib/webhook-logger';
 import { getRedis } from '@/lib/redis';
+
+const deriveWebhookEventId = (source: string, rawBody: string, signature: string | null): string => {
+  return crypto
+    .createHash('sha256')
+    .update(source)
+    .update('\0')
+    .update(signature ?? '')
+    .update('\0')
+    .update(rawBody)
+    .digest('hex');
+};
 
 // Generic payment received webhook handler
 export async function POST(request: NextRequest) {
@@ -37,31 +49,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    // Idempotency: Check if this event was already processed via Redis deduplication
-    const eventId = body.id || body.event_id || body.payment_id || body.transaction_id;
-    if (eventId) {
-      const redis = getRedis();
-      if (redis) {
-        const idempotencyKey = `webhook:payment:received:${eventId}`;
-        // Set key with 24h expiration, NX means only set if not exists
-        const isNewEvent = await redis.set(idempotencyKey, 'processing', 'EX', 86400, 'NX');
-        
-        if (!isNewEvent) {
-          logger.info('Duplicate payment received webhook event (Redis cache hit), skipping execution', { eventId, correlationId });
-          return NextResponse.json({ success: true, message: 'Event already processed (duplicate)' }, { status: 200 });
-        }
-      }
+    // Idempotency: every signed request gets either the gateway event id or a stable body fingerprint.
+    const eventId = body.id || body.event_id || body.payment_id || body.transaction_id || deriveWebhookEventId(source, rawBody, signature);
+    const redis = getRedis();
+    if (redis) {
+      const idempotencyKey = `webhook:payment:received:${eventId}`;
+      // Set key with 24h expiration, NX means only set if not exists.
+      const isNewEvent = await redis.set(idempotencyKey, 'processing', 'EX', 86400, 'NX');
 
-      const { data: existingEvent } = await supabase
-        .from('webhook_events')
-        .select('id')
-        .eq('event_id', eventId)
-        .maybeSingle();
-
-      if (existingEvent) {
-        logger.info('Duplicate payment received webhook event (DB hit), skipping execution', { eventId, correlationId });
+      if (!isNewEvent) {
+        logger.info('Duplicate payment received webhook event (Redis cache hit), skipping execution', { eventId, correlationId });
         return NextResponse.json({ success: true, message: 'Event already processed (duplicate)' }, { status: 200 });
       }
+    }
+
+    const { data: existingEvent } = await supabase
+      .from('webhook_events')
+      .select('id')
+      .eq('event_id', eventId)
+      .maybeSingle();
+
+    if (existingEvent) {
+      logger.info('Duplicate payment received webhook event (DB hit), skipping execution', { eventId, correlationId });
+      return NextResponse.json({ success: true, message: 'Event already processed (duplicate)' }, { status: 200 });
     }
 
     // Use Next.js after() to process the webhook asynchronously
@@ -87,7 +97,13 @@ export async function POST(request: NextRequest) {
       try {
         parsedBody = rawBody ? JSON.parse(rawBody) : {};
       } catch {}
-      const eventId = (parsedBody as any).id || (parsedBody as any).event_id || (parsedBody as any).payment_id || (parsedBody as any).transaction_id;
+      const signature = request.headers.get('x-webhook-signature');
+      const source = request.headers.get('x-webhook-source') || 'unknown';
+      const eventId = (parsedBody as any).id
+        || (parsedBody as any).event_id
+        || (parsedBody as any).payment_id
+        || (parsedBody as any).transaction_id
+        || deriveWebhookEventId(source, rawBody, signature);
       await logWebhookEvent(supabase, 'payment_received', parsedBody, 'unknown', false, error.message, startTime, eventId);
     } catch (logError: any) {
       logger.error('Failed to log webhook error:', { error: logError.message, correlationId });

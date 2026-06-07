@@ -30,6 +30,9 @@ const PUBLIC_SETTINGS_CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalid
 const PUBLIC_SETTINGS_SELECT = 'key,value,description,updated_at';
 
 function getSupabaseAdmin() {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase admin environment variables are not configured');
+  }
   return createAdminClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 }
 

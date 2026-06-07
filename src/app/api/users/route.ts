@@ -29,8 +29,8 @@ function isSupabaseConfigured() {
 
 // Create admin client for user management
 const supabaseAdmin = createClient(
-  SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY,
+  SUPABASE_URL!,
+  SUPABASE_SERVICE_ROLE_KEY!,
   {
     auth: {
       autoRefreshToken: false,
@@ -40,8 +40,8 @@ const supabaseAdmin = createClient(
 );
 
 const createAnonClient = () => createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
+  SUPABASE_URL!,
+  SUPABASE_ANON_KEY!,
   {
     auth: {
       autoRefreshToken: false,

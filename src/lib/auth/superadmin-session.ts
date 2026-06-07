@@ -1,5 +1,6 @@
 import { logger } from '../logger';
 import { getRedis } from '../redis';
+import { createServiceClient } from '../supabase/server';
 
 const SUPERADMIN_SESSION_TTL_SECONDS = 60 * 60 * 24;
 
@@ -126,13 +127,31 @@ export async function verifySuperadminSessionToken(token: string | undefined | n
 
     // Check if JTI is in blocklist (for revocation/logout)
     if (payload.jti) {
+      // Primary: Redis
       const redis = getRedis();
       if (redis) {
         const isBlocked = await redis.get(`blocklist:jti:${payload.jti}`);
         if (isBlocked) {
-          logger.warn('Superadmin session revocation check: JTI is blocked', { jti: payload.jti });
+          logger.warn('Superadmin session revocation check: JTI is blocked (Redis)', { jti: payload.jti });
           return null;
         }
+      }
+
+      // Secondary: Database (Fallback)
+      try {
+        const supabase = createServiceClient();
+        const { data: dbBlocked } = await supabase
+          .from('superadmin_token_blocklist')
+          .select('jti')
+          .eq('jti', payload.jti)
+          .maybeSingle();
+        
+        if (dbBlocked) {
+          logger.warn('Superadmin session revocation check: JTI is blocked (DB)', { jti: payload.jti });
+          return null;
+        }
+      } catch (dbError) {
+        logger.error('Failed to check token blocklist in DB', { error: dbError });
       }
     }
 
@@ -151,14 +170,27 @@ export async function revokeSuperadminSessionToken(token: string) {
     const payload = JSON.parse(payloadText) as Partial<SuperadminSessionPayload>;
     
     if (payload.jti && payload.exp) {
-      const redis = getRedis();
-      if (redis) {
-        const now = Math.floor(Date.now() / 1000);
-        const ttl = payload.exp - now;
-        if (ttl > 0) {
+      const now = Math.floor(Date.now() / 1000);
+      const ttl = payload.exp - now;
+      if (ttl > 0) {
+        // Primary: Redis
+        const redis = getRedis();
+        if (redis) {
           await redis.set(`blocklist:jti:${payload.jti}`, '1', 'EX', ttl);
-          logger.info('Superadmin session revoked', { jti: payload.jti });
         }
+
+        // Secondary: Database
+        try {
+          const supabase = createServiceClient();
+          await supabase.from('superadmin_token_blocklist').insert({
+            jti: payload.jti,
+            expires_at: new Date(payload.exp * 1000).toISOString()
+          });
+        } catch (dbError) {
+          logger.error('Failed to persist token revocation to DB', { error: dbError });
+        }
+        
+        logger.info('Superadmin session revoked (Redis + DB)', { jti: payload.jti });
       }
     }
   } catch (error) {

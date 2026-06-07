@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
-import { normalizeRole as normalizeKnownRole, ROLE_HIERARCHY, type UserRole } from '@/lib/roles';
+import { ALL_ROLES, normalizeRole as normalizeKnownRole, ROLE_HIERARCHY, type UserRole } from '@/lib/roles';
 
 type AdminRole = 'admin' | 'manager' | 'superadmin';
 
@@ -28,28 +28,36 @@ function isAdminRole(role: unknown): role is AdminRole {
 
 const METADATA_ROLE_KEYS = ['role', 'default_role', 'app_role', 'user_role'] as const;
 const METADATA_ROLE_ARRAY_KEYS = ['roles', 'app_roles'] as const;
+const UNSAFE_METADATA_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) return false;
+  return !Object.keys(value).some((key) => UNSAFE_METADATA_KEYS.has(key));
+};
+
+const isCanonicalRole = (value: unknown): value is UserRole => {
+  return typeof value === 'string' && (ALL_ROLES as readonly string[]).includes(value);
+};
 
 const normalizeRole = (value: unknown): UserRole | null => {
   return normalizeKnownRole(value);
 };
 
 const extractRoleFromMetadata = (metadata: Record<string, unknown> | undefined | null): UserRole | null => {
-  if (!metadata || typeof metadata !== 'object') return null;
+  if (!isPlainRecord(metadata)) return null;
 
   for (const key of METADATA_ROLE_KEYS) {
-    if (key in metadata) {
-      const parsed = normalizeRole((metadata as Record<string, unknown>)[key]);
-      if (parsed) return parsed;
+    if (Object.prototype.hasOwnProperty.call(metadata, key) && isCanonicalRole(metadata[key])) {
+      return metadata[key];
     }
   }
 
   for (const key of METADATA_ROLE_ARRAY_KEYS) {
-    const value = (metadata as Record<string, unknown>)[key];
-    if (Array.isArray(value)) {
-      for (const entry of value) {
-        const parsed = normalizeRole(entry);
-        if (parsed) return parsed;
-      }
+    const value = metadata[key];
+    if (Array.isArray(value) && value.every(isCanonicalRole)) {
+      return value[0] ?? null;
     }
   }
 

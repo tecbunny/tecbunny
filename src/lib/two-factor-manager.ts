@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
@@ -18,6 +18,9 @@ export interface TwoFactorVerification {
   message: string;
   backupCodeUsed?: boolean;
 }
+
+const ENCRYPTED_SECRET_PREFIX = 'enc:v1:';
+const HASHED_BACKUP_CODE_PREFIX = 'hash:v1:';
 
 class TwoFactorManager {
   private resolveSupabaseClient(supabase?: SupabaseClient): SupabaseClient {
@@ -73,14 +76,94 @@ class TwoFactorManager {
     });
   }
 
+  private getEncryptionKey(): Buffer {
+    const rawKey = process.env.TOTP_SECRET_ENCRYPTION_KEY;
+
+    if (!rawKey) {
+      throw new Error('TOTP secret encryption key is not configured');
+    }
+
+    if (/^[a-f0-9]{64}$/i.test(rawKey)) {
+      return Buffer.from(rawKey, 'hex');
+    }
+
+    if (/^[A-Za-z0-9+/]{43}=$/.test(rawKey) || /^[A-Za-z0-9_-]{43}$/.test(rawKey)) {
+      const decoded = Buffer.from(rawKey, 'base64url');
+      if (decoded.length === 32) {
+        return decoded;
+      }
+    }
+
+    return createHash('sha256').update(rawKey, 'utf8').digest();
+  }
+
+  private encryptSecret(secret: string): string {
+    const iv = randomBytes(12);
+    const cipher = createCipheriv('aes-256-gcm', this.getEncryptionKey(), iv);
+    const encrypted = Buffer.concat([cipher.update(secret, 'utf8'), cipher.final()]);
+    const authTag = cipher.getAuthTag();
+
+    return `${ENCRYPTED_SECRET_PREFIX}${iv.toString('base64url')}:${authTag.toString('base64url')}:${encrypted.toString('base64url')}`;
+  }
+
+  private decryptSecret(storedSecret: string): string {
+    if (!storedSecret.startsWith(ENCRYPTED_SECRET_PREFIX)) {
+      return storedSecret;
+    }
+
+    const payload = storedSecret.slice(ENCRYPTED_SECRET_PREFIX.length);
+    const [ivValue, authTagValue, encryptedValue] = payload.split(':');
+
+    if (!ivValue || !authTagValue || !encryptedValue) {
+      throw new Error('Invalid encrypted TOTP secret format');
+    }
+
+    const decipher = createDecipheriv(
+      'aes-256-gcm',
+      this.getEncryptionKey(),
+      Buffer.from(ivValue, 'base64url')
+    );
+    decipher.setAuthTag(Buffer.from(authTagValue, 'base64url'));
+
+    return Buffer.concat([
+      decipher.update(Buffer.from(encryptedValue, 'base64url')),
+      decipher.final(),
+    ]).toString('utf8');
+  }
+
+  private hashBackupCode(code: string): string {
+    const normalizedCode = code.replace(/-/g, '').toUpperCase();
+    const salt = randomBytes(16);
+    const hash = scryptSync(normalizedCode, salt, 32);
+
+    return `${HASHED_BACKUP_CODE_PREFIX}${salt.toString('base64url')}:${hash.toString('base64url')}`;
+  }
+
+  private verifyBackupCodeHash(storedCode: string, normalizedCode: string): boolean {
+    if (!storedCode.startsWith(HASHED_BACKUP_CODE_PREFIX)) {
+      return storedCode.replace(/-/g, '').toUpperCase() === normalizedCode;
+    }
+
+    const payload = storedCode.slice(HASHED_BACKUP_CODE_PREFIX.length);
+    const [saltValue, hashValue] = payload.split(':');
+    if (!saltValue || !hashValue) {
+      return false;
+    }
+
+    const expectedHash = Buffer.from(hashValue, 'base64url');
+    const actualHash = scryptSync(normalizedCode, Buffer.from(saltValue, 'base64url'), expectedHash.length);
+
+    return actualHash.length === expectedHash.length && timingSafeEqual(actualHash, expectedHash);
+  }
+
   // Verify backup code
   verifyBackupCode(backupCodes: string[], usedCodes: string[], code: string): boolean {
     // Remove hyphens and convert to uppercase for comparison
     const normalizedCode = code.replace(/-/g, '').toUpperCase();
 
     // Check if code exists and hasn't been used
-    return backupCodes.some(backupCode =>
-      backupCode.replace(/-/g, '').toUpperCase() === normalizedCode &&
+    return backupCodes.some((backupCode) =>
+      this.verifyBackupCodeHash(backupCode, normalizedCode) &&
       !usedCodes.includes(backupCode)
     );
   }
@@ -89,7 +172,7 @@ class TwoFactorManager {
   markBackupCodeUsed(backupCodes: string[], usedCodes: string[], code: string): string[] {
     const normalizedCode = code.replace(/-/g, '').toUpperCase();
     const matchingCode = backupCodes.find(backupCode =>
-      backupCode.replace(/-/g, '').toUpperCase() === normalizedCode
+      this.verifyBackupCodeHash(backupCode, normalizedCode)
     );
 
     if (matchingCode && !usedCodes.includes(matchingCode)) {
@@ -109,13 +192,16 @@ class TwoFactorManager {
     const client = this.resolveSupabaseClient(supabase);
 
     try {
+      const encryptedSecret = this.encryptSecret(secret);
+      const hashedBackupCodes = backupCodes.map((backupCode) => this.hashBackupCode(backupCode));
+
       const { error } = await (client as any)
         .from('profiles')
         .update({
           two_factor_enabled: true,
-          two_factor_secret: secret,
+          two_factor_secret: encryptedSecret,
           two_factor_method: 'totp',
-          two_factor_backup_codes: backupCodes,
+          two_factor_backup_codes: hashedBackupCodes,
           two_factor_backup_codes_used: [],
           two_factor_setup_at: new Date().toISOString()
         } as any)
@@ -238,8 +324,16 @@ class TwoFactorManager {
         return { success: false, message: '2FA not enabled for this account' };
       }
 
+      let secret: string;
+      try {
+        secret = this.decryptSecret(profile.two_factor_secret);
+      } catch (decryptError) {
+        logger.error('2FA secret decrypt failed', { error: decryptError, userId });
+        return { success: false, message: 'Verification failed' };
+      }
+
       // Try TOTP verification first
-      if (this.verifyToken(profile.two_factor_secret, token)) {
+      if (this.verifyToken(secret, token)) {
         return { success: true, message: '2FA verification successful' };
       }
 

@@ -59,7 +59,7 @@ export const useCart = () => {
     if (typeof window === 'undefined') return;
 
     const handleStorageEvent = (e: StorageEvent) => {
-      const cartKey = user ? `tecbunny_cart_${user.id}` : 'tecbunny_cart_guest';
+      const cartKey = user ? `tecbunny_cart_user_${user.id}` : 'tecbunny_cart_guest';
       if (e.key === cartKey) {
         loadCartFromStorage(user);
       }

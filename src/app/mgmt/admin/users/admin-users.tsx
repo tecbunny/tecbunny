@@ -163,6 +163,10 @@ export default function UserManagementPage() {
         throw new Error(payload?.error || `Failed to load users (status ${response.status})`);
       }
 
+      if (controller.signal.aborted || usersControllerRef.current !== controller) {
+        return;
+      }
+
       const totalCount = payload?.total ?? 0;
       const maxPage = Math.max(1, Math.ceil(totalCount / pageSize) || 1);
       if (page > maxPage && totalCount > 0) {
@@ -230,8 +234,8 @@ export default function UserManagementPage() {
     } finally {
       if (usersControllerRef.current === controller) {
         usersControllerRef.current = null;
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
   }, [
     debouncedSearch,

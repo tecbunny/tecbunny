@@ -18,6 +18,8 @@ export interface CartPricing {
 }
 
 const GUEST_SESSION_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+const CART_STORAGE_PREFIX = 'tecbunny';
+const CART_STORAGE_NAMES = ['cart', 'appliedCoupon', 'cartLastUpdated', 'abandonedEmailSent'] as const;
 
 const resolveHsnCode = (value: unknown): string | undefined => {
   if (typeof value === 'string') {
@@ -92,9 +94,41 @@ const defaultPricing: CartPricing = {
 
 const getStorageKey = (key: string, user: any) => {
   if (user) {
-    return `${key}_user_${user.id}`;
+    return `${CART_STORAGE_PREFIX}_${key}_user_${user.id}`;
   }
-  return `${key}_guest`;
+  return `${CART_STORAGE_PREFIX}_${key}_guest`;
+};
+
+const removeLegacyStorageKeys = () => {
+  if (typeof localStorage === 'undefined') return;
+
+  [
+    'cart',
+    'appliedCoupon',
+    'cartLastUpdated',
+    'abandonedEmailSent',
+    'cart_guest',
+    'appliedCoupon_guest',
+  ].forEach((key) => localStorage.removeItem(key));
+};
+
+const removeCartStorageForUser = (user: any) => {
+  CART_STORAGE_NAMES.forEach((key) => localStorage.removeItem(getStorageKey(key, user)));
+};
+
+const readStorageWithLegacyFallback = (key: string, user: any): string | null => {
+  const scopedKey = getStorageKey(key, user);
+  const scopedValue = localStorage.getItem(scopedKey);
+
+  if (scopedValue !== null) {
+    return scopedValue;
+  }
+
+  if (!user) {
+    return localStorage.getItem(`${key}_guest`) ?? localStorage.getItem(key);
+  }
+
+  return localStorage.getItem(`${key}_user_${user.id}`);
 };
 
 const isGuestSessionExpired = (user: any) => {
@@ -121,10 +155,8 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   resetGuestSession: () => {
     localStorage.removeItem('guestSessionStart');
-    localStorage.removeItem('cart');
-    localStorage.removeItem('appliedCoupon');
-    localStorage.removeItem('cartLastUpdated');
-    localStorage.removeItem('abandonedEmailSent');
+    removeCartStorageForUser(null);
+    removeLegacyStorageKeys();
     
     set({
       cartItems: [],
@@ -160,11 +192,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         return;
       }
 
-      const cartKey = getStorageKey('cart', user);
-      const couponKey = getStorageKey('appliedCoupon', user);
-      
-      const storedCart = localStorage.getItem(cartKey);
-      const storedCoupon = localStorage.getItem(couponKey);
+      const storedCart = readStorageWithLegacyFallback('cart', user);
+      const storedCoupon = readStorageWithLegacyFallback('appliedCoupon', user);
       
       let newCartItems: CartItem[] = [];
       const newPricing = { ...get().pricing };
@@ -208,7 +237,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       } else {
         localStorage.removeItem(couponKey);
       }
-      localStorage.setItem('cartLastUpdated', Date.now().toString());
+      localStorage.setItem(getStorageKey('cartLastUpdated', user), Date.now().toString());
     } catch (error) {
       logger.error("Failed to save cart to localStorage", { error });
     }
@@ -537,8 +566,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     try {
       set({ isMergingAccountCart: true });
-      const guestCartKey = 'cart_guest';
-      const guestCartRaw = typeof window !== 'undefined' ? localStorage.getItem(guestCartKey) : null;
+      const guestCartRaw = typeof window !== 'undefined' ? readStorageWithLegacyFallback('cart', null) : null;
       const guestItems: CartItem[] = guestCartRaw ? JSON.parse(guestCartRaw) : [];
       const inMemoryItems = get().cartItems || [];
       
@@ -577,9 +605,9 @@ export const useCartStore = create<CartState>((set, get) => ({
         localStorage.setItem(userCartKey, JSON.stringify(mergedItems));
         
         // Clean up guest local storage
-        localStorage.removeItem('cart_guest');
-        localStorage.removeItem('appliedCoupon_guest');
+        removeCartStorageForUser(null);
         localStorage.removeItem('guestSessionStart');
+        removeLegacyStorageKeys();
       }
 
       // Refresh pricing for the newly merged cart
@@ -596,7 +624,15 @@ export const useCartStore = create<CartState>((set, get) => ({
   clearCartMemory: () => {
     if (typeof window !== 'undefined') {
       try {
-        window.localStorage.removeItem('tecbunny_cart_guest');
+        const prefixes = [`${CART_STORAGE_PREFIX}_cart_`, `${CART_STORAGE_PREFIX}_appliedCoupon_`, `${CART_STORAGE_PREFIX}_cartLastUpdated_`, `${CART_STORAGE_PREFIX}_abandonedEmailSent_`];
+        for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+          const key = window.localStorage.key(index);
+          if (key && prefixes.some((prefix) => key.startsWith(prefix))) {
+            window.localStorage.removeItem(key);
+          }
+        }
+        removeLegacyStorageKeys();
+        window.localStorage.removeItem('guestSessionStart');
       } catch (e) {}
     }
     set({

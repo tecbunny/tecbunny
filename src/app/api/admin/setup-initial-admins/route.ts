@@ -89,7 +89,9 @@ export async function POST(request: NextRequest) {
         userId = existingProfile.id;
         await supabaseAdmin.auth.admin.updateUserById(userId, {
           password,
-          email_confirm: true
+          email_confirm: true,
+          app_metadata: { role },
+          user_metadata: { name }
         });
 
         // Update profile
@@ -109,7 +111,8 @@ export async function POST(request: NextRequest) {
           email,
           password,
           email_confirm: true,
-          user_metadata: { role, name }
+          app_metadata: { role },
+          user_metadata: { name }
         });
 
         if (createErr || !created.user) {

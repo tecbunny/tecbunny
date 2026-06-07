@@ -45,13 +45,6 @@ export async function requireRole(minRole: UserRole) {
   }
 
   if (!role) {
-    const fallbackRole = normalizeRole((user.user_metadata as Record<string, unknown> | undefined)?.role);
-    if (fallbackRole) {
-      role = fallbackRole;
-    }
-  }
-
-  if (!role) {
     logger.warn('requireRole.role_missing', {
       userId: user.id,
       email: user.email,

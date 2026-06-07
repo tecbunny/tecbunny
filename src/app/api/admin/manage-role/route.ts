@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
 import { logger } from '@/lib/logger';
 
@@ -18,6 +19,11 @@ function isAuthorized(req: NextRequest) {
   return !!token && token === process.env.ADMIN_MAINT_TOKEN;
 }
 
+const roleMutationSchema = z.object({
+  userId: z.string().uuid(),
+  action: z.enum(['promote', 'demote']),
+}).strict();
+
 export async function POST(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -28,11 +34,16 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { userId, action } = await request.json();
-    
-    if (!userId || !['promote', 'demote'].includes(action)) {
-      return NextResponse.json({ error: 'userId and valid action (promote/demote) are required' }, { status: 400 });
+    const parsed = roleMutationSchema.safeParse(await request.json());
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid role mutation request', issues: parsed.error.issues },
+        { status: 400 }
+      );
     }
+
+    const { userId, action } = parsed.data;
 
     // 1) Verify user exists in profiles
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -46,6 +57,15 @@ export async function POST(request: NextRequest) {
     }
 
     const newRole = action === 'promote' ? 'admin' : 'customer';
+
+    const { data: authUserData, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    if (authUserError) {
+      logger.error('admin_role_change_auth_user_fetch_failed', {
+        userId,
+        error: authUserError.message,
+      });
+      return NextResponse.json({ error: 'Failed to load auth user metadata' }, { status: 500 });
+    }
 
     // 2) Update profile role
     const { error: updateError } = await supabaseAdmin
@@ -75,10 +95,29 @@ export async function POST(request: NextRequest) {
         severity: 'high'
       });
     
-    // 3) Update auth metadata (if using syncing, though we moved to profiles-only, keeping this consistent is good practice)
-    await supabaseAdmin.auth.admin.updateUserById(userId, {
-      user_metadata: { role: newRole }
+    // 3) Keep server-controlled auth app metadata in sync.
+    const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      app_metadata: {
+        ...(authUserData.user?.app_metadata ?? {}),
+        role: newRole,
+      }
     });
+
+    if (authUpdateError) {
+      await supabaseAdmin
+        .from('profiles')
+        .update({
+          role: profile.role,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      logger.error('admin_role_change_auth_metadata_failed', {
+        userId,
+        error: authUpdateError.message,
+      });
+      return NextResponse.json({ error: 'Failed to update auth role metadata' }, { status: 500 });
+    }
 
     logger.info('admin_role_change_success', {
       userId,

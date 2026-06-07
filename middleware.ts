@@ -218,7 +218,10 @@ export async function middleware(request: NextRequest) {
     // Role path segregation & folder group checks
     if (pathname.startsWith('/mgmt/admin')) {
       if (userRole !== 'admin') {
-        return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
+        const response = NextResponse.redirect(new URL('/', request.url));
+        response.cookies.delete('sb-access-token');
+        response.cookies.delete('sb-refresh-token');
+        return finalizeResponse(response);
       }
       
       // Enforce strict folder guards: Admins can ONLY see staff, inventory, orders, purchase, invoice-lookup, quotes.
@@ -234,17 +237,29 @@ export async function middleware(request: NextRequest) {
       ];
       const isAllowed = allowedAdminPaths.some(p => pathname === p || pathname.startsWith(p + '/'));
       if (!isAllowed) {
-        return finalizeResponse(new NextResponse('Forbidden', { status: 403 }))
+        const response = NextResponse.redirect(new URL('/', request.url));
+        response.cookies.delete('sb-access-token');
+        response.cookies.delete('sb-refresh-token');
+        return finalizeResponse(response);
       }
     }
     if (pathname.startsWith('/mgmt/manager') && userRole !== 'manager') {
-      return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
+      const response = NextResponse.redirect(new URL('/', request.url));
+      response.cookies.delete('sb-access-token');
+      response.cookies.delete('sb-refresh-token');
+      return finalizeResponse(response);
     }
     if (pathname.startsWith('/mgmt/sales-staff') && userRole !== 'sales-staff' && userRole !== 'sales') {
-      return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
+      const response = NextResponse.redirect(new URL('/', request.url));
+      response.cookies.delete('sb-access-token');
+      response.cookies.delete('sb-refresh-token');
+      return finalizeResponse(response);
     }
     if (pathname.startsWith('/mgmt/sales-external') && userRole !== 'sales-external') {
-      return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
+      const response = NextResponse.redirect(new URL('/', request.url));
+      response.cookies.delete('sb-access-token');
+      response.cookies.delete('sb-refresh-token');
+      return finalizeResponse(response);
     }
     if (pathname.startsWith('/mgmt/sales') && pathname !== '/mgmt/sales-staff' && !pathname.startsWith('/mgmt/sales-staff/') && pathname !== '/mgmt/sales-external' && !pathname.startsWith('/mgmt/sales-external/')) {
       if (userRole !== 'sales' && userRole !== 'sales-staff') {

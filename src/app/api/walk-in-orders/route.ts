@@ -349,6 +349,33 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Record atomic stock movements for each item to ensure inventory consistency
+      // and prevent race conditions via the SELECT FOR UPDATE inside the RPC.
+      for (const item of validatedItems) {
+        const { error: stockError } = await supabase.rpc(
+          'record_atomic_stock_movement',
+          {
+            p_product_id: item.product_id,
+            p_movement_type: 'walk_in_sale',
+            p_quantity: item.quantity,
+            p_reference_id: order.id,
+            p_reference_type: 'order',
+            p_notes: `Walk-in order #${order.order_number || order.id}`,
+            p_requested_serials: item.serial_numbers || null
+          }
+        );
+
+        if (stockError) {
+          logger.error('walk_in_order.stock_update_failed', { 
+            error: stockError, 
+            orderId: order.id, 
+            productId: item.product_id 
+          });
+          // Note: In a production system, we might want a full transaction rollback here.
+          // Since Supabase RPCs and REST calls are separate, we log and alert.
+        }
+      }
+
       return NextResponse.json({ order, items: orderItems });
     }
 

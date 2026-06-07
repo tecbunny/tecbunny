@@ -36,8 +36,8 @@ export class PricingService {
     product: Product, 
     context: PricingContext
   ): Promise<ProductPrice> {
-    const basePrice = product.price;
-    const originalPrice = product.mrp || basePrice;
+    const basePrice = Number(product.price) || 0;
+    const originalPrice = Number(product.mrp) || basePrice;
 
     // For B2C customers, use standard pricing logic
     if (context.customer_type === 'B2C') {
@@ -55,36 +55,37 @@ export class PricingService {
     product: Product, 
     context: PricingContext
   ): Promise<ProductPrice> {
-    const basePrice = product.price;
-    const originalPrice = product.mrp || basePrice;
+    const basePrice = Number(product.price) || 0;
+    const originalPrice = Number(product.mrp) || basePrice;
     let finalPrice = basePrice;
     let discountPercentage = 0;
 
     // Apply category-based discounts for B2C
     if (context.customer_category) {
-      const categoryDiscounts = {
+      const categoryDiscounts: Record<string, number> = {
         'Normal': 0,
         'Standard': 5,
         'Premium': 10
       };
       
-      discountPercentage = categoryDiscounts[context.customer_category as CustomerCategory] || 0;
+      discountPercentage = Number(categoryDiscounts[context.customer_category as string]) || 0;
       finalPrice = basePrice * (1 - discountPercentage / 100);
     }
 
     // Check for product-specific offers
-    if (product.offer_price && product.offer_price < finalPrice) {
-      finalPrice = product.offer_price;
-      discountPercentage = Math.round(((basePrice - finalPrice) / basePrice) * 100);
+    const offerPrice = product.offer_price != null ? Number(product.offer_price) : null;
+    if (offerPrice !== null && offerPrice > 0 && offerPrice < finalPrice) {
+      finalPrice = offerPrice;
+      discountPercentage = basePrice > 0 ? Math.round(((basePrice - finalPrice) / basePrice) * 100) : 0;
     }
 
     return {
       original_price: originalPrice,
       sale_price: basePrice,
-      final_price: Math.round(finalPrice * 100) / 100,
+      final_price: Math.max(0, Math.round(finalPrice * 100) / 100),
       customer_type: 'B2C',
-      discount_percentage: discountPercentage,
-      pricing_tier: context.customer_category || 'Normal'
+      discount_percentage: Math.max(0, discountPercentage),
+      pricing_tier: String(context.customer_category || 'Normal')
     };
   }
 
@@ -114,21 +115,23 @@ export class PricingService {
 
     if (productPricing) {
       // Check quantity requirements
-      const quantity = context.quantity || 1;
-      if (quantity >= (productPricing.min_quantity || 1) && 
-          quantity <= (productPricing.max_quantity || Infinity)) {
-        b2bPrice = productPricing.price;
+      const quantity = Number(context.quantity) || 1;
+      const minQty = Number(productPricing.min_quantity) || 1;
+      const maxQty = Number(productPricing.max_quantity) || Infinity;
+      
+      if (quantity >= minQty && quantity <= maxQty) {
+        b2bPrice = Number(productPricing.price) || basePrice;
         finalPrice = b2bPrice;
       }
     } else {
       // Fallback to category-based B2B discounts
-      const b2bDiscounts = {
+      const b2bDiscounts: Record<string, number> = {
         'Bronze': 8,    // 8% discount for Bronze B2B
         'Silver': 12,   // 12% discount for Silver B2B
         'Gold': 15      // 15% discount for Gold B2B
       };
       
-      const discountPercentage = b2bDiscounts[context.customer_category as B2BCategory] || 5;
+      const discountPercentage = Number(b2bDiscounts[context.customer_category as string]) || 5;
       b2bPrice = basePrice * (1 - discountPercentage / 100);
       finalPrice = b2bPrice;
     }
@@ -138,16 +141,16 @@ export class PricingService {
       finalPrice = basePrice;
     }
 
-    const discountPercentage = Math.round(((basePrice - finalPrice) / basePrice) * 100);
+    const discountPercentage = basePrice > 0 ? Math.round(((basePrice - finalPrice) / basePrice) * 100) : 0;
 
     return {
       original_price: originalPrice,
       sale_price: basePrice,
       b2b_price: b2bPrice,
-      final_price: Math.round(finalPrice * 100) / 100,
+      final_price: Math.max(0, Math.round(finalPrice * 100) / 100),
       customer_type: 'B2B',
-      discount_percentage: discountPercentage,
-      pricing_tier: context.customer_category || 'Bronze',
+      discount_percentage: Math.max(0, discountPercentage),
+      pricing_tier: String(context.customer_category || 'Bronze'),
       quantity_based: !!productPricing
     };
   }

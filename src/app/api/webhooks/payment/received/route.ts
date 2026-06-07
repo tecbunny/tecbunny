@@ -5,6 +5,7 @@ import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
 import { logger } from '@/lib/logger';
 import { validateWebhookSignature } from '@/lib/webhook-validator';
 import { logWebhookEvent } from '@/lib/webhook-logger';
+import { getRedis } from '@/lib/redis';
 
 // Generic payment received webhook handler
 export async function POST(request: NextRequest) {
@@ -36,9 +37,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    // Idempotency: Check if this event was already processed
+    // Idempotency: Check if this event was already processed via Redis deduplication
     const eventId = body.id || body.event_id || body.payment_id || body.transaction_id;
     if (eventId) {
+      const redis = getRedis();
+      if (redis) {
+        const idempotencyKey = `webhook:payment:received:${eventId}`;
+        // Set key with 24h expiration, NX means only set if not exists
+        const isNewEvent = await redis.set(idempotencyKey, 'processing', 'EX', 86400, 'NX');
+        
+        if (!isNewEvent) {
+          logger.info('Duplicate payment received webhook event (Redis cache hit), skipping execution', { eventId, correlationId });
+          return NextResponse.json({ success: true, message: 'Event already processed (duplicate)' }, { status: 200 });
+        }
+      }
+
       const { data: existingEvent } = await supabase
         .from('webhook_events')
         .select('id')
@@ -46,8 +59,8 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
 
       if (existingEvent) {
-        logger.info('Duplicate payment received webhook event, skipping execution', { eventId, correlationId });
-        return NextResponse.json({ success: true, message: 'Event already processed (duplicate)' });
+        logger.info('Duplicate payment received webhook event (DB hit), skipping execution', { eventId, correlationId });
+        return NextResponse.json({ success: true, message: 'Event already processed (duplicate)' }, { status: 200 });
       }
     }
 

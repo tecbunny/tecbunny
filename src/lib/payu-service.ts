@@ -160,5 +160,8 @@ export function verifyPayuHash(config: PayuConfig, response: Record<string, stri
     : baseSequence.map(sanitizeHashValue).join('|');
 
   const expectedHash = crypto.createHash('sha512').update(hashSequence).digest('hex');
-  return expectedHash === response.hash.toLowerCase();
+  const a = Buffer.from(expectedHash, 'utf8');
+  const b = Buffer.from(response.hash.toLowerCase(), 'utf8');
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
 }

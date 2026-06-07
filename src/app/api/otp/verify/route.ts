@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OTPManager, type OTPVerification } from '@/lib/otp-manager';
 import { logger } from '@/lib/logger';
 import { createServiceClient, isSupabaseServiceConfigured , createClient } from '@/lib/supabase/server';
+import { requireApiRole } from '@/lib/server-role-guard';
 
 const otpManager = new OTPManager();
 
@@ -12,6 +13,11 @@ const otpManager = new OTPManager();
  */
 export async function POST(request: NextRequest) {
   try {
+    const access = await requireApiRole();
+    if ('error' in access) {
+      return access.error;
+    }
+
     const body = await request.json();
     const { otpId, code, channel, orderId, otp, customerPhone } = body;
 
@@ -186,6 +192,11 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    const access = await requireApiRole();
+    if ('error' in access) {
+      return access.error;
+    }
+
     const { searchParams } = new URL(request.url);
     const orderId = searchParams.get('orderId');
     const otpId = searchParams.get('otpId');

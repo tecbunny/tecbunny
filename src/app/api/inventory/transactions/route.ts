@@ -25,6 +25,7 @@ import { z } from 'zod';
 
 import { logger } from '@/lib/logger';
 import { requireApiRole } from '@/lib/server-role-guard';
+import { createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Movement type definitions
@@ -164,7 +165,7 @@ export async function POST(request: NextRequest) {
   try {
     const access = await requireApiRole({ allowedRoles: ['sales', 'manager'], minimumRole: 'admin' });
     if ('error' in access) return access.error;
-    const { supabase } = access;
+    const supabase = isSupabaseServiceConfigured ? createServiceClient() : access.supabase;
 
     const body = await request.json().catch(() => ({}));
     const validation = movementSchema.safeParse(body);
@@ -216,6 +217,7 @@ export async function POST(request: NextRequest) {
         p_reference_type: reference_type,
         p_notes:          notes || `${movement_type} via API`,
         p_allow_negative: allow_negative,
+        p_created_by:     access.session?.user.id || null,
       }
     );
 
@@ -278,7 +280,7 @@ export async function PUT(request: NextRequest) {
   try {
     const access = await requireApiRole({ allowedRoles: [], minimumRole: 'admin' });
     if ('error' in access) return access.error;
-    const { supabase } = access;
+    const supabase = isSupabaseServiceConfigured ? createServiceClient() : access.supabase;
 
     const { product_id, new_quantity, notes, reference_id } = await request.json().catch(() => ({}));
 
@@ -300,6 +302,7 @@ export async function PUT(request: NextRequest) {
       p_reference_type: 'manual',
       p_notes:          notes || 'Physical stocktake adjustment',
       p_allow_negative: false,
+      p_created_by:     access.session?.user.id || null,
     });
 
     if (error) {

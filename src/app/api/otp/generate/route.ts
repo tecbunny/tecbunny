@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { createClient } from '@supabase/supabase-js';
 
+import { requireApiRole } from '@/lib/server-role-guard';
 import { OTPManager, type OTPRequest } from '@/lib/otp-manager';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
@@ -20,6 +21,11 @@ const otpManager = new OTPManager();
  */
 export async function POST(request: NextRequest) {
   try {
+    const access = await requireApiRole();
+    if ('error' in access) {
+      return access.error;
+    }
+
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json(
         { error: 'Service configuration error. Please contact support.' },
@@ -56,6 +62,40 @@ export async function POST(request: NextRequest) {
         { error: 'Valid purpose is required' },
         { status: 400 }
       );
+    }
+
+    if (finalPurpose === 'agent_order') {
+      const permittedAgentRoles = new Set(['sales', 'sales-staff', 'sales-external', 'manager', 'admin']);
+      if (!permittedAgentRoles.has(access.role)) {
+        return NextResponse.json(
+          { error: 'Agent order OTPs require an approved sales or management account' },
+          { status: 403 }
+        );
+      }
+
+      const { data: agent, error: agentError } = await supabase
+        .from('sales_agents')
+        .select('id,status')
+        .eq('user_id', access.session.user.id)
+        .maybeSingle();
+
+      if (agentError || !agent || agent.status !== 'approved') {
+        return NextResponse.json(
+          { error: 'Only approved sales agents can request agent order OTPs' },
+          { status: 403 }
+        );
+      }
+
+      if (agentId && agentId !== agent.id) {
+        return NextResponse.json(
+          { error: 'Agent ID does not match the authenticated account' },
+          { status: 403 }
+        );
+      }
+
+      finalUserId = access.session.user.id;
+    } else {
+      finalUserId = access.session.user.id;
     }
 
     const bypassRateLimit = process.env.OTP_RATE_LIMIT_BYPASS === 'true';
@@ -117,7 +157,6 @@ export async function POST(request: NextRequest) {
       fallbackAvailable: result.fallbackAvailable,
       provider: result.provider,
       providerMessageId: result.providerMessageId,
-      providerResponse: result.providerResponse,
       expiresIn: 300, // 5 minutes in seconds
       canResend: true,
       // Legacy compatibility
@@ -139,6 +178,11 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    const access = await requireApiRole();
+    if ('error' in access) {
+      return access.error;
+    }
+
     const { searchParams } = new URL(request.url);
     const otpId = searchParams.get('otpId');
 

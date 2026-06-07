@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+import { AdminAuthError, requireAdminContext } from '@/lib/auth/admin-guard';
 import { logger } from '@/lib/logger';
 
 const PUBLIC_PAGE_CONTENT_CACHE_CONTROL = 'no-store, max-age=0';
@@ -251,6 +252,8 @@ export async function GET(request: NextRequest) {
 // Update page content (admin only)
 export async function PUT(request: NextRequest) {
   try {
+    await requireAdminContext();
+
     const supabase = getSupabaseClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
@@ -280,6 +283,9 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error) {
+    if (error instanceof AdminAuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     logger.error('page_content_update_exception', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -288,6 +294,8 @@ export async function PUT(request: NextRequest) {
 // Get all page contents (admin only)
 export async function POST(request: NextRequest) {
   try {
+    await requireAdminContext();
+
     const supabase = getSupabaseClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
@@ -354,6 +362,9 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
+    if (error instanceof AdminAuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     logger.error('page_content_list_exception', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -361,6 +372,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    await requireAdminContext();
+
     const supabase = getSupabaseClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
@@ -424,6 +437,9 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true, message: 'Page content deleted successfully' });
 
   } catch (error) {
+    if (error instanceof AdminAuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     logger.error('page_content_delete_exception', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

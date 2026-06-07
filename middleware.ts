@@ -18,22 +18,23 @@ const SHARED_CONTENT_SECURITY_POLICY = [
 
 export async function middleware(request: NextRequest) {
   // Define public API routes that don't require authentication
-  const publicApiRoutes = [
-    '/api/auth',     // Auth endpoints (signin, callback, etc)
-    '/api/health',
-    '/api/settings',
-    '/api/page-content',
-    '/api/auto-offers',
-    '/api/offers',
-    '/api/coupons',
-    '/api/products', // Public product catalog
-    '/api/analytics', // Public analytics tracking
-    '/api/captcha',  // Public captcha config/verification
+  const publicApiRoutes: Array<{ path: string; methods?: string[] }> = [
+    { path: '/api/auth' },     // Auth endpoints (signin, callback, etc)
+    { path: '/api/health' },
+    { path: '/api/settings', methods: ['GET'] },
+    { path: '/api/page-content', methods: ['GET'] },
+    { path: '/api/auto-offers', methods: ['GET'] },
+    { path: '/api/offers', methods: ['GET'] },
+    { path: '/api/coupons', methods: ['GET'] },
+    { path: '/api/products', methods: ['GET'] }, // Public product catalog
+    { path: '/api/analytics' }, // Public analytics tracking
+    { path: '/api/captcha' },  // Public captcha config/verification
   ]
   
   // Check if the current path is in the public API routes
-  const isPublicApiRoute = publicApiRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
+  const isPublicApiRoute = publicApiRoutes.some(route =>
+    request.nextUrl.pathname.startsWith(route.path)
+    && (!route.methods || route.methods.includes(request.method))
   )
 
   const requestHeaders = new Headers(request.headers)

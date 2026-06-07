@@ -75,93 +75,50 @@ export async function POST(request: Request) {
   // Compute totals
   const totals = computeTotals(items)
 
-  // Create order for the customer, and attribute to agent
-  const orderNumber = genOrderNumber()
-  const modernPayload = {
-    order_number: orderNumber,
-    user_id: customerId,
-    status: 'Pending',
-    subtotal: totals.subtotal,
-    tax_amount: totals.gst_amount,
-    shipping_amount: 0,
-    total: totals.total,
-    total_amount: totals.total,
-    currency: 'INR',
-    payment_method: null as any,
-    shipping_address: null as any,
-    billing_address: null as any,
-    items,
-    notes,
-    agent_id: agent.id
+  const atomicItems = items.map((item) => ({
+    ...item,
+    id: item.productId,
+  }))
+
+  const { data: atomicOrder, error: atomicOrderError } = await svc.rpc('allocate_order_inventory_atomic', {
+    p_customer_name: customer.name || customer.email || customer.mobile || 'Customer',
+    p_customer_id: customerId,
+    p_customer_email: customer.email || null,
+    p_customer_phone: customer.mobile || null,
+    p_delivery_address: null,
+    p_notes: notes || null,
+    p_payment_method: null,
+    p_subtotal: totals.subtotal,
+    p_gst_amount: totals.gst_amount,
+    p_total: totals.total,
+    p_discount_amount: 0,
+    p_shipping_amount: 0,
+    p_payment_status: 'pending',
+    p_order_type: type,
+    p_items: atomicItems,
+    p_agent_id: agent.id,
+  })
+
+  if (atomicOrderError) {
+    return NextResponse.json(
+      { error: 'Failed to create order with reserved inventory', details: atomicOrderError.message },
+      { status: 409 }
+    )
   }
 
-  let createdOrderId: string | null = null
-  let orderTotalForCommission = totals.total
-
-  // Try modern schema
-  {
-    const { data, error } = await svc
-      .from('orders')
-      .insert(modernPayload)
-      .select('id, total')
-      .maybeSingle()
-    if (!error && data) {
-      createdOrderId = data.id
-      orderTotalForCommission = Number(data.total ?? totals.total)
-    }
+  const atomicOrderId = (atomicOrder as any)?.order?.id
+  if (!atomicOrderId) {
+    return NextResponse.json({ error: 'Atomic order creation returned no order id' }, { status: 500 })
   }
 
-  // Fallback: legacy schema with customer_name/total/gst_amount/etc.
-  if (!createdOrderId) {
-    const legacyPayload: any = {
-      customer_name: customer.name || customer.email || customer.mobile || 'Customer',
-      customer_id: customerId,
-      status: 'Pending',
-      subtotal: totals.subtotal,
-      gst_amount: totals.gst_amount,
-      total: totals.total,
-      type,
-      items,
-      notes,
-      processed_by: user.id,
-      agent_id: agent.id
-    }
-    // Attempt with agent_id
-    let { data, error } = await svc
-      .from('orders')
-      .insert(legacyPayload)
-      .select('id, total')
-      .maybeSingle()
-    if (error) {
-      // Retry without agent_id if undefined column
-      delete legacyPayload.agent_id
-      const retry = await svc
-        .from('orders')
-        .insert(legacyPayload)
-        .select('id, total')
-        .maybeSingle()
-      data = retry.data
-      error = retry.error
-    }
-    if (data) {
-      createdOrderId = data.id
-      orderTotalForCommission = Number((data as any).total ?? totals.total)
-    } else if (error) {
-      return NextResponse.json({ error: error.message || 'Failed to create order' }, { status: 400 })
-    }
-  }
+  await svc
+    .from('orders')
+    .update({ agent_id: agent.id })
+    .eq('id', atomicOrderId)
 
-  if (!createdOrderId) {
-    return NextResponse.json({ error: 'Failed to create order' }, { status: 400 })
-  }
+  await awardCommissionForAgent(svc, agent.id as string, atomicOrderId, totals.total).catch(() => {})
 
-  // Adjust inventory (best-effort; does not fail the order)
-  await adjustInventory(svc, items).catch(() => {})
-
-  // Award commission points for the agent based on settings
-  await awardCommissionForAgent(svc, agent.id as string, createdOrderId, orderTotalForCommission).catch(() => {})
-
-  return NextResponse.json({ success: true, order_id: createdOrderId })
+  return NextResponse.json({ success: true, order_id: atomicOrderId })
 }
 
 async function ensureCustomerUser(svc: ReturnType<typeof createServiceClient>, c: CustomerInput): Promise<string | null> {
@@ -231,56 +188,3 @@ async function awardCommissionForAgent(
   await svc.rpc('increment_agent_points', { agent_id: agentId, points_to_add: points })
 }
 
-function genOrderNumber(): string {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const t = d.getTime().toString().slice(-6)
-  return `TB-${y}${m}${day}-${t}`
-}
-
-async function adjustInventory(
-  svc: ReturnType<typeof createServiceClient>,
-  items: Array<{ productId: string; quantity: number }>
-) {
-  for (const it of items) {
-    const pid = it.productId
-    const qty = Math.max(1, Number(it.quantity) || 1)
-    // 1) Try stock movement RPC
-    const rpc = await svc.rpc('record_stock_movement', {
-      p_product_id: pid,
-      p_movement_type: 'out',
-      p_quantity: qty,
-      p_reference_type: 'agent_order',
-      p_notes: 'Agent order deduction'
-    })
-    if (!rpc.error) continue
-
-    // 2) Fallback to inventory table
-    const { data: inv } = await svc
-      .from('inventory')
-      .select('quantity')
-      .eq('product_id', pid)
-      .maybeSingle()
-    const current = Number(inv?.quantity ?? 0)
-    const newQty = Math.max(0, current - qty)
-    await svc
-      .from('inventory')
-      .upsert({ product_id: pid, quantity: newQty, last_updated: new Date().toISOString() }, { onConflict: 'product_id' })
-    // Try to record movement if table exists
-    try {
-      await svc
-        .from('stock_movements')
-        .insert({ product_id: pid, movement_type: 'out', quantity: qty, reference_type: 'agent_order', notes: 'Agent order deduction (fallback)' })
-    } catch (_ignoreErr) {
-      // ignore
-    }
-
-    // 3) Update products stock columns for UI consistency
-    await svc
-      .from('products')
-      .update({ stock_quantity: newQty, quantity: newQty })
-      .eq('id', pid)
-  }
-}

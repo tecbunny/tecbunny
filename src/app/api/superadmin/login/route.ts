@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyCaptcha } from '@/lib/captcha/captcha-service';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 function getClientIp(request: Request) {
   const headers = request.headers;
@@ -15,6 +16,16 @@ export async function POST(request: Request) {
     const { userId, email, password, captchaToken } = await request.json();
     const ip = getClientIp(request);
     const submittedUserId = String(userId ?? email ?? '').trim();
+
+    if (!rateLimit(`ip:${ip}`, 'superadmin_login', { limit: 5, windowMs: 15 * 60 * 1000 })) {
+      logger.warn('superadmin_login.rate_limited', { ip, userId: submittedUserId });
+      return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 });
+    }
+
+    if (submittedUserId && !rateLimit(`user:${submittedUserId}`, 'superadmin_login_identifier', { limit: 5, windowMs: 15 * 60 * 1000 })) {
+      logger.warn('superadmin_login.identifier_rate_limited', { ip, userId: submittedUserId });
+      return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 });
+    }
 
     // Verify Turnstile Captcha if site key is configured
     const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;

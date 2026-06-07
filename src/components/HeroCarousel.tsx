@@ -4,7 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from '@/lib/sanitize-html';
 
 import { usePageContent } from '../hooks/use-page-content';
 import { usePrefersReducedMotion } from '../hooks/use-prefers-reduced-motion';
@@ -169,7 +169,7 @@ export default function HeroCarousel({ pageKey, intervalMs = 6000, className }: 
               {currentSlide.htmlContent ? (
                 <div
                   className="carousel-overlay carousel-overlay--active absolute inset-0 flex h-full w-full flex-col justify-center"
-                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentSlide.htmlContent) }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentSlide.htmlContent) }}
                 />
               ) : (
                 <>

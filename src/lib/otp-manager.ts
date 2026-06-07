@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from 'crypto';
+import { randomBytes, randomUUID, randomInt } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
 import { logger } from './logger';
@@ -117,32 +117,16 @@ export class OTPManager {
     });
   }
 
-  // Generate a secure 6-digit OTP code
+  // Generate a secure 6-digit OTP code using CSPRNG
   generateOTPCode(): string {
-    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
-      try {
-        const array = new Uint32Array(1);
-        window.crypto.getRandomValues(array);
-        const value = array[0];
-        if (value !== undefined) {
-          return (100000 + (value % 900000)).toString();
-        }
-      } catch (error) {
-        logger.warn('Browser crypto entropy failed; falling back to Node.js crypto', { error });
-      }
-    }
-
-    if (typeof randomBytes !== 'undefined') {
-      try {
-        const bytes = randomBytes(4);
-        const num = bytes.readUInt32BE(0);
-        return (100000 + (num % 900000)).toString();
-      } catch (error) {
-        logger.warn('Node crypto failed; falling back to Math.random', { error });
-        return Math.floor(100000 + Math.random() * 900000).toString();
-      }
-    } else {
-      return Math.floor(100000 + Math.random() * 900000).toString();
+    try {
+      return randomInt(100000, 999999).toString();
+    } catch (error) {
+      logger.error('Failed to generate secure OTP code', { error });
+      // Fallback to randomBytes if randomInt fails
+      const bytes = randomBytes(4);
+      const num = bytes.readUInt32BE(0);
+      return (100000 + (num % 900000)).toString();
     }
   }
 

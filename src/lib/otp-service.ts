@@ -7,6 +7,7 @@ import { createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase
 import type { OtpType } from '@/lib/types';
 import { emailClient } from './email/client';
 import { sendInfobipWhatsAppOtp } from './infobip/infobip-whatsapp-otp';
+import crypto from 'crypto';
 
 import { logger } from './logger';
 
@@ -36,10 +37,10 @@ export class OtpService {
   }
 
   /**
-   * Generate a 6-digit OTP code
+   * Generate a 6-digit OTP code using cryptographically strong pseudo-random numbers
    */
   private generateOtpCode(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    return crypto.randomInt(100000, 999999).toString();
   }
 
   /**

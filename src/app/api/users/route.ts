@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 
 import { resolveSiteUrl } from '@/lib/site-url';
 import { createClient as createServerClient } from '@/lib/supabase/server';
@@ -301,10 +302,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden: Admins can only create customer profiles' }, { status: 403 });
     }
 
-    // Auto-generate a strong password if not provided
+    // Auto-generate a strong password if not provided using CSPRNG
     if (!password || password.trim() === '') {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*()_+';
-      const random = (len: number) => Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      const random = (len: number) => {
+        let str = '';
+        for (let i = 0; i < len; i++) {
+          str += chars.charAt(crypto.randomInt(0, chars.length));
+        }
+        return str;
+      };
       password = `${random(4)}-${random(4)}-${random(4)}`; // e.g., Ab9!-xY7@-Kp3#
     }
 

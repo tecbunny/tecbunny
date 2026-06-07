@@ -18,14 +18,18 @@ export async function POST(request: Request) {
     const ip = getClientIp(request);
     const submittedUserId = String(userId ?? email ?? '').trim();
 
-    if (!rateLimit(`ip:${ip}`, 'superadmin_login', { limit: 5, windowMs: 15 * 60 * 1000 })) {
+    const ipRl = await rateLimit(`ip:${ip}`, 5, 15 * 60 * 1000);
+    if (!ipRl.allowed) {
       logger.warn('superadmin_login.rate_limited', { ip, userId: submittedUserId });
       return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 });
     }
 
-    if (submittedUserId && !rateLimit(`user:${submittedUserId}`, 'superadmin_login_identifier', { limit: 5, windowMs: 15 * 60 * 1000 })) {
-      logger.warn('superadmin_login.identifier_rate_limited', { ip, userId: submittedUserId });
-      return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 });
+    if (submittedUserId) {
+      const idRl = await rateLimit(`user:${submittedUserId}`, 5, 15 * 60 * 1000);
+      if (!idRl.allowed) {
+        logger.warn('superadmin_login.identifier_rate_limited', { ip, userId: submittedUserId });
+        return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 });
+      }
     }
 
     // Verify Turnstile Captcha if site key is configured

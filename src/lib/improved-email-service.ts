@@ -52,7 +52,8 @@ class ImprovedEmailService {
           pass: process.env.SMTP_PASS,
         },
         tls: {
-          rejectUnauthorized: false
+          // Only allow unauthorized certificates in non-production environments
+          rejectUnauthorized: process.env.NODE_ENV !== 'production'
         },
         pool: true,
         maxConnections: 5,
@@ -74,7 +75,8 @@ class ImprovedEmailService {
           pass: process.env.BACKUP_SMTP_PASS,
         },
         tls: {
-          rejectUnauthorized: false
+          // Only allow unauthorized certificates in non-production environments
+          rejectUnauthorized: process.env.NODE_ENV !== 'production'
         },
       });
     }

@@ -212,7 +212,8 @@ export async function POST(request: NextRequest) {
             payment_status: 'Payment Confirmed',
             updated_at: new Date().toISOString(),
           })
-          .eq('id', orderId);
+          .eq('id', orderId)
+          .not('status', 'in', '(Cancelled,Rejected,Completed,Delivered)');
 
         if (orderUpdateError) {
           logger.error('payu_callback.order_update_failed', {
@@ -229,7 +230,8 @@ export async function POST(request: NextRequest) {
             payment_status: 'Payment Failed',
             updated_at: new Date().toISOString(),
           })
-          .eq('id', orderId);
+          .eq('id', orderId)
+          .not('status', 'in', '(Cancelled,Rejected,Completed,Delivered)');
 
         if (orderUpdateError) {
           logger.error('payu_callback.order_mark_failed_failed', {

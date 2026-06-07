@@ -17,6 +17,14 @@ const STALE_PAYMENT_STATUSES = [
 const AUTO_CANCEL_REASON = 'Automatically cancelled after 24 hours without payment confirmation.';
 const AUTO_CANCEL_BATCH_LIMIT = 100;
 
+function isMissingRpcError(error: { message?: string; code?: string } | null) {
+  if (!error) {
+    return false;
+  }
+
+  return error.code === '42883' || /function .*auto_cancel_stale_orders_v1/i.test(error.message ?? '');
+}
+
 export async function POST(_request: NextRequest) {
   try {
     const authHeader = _request.headers.get('authorization');
@@ -47,6 +55,41 @@ export async function POST(_request: NextRequest) {
 
     const serviceClient = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
     const cutoffIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    if (isSupabaseServiceConfigured) {
+      const { data: rpcResult, error: rpcError } = await serviceClient.rpc('auto_cancel_stale_orders_v1', {
+        p_cutoff: cutoffIso,
+        p_limit: AUTO_CANCEL_BATCH_LIMIT,
+        p_reason: AUTO_CANCEL_REASON
+      });
+
+      if (!rpcError) {
+        const result = (rpcResult ?? {}) as {
+          cancelled?: number;
+          restoredItems?: number;
+        };
+
+        logger.info('orders_auto_cancel_success', {
+          mode: 'rpc',
+          cancelled: result.cancelled ?? 0,
+          restoredItems: result.restoredItems ?? 0
+        });
+
+        return NextResponse.json({
+          success: true,
+          mode: 'rpc',
+          cancelled: result.cancelled ?? 0,
+          restoredItems: result.restoredItems ?? 0
+        });
+      }
+
+      if (!isMissingRpcError(rpcError)) {
+        logger.error('orders_auto_cancel_rpc_error', { error: rpcError.message });
+        return NextResponse.json({ error: 'Failed to cancel stale orders' }, { status: 500 });
+      }
+
+      logger.warn('orders_auto_cancel_rpc_unavailable_using_fallback', { error: rpcError.message });
+    }
 
     const { data: staleOrders, error: fetchError } = await serviceClient
       .from('orders')

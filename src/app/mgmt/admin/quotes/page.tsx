@@ -6,13 +6,20 @@ import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, Handshake, Check, X, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '../../../../hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function AdminQuotesPage() {
   const [quotes, setQuotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedQuote, setSelectedQuote] = useState<any>(null);
+  const [showBidModal, setShowBidModal] = useState(false);
+  const [counterPrice, setCounterPrice] = useState('');
+  const [clauses, setClauses] = useState('60% advance payment required');
+  const [respondLoading, setRespondLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -28,54 +35,62 @@ export default function AdminQuotesPage() {
       });
   }, []);
 
-  const downloadPdf = async (quote: any) => {
+  const handleRespond = async (action: 'approve' | 'counter' | 'reject'): Promise<void> => {
+    if (action === 'counter' && !counterPrice) {
+      toast({ variant: 'destructive', title: 'Missing counter price', description: 'Please enter the counter offer price.' });
+      return;
+    }
+
+    setRespondLoading(true);
     try {
-      toast({
-        title: "Downloading...",
-        description: "Generating PDF file.",
+      const res = await fetch(`/api/admin/quotes/${selectedQuote.id}/respond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          counterPrice: action === 'counter' ? Number(counterPrice) : null,
+          clauses: action === 'counter' ? clauses : null
+        })
       });
 
-      const response = await fetch(`/api/admin/quotes/${quote.id}/download`);
-      
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `quote-${quote.section_id || quote.id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      if (!res.ok) throw new Error('Failed to respond');
 
       toast({
-        title: "Success",
-        description: "Quote downloaded successfully.",
+        title: 'Response sent',
+        description: `Quote ${action === 'approve' ? 'approved' : action === 'counter' ? 'countered' : 'rejected'}.`
       });
+
+      setShowBidModal(false);
+      setSelectedQuote(null);
+      setCounterPrice('');
+      setClauses('60% advance payment required');
+
+      // Refresh list
+      const updated = await fetch('/api/admin/quotes').then(r => r.json());
+      setQuotes(Array.isArray(updated) ? updated : []);
     } catch (error) {
       console.error(error);
       toast({
-        title: "Error",
-        description: "Failed to download PDF.",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Failed to send response.',
+        variant: 'destructive'
       });
+    } finally {
+      setRespondLoading(false);
     }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Quotes</h1>
-        <p className="text-sm text-slate-400">Track and manage customer quote requests.</p>
+        <h1 className="text-2xl font-bold text-white">Quotes & Bids</h1>
+        <p className="text-sm text-slate-400">Review, negotiate, and manage customer quote requests and bids.</p>
       </div>
       <Separator className="bg-white/10" />
       
       <Card className="border-white/10 bg-white/5 text-slate-200">
         <CardHeader>
-          <CardTitle>Generated Quotes</CardTitle>
+          <CardTitle>Generated Quotes & Bids</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -88,24 +103,54 @@ export default function AdminQuotesPage() {
                 <TableRow className="border-white/10 hover:bg-white/5">
                   <TableHead className="text-slate-400">Date</TableHead>
                   <TableHead className="text-slate-400">Customer</TableHead>
-                  <TableHead className="text-slate-400">Email</TableHead>
-                  <TableHead className="text-slate-400">Summary</TableHead>
-                   <TableHead className="text-slate-400">Status</TableHead>
+                  <TableHead className="text-slate-400">Phone</TableHead>
+                  <TableHead className="text-slate-400">Quote Price</TableHead>
+                  <TableHead className="text-slate-400">Bid Price</TableHead>
+                  <TableHead className="text-slate-400">Status</TableHead>
                   <TableHead className="text-right text-slate-400">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {quotes.map((quote) => (
                   <TableRow key={quote.id} className="border-white/10 hover:bg-white/5">
-                    <TableCell>{format(new Date(quote.created_at), 'PPP')}</TableCell>
-                    <TableCell>{quote.customer_name}</TableCell>
-                    <TableCell>{quote.customer_email}</TableCell>
-                    <TableCell className="max-w-[200px] truncate" title={quote.summary}>{quote.summary}</TableCell>
-                    <TableCell><Badge variant="outline">{quote.status}</Badge></TableCell>
+                    <TableCell className="text-sm">{format(new Date(quote.created_at), 'MMM dd, yyyy')}</TableCell>
+                    <TableCell className="font-medium">{quote.customer_name}</TableCell>
+                    <TableCell className="text-sm">{quote.customer_phone}</TableCell>
+                    <TableCell className="text-sm">₹{Math.round(quote.selections?.totals?.sale || 0).toLocaleString()}</TableCell>
+                    <TableCell className="text-sm font-semibold text-amber-400">{quote.bidded_price ? `₹${Math.round(quote.bidded_price).toLocaleString()}` : '-'}</TableCell>
+                    <TableCell>
+                      <Badge className={
+                        quote.status === 'created' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
+                        quote.status === 'bidded' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                        quote.status === 'accepted' ? 'bg-green-500/20 text-green-300 border-green-500/30' :
+                        quote.status === 'countered' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
+                        'bg-red-500/20 text-red-300 border-red-500/30'
+                      } variant="outline">{quote.status}</Badge>
+                    </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => downloadPdf(quote)}>
-                        <Download className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-2 justify-end">
+                        {quote.status === 'bidded' && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedQuote(quote);
+                              setCounterPrice(quote.bidded_price?.toString() || '');
+                              setClauses(quote.negotiation_clauses || '60% advance payment required');
+                              setShowBidModal(true);
+                            }}
+                            className="text-cyan-400 hover:bg-cyan-400/10"
+                          >
+                            <Handshake className="h-4 w-4 mr-1" /> Respond
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={() => {
+                          // Download PDF logic
+                          toast({ title: 'Download', description: 'PDF download feature coming soon.' });
+                        }}>
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -114,6 +159,86 @@ export default function AdminQuotesPage() {
           )}
         </CardContent>
       </Card>
+
+      {showBidModal && selectedQuote && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-2xl border-white/10 bg-[#030712]">
+            <CardHeader className="border-b border-white/10">
+              <CardTitle className="text-white">Respond to Bid</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                  <p className="text-xs text-slate-500 mb-1">Original Quote Total</p>
+                  <p className="text-2xl font-bold text-white">₹{Math.round(selectedQuote.selections?.totals?.sale || 0).toLocaleString()}</p>
+                </div>
+                <div className="bg-amber-500/10 p-4 rounded-lg border border-amber-500/30">
+                  <p className="text-xs text-amber-400 mb-1">Customer's Bid</p>
+                  <p className="text-2xl font-bold text-amber-300">₹{Math.round(selectedQuote.bidded_price || 0).toLocaleString()}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-slate-300 mb-2 block">Counter Offer Price (₹)</Label>
+                  <Input 
+                    type="number" 
+                    value={counterPrice} 
+                    onChange={e => setCounterPrice(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white" 
+                    placeholder="Enter counter offer price"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Leave empty to approve bid as-is</p>
+                </div>
+
+                <div>
+                  <Label className="text-slate-300 mb-2 block">Payment Clauses & Conditions</Label>
+                  <textarea 
+                    value={clauses} 
+                    onChange={e => setClauses(e.target.value)}
+                    rows={3}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                    placeholder="E.g. 60% advance payment, 40% on completion"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowBidModal(false)}
+                  className="text-slate-400 hover:text-white"
+                  disabled={respondLoading}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive"
+                  onClick={() => handleRespond('reject')}
+                  disabled={respondLoading}
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" /> Reject
+                </Button>
+                <Button 
+                  onClick={() => handleRespond('approve')}
+                  disabled={respondLoading || counterPrice !== ''}
+                  className="bg-green-600 hover:bg-green-700 gap-2"
+                >
+                  <Check className="h-4 w-4" /> {respondLoading ? 'Approving...' : 'Approve'}
+                </Button>
+                <Button 
+                  onClick={() => handleRespond('counter')}
+                  disabled={respondLoading || !counterPrice}
+                  className="bg-cyan-600 hover:bg-cyan-700 gap-2"
+                >
+                  <Send className="h-4 w-4" /> {respondLoading ? 'Sending...' : 'Send Counter'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

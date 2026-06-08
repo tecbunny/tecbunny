@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import type { CustomSetupBlueprintComponentSummary, CustomSetupBlueprintSummary } from '@/lib/custom-setup-service';
-import { useAuth } from '@/lib/hooks';
+import { useAuth, useCart } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
 import { ROICostEfficiencyBanner } from './ROICostEfficiencyBanner';
 import { useLeadCaptureTrigger } from '@/hooks/use-lead-capture-trigger';
@@ -98,9 +98,12 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
   const [monitorIncluded, setMonitorIncluded] = useState<boolean>(false);
   const [installationIncluded, setInstallationIncluded] = useState<boolean>(true);
   const [quoteDownloading, setQuoteDownloading] = useState<boolean>(false);
+  const [isBidding, setIsBidding] = useState(false);
+  const [bidForm, setBidForm] = useState({ name: '', email: '', phone: '', address: '', price: '' });
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const { addToCart } = useCart();
 
   // CRO: Dynamic lead capture trigger
   useLeadCaptureTrigger(45000);
@@ -112,6 +115,12 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
       setCameraCountInput(normalized.toString());
     }
   }, [cameraCount]);
+
+  useEffect(() => {
+    if (user) {
+      setBidForm(prev => ({ ...prev, name: user.name || '', email: user.email || '', phone: user.mobile || '' }));
+    }
+  }, [user]);
 
   const handleCameraRangeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const normalized = Math.min(32, Math.max(1, Number.parseInt(event.target.value, 10)));
@@ -387,6 +396,87 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
       toast({ variant: 'destructive', title: 'Quote failed', description: error?.message || 'Unable to generate quote.' });
     } finally {
       setQuoteDownloading(false);
+    }
+  };
+
+  const handleBookNow = () => {
+    if (quoteDownloading) return;
+    const systemLabel = system === 'analog' ? 'Analog DVR' : 'IP NVR';
+    
+    addToCart({
+      id: `service-cctv-${Math.random().toString(36).substring(2,9)}`,
+      name: `Custom CCTV Setup - ${cameraCount} Cameras (${systemLabel})`,
+      price: totals.overall.sale,
+      mrp: totals.overall.mrp,
+      image: 'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/TecBunny%20Solution/cctv-bundle.jpg',
+      product_type: 'service',
+      description: inlineQuoteSummary
+    }, 1);
+    
+    router.push('/checkout');
+  };
+
+  const handleSubmitBid = async (): Promise<void> => {
+    if (!bidForm.name || !bidForm.phone || !bidForm.price) {
+      toast({ variant: 'destructive', title: 'Missing fields', description: 'Name, phone, and bid price are required.' });
+      return;
+    }
+
+    const originalPrice = totals?.overall?.sale || 0;
+    const bidPrice = Number(bidForm.price);
+    const minPrice = originalPrice * 0.7; // 70% of original price
+
+    if (bidPrice < minPrice) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Bid too low', 
+        description: `Minimum bid price is ₹${Math.round(minPrice).toLocaleString()} (70% of quoted price). Your bid: ₹${Math.round(bidPrice).toLocaleString()}` 
+      });
+      return;
+    }
+
+    try {
+      const customSetupConfig = {
+        system,
+        cameraCount,
+        analogSelections,
+        ipSelections,
+        hddId,
+        monitorIncluded,
+        installationIncluded,
+        totals
+      };
+
+      const res = await fetch('/api/quotes/bid', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...bidForm,
+          biddedPrice: bidPrice,
+          summary: inlineQuoteSummary,
+          customSetupConfig
+        })
+      });
+
+      if (!res.ok) throw new Error('Submission failed');
+      
+      const data = await res.json();
+      const quoteId = data.quoteId;
+      
+      toast({ 
+        title: 'Bid Submitted Successfully!', 
+        description: 'Check your quote status to see our counter-offer.' 
+      });
+      
+      setIsBidding(false);
+      setBidForm({ name: '', email: '', phone: '', address: '', price: '' });
+      
+      // Redirect to quote view page
+      setTimeout(() => {
+        router.push(`/quotes/${quoteId}`);
+      }, 1500);
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to submit bid.' });
     }
   };
 
@@ -879,15 +969,33 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
               </span>
             </p>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span className={cn('text-xs', isTech ? 'text-slate-300' : 'text-slate-600')}>Download this estimate as a signed PDF quote.</span>
-              <Button
-                size="sm"
-                variant={isTech ? 'secondary' : 'default'}
-                onClick={handleInlineQuoteDownload}
-                disabled={quoteDownloading}
-              >
-                {quoteDownloading ? 'Preparing…' : 'Download Quote'}
-              </Button>
+              <span className={cn('text-xs', isTech ? 'text-slate-300' : 'text-slate-600')}>Download this estimate or proceed to book your setup.</span>
+              <div className="flex gap-2 flex-wrap justify-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={isTech ? "border-amber-500/50 text-amber-400 hover:bg-amber-500/10" : "text-amber-600 border-amber-200"}
+                  onClick={() => setIsBidding(true)}
+                >
+                  Negotiate Price
+                </Button>
+                <Button
+                  size="sm"
+                  variant={isTech ? 'secondary' : 'outline'}
+                  onClick={handleInlineQuoteDownload}
+                  disabled={quoteDownloading}
+                >
+                  {quoteDownloading ? 'Preparing…' : 'Download Quote'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={handleBookNow}
+                  className={isTech ? 'bg-cyan-500 text-slate-900 hover:bg-cyan-400 font-bold' : ''}
+                >
+                  Book Installation
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -952,6 +1060,44 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
           </div>
         </CardContent>
       </Card>
+
+      {isBidding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-[#030712] border border-amber-500/30 rounded-xl max-w-md w-full p-6 shadow-2xl relative">
+            <h3 className="text-xl font-bold text-white mb-2">Request Revised Price</h3>
+            <p className="text-sm text-slate-400 mb-6">Enter your details and bid a price for this custom setup. Our team will review and respond shortly.</p>
+            
+            <div className="space-y-4">
+              <div>
+                <Label className="text-slate-300">Name</Label>
+                <Input value={bidForm.name} onChange={e => setBidForm({...bidForm, name: e.target.value})} className="bg-white/5 border-white/10" placeholder="John Doe" />
+              </div>
+              <div>
+                <Label className="text-slate-300">Phone Number</Label>
+                <Input value={bidForm.phone} onChange={e => setBidForm({...bidForm, phone: e.target.value})} className="bg-white/5 border-white/10" placeholder="+91 9876543210" />
+              </div>
+              <div>
+                <Label className="text-slate-300">Email Address (Optional)</Label>
+                <Input value={bidForm.email} onChange={e => setBidForm({...bidForm, email: e.target.value})} className="bg-white/5 border-white/10" placeholder="john@example.com" />
+              </div>
+              <div>
+                <Label className="text-slate-300">Installation Address</Label>
+                <Input value={bidForm.address} onChange={e => setBidForm({...bidForm, address: e.target.value})} className="bg-white/5 border-white/10" placeholder="City, Area" />
+              </div>
+              <div>
+                <Label className="text-amber-400 font-bold">Your Bid Price (₹)</Label>
+                <Input type="number" value={bidForm.price} onChange={e => setBidForm({...bidForm, price: e.target.value})} className="bg-amber-500/10 border-amber-500/30 text-amber-100 placeholder:text-amber-500/30" placeholder={`E.g. ${Math.round(totals.overall.sale * 0.9)}`} />
+                <p className="text-xs text-slate-500 mt-1">Current total: {formatCurrency(totals.overall.sale)}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end mt-8">
+              <Button variant="ghost" onClick={() => setIsBidding(false)} className="text-slate-400 hover:text-white">Cancel</Button>
+              <Button onClick={handleSubmitBid} className="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold">Submit Bid</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ROICostEfficiencyBanner savingsPercentage={Math.round(totals.overall.discountPercent)} isTech={isTech} />
     </section>
@@ -1090,6 +1236,28 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
               <div className="mt-6 flex gap-2 items-center">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span className="text-xs text-emerald-400 font-bold">SYSTEM COMPATIBLE</span>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-white/10">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-slate-400 text-sm">Estimated Total</span>
+                  <span className="text-xl font-bold text-white">{formatCurrency(totals.overall.sale)}</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    onClick={handleBookNow} 
+                    className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold uppercase tracking-wider"
+                  >
+                    Book Installation
+                  </Button>
+                  <Button 
+                    onClick={() => setIsBidding(true)} 
+                    variant="outline"
+                    className="w-full border-amber-500/30 text-amber-400 hover:bg-amber-500/10 font-bold uppercase tracking-wider"
+                  >
+                    Negotiate Price
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

@@ -102,13 +102,25 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * Share-for-Discount Conversion Trigger
+ * Share-for-Discount Conversion Trigger & Auto Offers Management
  * POST /api/auto-offers
  */
 export async function POST(request: NextRequest) {
   try {
-    const { action, blueprintId, platform } = await request.json();
+    if (!isServiceConfigured) {
+      logger.error('auto-offers.post.missing_supabase_config');
+      return NextResponse.json(
+        {
+          error: 'Supabase configuration missing. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.'
+        },
+        { status: 503 }
+      );
+    }
 
+    const body = await request.json();
+    const { action, blueprintId, platform } = body;
+
+    // Check if this is the viral sharing trigger (public access)
     if (action === 'issue_share_discount') {
       const supabaseAdmin = getSupabaseAdmin();
       
@@ -142,31 +154,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-
-  } catch (error: any) {
-    logger.error('failed_to_issue_viral_discount', { error: error.message });
-    return NextResponse.json({ error: 'Failed to process viral discount' }, { status: 500 });
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    if (!isServiceConfigured) {
-      logger.error('auto-offers.post.missing_supabase_config');
-      return NextResponse.json(
-        {
-          error: 'Supabase configuration missing. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.'
-        },
-        { status: 503 }
-      );
-    }
-
+    // Standard auto offer creation requires admin/manager role
     const auth = await requireRole();
     if ('error' in auth) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-    const body = await request.json();
+
     const { 
       title, 
       description, 

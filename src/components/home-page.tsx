@@ -23,6 +23,7 @@ import type { Product } from '@/lib/types';
 import { useNearViewport } from '../hooks/use-near-viewport';
 import { usePrefersReducedMotion } from '../hooks/use-prefers-reduced-motion';
 import { BehavioralCouponPopup } from './BehavioralCouponPopup';
+import { RegionalTrustBanner } from './RegionalTrustBanner';
 
 const AddToCartButton = dynamic(
   () => import('@/components/cart/AddToCartButton').then((module) => module.AddToCartButton),
@@ -539,6 +540,9 @@ export default function HomePage() {
           </section>
         )}
       </div>
+
+      {/* 4. REAL-TIME REGIONAL SOCIAL PROOF */}
+      <RegionalTrustBanner />
 
       {/* Partner Brands Strip */}
       <section className="border-y border-white/5 bg-slate-950/80 py-10">

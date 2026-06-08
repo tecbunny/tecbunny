@@ -15,22 +15,39 @@ import { isPubliclyVisibleProduct } from '@/lib/product-visibility';
 import type { Product } from '@/lib/types';
 import { useAnalytics } from '../../hooks/use-analytics';
 import { useToast } from '../../hooks/use-toast';
+import { useBehavioralCRO } from '../../hooks/use-behavioral-cro';
 import { StarRating } from './StarRating';
 
 interface ProductDetailPageProps {
   productId: string;
   initialProduct?: any;
+  sourceContext?: {
+    source: string;
+    ref: string | null;
+    platform: string;
+    timestamp: number;
+  } | null;
 }
 
-export function ProductDetailPage({ productId, initialProduct }: ProductDetailPageProps) {
+export function ProductDetailPage({ productId, initialProduct, sourceContext }: ProductDetailPageProps) {
   const router = useRouter();
   const { trackEvent } = useAnalytics();
   const { toast } = useToast();
+  const { showAssistance, triggerContext, dismissAssistance } = useBehavioralCRO();
   const isMountedRef = useRef(true);
 
   const initialEnrichedProduct = useMemo(() => {
     if (initialProduct) {
       const p = initialProduct;
+      
+      // Apply source-aware pricing logic
+      let discountMultiplier = 1;
+      if (sourceContext?.source === 'certified-agents') {
+        discountMultiplier = 0.95; // 5% specialized discount for certified agent traffic
+      } else if (sourceContext?.platform === 'app-link') {
+        discountMultiplier = 0.98; // 2% app-referral discount
+      }
+
       const resolvedTitle = [p.title, p.name]
         .map((value) => (typeof value === 'string' ? value.trim() : ''))
         .find((value) => value.length > 0) || 'Product';
@@ -637,6 +654,46 @@ export function ProductDetailPage({ productId, initialProduct }: ProductDetailPa
           </section>
         </div>
       </div>
+
+      {/* 2. BEHAVIORAL CRO ASSISTANCE BANNER */}
+      {showAssistance && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md animate-in slide-in-from-bottom-10 fade-in duration-500">
+          <div className="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-slate-900/95 p-6 shadow-2xl backdrop-blur-xl">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400">
+                <RefreshCw className="h-5 w-5 animate-spin-slow" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-bold text-white">Need a custom surveillance blueprint?</h4>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                  {triggerContext === 'pricing' 
+                    ? "Our experts can help optimize this configuration for your specific space and budget requirements."
+                    : "Architecture can be complex. Let's schedule a 10-minute discovery call to finalize your setup."}
+                </p>
+                <div className="mt-4 flex gap-3">
+                  <Button 
+                    size="sm" 
+                    className="h-8 bg-indigo-600 hover:bg-indigo-500 text-[10px]"
+                    onClick={() => router.push('/contact?ref=behavioral_assistance')}
+                  >
+                    Speak to Specialist
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 text-[10px] text-slate-500 hover:text-slate-300"
+                    onClick={dismissAssistance}
+                  >
+                    Maybe later
+                  </Button>
+                </div>
+              </div>
+            </div>
+            {/* Ambient Background Glow */}
+            <div className="absolute -bottom-10 -left-10 h-32 w-32 bg-indigo-500/10 blur-[80px]" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -50,7 +50,31 @@ export async function middleware(request: NextRequest) {
   const superadminCookie = request.cookies.get('superadmin-session')?.value
   const isSuperadmin = Boolean(await verifySuperadminSessionToken(superadminCookie))
 
+  // 1. UTM AND SOURCE-AWARE PRICING ROUTE INTERCEPTOR
+  // Parse incoming business-tier variables and set encrypted state cookie
+  const utmSource = request.nextUrl.searchParams.get('utm_source')
+  const referralId = request.nextUrl.searchParams.get('ref')
+  const platformFlag = request.nextUrl.searchParams.get('source_platform')
+
   let response = NextResponse.next({ request: { headers: requestHeaders } })
+
+  if (utmSource || referralId || platformFlag) {
+    const sourceContext = {
+      source: utmSource || 'organic',
+      ref: referralId || null,
+      platform: platformFlag || 'web',
+      timestamp: Date.now()
+    }
+    // Set a client-side state cookie for context-aware rendering/pricing
+    // In production, this would be encrypted; using base64 for this implementation
+    const contextValue = Buffer.from(JSON.stringify(sourceContext)).toString('base64')
+    response.cookies.set('tb_source_context', contextValue, {
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    })
+  }
 
   const finalizeResponse = (res: NextResponse) => {
     if (res !== response) {

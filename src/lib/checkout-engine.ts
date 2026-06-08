@@ -43,6 +43,12 @@ export interface CheckoutEngineResponse {
     commission_amount: number;
     commission_rate: number;
   };
+
+  /**
+   * Internal database product metadata mapping used for validation 
+   * and downstream marketing logic.
+   */
+  dbProductMap?: Map<string, any>;
 }
 
 export class CheckoutEngine {

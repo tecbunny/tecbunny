@@ -12,6 +12,7 @@ import { useToast } from '../../../hooks/use-toast';
 import { useAuth } from '@/lib/hooks';
 import { createClient } from '@/lib/supabase/client';
 import type { Order, OrderStatus } from '@/lib/types';
+import { MarketingKitTerminal } from '@/components/sales/MarketingKitTerminal';
 
 const COMPLETED_STATUSES: OrderStatus[] = ['Completed', 'Delivered', 'Payment Confirmed'];
 const PENDING_DELIVERY_STATUSES: OrderStatus[] = ['Processing', 'Ready to Ship', 'Shipped'];
@@ -29,6 +30,7 @@ export default function SalesDashboard() {
     });
     const [recentOrders, setRecentOrders] = React.useState<Order[]>([]);
     const [loading, setLoading] = React.useState(true);
+    const [referralCode, setReferralCode] = React.useState<string>('');
 
     const fetchStats = React.useCallback(async () => {
         setLoading(true);
@@ -38,7 +40,7 @@ export default function SalesDashboard() {
             const endOfDay = new Date();
             endOfDay.setHours(23, 59, 59, 999);
 
-            const [todayOrdersRes, newCustomersRes, pickupRes, deliveryRes, recentOrdersRes] = await Promise.all([
+            const [todayOrdersRes, newCustomersRes, pickupRes, deliveryRes, recentOrdersRes, agentRes] = await Promise.all([
                 supabase
                     .from('orders')
                     .select('total,status,created_at')
@@ -64,6 +66,11 @@ export default function SalesDashboard() {
                     .select('id, customer_name, status, total, created_at')
                     .order('created_at', { ascending: false })
                     .limit(5),
+                supabase
+                    .from('sales_agents')
+                    .select('referral_code')
+                    .eq('user_id', user?.id)
+                    .maybeSingle()
             ]);
 
             if (todayOrdersRes.error) throw todayOrdersRes.error;
@@ -84,6 +91,9 @@ export default function SalesDashboard() {
                 pendingDeliveries: deliveryRes.count ?? 0,
             });
             setRecentOrders((recentOrdersRes.data as Order[]) || []);
+            if (agentRes?.data?.referral_code) {
+                setReferralCode(agentRes.data.referral_code);
+            }
         } catch (error) {
             console.error('Failed to load dashboard metrics', error);
             toast({
@@ -208,6 +218,12 @@ export default function SalesDashboard() {
                     )}
                 </CardContent>
             </Card>
+
+            {referralCode && (
+                <div className="mt-8">
+                    <MarketingKitTerminal referralCode={referralCode} />
+                </div>
+            )}
         </div>
     );
 }

@@ -15,6 +15,7 @@ import {
   Package,
   Archive,
   BarChart2,
+  Megaphone,
 } from 'lucide-react';
 
 import { logger } from '@/lib/logger';

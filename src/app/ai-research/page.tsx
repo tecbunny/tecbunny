@@ -1,8 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
+import { Send, Bot, User, Loader2, Sparkles, Lock, ShieldCheck } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
+import { TechStackAudit } from '@/components/ai-research/TechStackAudit';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 type ProductResult = {
   id: string;
@@ -42,6 +45,12 @@ export default function AiResearchPage() {
     }
   ]);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [showAudit, setShowAudit] = React.useState(true);
+  const [isLocked, setIsLocked] = React.useState(false);
+  const [leadVerified, setLeadVerified] = React.useState(false);
+  const [showLeadGate, setShowLeadGate] = React.useState(false);
+  const [leadData, setLeadData] = React.useState({ phone: '', email: '' });
+  
   const messagesContainerRef = React.useRef<HTMLDivElement>(null);
   const isUserNearBottomRef = React.useRef(true);
 
@@ -157,6 +166,65 @@ export default function AiResearchPage() {
     }
   };
 
+  const handleAuditComplete = (selections: any) => {
+    if (!leadVerified) {
+      setShowLeadGate(true);
+      return;
+    }
+    // Proceed to generate report
+    const query = `Generate a technical telemetry report for an infrastructure with: ${selections.infrastructure}, ${selections.securityLevel}, and ${selections.connectivity}. Include architectural recommendations and budget optimization.`;
+    void handleCustomSubmit(query);
+    setShowAudit(false);
+  };
+
+  const handleCustomSubmit = async (query: string) => {
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: query,
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    // ... rest of the logic similar to handleSubmit but simplified for direct query
+    const loadingMessageId = (Date.now() + 1).toString();
+    setMessages((prev) => [...prev, { id: loadingMessageId, role: 'assistant', isLoading: true }]);
+    
+    try {
+      const response = await fetch('/api/ai/research', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      const data = await response.json();
+      setMessages((prev) => prev.filter(m => m.id !== loadingMessageId).concat({
+        id: Date.now().toString(),
+        role: 'assistant',
+        result: data,
+      }));
+    } catch (err) {
+      setMessages((prev) => prev.filter(m => m.id !== loadingMessageId).concat({
+        id: Date.now().toString(),
+        role: 'assistant',
+        error: 'Failed to generate report. Please try again.',
+      }));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLeadVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    // Simulate WhatsApp OTP Verification
+    setTimeout(() => {
+      setLeadVerified(true);
+      setShowLeadGate(false);
+      setIsLoading(false);
+      // Re-trigger audit completion
+      setShowAudit(true); 
+    }, 1500);
+  };
+
   return (
     <div className="flex h-[calc(100vh-80px)] flex-col bg-slate-950 text-slate-200">
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
@@ -181,6 +249,12 @@ export default function AiResearchPage() {
         className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth"
       >
         <div className="mx-auto max-w-4xl space-y-6">
+          {showAudit && messages.length === 1 && (
+            <div className="mb-10">
+              <TechStackAudit onComplete={handleAuditComplete} isLocked={showLeadGate} />
+            </div>
+          )}
+
           {messages.map((message) => (
             <div
               key={message.id}
@@ -255,6 +329,70 @@ export default function AiResearchPage() {
           <div />
         </div>
       </div>
+
+      {/* Lead Gate Modal */}
+      {showLeadGate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-xl p-4">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-8 shadow-2xl">
+            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-400">
+              <Lock className="h-7 w-7" />
+            </div>
+            <h3 className="mb-2 text-2xl font-bold text-white">Unlock Telemetry Report</h3>
+            <p className="mb-8 text-sm text-slate-400 leading-relaxed">
+              We require corporate verification to share comprehensive architectural telemetry reports. Please provide your business contact details.
+            </p>
+            
+            <form onSubmit={handleLeadVerification} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Corporate Email</label>
+                <Input 
+                  required 
+                  type="email" 
+                  placeholder="name@company.com" 
+                  className="bg-white/5 border-white/10 text-white h-12"
+                  value={leadData.email}
+                  onChange={(e) => setLeadData({ ...leadData, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Phone (for WhatsApp OTP)</label>
+                <Input 
+                  required 
+                  type="tel" 
+                  placeholder="+91 12345 67890" 
+                  className="bg-white/5 border-white/10 text-white h-12"
+                  value={leadData.phone}
+                  onChange={(e) => setLeadData({ ...leadData, phone: e.target.value })}
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full h-14 bg-cyan-600 hover:bg-cyan-500 text-lg font-bold mt-4"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" /> Verifying...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Verify & Unlock Report <ShieldCheck className="h-5 w-5" />
+                  </span>
+                )}
+              </Button>
+              
+              <button 
+                type="button" 
+                onClick={() => setShowLeadGate(false)}
+                className="w-full py-2 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                Cancel and return to chat
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Input Area */}
       <div className="relative z-10 border-t border-white/10 bg-slate-950/80 p-4 backdrop-blur-md sm:px-6 lg:px-8">

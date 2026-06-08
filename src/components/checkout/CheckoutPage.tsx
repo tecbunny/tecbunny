@@ -862,12 +862,44 @@ export default function CheckoutPage() {
                     );
                   })}
                 </div>
+                
+                {/* Trust Badges & Compliance */}
+                <div className="mt-8 pt-6 border-t border-white/5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <Shield className="h-6 w-6 text-emerald-400" />
+                    <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">BIS Certified Hardware</span>
+                  </div>
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <CheckCircle className="h-6 w-6 text-cyan-400" />
+                    <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Regional Tech Compliance</span>
+                  </div>
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <CreditCard className="h-6 w-6 text-blue-400" />
+                    <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Secure UPI/Netbanking</span>
+                  </div>
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <User className="h-6 w-6 text-purple-400" />
+                    <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Verified Installer Network</span>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div className="lg:col-span-1">
-              <div className="sticky top-24 glass-panel p-6 rounded-2xl border-t-4 border-cyan-400">
-                <h3 className="text-xl font-bold text-white font-tech mb-6">Invoice Preview</h3>
+              <div className="sticky top-24 space-y-6">
+                {/* Urgency Alert: Stock Shortage */}
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3 animate-pulse">
+                  <div className="h-5 w-5 shrink-0 rounded-full bg-amber-500/20 flex items-center justify-center">
+                    <span className="text-amber-500 font-bold text-xs">!</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-amber-200">High Demand - Low Stock</p>
+                    <p className="text-[10px] text-amber-200/70 mt-0.5">Several items in your cart are in high demand in Goa. Secure your stock now.</p>
+                  </div>
+                </div>
+
+                <div className="glass-panel p-6 rounded-2xl border-t-4 border-cyan-400">
+                  <h3 className="text-xl font-bold text-white font-tech mb-6">Invoice Preview</h3>
 
                 <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2">
                   {cartItems.map((item) => (
@@ -955,6 +987,17 @@ export default function CheckoutPage() {
                     {' '}and{' '}
                     <Link href="/info/policies/terms" className="text-cyan-300 hover:text-white underline">Terms of Service</Link>.
                   </label>
+                </div>
+
+                {/* Purchase Velocity Trigger */}
+                <div className="mb-4 flex items-center justify-center gap-2 py-1 px-3 rounded-full bg-cyan-400/10 border border-cyan-400/20">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                  </span>
+                  <p className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest">
+                    14 others viewing this in your region
+                  </p>
                 </div>
 
                 <button

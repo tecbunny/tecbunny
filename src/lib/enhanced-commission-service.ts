@@ -9,6 +9,7 @@ import type {
 } from '@/lib/types';
 
 import { logger } from './logger';
+import { WhatsAppService } from './whatsapp-service';
 
 export interface CommissionCalculation {
   order_id: string;
@@ -199,6 +200,9 @@ export class EnhancedCommissionService {
       // Update agent points balance
       await this.updateAgentPoints(calculation.agent_id, calculation.commission_amount);
 
+      // Trigger WhatsApp Notification
+      this.triggerAgentWhatsApp(calculation);
+
       return {
         success: true,
         commission_id: commission.id
@@ -210,6 +214,40 @@ export class EnhancedCommissionService {
         success: false,
         error: 'Internal server error'
       };
+    }
+  }
+
+  /**
+   * Trigger WhatsApp notification for agent commission
+   */
+  private async triggerAgentWhatsApp(calculation: CommissionCalculation) {
+    try {
+      const supabase = this.supabase;
+      if (!supabase) return;
+
+      // Fetch agent details
+      const { data: agent, error } = await supabase
+        .from('profiles')
+        .select('full_name, mobile')
+        .eq('id', calculation.agent_id)
+        .single();
+
+      if (error || !agent || !agent.mobile) {
+        logger.warn('agent-commission.whatsapp_skipped.missing_agent_details', { agentId: calculation.agent_id });
+        return;
+      }
+
+      const whatsapp = new WhatsAppService();
+      await whatsapp.sendAgentCommissionNotification(agent.mobile, {
+        agentName: agent.full_name || 'Partner',
+        orderNumber: calculation.order_id.split('-')[0].toUpperCase(), // Short ID
+        amount: calculation.commission_amount.toLocaleString('en-IN'),
+        nextTier: 'Gold', // Dynamic logic can be added here
+        differenceToNextTier: '15,000' // Dynamic logic can be added here
+      });
+
+    } catch (err) {
+      logger.error('agent-commission.whatsapp_trigger_failed', { error: err });
     }
   }
 

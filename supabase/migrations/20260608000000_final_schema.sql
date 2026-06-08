@@ -466,6 +466,7 @@ CREATE INDEX IF NOT EXISTS idx_products_gst_rate ON public.products (gst_rate);
 CREATE INDEX IF NOT EXISTS idx_products_tax_ai_review ON public.products (tax_ai_reviewed, tax_ai_classified_at DESC);
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_order_id ON public.payment_transactions(order_id);
 CREATE INDEX IF NOT EXISTS idx_superadmin_token_blocklist_expiry ON public.superadmin_token_blocklist(expires_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_whatsapp_messages_message_id ON public.whatsapp_messages (whatsapp_message_id) WHERE whatsapp_message_id IS NOT NULL;
 
 -- ============================================================================
 -- 4. JWT & Role Helpers
@@ -610,27 +611,38 @@ ALTER TABLE public.superadmin_token_blocklist ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_archive_log ENABLE ROW LEVEL SECURITY;
 
 -- Product Policies
+DROP POLICY IF EXISTS rls_products_public_read ON public.products;
 CREATE POLICY rls_products_public_read ON public.products FOR SELECT USING (is_deleted = FALSE AND status = 'active');
+DROP POLICY IF EXISTS rls_products_admin_manage ON public.products;
 CREATE POLICY rls_products_admin_manage ON public.products FOR ALL TO authenticated USING (public.is_manager_or_admin());
 
 -- Profile Policies
+DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
 CREATE POLICY "Users can read own profile" ON public.profiles FOR SELECT TO authenticated USING (id = auth.uid());
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE TO authenticated USING (id = auth.uid()) WITH CHECK (id = auth.uid());
+DROP POLICY IF EXISTS "Admins can manage profiles" ON public.profiles;
 CREATE POLICY "Admins can manage profiles" ON public.profiles FOR ALL TO authenticated USING (public.is_admin_user()) WITH CHECK (public.is_admin_user());
 
 -- Order Policies
+DROP POLICY IF EXISTS "Customers can view own orders" ON public.orders;
 CREATE POLICY "Customers can view own orders" ON public.orders FOR SELECT TO authenticated USING (auth.uid() = customer_id);
+DROP POLICY IF EXISTS "Staff can view all orders" ON public.orders;
 CREATE POLICY "Staff can view all orders" ON public.orders FOR SELECT TO authenticated USING (public.is_staff_member());
 
 -- Inventory Policies
+DROP POLICY IF EXISTS inventory_staff_all ON public.inventory;
 CREATE POLICY inventory_staff_all ON public.inventory FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
 
 -- FAQ Policies
+DROP POLICY IF EXISTS "Allow public read access to published FAQs" ON public.faqs;
 CREATE POLICY "Allow public read access to published FAQs" ON public.faqs FOR SELECT USING (is_published = true);
 
 -- Payment Transactions Policies
+DROP POLICY IF EXISTS "Staff can view all payment transactions" ON public.payment_transactions;
 CREATE POLICY "Staff can view all payment transactions" ON public.payment_transactions
   FOR SELECT TO authenticated USING (public.is_staff_member());
+DROP POLICY IF EXISTS "Customers can view own payment transactions" ON public.payment_transactions;
 CREATE POLICY "Customers can view own payment transactions" ON public.payment_transactions
   FOR SELECT TO authenticated USING (
     EXISTS (
@@ -641,15 +653,19 @@ CREATE POLICY "Customers can view own payment transactions" ON public.payment_tr
   );
 
 -- Product Archive Log Policies
+DROP POLICY IF EXISTS "Staff can view product archive log" ON public.product_archive_log;
 CREATE POLICY "Staff can view product archive log" ON public.product_archive_log
   FOR SELECT TO authenticated USING (public.is_manager_or_admin());
 
 -- Superadmin Token Blocklist Policies
+DROP POLICY IF EXISTS "Superadmins can manage token blocklist" ON public.superadmin_token_blocklist;
 CREATE POLICY "Superadmins can manage token blocklist" ON public.superadmin_token_blocklist
   FOR ALL TO authenticated USING (public.is_superadmin_user()) WITH CHECK (public.is_superadmin_user());
 
 -- Security Table Policies
+DROP POLICY IF EXISTS security_audit_log_superadmin_only ON public.security_audit_log;
 CREATE POLICY security_audit_log_superadmin_only ON public.security_audit_log FOR ALL TO authenticated USING (public.is_superadmin_user()) WITH CHECK (public.is_superadmin_user());
+DROP POLICY IF EXISTS security_settings_superadmin_only ON public.security_settings;
 CREATE POLICY security_settings_superadmin_only ON public.security_settings FOR ALL TO authenticated USING (public.is_superadmin_user()) WITH CHECK (public.is_superadmin_user());
 
 -- ============================================================================

@@ -129,6 +129,14 @@ const promoSchema = z.object({
   link: z.string().url(),
 });
 
+const agentCommissionSchema = z.object({
+  agentName: z.string().min(1),
+  orderNumber: z.string().min(1),
+  amount: z.string().min(1),
+  nextTier: z.string().min(1).optional(),
+  differenceToNextTier: z.string().min(1).optional(),
+});
+
 const cartReminderSchema = z.object({
   items: z.array(z.string()).min(1),
   total: z.number().nonnegative(),
@@ -280,6 +288,20 @@ export class WhatsAppService {
       language: 'en_US'
     };
     return this.sendMessage(to, content, 'template', true);
+  }
+
+  // Send agent commission notification
+  async sendAgentCommissionNotification(to: string, data: z.infer<typeof agentCommissionSchema>) {
+    const { agentName, orderNumber, amount, nextTier, differenceToNextTier } = data;
+    
+    let message = `🚀 Milestone Unlocked! \n\nHi ${agentName}, your referral order #${orderNumber} has cleared payment. A commission of ₹${amount} has been credited to your account.`;
+    
+    if (nextTier && differenceToNextTier) {
+      message += `\n\nYou're just ₹${differenceToNextTier} away from the ${nextTier} tier! Keep going! 🐰`;
+    }
+
+    // For now, using text message if no specific template is approved yet
+    return this.sendMessage(to, message, 'text', true, 'serviceUpdates');
   }
 
   // Send order confirmation (remains order_confirmation)

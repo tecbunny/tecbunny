@@ -15,6 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import type { CustomSetupBlueprintComponentSummary, CustomSetupBlueprintSummary } from '@/lib/custom-setup-service';
 import { useAuth } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
+import { ROICostEfficiencyBanner } from './ROICostEfficiencyBanner';
+import { useLeadCaptureTrigger } from '@/hooks/use-lead-capture-trigger';
 
 export interface CustomSetupFlowProps {
   blueprint: CustomSetupBlueprintSummary | null;
@@ -98,6 +100,9 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+
+  // CRO: Dynamic lead capture trigger
+  useLeadCaptureTrigger(45000);
 
   useEffect(() => {
     const normalized = Number.isFinite(cameraCount) ? Math.min(32, Math.max(1, Math.round(cameraCount))) : 4;
@@ -886,6 +891,8 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
           </div>
         </CardContent>
       </Card>
+
+      <ROICostEfficiencyBanner savingsPercentage={Math.round(totals.overall.discountPercent)} isTech={isTech} />
     </section>
   );
 

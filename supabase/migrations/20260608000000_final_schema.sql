@@ -16,7 +16,34 @@ BEGIN
     NEW.updated_at = now();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ language 'plpgsql'
+SET search_path = public, pg_temp;
+
+-- Cleanup function for expired tokens
+CREATE OR REPLACE FUNCTION public.cleanup_expired_superadmin_tokens()
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  DELETE FROM public.superadmin_token_blocklist WHERE expires_at < NOW();
+$$;
+
+-- Prune old logs function
+CREATE OR REPLACE FUNCTION public.prune_old_logs()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  DELETE FROM public.webhook_events WHERE created_at < NOW() - INTERVAL '30 days';
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'whatsapp_messages') THEN
+    DELETE FROM public.whatsapp_messages WHERE created_at < NOW() - INTERVAL '30 days';
+  END IF;
+  DELETE FROM public.order_otp_verifications WHERE created_at < NOW() - INTERVAL '30 days';
+END;
+$$;
 
 -- ============================================================================
 -- 1. Custom Enums & Types
@@ -553,7 +580,8 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp;
 
 DROP TRIGGER IF EXISTS tr_protect_profile_role_column ON public.profiles;
 CREATE TRIGGER tr_protect_profile_role_column
@@ -578,6 +606,8 @@ ALTER TABLE public.policies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.security_audit_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.security_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.superadmin_token_blocklist ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_archive_log ENABLE ROW LEVEL SECURITY;
 
 -- Product Policies
 CREATE POLICY rls_products_public_read ON public.products FOR SELECT USING (is_deleted = FALSE AND status = 'active');
@@ -597,6 +627,26 @@ CREATE POLICY inventory_staff_all ON public.inventory FOR ALL TO authenticated U
 
 -- FAQ Policies
 CREATE POLICY "Allow public read access to published FAQs" ON public.faqs FOR SELECT USING (is_published = true);
+
+-- Payment Transactions Policies
+CREATE POLICY "Staff can view all payment transactions" ON public.payment_transactions
+  FOR SELECT TO authenticated USING (public.is_staff_member());
+CREATE POLICY "Customers can view own payment transactions" ON public.payment_transactions
+  FOR SELECT TO authenticated USING (
+    EXISTS (
+      SELECT 1 FROM public.orders
+      WHERE orders.id = payment_transactions.order_id
+        AND orders.customer_id = auth.uid()
+    )
+  );
+
+-- Product Archive Log Policies
+CREATE POLICY "Staff can view product archive log" ON public.product_archive_log
+  FOR SELECT TO authenticated USING (public.is_manager_or_admin());
+
+-- Superadmin Token Blocklist Policies
+CREATE POLICY "Superadmins can manage token blocklist" ON public.superadmin_token_blocklist
+  FOR ALL TO authenticated USING (public.is_superadmin_user()) WITH CHECK (public.is_superadmin_user());
 
 -- Security Table Policies
 CREATE POLICY security_audit_log_superadmin_only ON public.security_audit_log FOR ALL TO authenticated USING (public.is_superadmin_user()) WITH CHECK (public.is_superadmin_user());
@@ -753,6 +803,154 @@ BEGIN
 END;
 $$;
 
+-- Transaction-safe Order Status Update
+CREATE OR REPLACE FUNCTION public.update_order_status_v1(
+  target_order_id UUID,
+  new_status TEXT,
+  new_payment_status TEXT,
+  additional_data JSONB,
+  p_pickup_code TEXT,
+  p_processed_by UUID
+)
+RETURNS VOID AS $$
+DECLARE
+  v_key TEXT;
+  v_val JSONB;
+  v_current_status TEXT;
+  v_current_payment_status TEXT;
+  v_items_json JSONB;
+  v_item RECORD;
+BEGIN
+  SELECT status, payment_status, items INTO v_current_status, v_current_payment_status, v_items_json
+  FROM public.orders
+  WHERE id = target_order_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Order % not found', target_order_id;
+  END IF;
+
+  IF v_current_status IN ('Cancelled', 'Rejected', 'Completed', 'Delivered') AND new_status NOT IN ('Cancelled', 'Rejected', 'Completed', 'Delivered') THEN
+    RAISE EXCEPTION 'Cannot transition order % from terminal state (%) to %', target_order_id, v_current_status, new_status;
+  END IF;
+
+  UPDATE public.orders
+  SET
+    status = new_status,
+    payment_status = COALESCE(new_payment_status, payment_status),
+    processed_by = p_processed_by,
+    updated_at = NOW()
+  WHERE id = target_order_id;
+
+  IF additional_data IS NOT NULL THEN
+    FOR v_key, v_val IN SELECT * FROM jsonb_each(additional_data) LOOP
+      IF v_key = 'cancellation_reason' THEN
+        UPDATE public.orders SET cancellation_reason = v_val#>>'{}' WHERE id = target_order_id;
+      ELSIF v_key = 'payment_reference' THEN
+        UPDATE public.orders SET payment_reference = v_val#>>'{}' WHERE id = target_order_id;
+      ELSIF v_key = 'notes' THEN
+        UPDATE public.orders SET notes = v_val#>>'{}' WHERE id = target_order_id;
+      ELSIF v_key = 'shipping_amount' THEN
+        UPDATE public.orders SET shipping_amount = (v_val#>>'{}')::NUMERIC WHERE id = target_order_id;
+      ELSIF v_key = 'discount_amount' THEN
+        UPDATE public.orders SET discount_amount = (v_val#>>'{}')::NUMERIC WHERE id = target_order_id;
+      END IF;
+    END LOOP;
+  END IF;
+
+  IF p_pickup_code IS NOT NULL AND p_pickup_code <> '' THEN
+    UPDATE public.orders SET pickup_code = p_pickup_code WHERE id = target_order_id;
+  END IF;
+
+  IF new_status IN ('Cancelled', 'Rejected') THEN
+    UPDATE public.orders
+    SET
+      cancelled_at = NOW(),
+      cancelled_by = p_processed_by
+    WHERE id = target_order_id;
+
+    IF v_current_status NOT IN ('Cancelled', 'Rejected') AND v_items_json IS NOT NULL THEN
+      FOR v_item IN SELECT (value->>'id')::uuid AS id, (value->>'quantity')::integer AS quantity FROM jsonb_array_elements(v_items_json->'cart_items') LOOP
+        PERFORM public.record_atomic_stock_movement(
+          v_item.id,
+          'return',
+          v_item.quantity,
+          target_order_id::TEXT,
+          'online_order',
+          'Reverted stock due to order cancellation',
+          true,
+          p_processed_by
+        );
+      END LOOP;
+    END IF;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp;
+
+-- Transaction-safe Service Completion
+CREATE OR REPLACE FUNCTION public.complete_service_ticket_v1(
+  p_ticket_id          UUID,
+  p_engineer_notes     TEXT,
+  p_service_charge     NUMERIC,
+  p_actual_duration    INTEGER,
+  p_photos             TEXT[],
+  p_parts_used         JSONB -- Array of parts
+)
+RETURNS NUMERIC
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_part RECORD;
+  v_total_parts_cost NUMERIC := 0;
+  v_total_cost NUMERIC := 0;
+  v_current_status TEXT;
+BEGIN
+  SELECT status INTO v_current_status
+  FROM public.service_tickets
+  WHERE id = p_ticket_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Service ticket % not found', p_ticket_id;
+  END IF;
+
+  IF v_current_status = 'completed' THEN
+    RAISE EXCEPTION 'Service ticket % is already completed', p_ticket_id;
+  END IF;
+
+  IF p_parts_used IS NOT NULL AND jsonb_array_length(p_parts_used) > 0 THEN
+    FOR v_part IN SELECT * FROM jsonb_to_recordset(p_parts_used) AS x(part_name TEXT, quantity INTEGER, unit_cost NUMERIC, warranty_days INTEGER) LOOP
+      INSERT INTO public.service_parts (
+        ticket_id, part_name, quantity, unit_cost, warranty_days
+      ) VALUES (
+        p_ticket_id, v_part.part_name, v_part.quantity, v_part.unit_cost, COALESCE(v_part.warranty_days, 0)
+      );
+      v_total_parts_cost := v_total_parts_cost + (v_part.quantity * v_part.unit_cost);
+    END LOOP;
+  END IF;
+
+  v_total_cost := COALESCE(p_service_charge, 0) + v_total_parts_cost;
+
+  UPDATE public.service_tickets
+  SET
+    status = 'completed',
+    completed_at = NOW(),
+    engineer_notes = p_engineer_notes,
+    service_charge = p_service_charge,
+    parts_cost = v_total_parts_cost,
+    total_cost = v_total_cost,
+    actual_duration = p_actual_duration,
+    photos = p_photos,
+    updated_at = NOW()
+  WHERE id = p_ticket_id;
+
+  RETURN v_total_cost;
+END;
+$$;
+
 -- ============================================================================
 -- 7. Seed Defaults
 -- ============================================================================
@@ -765,13 +963,31 @@ ON CONFLICT (name) DO UPDATE SET rate = EXCLUDED.rate;
 -- 8. Permissions Lockdown
 -- ============================================================================
 
+-- Revoke all direct execution from public roles for SECURITY DEFINER functions
+REVOKE ALL ON FUNCTION public.cleanup_expired_superadmin_tokens() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.prune_old_logs() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.soft_delete_product(uuid, uuid, text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.record_atomic_stock_movement(uuid, text, integer, text, text, text, boolean, uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.allocate_order_inventory_atomic(text, uuid, text, text, text, text, text, numeric, numeric, numeric, numeric, numeric, text, text, jsonb, uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.verify_order_otp_atomic(uuid, text, text, integer) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.update_order_status_v1(uuid, text, text, jsonb, text, uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.complete_service_ticket_v1(uuid, text, numeric, integer, text[], jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.is_superadmin_user() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.is_admin_user() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.is_manager_or_admin() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.is_staff_member() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.protect_profile_role_column() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.sync_profile_role_to_auth() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.update_updated_at_column() FROM PUBLIC, anon, authenticated;
 
+-- Explicitly grant execute to authorized roles
+GRANT EXECUTE ON FUNCTION public.is_superadmin_user() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_admin_user() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_manager_or_admin() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_staff_member() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.verify_order_otp_atomic(UUID, TEXT, TEXT, INTEGER) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.allocate_order_inventory_atomic(TEXT, UUID, TEXT, TEXT, TEXT, TEXT, TEXT, NUMERIC, NUMERIC, NUMERIC, NUMERIC, NUMERIC, TEXT, TEXT, JSONB, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.update_order_status_v1(uuid, text, text, jsonb, text, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.complete_service_ticket_v1(uuid, text, numeric, integer, text[], jsonb) TO authenticated;
 
 COMMIT;

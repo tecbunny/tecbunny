@@ -37,7 +37,6 @@ const navLinks = [
       { name: 'Web Development', href: '/webdev' },
     ]
   },
-  { name: 'Innovation', href: '/innovation' },
   { name: 'About Us', href: '/about' },
   { name: 'Contact Us', href: '/contact' },
   {

@@ -80,14 +80,14 @@ const FEATURE_PILLARS = [
     desc: 'Smarter controls that adapt to the way you run your space.',
     icon: Wifi,
     accent: 'from-emerald-400/30 to-teal-500/30',
-    href: '/innovation',
+    href: '/services',
   },
   {
     title: 'Incident Response',
     desc: 'Rapid alerts, clear workflows, and actionable insights.',
     icon: Zap,
     accent: 'from-orange-400/30 to-rose-500/30',
-    href: '/innovation',
+    href: '/services',
   },
 ];
 

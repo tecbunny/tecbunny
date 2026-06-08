@@ -28,6 +28,7 @@ import {
   Activity,
   Lightbulb,
   ShoppingBag,
+  Megaphone,
   Archive,
   FileSearch,
 } from 'lucide-react';
@@ -67,6 +68,12 @@ const navSections: NavSection[] = [
       { href: '/mgmt/admin/purchase', label: 'Purchase Management', icon: Archive },
       { href: '/mgmt/admin/invoice-lookup', label: 'Invoice Look-up', icon: FileSearch },
       { href: '/mgmt/admin/quotes', label: 'Quotes Management', icon: FileText },
+    ]
+  },
+  {
+    title: 'Marketing',
+    items: [
+      { href: '/mgmt/admin/promotional-broadcast', label: 'Promo Broadcast', icon: Megaphone },
     ]
   }
 ];

@@ -19,8 +19,10 @@ function serialize(level: LogLevel, msg: string, meta?: LogMeta) {
 // Basic redaction for likely sensitive keys (case-insensitive and substrings)
 const SENSITIVE_KEYS = [
   'password', 'passwd', 'pwd', 'token', 'authorization', 'auth', 'email',
-  'secret', 'key', 'api_key', 'access', 'refresh', 'txn', 'transaction', 'client_secret', 'private', 'rsa', 'ssh'
+  'secret', 'key', 'api_key', 'access', 'refresh', 'txn', 'transaction', 
+  'client_secret', 'private', 'rsa', 'ssh', 'cookie', 'session', 'otp', 'salt'
 ];
+
 function redacted(obj: unknown, seen = new WeakSet()): unknown {
   if (!obj || typeof obj !== 'object') return obj;
   
@@ -30,20 +32,27 @@ function redacted(obj: unknown, seen = new WeakSet()): unknown {
   seen.add(obj);
 
   if (Array.isArray(obj)) return obj.map(item => redacted(item, seen));
+  
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(obj)) {
     const lowerK = k.toLowerCase();
-    const matchesKey = SENSITIVE_KEYS.some((s) => lowerK.includes(s));
+    
+    // Exact match or contains sensitive keyword
+    const matchesKey = SENSITIVE_KEYS.some((s) => lowerK === s || lowerK.includes(s));
+    
     if (matchesKey) {
       out[k] = '[REDACTED]';
       continue;
     }
-    // ... existing key redaction ...
+
     if (v && typeof v === 'string') {
+      // More robust checks for secrets in strings
       const jwtLike = v.split('.').length === 3 && v.length > 20;
       const longToken = v.length > 60; 
-      const base64Like = /^(?:[A-Za-z0-9+/]{4}){8,}=?$/.test(v);
-       if (jwtLike || longToken || base64Like) {
+      const base64Like = v.length > 20 && /^(?:[A-Za-z0-9+/]{4}){5,}=?$/.test(v);
+      const bearerLike = v.toLowerCase().startsWith('bearer ');
+      
+      if (jwtLike || longToken || base64Like || bearerLike) {
         out[k] = '[REDACTED]';
         continue;
       }

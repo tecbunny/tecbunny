@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 import { rateLimit } from '@/lib/rate-limit';
+import { getEffectiveUserRole } from '@/lib/auth/server-role';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { apiError, apiSuccess } from '@/lib/errors';
 import { logger } from '@/lib/logger';
@@ -20,6 +21,7 @@ const supabase = createClient(
 
 const LIMIT = 5;
 const WINDOW_MS = 60 * 1000;
+const STAFF_PAYMENT_ROLES = new Set(['admin', 'manager', 'accounts', 'superadmin']);
 
 function generateTransactionId(orderId: string): string {
   const cleanedOrder = orderId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(-6);
@@ -66,12 +68,24 @@ export async function POST(request: NextRequest) {
     }
 
     let userId: string | null = null;
+    let userRole: string | null = null;
     try {
       const serverClient = await createServerClient();
-      const { data } = await serverClient.auth.getUser();
-      userId = data.user?.id ?? null;
+      const { data, error } = await serverClient.auth.getUser();
+      if (error || !data.user) {
+        return apiError('UNAUTHORIZED', {
+          correlationId,
+          overrideMessage: 'Authentication required to initiate payment',
+        });
+      }
+      userId = data.user.id;
+      userRole = await getEffectiveUserRole(data.user);
     } catch (error) {
       logger.debug('payu_init.user_lookup_failed', { error: error instanceof Error ? error.message : String(error), correlationId });
+      return apiError('UNAUTHORIZED', {
+        correlationId,
+        overrideMessage: 'Authentication required to initiate payment',
+      });
     }
 
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -169,7 +183,7 @@ export async function POST(request: NextRequest) {
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .select('id, total, customer_name, customer_email, customer_phone, items')
+      .select('id, customer_id, total, customer_name, customer_email, customer_phone, items')
       .eq('id', orderId)
       .single();
 
@@ -177,6 +191,16 @@ export async function POST(request: NextRequest) {
       return apiError('NOT_FOUND', {
         correlationId,
         overrideMessage: 'Order not found',
+      });
+    }
+
+    const orderOwnerId = typeof order.customer_id === 'string' ? order.customer_id : null;
+    const canManagePayments = Boolean(userRole && STAFF_PAYMENT_ROLES.has(userRole));
+    if (orderOwnerId && orderOwnerId !== userId && !canManagePayments) {
+      logger.warn('payu_init.forbidden_order_access', { orderId, userId, userRole, correlationId });
+      return apiError('FORBIDDEN', {
+        correlationId,
+        overrideMessage: 'You are not allowed to initiate payment for this order',
       });
     }
 

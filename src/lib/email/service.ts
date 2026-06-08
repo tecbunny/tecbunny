@@ -28,6 +28,25 @@ const formatOrderIdForDisplay = (orderData: any): string => {
   return idText;
 };
 
+const hasHeaderControlChars = (value: string) => /[\r\n]/.test(value);
+
+const assertSafeHeaderValue = (value: string | string[] | undefined, fieldName: string) => {
+  if (value === undefined) {
+    return;
+  }
+  const values = Array.isArray(value) ? value : [value];
+  if (values.some((entry) => hasHeaderControlChars(String(entry)))) {
+    throw new Error(`Invalid ${fieldName} header value`);
+  }
+};
+
+const joinRecipients = (value: string | string[] | undefined) => {
+  if (!value) {
+    return undefined;
+  }
+  return Array.isArray(value) ? value.join(', ') : value;
+};
+
 export interface EmailServiceConfig {
   host: string;
   port: number;
@@ -91,12 +110,17 @@ export class EmailService {
   ): Promise<boolean> {
     try {
       const template = generateEmailTemplate(templateType, templateData);
+      assertSafeHeaderValue(to, 'to');
+      assertSafeHeaderValue(options?.cc, 'cc');
+      assertSafeHeaderValue(options?.bcc, 'bcc');
+      assertSafeHeaderValue(options?.replyTo, 'replyTo');
+      assertSafeHeaderValue(template.subject, 'subject');
       
       const mailOptions = {
         from: { name: this.config.from.name, address: this.config.from.email },
-        to: Array.isArray(to) ? to.join(', ') : to,
-        cc: options?.cc ? (Array.isArray(options.cc) ? options.cc.join(', ') : options.cc) : undefined,
-        bcc: options?.bcc ? (Array.isArray(options.bcc) ? options.bcc.join(', ') : options.bcc) : undefined,
+        to: joinRecipients(to),
+        cc: joinRecipients(options?.cc),
+        bcc: joinRecipients(options?.bcc),
         replyTo: options?.replyTo || this.config.from.email,
         subject: template.subject,
         text: template.text,
@@ -134,11 +158,17 @@ export class EmailService {
     }
   ): Promise<boolean> {
     try {
+      assertSafeHeaderValue(to, 'to');
+      assertSafeHeaderValue(options?.cc, 'cc');
+      assertSafeHeaderValue(options?.bcc, 'bcc');
+      assertSafeHeaderValue(options?.replyTo, 'replyTo');
+      assertSafeHeaderValue(subject, 'subject');
+
       const mailOptions = {
         from: { name: this.config.from.name, address: this.config.from.email },
-        to: Array.isArray(to) ? to.join(', ') : to,
-        cc: options?.cc ? (Array.isArray(options.cc) ? options.cc.join(', ') : options.cc) : undefined,
-        bcc: options?.bcc ? (Array.isArray(options.bcc) ? options.bcc.join(', ') : options.bcc) : undefined,
+        to: joinRecipients(to),
+        cc: joinRecipients(options?.cc),
+        bcc: joinRecipients(options?.bcc),
         replyTo: options?.replyTo || this.config.from.email,
         subject,
         text: text || html.replace(/<[^>]*>/g, ''), // Strip HTML if no text provided

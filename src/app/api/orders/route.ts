@@ -15,6 +15,7 @@ import { enhancedCommissionService } from '@/lib/enhanced-commission-service';
 import { emailHelpers } from '@/lib/email';
 import { checkoutEngine } from '@/lib/checkout-engine';
 import { formatPlaceOfSupply, resolveIndianStateFromText, resolveIndianStateInfo, TECBUNNY_REGISTERED_STATE } from '@/lib/indian-tax';
+import { verifySuperadminSessionToken } from '@/lib/auth/superadmin-session';
 
 const RATE_LIMIT = 5; // 5 orders
 const RATE_WINDOW_MS = 60 * 1000; // per minute
@@ -25,23 +26,11 @@ export async function POST(request: NextRequest) {
 
     // Check superadmin session cookie first to block order placements
     const superadminCookie = request.cookies.get('superadmin-session')?.value;
-    if (superadminCookie) {
-      const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
-      const correctPassword = process.env.SUPERADMIN_PASSWORD;
-      if (correctEmail && correctPassword) {
-        const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-        const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        
-        if (superadminCookie === expectedToken) {
-          return apiError('FORBIDDEN', { 
-            correlationId, 
-            overrideMessage: '403 Forbidden - System Configuration Accounts Cannot Place Orders.' 
-          });
-        }
-      }
+    if (await verifySuperadminSessionToken(superadminCookie)) {
+      return apiError('FORBIDDEN', {
+        correlationId,
+        overrideMessage: '403 Forbidden - System Configuration Accounts Cannot Place Orders.'
+      });
     }
 
     // Support both cookie-based auth (SSR) and Authorization: Bearer token (client fetch)
@@ -52,21 +41,12 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
     const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
-    if (bearerToken) {
-      // Verify the bearer token directly with Supabase
-      const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
-      const supabaseVerifier = createSupabaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { auth: { autoRefreshToken: false, persistSession: false } }
-      );
-      const { data: { user: tokenUser } } = await supabaseVerifier.auth.getUser(bearerToken);
-      user = tokenUser;
-    }
-
-    // Fallback: cookie-based session (standard SSR path)
     const supabase = await createServerClient();
-    if (!user) {
+    
+    if (bearerToken) {
+      const { data: { user: tokenUser } } = await supabase.auth.getUser(bearerToken);
+      user = tokenUser;
+    } else {
       const { data: { user: cookieUser } } = await supabase.auth.getUser();
       user = cookieUser;
     }
@@ -78,7 +58,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Rate limit by user id
-  if (!rateLimit(user.id, 'api_orders_create', { limit: RATE_LIMIT, windowMs: RATE_WINDOW_MS })) {
+    const limitCheck = await rateLimit(user.id, RATE_LIMIT, RATE_WINDOW_MS);
+    if (!limitCheck.allowed) {
       logger.warn('orders_rate_limited', { userId: user.id });
       return apiError('RATE_LIMITED', { correlationId });
     }
@@ -93,65 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Security: Recalculate totals server-side to prevent price tampering
-    const itemIds = (orderData.items || [])
-      .map((item: any) => item.id || item.productId)
-      .filter((id: any) => typeof id === 'string' && id.length > 0);
-
-    if (itemIds.length === 0) {
-      return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: 'No valid items in order' });
-    }
-
-    const { data: dbProducts, error: productsError } = await serviceSupabase
-      .from('products')
-      .select('id, price, stock_quantity, gst_rate, gst_percentage')
-      .in('id', itemIds);
-
-    if (productsError || !dbProducts) {
-       logger.error('order_product_validation_failed', { error: productsError, itemIds });
-       return apiError('INTERNAL_ERROR', { correlationId, overrideMessage: 'Failed to validate products' });
-    }
-
-    let calculatedSubtotal = 0; // Inclusive subtotal
-    let calculatedExclusiveSubtotal = 0; // Exclusive subtotal
-    let calculatedGstAmount = 0; // Dynamic GST Amount
-    const validatedItems = [];
-
-    for (const item of (orderData.items || [])) {
-      const itemId = item.id || item.productId;
-      const dbProduct = dbProducts.find(p => p.id === itemId);
-      if (!dbProduct) {
-         return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: `Product not found: ${itemId}` });
-      }
-      
-      // Check stock
-      if ((dbProduct.stock_quantity || 0) < item.quantity) {
-         return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: `Insufficient stock for product: ${item.name}` });
-      }
-
-      const price = dbProduct.price;
-      const itemInclusiveTotal = price * item.quantity;
-      calculatedSubtotal += itemInclusiveTotal;
-
-      // GST_RATE is a fraction (e.g. 0.18), product columns store percentage (e.g. 18)
-      const gstRateRaw = dbProduct.gst_rate ?? dbProduct.gst_percentage ?? (GST_RATE * 100);
-      const gstRate = typeof gstRateRaw === 'number' ? gstRateRaw : parseFloat(gstRateRaw) || 18;
-      const itemBase = Math.round((itemInclusiveTotal / (1 + (gstRate / 100))) * 100) / 100;
-      const itemGst = Math.round((itemInclusiveTotal - itemBase) * 100) / 100;
-
-      calculatedExclusiveSubtotal += itemBase;
-      calculatedGstAmount += itemGst;
-      
-      validatedItems.push({
-        ...item,
-        id: itemId, // Ensure ID is present for stock deduction
-        price, // Enforce server price
-      });
-    }
-
-    const subtotal = calculatedExclusiveSubtotal; // Exclusive subtotal
-    const gst_amount = calculatedGstAmount; // Dynamically calculated GST
-    
-    // Security: Validate discount_amount against server-side coupon and auto-offer calculations
+    // We now rely solely on the CheckoutEngine for the final source of truth for taxes and totals
     const checkoutResult = await checkoutEngine.calculate({
       items: (orderData.items || []).map((item: any) => ({
         id: item.id || item.productId,
@@ -163,22 +86,33 @@ export async function POST(request: NextRequest) {
       salesAgentId: orderData.agent_id || undefined,
     });
 
-    const serverDiscount = checkoutResult.totalDiscount;
-    const discount_amount = Math.max(0, orderData.discount_amount || 0);
+    const serverDiscountPaise = Math.round(checkoutResult.totalDiscount * 100);
+    const clientDiscountPaise = Math.round(Math.max(0, orderData.discount_amount || 0) * 100);
 
-    if (discount_amount > serverDiscount + 1) { // 1 INR tolerance
+    if (clientDiscountPaise > serverDiscountPaise + 100) { // 100 Paise (1 INR) tolerance
       logger.warn('order_discount_tampered', {
         userId: user.id,
-        clientDiscount: discount_amount,
-        serverDiscount
+        clientDiscount: clientDiscountPaise / 100,
+        serverDiscount: serverDiscountPaise / 100
       });
       return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: 'Invalid discount amount' });
     }
 
-    const shipping_amount = Math.max(0, orderData.shipping_amount || 0);
-    
-    // Total is subtotal (inclusive) + shipping - discount
-    const total = calculatedSubtotal + shipping_amount - discount_amount;
+    const subtotal = checkoutResult.subtotal;
+    const gst_amount = checkoutResult.gstAmount;
+    const discount_amount = checkoutResult.totalDiscount;
+    const shipping_amount = 0; // Fix: calculate shipping rules definitively here instead of trusting client
+    const total = checkoutResult.finalTotal + shipping_amount;
+
+    // Re-map validated items from checkout engine for the RPC
+    const validatedItems = checkoutResult.itemPrices.map(item => ({
+      id: item.product_id,
+      productId: item.product_id,
+      quantity: item.quantity,
+      price: item.unit_price,
+      total_price: item.total_price,
+      discount_amount: item.discount_amount
+    }));
     
     const normalizeOrderType = (value: unknown): string => {
       if (typeof value !== 'string') return '';

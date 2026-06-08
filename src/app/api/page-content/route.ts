@@ -16,11 +16,11 @@ const PAGE_CONTENT_PUBLIC_SELECTS = {
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   // Use service role if available, else anon for read operations (GET)
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseServiceKey) {
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) {
     return null;
   }
-  return createClient(supabaseUrl, supabaseServiceKey);
+  return createClient(supabaseUrl, supabaseKey);
 }
 
 function isFetchFailure(err: any) {
@@ -252,12 +252,8 @@ export async function GET(request: NextRequest) {
 // Update page content (admin only)
 export async function PUT(request: NextRequest) {
   try {
-    await requireAdminContext();
+    const { serviceSupabase: supabase } = await requireAdminContext();
 
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
-    }
     const body = await request.json();
     let payload: ContentPayload;
     try {
@@ -294,12 +290,8 @@ export async function PUT(request: NextRequest) {
 // Get all page contents (admin only)
 export async function POST(request: NextRequest) {
   try {
-    await requireAdminContext();
+    const { serviceSupabase: supabase } = await requireAdminContext();
 
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
-    }
     const body = await request.json();
 
     if (body?.action === 'list_all') {
@@ -372,12 +364,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    await requireAdminContext();
+    const { serviceSupabase: supabase } = await requireAdminContext();
 
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
-    }
     const url = new URL(request.url);
     let pageKey = url.searchParams.get('key') || url.searchParams.get('pageKey');
 

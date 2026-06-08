@@ -1,90 +1,31 @@
-// Minimal HTML sanitizer to prevent XSS in trusted-but-user-editable content
-// Allows a small, safe subset of tags and attributes
-const ALLOWED_TAGS = new Set([
-  'a',
-  'b',
-  'strong',
-  'i',
-  'em',
-  'u',
-  'ul',
-  'ol',
-  'li',
-  'p',
-  'br',
-  'span',
-  'div',
-  'section',
-  'article',
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'table',
-  'thead',
-  'tbody',
-  'tr',
-  'th',
-  'td',
-  'hr',
-  'blockquote'
-]);
-const ALLOWED_ATTRS = new Set(['href', 'title', 'target', 'rel', 'class']);
+import sanitizeHtmlLib from 'sanitize-html';
 
 export function sanitizeHtml(input: string): string {
-  if (!input || typeof input !== 'string') return '';
+  if (typeof input !== 'string' || !input.trim()) return '';
 
-  // Remove script/style/iframe and event handlers
-  let out = input
-    .replace(/<\/(script|style|iframe)[^>]*>/gi, '')
-    .replace(/<(script|style|iframe)[\s\S]*?>[\s\S]*?<\/\1>/gi, '')
-    .replace(/ on[a-z]+\s*=\s*\"[^\"]*\"/gi, '')
-    .replace(/ on[a-z]+\s*=\s*'[^']*'/gi, '')
-    .replace(/ on[a-z]+\s*=\s*[^\s>]+/gi, '')
-    .replace(/javascript:\s*/gi, '')
-    .replace(/data:text\/html/gi, '');
-
-  // Strip disallowed tags but keep their inner text
-  out = out.replace(/<([\w:-]+)([^>]*)>/gi, (full: string, tagName: string, attrs: string) => {
-    const tag = String(tagName).toLowerCase();
-    if (!ALLOWED_TAGS.has(tag)) {
-      return '';
-    }
-
-    // Filter attributes
-    const safeAttrs: string[] = [];
-  attrs.replace(/([a-zA-Z:-]+)=(\"[^\"]*\"|'[^']*'|[^\s>]+)/g, (_m: string, name: string, value: string) => {
-      const n = String(name).toLowerCase();
-      if (!ALLOWED_ATTRS.has(n)) return '';
-
-      const v = String(value);
-      // Prevent js urls
-      if (/^\s*['\"]?\s*javascript:/i.test(v)) return '';
-      if (n === 'target') {
-        // force safe target behavior
-        safeAttrs.push('target="_blank" rel="noopener noreferrer"');
-      } else {
-        safeAttrs.push(`${n}=${v}`);
+  return sanitizeHtmlLib(input, {
+    allowedTags: [
+      'a', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'p', 'br',
+      'span', 'div', 'section', 'article', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'blockquote'
+    ],
+    allowedAttributes: {
+      '*': ['class', 'title'],
+      'a': ['href', 'target', 'rel']
+    },
+    transformTags: {
+      'a': (tagName, attribs) => {
+        // Enforce safe linking behavior globally
+        if (attribs.target && attribs.target.toLowerCase() === '_blank') {
+          attribs.rel = 'noopener noreferrer';
+        }
+        return {
+          tagName,
+          attribs
+        };
       }
-      return '';
-    });
-
-    return `<${tag}${safeAttrs.length ? ` ${  safeAttrs.join(' ')}` : ''}>`;
+    }
   });
-
-  // Close tags if needed is out of scope; rely on input being simple lists/links
-  const trimmed = out.trim();
-  if (trimmed.length === 0 && input.trim().length > 0) {
-    // As a fallback, escape HTML so at least text is visible
-    return input
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
-
-  return out;
 }
 
 export default sanitizeHtml;

@@ -22,7 +22,17 @@ export async function POST(request: NextRequest) {
       const supabase = await createServerClient();
       const { data: { user } } = await supabase.auth.getUser();
       userId = user?.id || null;
+      const userEmail = user?.email?.trim().toLowerCase();
+      if (!userId || !userEmail || userEmail !== to.trim().toLowerCase()) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     } catch(_ignoreErr) {}
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    if (!/^\d{6}$/.test(otp)) {
+      return NextResponse.json({ error: 'Invalid OTP format' }, { status: 400 });
+    }
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     const rateKey = userId ? `user:${userId}` : `ip:${ip}`;
     if (!rateLimit(rateKey, 'email_verification', { limit: LIMIT, windowMs: WINDOW_MS })) {

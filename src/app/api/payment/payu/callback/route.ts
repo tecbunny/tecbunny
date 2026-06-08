@@ -16,6 +16,22 @@ const supabase = createClient(
   SUPABASE_SERVICE_ROLE_KEY
 );
 
+// Simple in-memory cache for settings to reduce DB load on high-frequency callbacks
+const SETTINGS_CACHE: Record<string, { value: string, expiry: number }> = {};
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getCachedSetting(key: string): Promise<string> {
+  const cached = SETTINGS_CACHE[key];
+  if (cached && cached.expiry > Date.now()) {
+    return cached.value;
+  }
+  return '';
+}
+
+function setCachedSetting(key: string, value: string) {
+  SETTINGS_CACHE[key] = { value, expiry: Date.now() + CACHE_TTL };
+}
+
 function resolveEnvironmentPreference(envs: Array<string | null | undefined>): PayuEnvironment {
   const normalisedValues = envs
     .filter((candidate): candidate is string => typeof candidate === 'string' && candidate.trim().length > 0)
@@ -56,24 +72,37 @@ export async function POST(request: NextRequest) {
     const txnId = payload.txnid || '';
     const status = (payload.status || '').toLowerCase();
 
-    // Fetch settings from database first, fallback to env vars
-    let dbMerchantKey = '';
-    let dbMerchantSalt = '';
-    let dbEnvironment = '';
-    let dbEnabled = 'true';
-    try {
-      const { data: dbSettings } = await supabase
-        .from('settings')
-        .select('key, value')
-        .in('key', ['payu_merchant_key', 'payu_merchant_salt', 'payu_environment', 'payu_enabled']);
-      if (dbSettings) {
-        dbMerchantKey = dbSettings.find(s => s.key === 'payu_merchant_key')?.value || '';
-        dbMerchantSalt = dbSettings.find(s => s.key === 'payu_merchant_salt')?.value || '';
-        dbEnvironment = dbSettings.find(s => s.key === 'payu_environment')?.value || '';
-        dbEnabled = dbSettings.find(s => s.key === 'payu_enabled')?.value || 'true';
+    // Fetch settings with caching to reduce DB pressure
+    let dbMerchantKey = await getCachedSetting('payu_merchant_key');
+    let dbMerchantSalt = await getCachedSetting('payu_merchant_salt');
+    let dbEnvironment = await getCachedSetting('payu_environment');
+    let dbEnabled = await getCachedSetting('payu_enabled') || 'true';
+
+    if (!dbMerchantKey || !dbMerchantSalt) {
+      try {
+        const { data: dbSettings } = await supabase
+          .from('settings')
+          .select('key, value')
+          .in('key', ['payu_merchant_key', 'payu_merchant_salt', 'payu_environment', 'payu_enabled']);
+        if (dbSettings) {
+          const k = dbSettings.find(s => s.key === 'payu_merchant_key')?.value || '';
+          const s = dbSettings.find(s => s.key === 'payu_merchant_salt')?.value || '';
+          const e = dbSettings.find(s => s.key === 'payu_environment')?.value || '';
+          const en = dbSettings.find(s => s.key === 'payu_enabled')?.value || 'true';
+          
+          if (k) setCachedSetting('payu_merchant_key', k);
+          if (s) setCachedSetting('payu_merchant_salt', s);
+          if (e) setCachedSetting('payu_environment', e);
+          setCachedSetting('payu_enabled', en);
+          
+          dbMerchantKey = k;
+          dbMerchantSalt = s;
+          dbEnvironment = e;
+          dbEnabled = en;
+        }
+      } catch (err) {
+        logger.error('Failed to load PayU settings from DB', { error: err, correlationId });
       }
-    } catch (err) {
-      logger.error('Failed to load PayU settings from DB', { error: err, correlationId });
     }
 
     const payuConfig = {
@@ -149,29 +178,6 @@ export async function POST(request: NextRequest) {
     // STRICT PAYMENT CHECK: Terminate immediately if hash verification fails to prevent spoofing
     if (!isHashValid) {
       logger.error('payu_callback.signature_verification_failed', { correlationId, orderId, txnId });
-      
-      // Update transaction ledger with warning details
-      await supabase
-        .from('payment_transactions')
-        .upsert({
-          order_id: orderId || null,
-          transaction_id: txnId || crypto.randomUUID(),
-          payment_method: 'payu',
-          status: 'failed',
-          gateway_response: { ...payload, hash_verified: false, security_alert: 'Signature validation failed (possible tampering).' },
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'transaction_id' });
-
-      if (orderId) {
-        await supabase
-          .from('orders')
-          .update({
-            payment_status: 'Payment Failed',
-            notes: 'PayU webhook failed cryptographic hash check.',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', orderId);
-      }
 
       const failureUrl = new URL(`/payment/failed`, siteUrl);
       failureUrl.searchParams.set('orderId', orderId);
@@ -180,10 +186,52 @@ export async function POST(request: NextRequest) {
     }
 
     const isSuccess = isGatewayReportedSuccess;
+    const amountNumber = Number(payload.amount);
+
+    if (!orderId || !txnId || !Number.isFinite(amountNumber) || amountNumber <= 0) {
+      logger.warn('payu_callback.missing_or_invalid_reference', { correlationId, orderId, txnId, amount: payload.amount });
+      const fallbackUrl = new URL(`/payment/failed`, siteUrl);
+      fallbackUrl.searchParams.set('reason', 'Invalid payment reference.');
+      return NextResponse.redirect(fallbackUrl, 303);
+    }
+
+    const { data: existingTxn, error: existingTxnError } = await supabase
+      .from('payment_transactions')
+      .select('order_id, amount, status')
+      .eq('transaction_id', txnId)
+      .maybeSingle();
+
+    if (existingTxnError || !existingTxn) {
+      logger.warn('payu_callback.unknown_transaction', { correlationId, orderId, txnId, error: existingTxnError?.message });
+      const failureUrl = new URL(`/payment/failed`, siteUrl);
+      failureUrl.searchParams.set('orderId', orderId);
+      failureUrl.searchParams.set('reason', 'Unknown payment transaction.');
+      return NextResponse.redirect(failureUrl, 303);
+    }
+
+    const expectedAmount = Number(existingTxn.amount);
+    if (
+      existingTxn.order_id !== orderId ||
+      !Number.isFinite(expectedAmount) ||
+      Math.abs(expectedAmount - amountNumber) > 0.01
+    ) {
+      logger.error('payu_callback.transaction_mismatch', {
+        correlationId,
+        orderId,
+        txnId,
+        expectedOrderId: existingTxn.order_id,
+        expectedAmount,
+        receivedAmount: amountNumber,
+      });
+      const failureUrl = new URL(`/payment/failed`, siteUrl);
+      failureUrl.searchParams.set('orderId', orderId);
+      failureUrl.searchParams.set('reason', 'Payment transaction mismatch.');
+      return NextResponse.redirect(failureUrl, 303);
+    }
 
     const transactionUpsert = {
-      order_id: orderId || null,
-      transaction_id: txnId || crypto.randomUUID(),
+      order_id: orderId,
+      transaction_id: txnId,
       payment_method: 'payu',
       status: isSuccess ? 'success' : 'failed',
       gateway_response: { ...payload, hash_verified: true },

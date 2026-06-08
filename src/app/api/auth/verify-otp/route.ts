@@ -65,12 +65,19 @@ export async function POST(request: NextRequest) {
     return apiError('RATE_LIMITED', { overrideMessage: 'Too many OTP verification attempts for this account. Please try again later.', correlationId });
   }
 
-  // Debug: log incoming body in development for easier tracing
+  // Debug: log non-sensitive request shape in development for easier tracing.
   if (process.env.NODE_ENV !== 'production') {
-    logger.debug('verify_otp_incoming', { correlationId, body, normalizedEmail, normalizedMobile });
+    logger.debug('verify_otp_incoming', {
+      correlationId,
+      normalizedEmail,
+      normalizedMobile,
+      type,
+      hasOtp: typeof otp === 'string',
+      hasOtpId: typeof rawOtpId === 'string',
+    });
   }
-  if (typeof otp !== 'string' || otp.length !== 4 || !/^\d{4}$/.test(otp)) {
-    return apiError('VALIDATION_ERROR', { overrideMessage: 'Valid 4-digit OTP is required', correlationId });
+  if (typeof otp !== 'string' || !/^\d{6}$/.test(otp)) {
+    return apiError('VALIDATION_ERROR', { overrideMessage: 'Valid 6-digit OTP is required', correlationId });
   }
   if (!['signup', 'recovery'].includes(type)) {
     return apiError('VALIDATION_ERROR', { overrideMessage: 'Invalid OTP type. Must be either "signup" or "recovery"', correlationId });

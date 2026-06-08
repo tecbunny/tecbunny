@@ -57,11 +57,10 @@ export async function requireRole(minRole: UserRole) {
     return { error: 'Forbidden', status: 403 } as const;
   }
 
-  const service = createServiceClient();
-
   // Opportunistically synchronize app_metadata.role so future checks are fast
   if (isSupabaseServiceConfigured && role !== metadataRole) {
     try {
+      const service = createServiceClient();
       await service.auth.admin.updateUserById(user.id, {
         app_metadata: { ...(user.app_metadata || {}), role }
       });
@@ -76,6 +75,7 @@ export async function requireRole(minRole: UserRole) {
   // Ensure profiles table reflects authoritative role for downstream RLS checks
   if (isSupabaseServiceConfigured) {
     try {
+      const service = createServiceClient();
       if (profileExists) {
         if (profileRole && profileRole !== role) {
           await service
@@ -106,5 +106,6 @@ export async function requireRole(minRole: UserRole) {
     }
   }
 
+  const service = isSupabaseServiceConfigured ? createServiceClient() : null;
   return { user, role, supabase, service } as const;
 }

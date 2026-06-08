@@ -5,11 +5,7 @@ import { rateLimit } from '@/lib/rate-limit';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.local';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';
 
-const supabaseAdmin = createClient(
-  SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+const getSupabaseAdmin = () => createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
 
 function getClientIp(request: NextRequest) {
   return request.headers.get('cf-connecting-ip')?.trim()
@@ -37,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Edge Environment Protection: Block setup if any admin already exists
-    const { data: existingAdmins, error: adminCheckError } = await supabaseAdmin
+    const { data: existingAdmins, error: adminCheckError } = await getSupabaseAdmin()
       .from('profiles')
       .select('id')
       .in('role', ['admin'])
@@ -76,7 +72,7 @@ export async function POST(request: NextRequest) {
       const { email, password, name, mobile, role } = userData;
 
       // Check if user already exists
-      const { data: existingProfile } = await supabaseAdmin
+      const { data: existingProfile } = await getSupabaseAdmin()
         .from('profiles')
         .select('id, email, role')
         .eq('email', email)
@@ -87,7 +83,7 @@ export async function POST(request: NextRequest) {
       if (existingProfile?.id) {
         // Update existing user
         userId = existingProfile.id;
-        await supabaseAdmin.auth.admin.updateUserById(userId, {
+        await getSupabaseAdmin().auth.admin.updateUserById(userId, {
           password,
           email_confirm: true,
           app_metadata: { role },
@@ -95,7 +91,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Update profile
-        await supabaseAdmin
+        await getSupabaseAdmin()
           .from('profiles')
           .update({
             name,
@@ -107,7 +103,7 @@ export async function POST(request: NextRequest) {
           .eq('id', userId);
       } else {
         // Create new user
-        const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+        const { data: created, error: createErr } = await getSupabaseAdmin().auth.admin.createUser({
           email,
           password,
           email_confirm: true,
@@ -123,7 +119,7 @@ export async function POST(request: NextRequest) {
         userId = created.user.id;
 
         // Create profile
-        await supabaseAdmin
+        await getSupabaseAdmin()
           .from('profiles')
           .upsert({
             id: userId,

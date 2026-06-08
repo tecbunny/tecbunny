@@ -67,16 +67,16 @@ export class CheckoutEngine {
       const itemPrices = [];
       let grossSubtotal = 0; // Sum of item price * quantity before discounts and GST
 
-      // Retrieve verified pricing source of truth from database to prevent client-side price manipulation
+      // Retrieve verified pricing and stock source of truth from database
       const productIds = items.map(item => item.id);
       const supabase = await pricingService['getSupabaseClient']();
       const { data: dbProducts, error: dbError } = await supabase
         .from('products')
-        .select('id, price, mrp, status, is_deleted, gstRate, gst_rate, offer_price')
+        .select('id, title, price, mrp, status, is_deleted, gstRate, gst_rate, offer_price, stock_quantity')
         .in('id', productIds);
       
       if (dbError || !dbProducts) {
-        logger.error('Failed to fetch pricing product metadata from database', { dbError });
+        logger.error('Failed to fetch pricing and stock metadata from database', { dbError });
         throw new Error('Verification of product prices failed. Please try again.');
       }
 
@@ -88,6 +88,13 @@ export class CheckoutEngine {
         if (!dbProduct || dbProduct.is_deleted || dbProduct.status !== 'active') {
           throw new Error(`Product ${item.id} is invalid or no longer available.`);
         }
+        
+        // Stock verification
+        const availableStock = dbProduct.stock_quantity ?? 0;
+        if (item.quantity > availableStock) {
+          throw new Error(`Insufficient stock for "${dbProduct.title || item.id}". Only ${availableStock} units available.`);
+        }
+
         return {
           product: {
             ...item,
@@ -142,7 +149,7 @@ export class CheckoutEngine {
       // Distribute total discount proportionally across all items down to the exact paisa (2 decimal places)
       const distributedDiscounts = (() => {
         const totalGross = itemsToDistribute.reduce((sum, item) => sum + item.gross, 0);
-        if (totalGross === 0 || totalDiscountApplied === 0) return itemsToDistribute.map(() => 0);
+        if (totalGross <= 0 || totalDiscountApplied === 0) return itemsToDistribute.map(() => 0);
 
         const totalDiscountPaise = toPaise(totalDiscountApplied);
         const rawShares = itemsToDistribute.map((item, index) => {
@@ -239,6 +246,9 @@ export class CheckoutEngine {
       };
 
     } catch (error) {
+      if (error instanceof Error && (error.message.includes('Insufficient stock') || error.message.includes('invalid or no longer'))) {
+        throw error;
+      }
       logger.error('Checkout Engine Calculation Failed', { error });
       throw new Error('Checkout engine calculation failed due to internal execution errors.');
     }

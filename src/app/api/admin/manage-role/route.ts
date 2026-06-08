@@ -8,11 +8,7 @@ import { logger } from '@/lib/logger';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.local';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-role-key';
 
-const supabaseAdmin = createClient(
-  SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+const getSupabaseAdmin = () => createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
 
 function isAuthorized(req: NextRequest) {
   const token = req.headers.get('x-admin-token');
@@ -46,7 +42,7 @@ export async function POST(request: NextRequest) {
     const { userId, action } = parsed.data;
 
     // 1) Verify user exists in profiles
-    const { data: profile, error: profileError } = await supabaseAdmin
+    const { data: profile, error: profileError } = await getSupabaseAdmin()
       .from('profiles')
       .select('id, role')
       .eq('id', userId)
@@ -58,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     const newRole = action === 'promote' ? 'admin' : 'customer';
 
-    const { data: authUserData, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const { data: authUserData, error: authUserError } = await getSupabaseAdmin().auth.admin.getUserById(userId);
     if (authUserError) {
       logger.error('admin_role_change_auth_user_fetch_failed', {
         userId,
@@ -68,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2) Update profile role
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await getSupabaseAdmin()
       .from('profiles')
       .update({ 
         role: newRole,
@@ -81,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log the role alteration to security audit log
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from('security_audit_log')
       .insert({
         event_type: 'role_alteration',
@@ -96,7 +92,7 @@ export async function POST(request: NextRequest) {
       });
     
     // 3) Keep server-controlled auth app metadata in sync.
-    const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    const { error: authUpdateError } = await getSupabaseAdmin().auth.admin.updateUserById(userId, {
       app_metadata: {
         ...(authUserData.user?.app_metadata ?? {}),
         role: newRole,
@@ -104,7 +100,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (authUpdateError) {
-      await supabaseAdmin
+      await getSupabaseAdmin()
         .from('profiles')
         .update({
           role: profile.role,

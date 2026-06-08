@@ -4,6 +4,7 @@ import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { normalizeRole as normalizeKnownRole, type UserRole } from '../roles';
 import { createClient as createServerClient, createServiceClient, isSupabaseServiceConfigured } from '../supabase/server';
 import { logger } from '../logger';
+import { verifySuperadminSessionToken } from './superadmin-session';
 
 const ROLE_KEYS = ['role', 'default_role', 'app_role', 'user_role'] as const;
 const ROLE_ARRAY_KEYS = ['roles', 'app_roles'] as const;
@@ -96,19 +97,8 @@ export const getEffectiveUserRole = async (user: SupabaseUser | null): Promise<U
 
 const verifySuperadminRequest = async (request: NextRequest): Promise<Session | null> => {
   const superadminCookie = request.cookies.get('superadmin-session')?.value;
-  if (!superadminCookie) return null;
-
-  const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
-  const correctPassword = process.env.SUPERADMIN_PASSWORD;
-  if (!correctEmail || !correctPassword) return null;
-
-  const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-  const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-  if (superadminCookie !== expectedToken) return null;
+  const payload = await verifySuperadminSessionToken(superadminCookie);
+  if (!payload) return null;
 
   return {
     access_token: superadminCookie,
@@ -117,7 +107,7 @@ const verifySuperadminRequest = async (request: NextRequest): Promise<Session | 
     token_type: 'bearer',
     user: {
       id: 'superadmin-root-id',
-      email: correctEmail,
+      email: payload.email,
       app_metadata: { role: 'superadmin' },
       user_metadata: {},
       aud: 'authenticated',

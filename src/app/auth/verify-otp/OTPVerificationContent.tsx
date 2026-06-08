@@ -147,7 +147,7 @@ export function OTPVerificationContent() {
 
   // Debug button state
   useEffect(() => {
-    const buttonDisabled = isLoading || otp.length !== 4 || verified;
+    const buttonDisabled = isLoading || otp.length !== 6 || verified;
     logger.debug('Button state update:', {
       isLoading,
       otpLength: otp.length,
@@ -174,9 +174,9 @@ export function OTPVerificationContent() {
       verified
     });
     
-    if (!otp || otp.length !== 4) {
+    if (!otp || otp.length !== 6) {
       logger.warn('Invalid OTP length');
-      toast.error('Please enter a valid 4-digit OTP');
+      toast.error('Please enter a valid 6-digit OTP');
       return;
     }
 
@@ -517,19 +517,19 @@ export function OTPVerificationContent() {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={4}
+              maxLength={6}
               required
               className="appearance-none relative block w-full px-3 py-2 border border-white/10 bg-white/5 placeholder:text-slate-500 text-slate-100 rounded-md focus:outline-none focus:ring-cyan-400 focus:border-cyan-400 focus:z-10 sm:text-sm text-center text-lg tracking-widest"
-              placeholder="0000"
+              placeholder="000000"
               value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
               autoComplete="one-time-code"
             />
           </div>
           <div>
             <button
               type="submit"
-              disabled={isLoading || otp.length !== 4 || verified}
+              disabled={isLoading || otp.length !== 6 || verified}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (

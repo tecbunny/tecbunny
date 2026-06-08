@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { User as CustomUser, UserRole } from './types';
 import { logger } from './logger';
 import { ROLE_HIERARCHY as roleHierarchy, EFFECTIVE_PERMISSIONS, isAtLeast, normalizeRole } from './roles';
+import { verifySuperadminSessionToken } from './auth/superadmin-session';
 
 /**
  * Validates the Edge Superadmin session cookie.
@@ -14,19 +15,7 @@ export async function isSuperadminSession(): Promise<boolean> {
   try {
     const cookieStore = await cookies();
     const superadminCookie = cookieStore.get('superadmin-session')?.value;
-    if (!superadminCookie) return false;
-
-    const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
-    const correctPassword = process.env.SUPERADMIN_PASSWORD;
-    if (!correctEmail || !correctPassword) return false;
-
-    const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-    const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-    return superadminCookie === expectedToken;
+    return Boolean(await verifySuperadminSessionToken(superadminCookie));
   } catch (error) {
     console.error('Error verifying superadmin session on server:', error);
     return false;
@@ -46,20 +35,25 @@ async function getUserRole(user: SupabaseUser | null): Promise<UserRole | null> 
 
   if (!user) return null;
 
-  // First check app_metadata (secure, admin-only editable)
+  // app_metadata is the secure source of truth (set via service_role/admin only)
   let metadataRole = normalizeRole(user.app_metadata?.role) as UserRole | null;
-  if (user.id !== 'superadmin-root-id' && ((metadataRole as string) === 'superadmin' || (metadataRole as string) === 'super-admin' || (metadataRole as string) === 'super admin')) {
+  
+  // Security check: only the root superadmin ID can have the superadmin role via metadata
+  // All other users claiming superadmin/admin via metadata are downgraded to customer if not verified
+  const STAFF_ROLES: UserRole[] = ['admin', 'manager', 'accounts', 'sales', 'sales-staff', 'sales-external', 'service_engineer'];
+  
+  if (metadataRole === 'superadmin' && user.id !== process.env.SUPERADMIN_ROOT_ID) {
+    logger.warn('Unauthorized superadmin claim detected in metadata', { userId: user.id });
     metadataRole = 'customer';
   }
+
   if (metadataRole) {
     return metadataRole;
   }
 
-  // Fallback: This function can be called from different server-side contexts,
-  // so we create a new Supabase client each time.
+  // Fallback to profiles table for customer categories or if metadata is missing
   const supabase = await createClient();
   
-  // In this project, user profile data including the role is in the 'profiles' table.
   const { data, error } = await supabase
     .from('profiles')
     .select('role')
@@ -67,19 +61,23 @@ async function getUserRole(user: SupabaseUser | null): Promise<UserRole | null> 
     .single();
 
   if (error) {
-    // It's common for a profile to not exist immediately after signup,
-    // so we don't want to flood logs with "not found" errors.
     if (error.code !== 'PGRST116') {
-      logger.error('Error fetching user role', { message: error.message, code: error.code });
+      logger.error('Error fetching user role from DB', { message: error.message, code: error.code });
     }
-    return null;
+    return 'customer'; // Default to lowest privilege
   }
 
   let dbRole = normalizeRole(data?.role) as UserRole | null;
-  if (user.id !== 'superadmin-root-id' && ((dbRole as string) === 'superadmin' || (dbRole as string) === 'super-admin' || (dbRole as string) === 'super admin')) {
-    dbRole = 'customer';
+  
+  // STRICT SECURITY: Do NOT allow staff roles to be set via profiles table 
+  // unless we are absolutely sure the profiles table is protected by RLS.
+  // We assume only 'customer' roles should be in the profiles table.
+  if (dbRole && dbRole !== 'customer') {
+    logger.warn('Staff role detected in profiles table; ignoring for security', { userId: user.id, role: dbRole });
+    return 'customer';
   }
-  return dbRole;
+
+  return dbRole || 'customer';
 }
 
 // Check if user has a specific role or higher

@@ -125,11 +125,18 @@ function applyMagneticEffect(event: React.MouseEvent<HTMLElement>) {
   const rect = target.getBoundingClientRect();
   const x = event.clientX - rect.left - rect.width / 2;
   const y = event.clientY - rect.top - rect.height / 2;
-  target.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px)`;
+  
+  // Use CSS variables to avoid direct DOM manipulation that conflicts with React's virtual DOM
+  target.style.setProperty('--m-x', `${x * 0.15}px`);
+  target.style.setProperty('--m-y', `${y * 0.15}px`);
+  target.style.transform = 'translate(var(--m-x, 0px), var(--m-y, 0px))';
 }
 
 function resetMagneticEffect(event: React.MouseEvent<HTMLElement>) {
-  event.currentTarget.style.transform = 'translate(0px, 0px)';
+  const target = event.currentTarget;
+  target.style.setProperty('--m-x', '0px');
+  target.style.setProperty('--m-y', '0px');
+  target.style.transform = 'translate(0px, 0px)';
 }
 
 function scheduleWhenIdle(callback: () => void, timeout = 1600) {

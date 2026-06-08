@@ -23,11 +23,7 @@ export const isSupabaseServiceConfigured = missingVars([
 export function requireSupabasePublicEnv() {
   const missing = missingVars(['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY']);
   if (missing.length) {
-    warnOnce('[supabase] Public client env missing', { required: missing });
-    return {
-      url: (process.env.NEXT_PUBLIC_SUPABASE_URL as string) || 'https://placeholder.supabase.co',
-      anonKey: (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string) || 'placeholder-anon-key',
-    };
+    throw new Error(`[supabase] Public client env missing: ${missing.join(', ')}`);
   }
   return {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -38,11 +34,7 @@ export function requireSupabasePublicEnv() {
 export function requireSupabaseServiceEnv() {
   const missing = missingVars(['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']);
   if (missing.length) {
-    warnOnce('[supabase] Service client env missing', { required: missing });
-    return {
-      url: (process.env.NEXT_PUBLIC_SUPABASE_URL as string) || 'https://placeholder.supabase.co',
-      serviceKey: (process.env.SUPABASE_SERVICE_ROLE_KEY as string) || 'placeholder-service-key',
-    };
+    throw new Error(`[supabase] Service client env missing: ${missing.join(', ')}`);
   }
   return {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL as string,

@@ -26,7 +26,7 @@ export async function LEGACY_GET(request: NextRequest) {
     }
 
     // Get users with profiles using admin client
-    const { data: { users }, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: { users }, error: authError } = await getSupabaseAdmin().auth.admin.listUsers();
     
     if (authError) {
       console.error('Error fetching auth users:', authError);
@@ -34,7 +34,7 @@ export async function LEGACY_GET(request: NextRequest) {
     }
 
     // Get profiles for all users
-    const { data: profiles, error: profilesError } = await supabaseAdmin
+    const { data: profiles, error: profilesError } = await getSupabaseAdmin()
       .from('profiles')
       .select('*');
 
@@ -99,7 +99,7 @@ export async function LEGACY_POST(request: NextRequest) {
     }
 
     // Create user with admin client
-    const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: userData, error: createError } = await getSupabaseAdmin().auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -118,7 +118,7 @@ export async function LEGACY_POST(request: NextRequest) {
 
     // Create profile
     if (userData.user) {
-      const { error: profileError } = await supabaseAdmin
+      const { error: profileError } = await getSupabaseAdmin()
         .from('profiles')
         .insert({
           id: userData.user.id,
@@ -135,7 +135,7 @@ export async function LEGACY_POST(request: NextRequest) {
         // Check if it's a duplicate key error
         if (profileError.message.includes('duplicate key') || profileError.code === '23505') {
           // Profile might already exist, try to update instead
-          const { error: updateError } = await supabaseAdmin
+          const { error: updateError } = await getSupabaseAdmin()
             .from('profiles')
             .update({
               name,
@@ -147,14 +147,14 @@ export async function LEGACY_POST(request: NextRequest) {
           
           if (updateError) {
             console.error('Error updating existing profile:', updateError);
-            await supabaseAdmin.auth.admin.deleteUser(userData.user.id);
+            await getSupabaseAdmin().auth.admin.deleteUser(userData.user.id);
             return NextResponse.json({ 
               error: `Failed to update user profile: ${updateError.message}` 
             }, { status: 500 });
           }
         } else {
           // Try to clean up the auth user if profile creation failed
-          await supabaseAdmin.auth.admin.deleteUser(userData.user.id);
+          await getSupabaseAdmin().auth.admin.deleteUser(userData.user.id);
           return NextResponse.json({ 
             error: `Failed to create user profile: ${profileError.message}` 
           }, { status: 500 });

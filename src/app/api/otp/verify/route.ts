@@ -4,8 +4,10 @@ import { OTPManager, type OTPVerification } from '@/lib/otp-manager';
 import { logger } from '@/lib/logger';
 import { createServiceClient, isSupabaseServiceConfigured , createClient } from '@/lib/supabase/server';
 import { requireApiRole } from '@/lib/server-role-guard';
+import { rateLimit } from '@/lib/rate-limit';
 
 const otpManager = new OTPManager();
+const VERIFY_RATE_LIMIT = { limit: 5, windowMs: 15 * 60 * 1000 };
 
 /**
  * Verify OTP with multi-channel support and automatic fallback handling
@@ -13,6 +15,10 @@ const otpManager = new OTPManager();
  */
 export async function POST(request: NextRequest) {
   try {
+    const clientIp = request.headers.get('cf-connecting-ip') || 
+                     request.headers.get('x-forwarded-for')?.split(',')[0] || 
+                     'unknown';
+
     const access = await requireApiRole();
     if ('error' in access) {
       return access.error;
@@ -23,6 +29,17 @@ export async function POST(request: NextRequest) {
 
     const reqCode = code || otp;
     const reqPhone = customerPhone;
+
+    // Rate limit OTP verification attempts to prevent brute-force
+    const rateLimitKey = `otp_verify_${clientIp}_${otpId || orderId || reqPhone}`;
+    const rl = await rateLimit(rateLimitKey, VERIFY_RATE_LIMIT.limit, VERIFY_RATE_LIMIT.windowMs);
+    if (!rl.allowed) {
+      logger.warn('otp_verify_rate_limited', { clientIp, otpId, orderId });
+      return NextResponse.json(
+        { error: 'Too many verification attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
 
     // Prefer service client for RLS bypass when looking up OTP/Order data
     const serviceSupabase = isSupabaseServiceConfigured ? createServiceClient() : await createClient();
@@ -132,9 +149,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!/^\d{4}$/.test(finalCode)) {
+    if (!/^\d{6}$/.test(finalCode)) {
       return NextResponse.json(
-        { error: 'OTP code must be 4 digits' },
+        { error: 'OTP code must be 6 digits' },
         { status: 400 }
       );
     }

@@ -108,7 +108,8 @@ export class EnhancedCommissionService {
       let totalCommission = 0;
       const breakdown: CommissionBreakdown[] = [];
 
-      // Calculate commission for each item
+      // Calculate commission for each item using integer-based math (paisa)
+      let totalCommissionPaise = 0;
       for (const item of orderItems) {
         const itemCommission = await this.calculateItemCommission(
           item,
@@ -116,7 +117,7 @@ export class EnhancedCommissionService {
           preTaxAmount
         );
 
-        totalCommission += itemCommission.commission_amount;
+        totalCommissionPaise += Math.round(itemCommission.commission_amount * 100);
         breakdown.push(itemCommission);
       }
 
@@ -133,7 +134,7 @@ export class EnhancedCommissionService {
         pre_tax_amount: preTaxAmount,
         gst_amount: gstAmount,
         commission_rate: finalCommissionRate,
-        commission_amount: Math.round(totalCommission * 100) / 100,
+        commission_amount: totalCommissionPaise / 100,
         breakdown
       };
 

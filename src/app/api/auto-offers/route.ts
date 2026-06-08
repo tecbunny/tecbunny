@@ -4,17 +4,18 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'service-role-placeholder';
-const isServiceConfigured = Boolean(
-  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const isServiceConfigured = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 
 const isPublicConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 function getSupabaseAdmin() {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase admin environment variables are not configured');
+  }
   return createAdminClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 }
 

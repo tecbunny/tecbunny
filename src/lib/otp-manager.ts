@@ -1,7 +1,8 @@
-import { randomBytes, randomUUID } from 'crypto';
+import { randomBytes, randomUUID, randomInt, createHash } from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
 import { logger } from './logger';
+import { getRedis } from './redis';
 import { sendInfobipWhatsAppOtp } from './infobip/infobip-whatsapp-otp';
 import improvedEmailService from './improved-email-service';
 
@@ -95,6 +96,36 @@ interface InMemoryOTPRecord {
 const inMemoryOTPStore = new Map<string, InMemoryOTPRecord>();
 const legacyOtpStorage = new Map<string, { otp: string, type: string, expires: number, used: boolean }>();
 
+/**
+ * Distributed OTP fallback using Redis when Supabase is not available
+ */
+async function setDistributedOTP(id: string, record: InMemoryOTPRecord) {
+  try {
+    const redis = getRedis();
+    if (redis) {
+      await redis.set(`otp_verification:${id}`, JSON.stringify(record), 'EX', 600); // 10 min TTL
+    } else {
+      inMemoryOTPStore.set(id, record);
+    }
+  } catch (err) {
+    logger.error('Failed to set distributed OTP', { error: err });
+    inMemoryOTPStore.set(id, record);
+  }
+}
+
+async function getDistributedOTP(id: string): Promise<InMemoryOTPRecord | undefined> {
+  try {
+    const redis = getRedis();
+    if (redis) {
+      const data = await redis.get(`otp_verification:${id}`);
+      if (data) return JSON.parse(data) as InMemoryOTPRecord;
+    }
+  } catch (err) {
+    logger.error('Failed to get distributed OTP', { error: err });
+  }
+  return inMemoryOTPStore.get(id);
+}
+
 type ChannelSendSuccess = {
   success: true;
   provider: string;
@@ -117,33 +148,26 @@ export class OTPManager {
     });
   }
 
-  // Generate a secure 4-digit OTP code
+  // Generate a secure 6-digit OTP code using CSPRNG
   generateOTPCode(): string {
-    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
-      try {
-        const array = new Uint32Array(1);
-        window.crypto.getRandomValues(array);
-        const value = array[0];
-        if (value !== undefined) {
-          return (1000 + (value % 9000)).toString();
-        }
-      } catch (error) {
-        logger.warn('Browser crypto entropy failed; falling back to Node.js crypto', { error });
-      }
+    try {
+      return randomInt(100000, 999999).toString();
+    } catch (error) {
+      logger.error('Failed to generate secure OTP code', { error });
+      // Fallback to randomBytes if randomInt fails
+      const bytes = randomBytes(4);
+      const num = bytes.readUInt32BE(0);
+      return (100000 + (num % 900000)).toString();
     }
+  }
 
-    if (typeof randomBytes !== 'undefined') {
-      try {
-        const bytes = randomBytes(4);
-        const num = bytes.readUInt32BE(0);
-        return (1000 + (num % 9000)).toString();
-      } catch (error) {
-        logger.warn('Node crypto failed; falling back to Math.random', { error });
-        return Math.floor(1000 + Math.random() * 9000).toString();
-      }
-    } else {
-      return Math.floor(1000 + Math.random() * 9000).toString();
+  // Hash OTP code for secure storage with salt and internal pepper to prevent pre-computation
+  private hashOTP(code: string, salt: string = 'tecbunny_static_salt'): string {
+    const pepper = process.env.OTP_SECRET_PEPPER;
+    if (!pepper) {
+      throw new Error('CRITICAL: OTP_SECRET_PEPPER is not configured in the environment.');
     }
+    return createHash('sha256').update(code + salt + pepper).digest('hex');
   }
 
   private async sendEmailOTP(email: string, code: string, purpose: string): Promise<ChannelSendSuccess> {
@@ -208,14 +232,13 @@ export class OTPManager {
         else throw new Error('No contact method available');
       }
 
-      const supabaseClient = supabase;
-      let otpId: string;
+      let finalOtpId: string;
 
-      if (supabaseClient) {
-        const { data, error } = await supabaseClient
+      if (supabase) {
+        const { data, error } = await supabase
           .from('otp_verifications')
           .insert([{
-            code,
+            code: 'REPLACEME', // Placeholder
             phone: request.phone,
             email: request.email,
             purpose: request.purpose,
@@ -231,11 +254,16 @@ export class OTPManager {
           }])
           .select().single();
         if (error) throw new Error(error.message);
-        otpId = data.id;
+        finalOtpId = data.id;
+        
+        // Update with salt derived from real ID
+        const realHashedCode = this.hashOTP(code, finalOtpId);
+        await supabase.from('otp_verifications').update({ code: realHashedCode }).eq('id', finalOtpId);
       } else {
-        otpId = randomUUID();
-        inMemoryOTPStore.set(otpId, {
-          id: otpId, code, phone: request.phone, email: request.email, purpose: request.purpose,
+        finalOtpId = randomUUID();
+        const realHashedCode = this.hashOTP(code, finalOtpId);
+        await setDistributedOTP(finalOtpId, {
+          id: finalOtpId, code: realHashedCode, phone: request.phone, email: request.email, purpose: request.purpose,
           channel: preferredChannel, attempts: 0, max_attempts: 3, verified: false,
           expires_at: expiresAt.toISOString(), user_id: request.userId, order_id: request.orderId,
           fallback_channels: [], created_at: new Date().toISOString()
@@ -249,13 +277,12 @@ export class OTPManager {
 
       return {
         success: true,
-        otpId,
+        otpId: finalOtpId,
         channel: preferredChannel,
         message: `Sent via ${preferredChannel}`,
         fallbackAvailable: false,
         provider: primaryResult.provider,
-        providerMessageId: primaryResult.providerMessageId,
-        providerResponse: primaryResult.raw
+        providerMessageId: primaryResult.providerMessageId
       };
     } catch (error) {
       return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };
@@ -269,10 +296,11 @@ export class OTPManager {
     if (typeof arg1 === 'object' && arg1 !== null) {
       // New verification path (OTPVerification)
       const verification = arg1 as OTPVerification;
+      const hashedInput = this.hashOTP(verification.code, verification.otpId); // Use ID as dynamic salt
+
       try {
-        const supabaseClient = supabase;
-        if (!supabaseClient) {
-          const otpRecord = inMemoryOTPStore.get(verification.otpId);
+        if (!supabase) {
+          const otpRecord = await getDistributedOTP(verification.otpId);
           if (!otpRecord) return { success: false, message: 'Invalid OTP ID' };
           if (new Date(otpRecord.expires_at) < new Date()) return { success: false, message: 'OTP has expired' };
           if (otpRecord.verified) return { success: false, message: 'OTP already used' };
@@ -281,24 +309,24 @@ export class OTPManager {
             return { success: false, message: 'Maximum verification attempts exceeded.', canRetry: false };
           }
 
-          if (otpRecord.code !== verification.code) {
+          if (otpRecord.code !== hashedInput) {
             const newAttempts = otpRecord.attempts + 1;
             otpRecord.attempts = newAttempts;
-            inMemoryOTPStore.set(verification.otpId, otpRecord);
+            await setDistributedOTP(verification.otpId, otpRecord);
             return { success: false, message: `Invalid OTP. ${otpRecord.max_attempts - newAttempts} attempts remaining.`, canRetry: true };
           }
 
           otpRecord.verified = true;
           otpRecord.verified_at = new Date().toISOString();
-          inMemoryOTPStore.set(verification.otpId, otpRecord);
+          await setDistributedOTP(verification.otpId, otpRecord);
           return { success: true, message: 'OTP verified successfully' };
         }
 
-        const { data: updatedRecord, error: updateError } = await supabaseClient
+        const { data: updatedRecord, error: updateError } = await supabase
           .from('otp_verifications')
           .update({ verified: true, verified_at: new Date().toISOString() })
           .eq('id', verification.otpId)
-          .eq('code', verification.code)
+          .eq('code', hashedInput)
           .eq('verified', false)
           .gt('expires_at', new Date().toISOString())
           .lt('attempts', 3)
@@ -306,7 +334,7 @@ export class OTPManager {
 
         if (updateError || !updatedRecord || updatedRecord.length === 0) {
           // Atomic update failed. Find out why and increment attempts if applicable.
-          const { data: otpRecord } = await supabaseClient
+          const { data: otpRecord } = await supabase
             .from('otp_verifications')
             .select('*')
             .eq('id', verification.otpId)
@@ -320,7 +348,7 @@ export class OTPManager {
           }
           
           const newAttempts = otpRecord.attempts + 1;
-          await supabaseClient
+          await supabase
             .from('otp_verifications')
             .update({ attempts: newAttempts, last_attempt_at: new Date().toISOString() })
             .eq('id', verification.otpId);
@@ -342,6 +370,11 @@ export class OTPManager {
       const type = arg3 || 'signup';
 
       const normalizedEmail = email.trim().toLowerCase();
+      if (!/^\d{4,6}$/.test(otp || '')) {
+        return { success: false, message: 'Invalid or expired OTP' };
+      }
+      
+      const hashedInput = this.hashOTP(otp);
       logger.debug('Starting legacy OTP verification', { email: normalizedEmail, type });
 
       try {
@@ -356,7 +389,7 @@ export class OTPManager {
             .eq('type', type)
             .eq('used', false)
             .gte('expires_at', new Date().toISOString())
-            .or(`otp.eq.${otp},otp_code.eq.${otp}`)
+            .or(`otp.eq.${hashedInput},otp_code.eq.${hashedInput}`)
             .select();
 
           if (updateError) {
@@ -388,9 +421,10 @@ export class OTPManager {
   // Legacy functions
   async storeOTP(email: string, otp: string, type: 'signup' | 'recovery' = 'signup'): Promise<boolean> {
     const normalizedEmail = email.trim().toLowerCase();
+    const hashedCode = this.hashOTP(otp);
     try {
       if (!supabase) {
-        return this.storeOTPInMemory(normalizedEmail, otp, type);
+        return this.storeOTPInMemory(normalizedEmail, hashedCode, type);
       }
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + 15);
@@ -398,7 +432,7 @@ export class OTPManager {
       const attemptInsert = async () => {
         const insertData: OTPInsertData = {
           email: normalizedEmail,
-          otp,
+          otp: hashedCode,
           expires_at: expiresAt.toISOString(),
           type,
           used: false,
@@ -414,8 +448,8 @@ export class OTPManager {
       }
 
       if (error?.code === '42P01') {
-        logger.warn('OTP table not found; using memory storage fallback', { email, type });
-        return this.storeOTPInMemory(normalizedEmail, otp, type);
+        logger.warn('OTP table not found; using memory storage fallback', { email: type });
+        return this.storeOTPInMemory(normalizedEmail, hashedCode, type);
       }
 
       const columnMissing =
@@ -425,7 +459,7 @@ export class OTPManager {
       if (columnMissing) {
         const legacyData: OTPInsertData = {
           email: normalizedEmail,
-          otp_code: otp,
+          otp_code: hashedCode,
           expires_at: expiresAt.toISOString(),
           type,
           used: false,
@@ -438,14 +472,14 @@ export class OTPManager {
           return true;
         }
         logger.error('Error storing OTP using legacy column', { error: legacyError });
-        return this.storeOTPInMemory(normalizedEmail, otp, type);
+        return this.storeOTPInMemory(normalizedEmail, hashedCode, type);
       }
 
       logger.error('Error storing OTP', { error, normalizedEmail, type });
-      return this.storeOTPInMemory(normalizedEmail, otp, type);
+      return this.storeOTPInMemory(normalizedEmail, hashedCode, type);
     } catch (error) {
       logger.error('Failed to store OTP', { error, normalizedEmail, type });
-      return this.storeOTPInMemory(normalizedEmail, otp, type);
+      return this.storeOTPInMemory(normalizedEmail, hashedCode, type);
     }
   }
 
@@ -556,9 +590,8 @@ export class OTPManager {
   // New OTP methods added to support routing
   async resendOTPWithFallback(otpId: string, fallbackChannel: OTPChannel): Promise<any> {
     try {
-      const supabaseClient = supabase;
-      if (!supabaseClient) {
-        const otpRecord = inMemoryOTPStore.get(otpId);
+      if (!supabase) {
+        const otpRecord = await getDistributedOTP(otpId);
         if (!otpRecord) return { success: false, message: 'Invalid OTP ID' };
 
         const newCode = this.generateOTPCode();
@@ -566,15 +599,15 @@ export class OTPManager {
         const result = await this.sendOTPViaChannel(fallbackChannel, otpRecord.phone, otpRecord.email, newCode, otpRecord.purpose);
         if (!result.success) return { success: false, message: result.error };
 
-        otpRecord.code = newCode;
+        otpRecord.code = this.hashOTP(newCode, otpId); // Use hashed code for storage
         otpRecord.channel = fallbackChannel;
         otpRecord.attempts = 0;
         otpRecord.expires_at = newExpiresAt.toISOString();
-        inMemoryOTPStore.set(otpId, otpRecord);
+        await setDistributedOTP(otpId, otpRecord);
         return { success: true, message: `OTP resent via ${fallbackChannel}`, channel: fallbackChannel, provider: result.provider, providerMessageId: result.providerMessageId };
       }
 
-      const { data: otpRecord, error } = await supabaseClient.from('otp_verifications').select('*').eq('id', otpId).single();
+      const { data: otpRecord, error } = await supabase.from('otp_verifications').select('*').eq('id', otpId).single();
       if (error || !otpRecord) return { success: false, message: 'Invalid OTP ID' };
 
       const newCode = this.generateOTPCode();
@@ -582,7 +615,8 @@ export class OTPManager {
       const result = await this.sendOTPViaChannel(fallbackChannel, otpRecord.phone, otpRecord.email, newCode, otpRecord.purpose);
       if (!result.success) return { success: false, message: result.error };
 
-      await supabaseClient.from('otp_verifications').update({ code: newCode, channel: fallbackChannel, attempts: 0, expires_at: newExpiresAt.toISOString(), created_at: new Date().toISOString() }).eq('id', otpId);
+      const hashedCode = this.hashOTP(newCode, otpId);
+      await supabase.from('otp_verifications').update({ code: hashedCode, channel: fallbackChannel, attempts: 0, expires_at: newExpiresAt.toISOString(), created_at: new Date().toISOString() }).eq('id', otpId);
       return { success: true, message: `OTP resent via ${fallbackChannel}`, channel: fallbackChannel, provider: result.provider, providerMessageId: result.providerMessageId };
     } catch (error) {
       return { success: false, message: 'Failed to resend OTP' };
@@ -591,14 +625,13 @@ export class OTPManager {
 
   async getOTPStatus(otpId: string): Promise<any> {
     try {
-      const supabaseClient = supabase;
-      if (!supabaseClient) {
-        const otpRecord = inMemoryOTPStore.get(otpId);
+      if (!supabase) {
+        const otpRecord = await getDistributedOTP(otpId);
         if (!otpRecord) return { success: false };
         return { success: true, otpRecord, availableFallbacks: [], canResend: !otpRecord.verified && new Date(otpRecord.expires_at) > new Date() };
       }
 
-      const { data: otpRecord, error } = await supabaseClient.from('otp_verifications').select('*').eq('id', otpId).single();
+      const { data: otpRecord, error } = await supabase.from('otp_verifications').select('*').eq('id', otpId).single();
       if (error || !otpRecord) return { success: false };
       return { success: true, otpRecord, availableFallbacks: [], canResend: !otpRecord.verified && new Date(otpRecord.expires_at) > new Date() };
     } catch (error) {

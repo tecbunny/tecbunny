@@ -5,6 +5,7 @@
 //   rateLimit(key, bucketName, { limit, windowMs }) -> boolean
 
 import { getRedis } from './redis'
+import { logger } from './logger'
 
 export type Result = { allowed: boolean; remaining?: number; reset?: number }
 
@@ -104,44 +105,45 @@ export function rateLimit(
     const now = Date.now()
     const windowStart = now - windowMs
 
-    // Inline eviction for memoryBuckets
-    for (const [k, timestamps] of memoryBuckets.entries()) {
-      const kept = timestamps.filter(ts => ts > now - windowMs)
-      if (kept.length === 0) {
-        memoryBuckets.delete(k)
-      } else {
-        memoryBuckets.set(k, kept)
-      }
-    }
-
     const redis = getRedis()
-    if (redis) {
-      return (async () => {
+    
+    // Define the async logic in a separate function to maintain non-async outer function
+    const executeAsync = async (): Promise<Result> => {
+      if (redis) {
         try {
           const windowKey = `rl:cnt:${key}`
+          // Use a simple atomic increment
           const count = await redis.incr(windowKey)
-          if (count === 1) await redis.pexpire(windowKey, windowMs)
-          const remaining = Math.max(0, limit - count)
-          return { allowed: count <= limit, remaining, reset: now + windowMs }
-        } catch {
-          // fall back to memory
-          const arr = memoryBuckets.get(key) || []
-          const kept = arr.filter(ts => ts > windowStart)
-          kept.push(now)
-          memoryBuckets.set(key, kept)
-          const remaining = Math.max(0, limit - kept.length)
-          return { allowed: kept.length <= limit, remaining, reset: now + windowMs }
+          if (count === 1) {
+            await redis.pexpire(windowKey, windowMs)
+          }
+          const remainingValue = Math.max(0, limit - count)
+          const allowed = count <= limit
+          
+          if (!allowed) {
+            logger.warn('rate_limit_exceeded', { key, count, limit })
+          }
+
+          return { allowed, remaining: remainingValue, reset: now + windowMs }
+        } catch (err) {
+          logger.warn('rate_limit_redis_failed', { error: (err as Error).message })
+          // fall through to memory
         }
-      })()
+      }
+
+      // memory fallback for async variant (Warning: not shared across serverless instances)
+      if (process.env.NODE_ENV === 'production' && !redis) {
+        logger.error('rate_limit_no_redis_production', { key })
+      }
+      const arr = memoryBuckets.get(key) || []
+      const kept = arr.filter(ts => ts > windowStart)
+      kept.push(now)
+      memoryBuckets.set(key, kept)
+      const remainingValue = Math.max(0, limit - kept.length)
+      return { allowed: kept.length <= limit, remaining: remainingValue, reset: now + windowMs }
     }
 
-    // memory fallback
-    const arr = memoryBuckets.get(key) || []
-    const kept = arr.filter(ts => ts > windowStart)
-    kept.push(now)
-    memoryBuckets.set(key, kept)
-    const remaining = Math.max(0, limit - kept.length)
-    return Promise.resolve({ allowed: kept.length <= limit, remaining, reset: now + windowMs })
+    return executeAsync()
   }
 
   throw new Error('Invalid rateLimit arguments')

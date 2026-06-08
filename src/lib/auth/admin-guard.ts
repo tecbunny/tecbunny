@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { createClient, createServiceClient, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import { ALL_ROLES, normalizeRole as normalizeKnownRole, type UserRole } from '@/lib/roles';
+import { verifySuperadminSessionToken } from '@/lib/auth/superadmin-session';
 
 type AdminRole = 'admin' | 'manager' | 'superadmin';
 
@@ -139,32 +140,21 @@ export async function requireSuperadminContext(): Promise<SuperadminContext> {
   try {
     const cookieStore = await cookies();
     const superadminCookie = cookieStore.get('superadmin-session')?.value;
-    if (superadminCookie) {
-      const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
-      const correctPassword = process.env.SUPERADMIN_PASSWORD;
-      if (correctEmail && correctPassword) {
-        const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-        const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        
-        if (superadminCookie === expectedToken) {
-          const serviceSupabase = isSupabaseServiceConfigured ? createServiceClient() : (await createClient());
-          return {
-            user: {
-              id: 'superadmin-root-id',
-              email: correctEmail,
-              app_metadata: { role: 'superadmin' },
-              user_metadata: {},
-              aud: 'authenticated',
-              created_at: new Date().toISOString()
-            } as any,
-            role: 'superadmin',
-            serviceSupabase
-          };
-        }
-      }
+    const payload = await verifySuperadminSessionToken(superadminCookie);
+    if (payload) {
+      const serviceSupabase = isSupabaseServiceConfigured ? createServiceClient() : (await createClient());
+      return {
+        user: {
+          id: 'superadmin-root-id',
+          email: payload.email,
+          app_metadata: { role: 'superadmin' },
+          user_metadata: {},
+          aud: 'authenticated',
+          created_at: new Date().toISOString()
+        } as any,
+        role: 'superadmin',
+        serviceSupabase
+      };
     }
   } catch (cookieError) {
     logger.warn('admin_guard.superadmin_cookie_check_failed', { error: cookieError });

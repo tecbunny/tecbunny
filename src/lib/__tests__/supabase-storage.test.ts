@@ -1,32 +1,45 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { uploadToSupabase, deleteFromSupabase, getSupabaseSignedUrl } from '../supabase-storage';
+const {
+  mockUpload,
+  mockGetPublicUrl,
+  mockRemove,
+  mockCreateSignedUrl,
+  mockClient,
+  mockEnv,
+  mockLogger,
+} = vi.hoisted(() => {
+  const upload = vi.fn();
+  const getPublicUrl = vi.fn();
+  const remove = vi.fn();
+  const createSignedUrl = vi.fn();
+  const client = {
+    storage: {
+      from: vi.fn(() => ({
+        upload,
+        getPublicUrl,
+        remove,
+        createSignedUrl,
+      })),
+    },
+  };
 
-const mockUpload = vi.fn();
-const mockGetPublicUrl = vi.fn();
-const mockRemove = vi.fn();
-const mockCreateSignedUrl = vi.fn();
-
-const mockClient = {
-  storage: {
-    from: vi.fn(() => ({
-      upload: mockUpload,
-      getPublicUrl: mockGetPublicUrl,
-      remove: mockRemove,
-      createSignedUrl: mockCreateSignedUrl,
-    })),
-  },
-};
-
-const mockEnv = {
-  isSupabaseServiceConfigured: true,
-  requireSupabaseServiceEnv: vi.fn(() => ({ url: 'https://example.supabase.co', serviceKey: 'service-key' })),
-};
-
-const mockLogger = {
-  warn: vi.fn(),
-  error: vi.fn(),
-};
+  return {
+    mockUpload: upload,
+    mockGetPublicUrl: getPublicUrl,
+    mockRemove: remove,
+    mockCreateSignedUrl: createSignedUrl,
+    mockClient: client,
+    mockEnv: {
+      isSupabaseServiceConfigured: true,
+      requireSupabaseServiceEnv: vi.fn(() => ({ url: 'https://example.supabase.co', serviceKey: 'service-key' })),
+    },
+    mockLogger: {
+      warn: vi.fn(),
+      error: vi.fn(),
+    },
+  };
+});
 
 vi.mock('../logger', () => ({ logger: mockLogger }));
 
@@ -36,9 +49,13 @@ vi.mock('@supabase/supabase-js', () => ({
 
 vi.mock('../supabase/env', () => mockEnv);
 
+import { uploadToSupabase, deleteFromSupabase, getSupabaseSignedUrl } from '../supabase-storage';
+
 describe('supabase-storage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockEnv.isSupabaseServiceConfigured = true;
+    mockEnv.requireSupabaseServiceEnv = vi.fn(() => ({ url: 'https://example.supabase.co', serviceKey: 'service-key' }));
   });
 
   afterEach(() => {

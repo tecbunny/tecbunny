@@ -18,6 +18,7 @@ export function usePageContent(pageKey: string) {
   const [content, setContent] = useState<PageContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -36,18 +37,18 @@ export function usePageContent(pageKey: string) {
 
         // data can be null when no content exists for the key
         setContent(result.data ?? null);
+        setRetryCount(0); // Reset on success
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         setError(errorMessage);
         logger.error('Error fetching page content:', { error: err });
         
-        // Auto-retry after 2 seconds for network errors
-        if (err instanceof Error && err.message.includes('fetch')) {
+        // Auto-retry with backoff and limit (max 3 retries)
+        if (err instanceof Error && err.message.includes('fetch') && retryCount < 3) {
+          const timeout = 2000 * Math.pow(2, retryCount);
           setTimeout(() => {
-            if (pageKey) {
-              fetchContent();
-            }
-          }, 2000);
+            setRetryCount(prev => prev + 1);
+          }, timeout);
         }
       } finally {
         setLoading(false);
@@ -57,7 +58,7 @@ export function usePageContent(pageKey: string) {
     if (pageKey) {
       fetchContent();
     }
-  }, [pageKey]);
+  }, [pageKey, retryCount]);
 
   const updateContent = async (updates: {
     title?: string;

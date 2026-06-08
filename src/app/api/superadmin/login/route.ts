@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyCaptcha } from '@/lib/captcha/captcha-service';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
+import { createSuperadminSessionToken, SUPERADMIN_SESSION_TTL_SECONDS } from '@/lib/auth/superadmin-session';
 
 function getClientIp(request: Request) {
   const headers = request.headers;
@@ -17,14 +18,18 @@ export async function POST(request: Request) {
     const ip = getClientIp(request);
     const submittedUserId = String(userId ?? email ?? '').trim();
 
-    if (!rateLimit(`ip:${ip}`, 'superadmin_login', { limit: 5, windowMs: 15 * 60 * 1000 })) {
+    const ipRl = await rateLimit(`ip:${ip}`, 5, 15 * 60 * 1000);
+    if (!ipRl.allowed) {
       logger.warn('superadmin_login.rate_limited', { ip, userId: submittedUserId });
       return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 });
     }
 
-    if (submittedUserId && !rateLimit(`user:${submittedUserId}`, 'superadmin_login_identifier', { limit: 5, windowMs: 15 * 60 * 1000 })) {
-      logger.warn('superadmin_login.identifier_rate_limited', { ip, userId: submittedUserId });
-      return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 });
+    if (submittedUserId) {
+      const idRl = await rateLimit(`user:${submittedUserId}`, 5, 15 * 60 * 1000);
+      if (!idRl.allowed) {
+        logger.warn('superadmin_login.identifier_rate_limited', { ip, userId: submittedUserId });
+        return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, { status: 429 });
+      }
     }
 
     // Verify Turnstile Captcha if site key is configured
@@ -50,12 +55,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid superadmin credentials.' }, { status: 401 });
     }
 
-    // Generate secure session token (SHA-256 hash of credentials + secret salt)
-    const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-    const msgBuffer = new TextEncoder().encode(`${correctUserId}:${correctPassword}:${secret}`);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const token = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const token = await createSuperadminSessionToken(correctUserId.trim());
 
     logger.info('superadmin_login.success', { userId: submittedUserId, ip });
 
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
-      maxAge: 60 * 60 * 24 // 24 hours
+      maxAge: SUPERADMIN_SESSION_TTL_SECONDS
     });
 
     return response;

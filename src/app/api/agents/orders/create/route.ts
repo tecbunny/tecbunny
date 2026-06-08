@@ -122,27 +122,31 @@ export async function POST(request: Request) {
 }
 
 async function ensureCustomerUser(svc: ReturnType<typeof createServiceClient>, c: CustomerInput): Promise<string | null> {
+  // Normalize mobile if provided
+  const normalizedMobile = c.mobile ? c.mobile.replace(/\D/g, '') : null;
+  const mobileWithPrefix = normalizedMobile ? (normalizedMobile.startsWith('91') && normalizedMobile.length === 12 ? normalizedMobile : (normalizedMobile.length === 10 ? `91${normalizedMobile}` : normalizedMobile)) : null;
+
   // 1) Try find by email or mobile in profiles
   const supabase = svc
   let profile: any = null
 
   if (c.email) {
-    const { data } = await supabase.from('profiles').select('id').eq('email', c.email).maybeSingle()
+    const { data } = await supabase.from('profiles').select('id').eq('email', c.email.trim().toLowerCase()).maybeSingle()
     if (data) profile = data
   }
-  if (!profile && c.mobile) {
-    const { data } = await supabase.from('profiles').select('id').eq('mobile', c.mobile).maybeSingle()
+  if (!profile && mobileWithPrefix) {
+    const { data } = await supabase.from('profiles').select('id').eq('mobile', mobileWithPrefix).maybeSingle()
     if (data) profile = data
   }
   if (profile?.id) return profile.id
 
   // 2) Create auth user via admin API
   const createReq: any = {
-    email: c.email || undefined,
-    phone: c.mobile || undefined,
+    email: c.email ? c.email.trim().toLowerCase() : undefined,
+    phone: mobileWithPrefix || undefined,
     email_confirm: true,
-    phone_confirm: !!c.mobile,
-    user_metadata: { name: c.name, mobile: c.mobile }
+    phone_confirm: !!mobileWithPrefix,
+    user_metadata: { name: c.name, mobile: mobileWithPrefix }
   }
   const { data: created, error } = await supabase.auth.admin.createUser(createReq)
   if (error || !created?.user) return null
@@ -151,7 +155,7 @@ async function ensureCustomerUser(svc: ReturnType<typeof createServiceClient>, c
   // 3) Upsert profile
   await supabase
     .from('profiles')
-    .upsert({ id: newUserId, name: c.name || '', email: c.email || null, mobile: c.mobile || null, role: 'customer' })
+    .upsert({ id: newUserId, name: c.name || '', email: c.email ? c.email.trim().toLowerCase() : null, mobile: mobileWithPrefix, role: 'customer' })
 
   return newUserId
 }

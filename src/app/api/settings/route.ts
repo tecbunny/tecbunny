@@ -2,11 +2,12 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getSessionWithRole } from '@/lib/auth/server-role';
+import { verifySuperadminSessionToken } from '@/lib/auth/superadmin-session';
 import { isSupabasePublicConfigured, isSupabaseServiceConfigured } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'service-role-placeholder';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const PUBLIC_DEFAULTS: Record<string, unknown> = {
   site_branding: 'TecBunny',
@@ -29,6 +30,9 @@ const PUBLIC_SETTINGS_CACHE_CONTROL = 'public, s-maxage=300, stale-while-revalid
 const PUBLIC_SETTINGS_SELECT = 'key,value,description,updated_at';
 
 function getSupabaseAdmin() {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase admin environment variables are not configured');
+  }
   return createAdminClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 }
 
@@ -36,23 +40,12 @@ async function getSessionAndRole(request: NextRequest) {
   try {
     // Check superadmin session cookie first
     const superadminCookie = request.cookies.get('superadmin-session')?.value;
-    if (superadminCookie) {
-      const correctEmail = process.env.SUPERADMIN_USER_ID || process.env.SUPERADMIN_EMAIL;
-      const correctPassword = process.env.SUPERADMIN_PASSWORD;
-      if (correctEmail && correctPassword) {
-        const secret = process.env.SUPERADMIN_PASSWORD || 'superadmin_salt_key_default';
-        const msgBuffer = new TextEncoder().encode(`${correctEmail}:${correctPassword}:${secret}`);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const expectedToken = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        
-        if (superadminCookie === expectedToken) {
-          return {
-            session: { user: { id: 'superadmin-root-id', email: correctEmail } } as any,
-            role: 'superadmin'
-          };
-        }
-      }
+    const superadminPayload = await verifySuperadminSessionToken(superadminCookie);
+    if (superadminPayload) {
+      return {
+        session: { user: { id: 'superadmin-root-id', email: superadminPayload.email } } as any,
+        role: 'superadmin'
+      };
     }
 
     if (!isSupabasePublicConfigured) {

@@ -206,6 +206,26 @@ function buildPublicProductSelect(columns: Set<string> | null) {
   return requestedColumns.length > 0 ? requestedColumns.join(',') : '*';
 }
 
+function parsePositiveInt(value: string | null, fallback: number, max: number) {
+  const parsed = Number.parseInt(value ?? '', 10);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return Math.min(Math.max(parsed, 1), max);
+}
+
+function cleanSearchText(value: string | null | undefined, maxLength = 80) {
+  if (!value) {
+    return '';
+  }
+  return value
+    .trim()
+    .replace(/[%_*]/g, '')
+    .replace(/[(),]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .slice(0, maxLength);
+}
+
 function pickFirst(...values: unknown[]) {
   return values.find((value) => {
     if (typeof value === 'string') return value.trim().length > 0;
@@ -299,7 +319,7 @@ const ADMIN_ROLES = new Set(['admin', 'manager', 'superadmin']);
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const handle = searchParams.get('handle');
+    const handle = cleanSearchText(searchParams.get('handle'), HANDLE_MAX_LENGTH);
     const include_variants = searchParams.get('include_variants') === 'true';
     const include_options = searchParams.get('include_options') === 'true';
 
@@ -315,11 +335,26 @@ export async function GET(request: NextRequest) {
       // Get specific product by handle (use name as fallback)
       let product: any = null;
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('products')
           .select(publicProductSelect)
-          .or(`handle.eq.${handle},name.ilike.%${handle}%`)
-          .single();
+          .limit(1);
+
+        if (productColumns?.has('handle')) {
+          query = query.eq('handle', handle);
+        } else if (productColumns?.has('slug')) {
+          query = query.eq('slug', handle);
+        } else if (productColumns?.has('permalink')) {
+          query = query.eq('permalink', handle);
+        } else if (productColumns?.has('title')) {
+          query = query.ilike('title', `%${handle}%`);
+        } else if (productColumns?.has('name')) {
+          query = query.ilike('name', `%${handle}%`);
+        } else {
+          query = query.ilike('description', `%${handle}%`);
+        }
+
+        const { data, error } = await query.maybeSingle();
         if (error) throw error;
         product = data;
   } catch (_error: any) {
@@ -340,6 +375,10 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         }
         product = list[0];
+      }
+
+      if (!product) {
+        return NextResponse.json({ error: 'Product not found' }, { status: 404 });
       }
 
       if (!isPrivilegedRequest && !isPubliclyVisibleProduct(product)) {
@@ -384,8 +423,8 @@ export async function GET(request: NextRequest) {
       }, PUBLIC_PRODUCTS_CACHE_CONTROL);
   } else {
       // Get all products with pagination
-      const page = parseInt(searchParams.get('page') || '1');
-      const limit = parseInt(searchParams.get('limit') || '20');
+      const page = parsePositiveInt(searchParams.get('page'), 1, 10_000);
+      const limit = parsePositiveInt(searchParams.get('limit'), 20, 100);
       const offset = (page - 1) * limit;
 
       // Get sort parameter (default to created_at for newest first)
@@ -429,13 +468,13 @@ export async function GET(request: NextRequest) {
         query = query.eq('vendor', vendor);
       }
 
-      const search = searchParams.get('search');
+      const search = cleanSearchText(searchParams.get('search'));
       if (search) {
         // Check which columns exist and use appropriate search
         if (productColumns?.has('title')) {
-          query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+          query = query.ilike('title', `%${search}%`);
         } else if (productColumns?.has('name')) {
-          query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+          query = query.ilike('name', `%${search}%`);
         } else {
           // Fallback to description only if neither title nor name exist
           query = query.ilike('description', `%${search}%`);
@@ -515,7 +554,7 @@ export async function GET(request: NextRequest) {
     if (!hasHandleLookup && isSupabaseConnectivityError(error)) {
       logger.warn('products.api_connectivity_fallback', { error });
       const page = parseInt(searchParams.get('page') || '1');
-      const limit = parseInt(searchParams.get('limit') || '20');
+      const limit = parsePositiveInt(searchParams.get('limit'), 20, 100);
       return jsonWithCache(buildCatalogFallback(page, limit), PUBLIC_PRODUCTS_CACHE_CONTROL);
     }
 

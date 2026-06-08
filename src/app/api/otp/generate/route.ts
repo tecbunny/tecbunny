@@ -4,14 +4,18 @@ import { createClient } from '@supabase/supabase-js';
 
 import { requireApiRole } from '@/lib/server-role-guard';
 import { OTPManager, type OTPRequest } from '@/lib/otp-manager';
+import { rateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'service-role-placeholder';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE_KEY
-);
+function getSupabaseAdmin() {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase admin environment variables are not configured');
+  }
+  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+}
 
 const otpManager = new OTPManager();
 
@@ -21,6 +25,13 @@ const otpManager = new OTPManager();
  */
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    const isAllowed = await rateLimit(`otp_gen_ip:${ip}`, 5, 60000);
+    if (!isAllowed) {
+      logger.warn('otp_generate_ip_rate_limited', { ip });
+      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
+
     const access = await requireApiRole();
     if ('error' in access) {
       return access.error;
@@ -73,7 +84,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { data: agent, error: agentError } = await supabase
+      const admin = getSupabaseAdmin();
+      const { data: agent, error: agentError } = await admin
         .from('sales_agents')
         .select('id,status')
         .eq('user_id', access.session.user.id)
@@ -111,7 +123,8 @@ export async function POST(request: NextRequest) {
       const rateLimitType = finalPhone ? 'phone' : email ? 'email' : 'ip';
       const maxRequests = parseInt(process.env.OTP_RATE_LIMIT_MAX_REQUESTS || '5', 10);
 
-      const { data: rateLimitCheck } = await supabase.rpc('check_otp_rate_limit', {
+      const admin = getSupabaseAdmin();
+      const { data: rateLimitCheck } = await admin.rpc('check_otp_rate_limit', {
         p_limit_key: rateLimitKey,
         p_limit_type: rateLimitType,
         p_max_requests: maxRequests

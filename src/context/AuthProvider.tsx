@@ -100,11 +100,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const firstLoginAttemptedRef = useRef<Set<string>>(new Set());
   const { trackEvent } = useAnalytics();
 
-  const syncGuestCartToUser = useCallback(async (userId: string) => {
+  const syncGuestCartToUser = useCallback(async (userId: string, abortSignal?: AbortSignal) => {
     try {
       const { useCartStore } = await import('@/store/cartStore');
+      if (abortSignal?.aborted) return;
       await useCartStore.getState().mergeGuestCartWithUserCart(userId, supabase);
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
       logger.error('Failed to sync guest cart on auth event', { error: err });
     }
   }, [supabase]);

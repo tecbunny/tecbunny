@@ -32,6 +32,15 @@ function uniqueStrings(values: string[]) {
   return Array.from(new Set(values));
 }
 
+function cleanSearchText(value: string, maxLength = 80) {
+  return value
+    .trim()
+    .replace(/[%_*]/g, '')
+    .replace(/[(),]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .slice(0, maxLength);
+}
+
 async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = EXTERNAL_FETCH_TIMEOUT_MS) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -93,8 +102,12 @@ export async function POST(request: NextRequest) {
     if (!query) {
       return NextResponse.json({ error: 'Query is required.' }, { status: 400 });
     }
+    const safeQuery = cleanSearchText(query);
+    if (!safeQuery) {
+      return NextResponse.json({ error: 'Query must contain searchable text.' }, { status: 400 });
+    }
 
-    const cacheKey = `ai:research:${crypto.createHash('sha256').update(JSON.stringify({ query, urls })).digest('hex')}`;
+    const cacheKey = `ai:research:${crypto.createHash('sha256').update(JSON.stringify({ query: safeQuery, urls })).digest('hex')}`;
     const redis = getRedis();
     if (redis) {
       try {
@@ -111,7 +124,7 @@ export async function POST(request: NextRequest) {
     const { data: products } = await supabase
       .from('products')
       .select('id,title,name,description,product_type,category,tags,images,image,additional_images,brand,specifications')
-      .or(`title.ilike.%${query}%,name.ilike.%${query}%,category.ilike.%${query}%`)
+      .ilike('title', `%${safeQuery}%`)
       .limit(5);
 
     const safeProducts = (products || []).map((product) => ({

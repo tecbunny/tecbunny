@@ -18,7 +18,7 @@ export function WarrantyTelemetryBadge() {
   }, [activeEvent]);
 
   return (
-    <div className={"fixed top-24 right-4 z-50 transition-all duration-700 transform \}>
+    <div className={`fixed top-24 right-4 z-50 transition-all duration-700 transform ${visible ? "translate-x-0 opacity-100" : "translate-x-12 opacity-0 pointer-events-none"}`}>
       <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 p-4 rounded-lg shadow-2xl flex items-start gap-3 w-[340px]">
         <div className="bg-green-500/20 p-2 rounded-full">
           <ShieldCheck className="w-5 h-5 text-green-400" />

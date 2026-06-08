@@ -56,9 +56,18 @@ export default function PromotionalBroadcastPage() {
   };
 
   const handleDispatch = async () => {
-    if (!campaignName) return toast({ title: 'Validation', description: 'Campaign name is required', variant: 'destructive' });
-    if (parsedContacts.length === 0) return toast({ title: 'Validation', description: 'Please parse contacts first', variant: 'destructive' });
-    if (!template) return toast({ title: 'Validation', description: 'Template cannot be empty', variant: 'destructive' });
+    if (!campaignName) {
+      toast({ title: 'Validation', description: 'Campaign name is required', variant: 'destructive' });
+      return;
+    }
+    if (parsedContacts.length === 0) {
+      toast({ title: 'Validation', description: 'Please parse contacts first', variant: 'destructive' });
+      return;
+    }
+    if (!template) {
+      toast({ title: 'Validation', description: 'Template cannot be empty', variant: 'destructive' });
+      return;
+    }
 
     setIsDispatching(true);
     

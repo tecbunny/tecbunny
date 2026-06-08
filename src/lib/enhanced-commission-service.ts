@@ -54,6 +54,21 @@ export class EnhancedCommissionService {
   }
 
   /**
+   * Calculates a dynamic multiplier for 24-hour blitz operations
+   */
+  async getBlitzMultiplier(agentId: string): Promise<number> {
+    const BLITZ_START = new Date("2026-06-08T00:00:00Z").getTime();
+    const BLITZ_END = BLITZ_START + (24 * 60 * 60 * 1000);
+    const now = Date.now();
+
+    if (now >= BLITZ_START && now <= BLITZ_END) {
+      logger.info('enhanced-commission-service.blitz_override_applied', { agentId });
+      return 2; // 2x Commission Override activated
+    }
+    return 1;
+  }
+
+  /**
    * Calculate commission for an order
    */
   async calculateOrderCommission(
@@ -111,12 +126,19 @@ export class EnhancedCommissionService {
 
       // Calculate commission for each item using integer-based math (paisa)
       let totalCommissionPaise = 0;
+      const blitzMultiplier = await this.getBlitzMultiplier(agentId);
+
       for (const item of orderItems) {
         const itemCommission = await this.calculateItemCommission(
           item,
           agentRules,
           preTaxAmount
         );
+
+        if (blitzMultiplier > 1) {
+          itemCommission.commission_amount *= blitzMultiplier;
+          itemCommission.rule_applied = (itemCommission.rule_applied ? itemCommission.rule_applied + ' | ' : '') + '2X_BLITZ_OVERRIDE';
+        }
 
         totalCommissionPaise += Math.round(itemCommission.commission_amount * 100);
         breakdown.push(itemCommission);

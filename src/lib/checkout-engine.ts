@@ -242,7 +242,8 @@ export class CheckoutEngine {
         availableCoupons: discountResult.availableCoupons,
         canCombineDiscounts: discountResult.canCombine,
         itemPrices: itemPricesWithTaxes,
-        commissionEstimate
+        commissionEstimate,
+        dbProductMap: dbProductMap // Export for API route marketing logic
       };
 
     } catch (error) {

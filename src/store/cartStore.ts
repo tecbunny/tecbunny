@@ -15,6 +15,16 @@ export interface CartPricing {
   finalTotal: number;
   availableCoupons: Coupon[];
   canCombineDiscounts: boolean;
+  marketingAlert?: {
+    type: string;
+    title: string;
+    message: string;
+    action: string;
+  };
+  bulkUpsells?: Array<{
+    productId: string;
+    message: string;
+  }>;
 }
 
 const GUEST_SESSION_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
@@ -296,6 +306,8 @@ export const useCartStore = create<CartState>((set, get) => ({
           finalTotal: pricingData.finalTotal,
           availableCoupons: pricingData.availableCoupons || [],
           canCombineDiscounts: pricingData.canCombineDiscounts,
+          marketingAlert: pricingData.marketingAlert,
+          bulkUpsells: pricingData.bulkUpsells,
         }
       });
     } catch (error) {

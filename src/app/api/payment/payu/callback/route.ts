@@ -289,6 +289,9 @@ export async function POST(request: NextRequest) {
             error: orderUpdateError.message,
           });
         }
+
+        // High-Velocity Recovery Logic
+        await triggerPaymentRecovery(orderId, payload, siteUrl);
       }
     }
 
@@ -329,5 +332,54 @@ export async function POST(request: NextRequest) {
       correlationId,
       details: { error: error instanceof Error ? error.message : 'Unknown error' },
     });
+  }
+}
+
+/**
+ * Initiates high-velocity payment recovery record and dispatch
+ */
+async function triggerPaymentRecovery(orderId: string, payload: any, siteUrl: URL) {
+  try {
+    const { data: order } = await supabase
+      .from('orders')
+      .select('customer_email, customer_phone, total')
+      .eq('id', orderId)
+      .single();
+
+    if (!order) return;
+
+    // 1. Create Recovery Record
+    const { data: recovery } = await supabase
+      .from('payment_recovery_queue')
+      .insert([{
+        order_id: orderId,
+        customer_email: order.customer_email,
+        customer_phone: order.customer_phone,
+        failure_reason: payload.error_Message || payload.field9 || 'Bank Authorization Failed',
+        recovery_status: 'urgent'
+      }])
+      .select()
+      .single();
+
+    // 2. Immediate Webhook Dispatch for Outreach (Simulated)
+    // In production, this would hit a CRM or high-priority support queue
+    const outreachPayload = {
+      orderId,
+      customer: { email: order.customer_email, phone: order.customer_phone },
+      amount: order.total,
+      recoveryUrl: `${siteUrl.origin}/payment/retry/${orderId}`,
+      timestamp: new Date().toISOString()
+    };
+
+    // Fast-track bypass dispatch
+    fetch(process.env.RECOVERY_OUTREACH_WEBHOOK_URL || '', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Priority': 'high' },
+      body: JSON.stringify(outreachPayload)
+    }).catch(e => logger.warn('recovery_webhook.dispatch_failed', { error: e }));
+
+    logger.info('payment_recovery.initiated', { orderId, recoveryId: recovery?.id });
+  } catch (err) {
+    logger.error('payment_recovery.trigger_failed', { error: err, orderId });
   }
 }

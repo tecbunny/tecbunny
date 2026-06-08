@@ -901,125 +901,126 @@ export default function CheckoutPage() {
                 <div className="glass-panel p-6 rounded-2xl border-t-4 border-cyan-400">
                   <h3 className="text-xl font-bold text-white font-tech mb-6">Invoice Preview</h3>
 
-                <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className={`flex justify-between text-sm ${item.id.startsWith('service-') ? 'text-purple-300' : ''}`}>
-                      <span className="text-slate-400">{item.quantity}x {item.name}</span>
-                      <span className="text-white">₹{(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="border-t border-white/10 pt-4 mb-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Subtotal</span>
-                    <span className="text-white">₹{displaySubtotal.toFixed(2)}</span>
+                  <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2">
+                    {cartItems.map((item) => (
+                      <div key={item.id} className={`flex justify-between text-sm ${item.id.startsWith('service-') ? 'text-purple-300' : ''}`}>
+                        <span className="text-slate-400">{item.quantity}x {item.name}</span>
+                        <span className="text-white">₹{(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
                   </div>
-                  {totalDiscount > 0 && (
-                    <div className="flex justify-between text-sm text-emerald-300">
-                      <span>Discount</span>
-                      <span>-₹{totalDiscount.toFixed(2)}</span>
+
+                  <div className="border-t border-white/10 pt-4 mb-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Subtotal</span>
+                      <span className="text-white">₹{displaySubtotal.toFixed(2)}</span>
+                    </div>
+                    {totalDiscount > 0 && (
+                      <div className="flex justify-between text-sm text-emerald-300">
+                        <span>Discount</span>
+                        <span>-₹{totalDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">GST (Estimated)</span>
+                      <span className="text-white">₹{displayGstAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-white/10 pt-4 mb-8">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <span className="block text-xs text-slate-500 uppercase font-bold">Total Payable</span>
+                        <span className="text-3xl font-bold text-cyan-300 font-tech">₹{displayTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    {showAdvance && (
+                      <div className="mt-2 bg-cyan-400/10 border border-cyan-400/20 rounded p-2 text-[10px] text-cyan-300 text-center">
+                        Advance Payable (50%): ₹{advanceAmount.toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+
+                  {autoOffer && autoOfferDiscount > 0 && autoOffer.description && (
+                    <div className="rounded-md border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-200 mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4" /> {autoOffer.title}
+                        </span>
+                        <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-200">
+                          -₹{autoOfferDiscount.toFixed(2)}
+                        </Badge>
+                      </div>
+                      <p className="mt-2 text-emerald-200/80">{autoOffer.description}</p>
                     </div>
                   )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">GST (Estimated)</span>
-                    <span className="text-white">₹{displayGstAmount.toFixed(2)}</span>
-                  </div>
-                </div>
 
-                <div className="border-t border-white/10 pt-4 mb-8">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <span className="block text-xs text-slate-500 uppercase font-bold">Total Payable</span>
-                      <span className="text-3xl font-bold text-cyan-300 font-tech">₹{displayTotal.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  {showAdvance && (
-                    <div className="mt-2 bg-cyan-400/10 border border-cyan-400/20 rounded p-2 text-[10px] text-cyan-300 text-center">
-                      Advance Payable (50%): ₹{advanceAmount.toFixed(2)}
+                  {appliedCoupon && couponDiscount > 0 && (
+                    <div className="rounded-md border border-cyan-400/20 bg-cyan-400/10 p-3 text-xs text-cyan-200 mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Tag className="h-4 w-4" /> {appliedCoupon.code}
+                        </span>
+                        <button type="button" className="text-xs text-cyan-200 hover:text-white" onClick={removeCoupon}>Remove</button>
+                      </div>
+                      <p className="mt-2 text-cyan-200/80">Coupon savings: ₹{couponDiscount.toFixed(2)}</p>
                     </div>
                   )}
-                </div>
 
-                {autoOffer && autoOfferDiscount > 0 && autoOffer.description && (
-                  <div className="rounded-md border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-200 mb-4">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4" /> {autoOffer.title}
-                      </span>
-                      <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-200">
-                        -₹{autoOfferDiscount.toFixed(2)}
-                      </Badge>
+                  {orderError && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-md p-3 mb-4">
+                      <p className="text-red-200 text-sm font-medium">{orderError}</p>
                     </div>
-                    <p className="mt-2 text-emerald-200/80">{autoOffer.description}</p>
-                  </div>
-                )}
+                  )}
 
-                {appliedCoupon && couponDiscount > 0 && (
-                  <div className="rounded-md border border-cyan-400/20 bg-cyan-400/10 p-3 text-xs text-cyan-200 mb-4">
-                    <div className="flex items-center justify-between">
+                  <div className="mb-4 flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 p-3">
+                    <input
+                      id="checkout-privacy-consent"
+                      type="checkbox"
+                      checked={privacyAccepted}
+                      onChange={(event) => setPrivacyAccepted(event.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-slate-400 bg-slate-900 text-cyan-400 focus:ring-cyan-400"
+                    />
+                    <label htmlFor="checkout-privacy-consent" className="text-xs text-slate-300 leading-relaxed">
+                      I have read and agree to the{' '}
+                      <Link href="/info/policies/privacy" className="text-cyan-300 hover:text-white underline">Privacy Policy</Link>
+                      {' '}and{' '}
+                      <Link href="/info/policies/terms" className="text-cyan-300 hover:text-white underline">Terms of Service</Link>.
+                    </label>
+                  </div>
+
+                  {/* Purchase Velocity Trigger */}
+                  <div className="mb-4 flex items-center justify-center gap-2 py-1 px-3 rounded-full bg-cyan-400/10 border border-cyan-400/20">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                    </span>
+                    <p className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest">
+                      14 others viewing this in your region
+                    </p>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isProcessingOrder || !selectedPaymentMethod || paymentLoading || !privacyAccepted}
+                    className="magnetic-btn w-full py-4 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-white hover:to-white hover:text-slate-900 text-white font-bold font-tech text-lg rounded-xl transition-all shadow-lg shadow-cyan-400/20 flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isProcessingOrder ? (
                       <span className="flex items-center gap-2">
-                        <Tag className="h-4 w-4" /> {appliedCoupon.code}
+                        <span className="h-4 w-4 rounded-full border-2 border-white border-b-transparent animate-spin"></span>
+                        Processing Order...
                       </span>
-                      <button type="button" className="text-xs text-cyan-200 hover:text-white" onClick={removeCoupon}>Remove</button>
-                    </div>
-                    <p className="mt-2 text-cyan-200/80">Coupon savings: ₹{couponDiscount.toFixed(2)}</p>
-                  </div>
-                )}
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        Confirm Order <CheckCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                      </span>
+                    )}
+                  </button>
 
-                {orderError && (
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-md p-3 mb-4">
-                    <p className="text-red-200 text-sm font-medium">{orderError}</p>
-                  </div>
-                )}
-
-                <div className="mb-4 flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 p-3">
-                  <input
-                    id="checkout-privacy-consent"
-                    type="checkbox"
-                    checked={privacyAccepted}
-                    onChange={(event) => setPrivacyAccepted(event.target.checked)}
-                    className="mt-1 h-4 w-4 rounded border-slate-400 bg-slate-900 text-cyan-400 focus:ring-cyan-400"
-                  />
-                  <label htmlFor="checkout-privacy-consent" className="text-xs text-slate-300 leading-relaxed">
-                    I have read and agree to the{' '}
-                    <Link href="/info/policies/privacy" className="text-cyan-300 hover:text-white underline">Privacy Policy</Link>
-                    {' '}and{' '}
-                    <Link href="/info/policies/terms" className="text-cyan-300 hover:text-white underline">Terms of Service</Link>.
-                  </label>
-                </div>
-
-                {/* Purchase Velocity Trigger */}
-                <div className="mb-4 flex items-center justify-center gap-2 py-1 px-3 rounded-full bg-cyan-400/10 border border-cyan-400/20">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                  </span>
-                  <p className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest">
-                    14 others viewing this in your region
+                  <p className="mt-4 text-xs text-slate-500 text-center">
+                    By placing this order, you agree to our Terms & Conditions.
                   </p>
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={isProcessingOrder || !selectedPaymentMethod || paymentLoading || !privacyAccepted}
-                  className="magnetic-btn w-full py-4 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-white hover:to-white hover:text-slate-900 text-white font-bold font-tech text-lg rounded-xl transition-all shadow-lg shadow-cyan-400/20 flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {isProcessingOrder ? (
-                    <span className="flex items-center gap-2">
-                      <span className="h-4 w-4 rounded-full border-2 border-white border-b-transparent animate-spin"></span>
-                      Processing Order...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      Confirm Order <CheckCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                    </span>
-                  )}
-                </button>
-
-                <p className="mt-4 text-xs text-slate-500 text-center">
-                  By placing this order, you agree to our Terms & Conditions.
-                </p>
               </div>
             </div>
           </form>

@@ -22,6 +22,7 @@ import { OptimizedImage } from './ui/optimized-image';
 import type { Product } from '@/lib/types';
 import { useNearViewport } from '../hooks/use-near-viewport';
 import { usePrefersReducedMotion } from '../hooks/use-prefers-reduced-motion';
+import { BehavioralCouponPopup } from './BehavioralCouponPopup';
 
 const AddToCartButton = dynamic(
   () => import('@/components/cart/AddToCartButton').then((module) => module.AddToCartButton),
@@ -420,6 +421,7 @@ export default function HomePage() {
 
   return (
     <div className="relative overflow-hidden bg-slate-950 text-slate-200 selection:bg-cyan-500/40 selection:text-white">
+      <BehavioralCouponPopup />
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -left-40 top-0 h-[42rem] w-[42rem] rounded-full bg-cyan-500/10 blur-[160px]" />
         <div className="absolute -right-40 top-1/3 h-[46rem] w-[46rem] rounded-full bg-violet-500/10 blur-[180px]" />

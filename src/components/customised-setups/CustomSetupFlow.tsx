@@ -17,6 +17,7 @@ import { useAuth, useCart } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
 import { ROICostEfficiencyBanner } from './ROICostEfficiencyBanner';
 import { useLeadCaptureTrigger } from '@/hooks/use-lead-capture-trigger';
+import { FreeInstallationOfferBanner } from '@/components/ui/FreeInstallationOfferBanner';
 import { Share2, Sparkles } from 'lucide-react';
 
 export interface CustomSetupFlowProps {
@@ -894,12 +895,21 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
             </div>
             <div className={cn('flex items-start gap-3 rounded-md border p-4', isTech && 'border-white/10 bg-white/5')}>
               <Checkbox id="installation-required" checked={installationIncluded} onCheckedChange={(checked) => setInstallationIncluded(Boolean(checked))} aria-label="Include installation service" />
-              <div>
+              <div className="flex-1">
                 <Label htmlFor="installation-required" className="text-base font-semibold">Include installation service</Label>
                 <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>
                   {installationIncluded ? 'Currently included: ' : 'Adds: '}
                   {installationOption.label} ({formatCurrency(installationOption.sale)} sale{installationOption.mrp ? ` · ${formatCurrency(installationOption.mrp)} MRP` : ' · No MRP'}).
                 </p>
+                {installationIncluded && (
+                  <div className="mt-3">
+                    <FreeInstallationOfferBanner 
+                      installationPrice={installationOption.sale} 
+                      isEligible={true}
+                      variant="inline"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -952,6 +962,16 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
               )}
             </div>
           </div>
+
+          {totals.installation.included && (
+            <div className="pt-2">
+              <FreeInstallationOfferBanner 
+                installationPrice={totals.installation.sale} 
+                isEligible={true}
+                variant="card"
+              />
+            </div>
+          )}
 
           <div className={cn('rounded-lg p-4 text-sm shadow-inner', isTech ? 'bg-white/5 text-slate-200' : 'bg-white/70')}>
             <p className={cn('flex items-center justify-between text-base font-semibold', isTech ? 'text-white' : 'text-slate-900')}>

@@ -161,7 +161,7 @@ async function processPaymentReceived(supabase: any, data: any, source: string) 
   // Update order status based on payment outcome
   if (orderId) {
     const orderStatus = systemPaymentStatus === 'approved' ? 'Payment Confirmed' : 'Payment Failed';
-    const { error: orderError } = await supabase
+    const { error: orderError, data: updatedOrder } = await supabase
       .from('orders')
       .update({
         payment_id: paymentId,
@@ -170,10 +170,67 @@ async function processPaymentReceived(supabase: any, data: any, source: string) 
         status: orderStatus,
         updated_at: new Date().toISOString()
       })
-      .eq('order_id', orderId);
+      .eq('order_id', orderId)
+      .select()
+      .single();
 
     if (orderError) {
       logger.warn('Failed to update order payment status:', orderError);
+    } else if (systemPaymentStatus === 'approved' && updatedOrder) {
+      // Check if order has installation service and is eligible for free installation offer
+      const orderItems = updatedOrder.items || [];
+      let shouldUseSlot = false;
+      let totalInstallationPrice = 0;
+
+      // Scan order items for installation services
+      if (Array.isArray(orderItems)) {
+        orderItems.forEach((item: any) => {
+          const itemName = item.name?.toLowerCase() || item.product_name?.toLowerCase() || '';
+          const isInstallation = itemName.includes('installation') || itemName.includes('install');
+          const price = item.sale_price || item.final_price || item.price || 0;
+          
+          if (isInstallation) {
+            totalInstallationPrice = Math.max(totalInstallationPrice, price);
+          }
+        });
+      }
+
+      // If order has installation service within free offer range (≤ ₹2,499), use a slot
+      if (totalInstallationPrice > 0 && totalInstallationPrice <= 2499) {
+        shouldUseSlot = true;
+
+        // Decrement free installation slot
+        try {
+          const slotResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/free-installation-slots`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          const slotData = await slotResponse.json();
+          
+          if (slotData.success) {
+            logger.info('Free installation slot decremented', { 
+              orderId, 
+              remainingSlots: slotData.remainingSlots,
+              confirmedCount: slotData.confirmedCount 
+            });
+          } else {
+            logger.warn('Failed to decrement free installation slot', { orderId, error: slotData.message });
+          }
+        } catch (slotError: any) {
+          logger.error('Error calling free installation slots API', { orderId, error: slotError.message });
+        }
+
+        // Mark order as using free installation
+        const { error: updateError } = await supabase
+          .from('orders')
+          .update({ used_free_installation: true })
+          .eq('order_id', orderId);
+
+        if (updateError) {
+          logger.warn('Failed to update order free installation flag:', updateError);
+        }
+      }
     }
   }
 

@@ -22,6 +22,7 @@ export async function middleware(request: NextRequest) {
   const publicApiRoutes: Array<{ path: string; methods?: string[] }> = [
     { path: '/api/auth' },     // Auth endpoints (signin, callback, etc)
     { path: '/api/health' },
+    { path: '/api/superadmin/login' }, // Allow superadmin authentication
     { path: '/api/settings', methods: ['GET'] },
     { path: '/api/page-content', methods: ['GET'] },
     { path: '/api/auto-offers', methods: ['GET'] },

@@ -938,7 +938,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     
                     // 3. Open share dialog
                     const shareUrl = `https://tecbunny.com/blueprints/${blueprintId}`;
-                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out my custom security architecture on TecBunny! ${shareUrl}`)}`, '_blank');
+                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out my custom security architecture on TecBunny! ${shareUrl}`)}`, '_blank');
                     
                   } catch (err) {
                     console.error('Viral trigger failed', err);

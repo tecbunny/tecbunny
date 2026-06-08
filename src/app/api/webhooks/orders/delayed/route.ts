@@ -87,6 +87,53 @@ async function processOrderDelayed(supabase: any, data: any, source: string) {
     logger.warn('Failed to update order status:', orderError);
   }
 
+  // Task 4: AUTOMATED DELAY & MITIGATION OFFER MATRIX
+  // Intercept delivery bottleneck and provision premium warranty if threshold met
+  try {
+    const CORPORATE_TIER_THRESHOLD = 10000; // INR 10k threshold
+    const { data: orderMeta } = await supabase
+      .from('orders')
+      .select('total, customer_id')
+      .eq('order_id', orderId)
+      .single();
+
+    if (orderMeta && orderMeta.total >= CORPORATE_TIER_THRESHOLD && orderMeta.customer_id) {
+      const warrantyCoupon = `PREM-WARRANTY-${Math.random().toString(36).substring(7).toUpperCase()}`;
+      
+      // 1. Provision premium warranty validation coupon into customer promotions
+      const { error: promoError } = await supabase.rpc('add_customer_promotion_v1', {
+        p_customer_id: orderMeta.customer_id,
+        p_promotion_data: {
+          type: 'premium_warranty',
+          code: warrantyCoupon,
+          label: 'Preemptive Delay Mitigation: 1-Year Extended Warranty',
+          order_id: orderId,
+          granted_at: new Date().toISOString()
+        }
+      });
+
+      if (!promoError) {
+        // 2. Inject mitigation alert into WhatsApp service layer
+        const whatsapp = (await import('@/lib/whatsapp-service')).WhatsAppService;
+        const ws = new whatsapp();
+        
+        await ws.sendMessage(formattedPhone!, {
+          templateName: 'delay_mitigation_premium_1',
+          templateData: {
+            body: {
+              placeholders: [customer_name || 'Valued Customer', orderId, warrantyCoupon]
+            }
+          },
+          language: 'en_US'
+        }, 'template', true, 'orderUpdates');
+        
+        logger.info('delay_mitigation_applied', { orderId, coupon: warrantyCoupon });
+      }
+    }
+  } catch (mitigationError: any) {
+    logger.error('delay_mitigation_failed', { error: mitigationError.message, orderId });
+  }
+
   // Find customer and log interaction
   if (formattedPhone) {
     const { data: customer } = await supabase

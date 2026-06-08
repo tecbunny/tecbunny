@@ -399,6 +399,19 @@ async function sendOrderStatusUpdateWhatsApp(phoneNumber: string, data: any) {
           customerName,
           orderNumber: orderId
         });
+        
+        // Trigger post-delivery upsell logic
+        try {
+          const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tecbunny.com';
+          fetch(`${baseUrl}/api/marketing/triggers/order-delivered-followup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId })
+          }).catch(err => logger.error('upsell_trigger_fetch_failed', { err }));
+        } catch (e) {
+          logger.error('upsell_trigger_initiation_failed', { e });
+        }
+        
         logger.info('Delivery confirmation WhatsApp sent:', { phoneNumber, orderId });
         return;
       // Default generic update

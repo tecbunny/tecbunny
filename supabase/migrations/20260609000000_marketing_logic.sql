@@ -66,10 +66,15 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 4. Trigger for wishlist matching
-DROP TRIGGER IF EXISTS trigger_match_wishlist_coupons ON public.wishlist_items;
-CREATE TRIGGER trigger_match_wishlist_coupons
-AFTER INSERT ON public.wishlist_items
-FOR EACH ROW EXECUTE FUNCTION public.match_wishlist_coupons();
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'wishlist_items') THEN
+        DROP TRIGGER IF EXISTS trigger_match_wishlist_coupons ON public.wishlist_items;
+        CREATE TRIGGER trigger_match_wishlist_coupons
+        AFTER INSERT ON public.wishlist_items
+        FOR EACH ROW EXECUTE FUNCTION public.match_wishlist_coupons();
+    END IF;
+END $$;
 
 -- 5. Recovery Queue for Payment Failures
 CREATE TABLE IF NOT EXISTS public.payment_recovery_queue (

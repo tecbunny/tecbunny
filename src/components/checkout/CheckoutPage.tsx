@@ -811,7 +811,7 @@ export default function CheckoutPage() {
                   {paymentLoading && (
                     <div className="space-y-4 min-h-[220px]">
                       {Array.from({ length: 3 }).map((_, index) => (
-                        <div key={index} className="h-16 w-full animate-pulse rounded-xl border border-white/5 bg-white/5" />
+                        <div key={index} className="h-16 w-full animate-pulse rounded-xl border border-white/5 bg-white/5"></div>
                       ))}
                     </div>
                   )}

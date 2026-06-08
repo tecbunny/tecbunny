@@ -15,6 +15,8 @@ export function BehavioralCouponPopup() {
   useEffect(() => {
     if (!user || isDismissed) return;
 
+    let timer: NodeJS.Timeout;
+
     const fetchMarketingMeta = async () => {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -28,12 +30,15 @@ export function BehavioralCouponPopup() {
         setCoupon(suggested);
         
         // Show after a short delay for impact
-        const timer = setTimeout(() => setIsVisible(true), 3000);
-        return () => clearTimeout(timer);
+        timer = setTimeout(() => setIsVisible(true), 3000);
       }
     };
 
     fetchMarketingMeta();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [user, isDismissed]);
 
   const handleDismiss = () => {

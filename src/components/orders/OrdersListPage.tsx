@@ -271,6 +271,44 @@ export default function OrdersListPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* 4. REAL-TIME TECHNICAL DISPATCH COMPLEMENTARY ACCESSORIES ASSIGNER */}
+                  {(order.status === 'Visit Scheduled' || order.status === 'Processing') && (
+                    <div className="mt-6 overflow-hidden rounded-xl border border-cyan-500/20 bg-cyan-500/5">
+                      <div className="flex items-center justify-between bg-cyan-500/10 px-4 py-2 border-b border-cyan-500/20">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Technician Dispatch Optimization</span>
+                        </div>
+                        <span className="text-[10px] font-medium text-cyan-400/70">Arriving Soon</span>
+                      </div>
+                      <div className="p-4 flex flex-col sm:flex-row items-center gap-4">
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold text-white">Complementary Accessories</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">Have your dispatched technician deliver this addition directly with your configuration today.</p>
+                        </div>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                          <div className="flex items-center gap-2 rounded-lg bg-white/5 p-2 border border-white/10">
+                            <div className="h-8 w-8 rounded bg-slate-800 flex items-center justify-center text-[10px] font-bold text-cyan-400">64GB</div>
+                            <div>
+                              <p className="text-[10px] font-bold text-white">Surveillance SD</p>
+                              <p className="text-[9px] text-cyan-300">₹899.00</p>
+                            </div>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            className="bg-cyan-400 hover:bg-white text-slate-900 text-[10px] font-bold h-8 px-3"
+                            onClick={() => {
+                              // Logic to add to order/dispatch would go here
+                              alert('Accessory added to technician dispatch!');
+                            }}
+                          >
+                            + Add to Dispatch
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

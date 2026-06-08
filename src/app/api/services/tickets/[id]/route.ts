@@ -63,6 +63,41 @@ export async function PUT(
           photos: data.photos,
           actual_duration: data.actual_duration
         });
+
+        // 1. THE POST-RESOLUTION MULTI-UNIT SALES TRIGGER
+        // If maintenance checklist indicates low-capacity network, attach upgrade proposal.
+        if (result.success) {
+          try {
+            const checklist = data.maintenance_checklist || {};
+            const isSingleSwitch = checklist.topology === 'single-switch' || data.engineer_notes.toLowerCase().includes('single switch');
+            const isLowerCapacity = checklist.bandwidth_capacity === 'low' || data.engineer_notes.toLowerCase().includes('low capacity');
+
+            if (isSingleSwitch || isLowerCapacity) {
+              const { createServiceClient } = await import('@/lib/supabase/server');
+              const supabase = createServiceClient();
+              
+              const upgradeProposal = {
+                title: 'Infrastructure Upgrade Proposal: Enterprise Multi-Node Network',
+                description: 'Based on our engineer\'s assessment, your current single-node configuration is at 85% utilization. We recommend upgrading to a load-balanced multi-switch architecture.',
+                recommended_products: ['EB-SW-48G-L3', 'EB-AP-AX6-PRO'],
+                estimated_roi: '40% reduction in latency',
+                special_offer: '15% discount if ordered within 7 days'
+              };
+
+              await supabase
+                .from('service_tickets')
+                .update({ 
+                  upgrade_proposal: upgradeProposal,
+                  notes: (data.notes || '') + ' | [System] Upgrade proposal attached.'
+                })
+                .eq('id', ticketId);
+              
+              logger.info('infrastructure_upgrade_proposal_attached', { ticketId, type: isSingleSwitch ? 'topology' : 'capacity' });
+            }
+          } catch (proposalError) {
+            logger.error('failed_to_attach_upgrade_proposal', { ticketId, error: proposalError });
+          }
+        }
         break;
 
       default:

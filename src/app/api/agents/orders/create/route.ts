@@ -177,6 +177,12 @@ export async function POST(request: Request) {
 
     if (atomicOrderError) return NextResponse.json({ error: atomicOrderError.message }, { status: 400 })
     result = atomicOrder;
+
+    // 3. Award Commission for Full Orders
+    const atomicOrderId = (result as any)?.order?.id
+    if (atomicOrderId && agentId) {
+      await awardCommissionForAgent(svc, agentId, atomicOrderId, totals.total).catch(() => {})
+    }
   }
 
   const response = NextResponse.json({ 
@@ -195,28 +201,6 @@ export async function POST(request: Request) {
   }
 
   return response
-}
-
-  if (atomicOrderError) {
-    return NextResponse.json(
-      { error: 'Failed to create order with reserved inventory', details: atomicOrderError.message },
-      { status: 409 }
-    )
-  }
-
-  const atomicOrderId = (atomicOrder as any)?.order?.id
-  if (!atomicOrderId) {
-    return NextResponse.json({ error: 'Atomic order creation returned no order id' }, { status: 500 })
-  }
-
-  await svc
-    .from('orders')
-    .update({ agent_id: agent.id })
-    .eq('id', atomicOrderId)
-
-  await awardCommissionForAgent(svc, agent.id as string, atomicOrderId, totals.total).catch(() => {})
-
-  return NextResponse.json({ success: true, order_id: atomicOrderId })
 }
 
 async function ensureCustomerUser(svc: ReturnType<typeof createServiceClient>, c: CustomerInput): Promise<string | null> {

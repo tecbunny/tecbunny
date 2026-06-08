@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { MapPin, ShieldCheck, Activity, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +22,7 @@ export const RegionalTrustBanner = ({ className }: RegionalTrustBannerProps) => 
   const [isVisible, setIsVisible] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setIsVisible(true);
@@ -44,6 +46,9 @@ export const RegionalTrustBanner = ({ className }: RegionalTrustBannerProps) => 
   }, []);
 
   if (!isVisible) return null;
+  if (pathname?.startsWith('/mgmt') || pathname?.startsWith('/superadmin') || pathname?.startsWith('/staff')) {
+    return null;
+  }
 
   const currentAction = RECENT_ACTIONS[currentIndex];
 

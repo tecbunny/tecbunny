@@ -1,20 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
 export function BlitzAuditBanner() {
-  const [slots, setSlots] = useState(47);
+  const [slots, setSlots] = useState(3);
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"phone" | "otp" | "success">("phone");
   const { toast } = useToast();
+  const pathname = usePathname();
 
   // Scarcity countdown simulator (aggressive conversion trigger)
   useEffect(() => {
     const timer = setInterval(() => {
-      setSlots((prev) => (prev > 12 ? prev - Math.floor(Math.random() * 2) : prev));
-    }, 45000);
+      setSlots((prev) => (prev > 1 ? prev - 1 : prev));
+    }, 120000); // Decrement every 2 mins to keep it realistic
     return () => clearInterval(timer);
   }, []);
 
@@ -39,19 +41,22 @@ export function BlitzAuditBanner() {
     // Create priority ticket
     await fetch("/api/services/tickets", {
       method: "POST",
-      body: JSON.stringify({ type: "INFRA_AUDIT", priority: "URGENT", phone, location: "North Goa" }),
+      body: JSON.stringify({ type: "FREE_INSTALLATION_CLAIM", priority: "URGENT", phone }),
     });
     setStep("success");
-    toast({ title: "Audit Secured", description: "A North Goa engineer will contact you in 15 minutes." });
+    toast({ title: "Offer Claimed", description: "Our team will contact you to verify your free installation." });
   };
 
   if (step === "success") return null;
+  if (pathname?.startsWith('/mgmt') || pathname?.startsWith('/superadmin') || pathname?.startsWith('/staff')) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-0 left-0 w-full bg-red-600 text-white p-4 z-50 flex flex-col md:flex-row items-center justify-between shadow-[0_-10px_40px_rgba(220,38,38,0.4)] border-t-4 border-red-800 animate-slide-up">
       <div className="mb-4 md:mb-0">
-        <h3 className="font-extrabold text-xl animate-pulse">⚡ NORTH GOA INFRASTRUCTURE BLITZ</h3>
-        <p className="text-sm font-medium">Only <span className="bg-white text-red-600 px-2 py-0.5 rounded font-black text-lg">{slots}</span> Free Enterprise Technical Audits Remaining Today.</p>
+        <h3 className="font-extrabold text-xl animate-pulse">⚡ MONTHLY FREE INSTALLATION OFFER</h3>
+        <p className="text-sm font-medium">First 10 confirmed orders get 100% Free Installation. Only <span className="bg-white text-red-600 px-2 py-0.5 rounded font-black text-lg">{slots}</span> slots remaining this month!</p>
       </div>
       
       <div className="flex gap-2 w-full md:w-auto">

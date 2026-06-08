@@ -1,12 +1,14 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useWarrantyTelemetry } from "@/hooks/use-warranty-telemetry";
 import { ShieldCheck } from "lucide-react";
 
 export function WarrantyTelemetryBadge() {
   const { activeEvent } = useWarrantyTelemetry();
   const [visible, setVisible] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (activeEvent) {
@@ -16,6 +18,10 @@ export function WarrantyTelemetryBadge() {
     }
     return () => {};
   }, [activeEvent]);
+
+  if (pathname?.startsWith('/mgmt') || pathname?.startsWith('/superadmin') || pathname?.startsWith('/staff')) {
+    return null;
+  }
 
   return (
     <div className={`fixed top-24 right-4 z-50 transition-all duration-700 transform ${visible ? "translate-x-0 opacity-100" : "translate-x-12 opacity-0 pointer-events-none"}`}>

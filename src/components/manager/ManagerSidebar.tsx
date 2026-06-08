@@ -32,6 +32,7 @@ const navItems = [
   { href: '/mgmt/manager/purchase', label: 'Purchase Entry', icon: Archive },
   { href: '/mgmt/manager/invoice-lookup', label: 'Invoice Lookup', icon: FileSearch },
   { href: '/mgmt/manager/reports', label: 'Reports', icon: BarChart2 },
+  { href: '/mgmt/admin/broadcast-desk', label: 'Broadcast Desk', icon: Megaphone },
 ];
 
 export function ManagerSidebar() {

@@ -73,7 +73,7 @@ const navSections: NavSection[] = [
   {
     title: 'Marketing',
     items: [
-      { href: '/mgmt/admin/promotional-broadcast', label: 'Promo Broadcast', icon: Megaphone },
+      { href: '/mgmt/admin/broadcast-desk', label: 'Broadcast Desk', icon: Megaphone },
     ]
   }
 ];

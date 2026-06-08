@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { WhatsAppService } from '@/lib/whatsapp-service';
 import improvedEmailService from '@/lib/improved-email-service';
@@ -13,64 +13,47 @@ const ContactRowSchema = z.object({
 
 const BroadcastPayloadSchema = z.object({
   campaignName: z.string().min(1, "Campaign Name is required"),
-  channelType: z.enum(['WhatsApp', 'Email']),
+  channelType: z.enum(['whatsapp', 'email']),
   template: z.string().min(1, "Message template is required"),
   contacts: z.array(ContactRowSchema).min(1, "At least one contact is required")
 });
 
-function formatIndianPhoneNumber(phone: string): string {
+function enforceIndianFormatting(phone: string): string {
   const cleaned = phone.replace(/\D/g, '');
-  if (cleaned.length === 10) {
-    return `91${cleaned}`;
-  }
-  if (cleaned.length === 12 && cleaned.startsWith('91')) {
-    return cleaned;
-  }
-  return cleaned; // Fallback
+  if (cleaned.length === 10) return "91" + cleaned;
+  if (cleaned.length === 12 && cleaned.startsWith('91')) return cleaned;
+  throw new Error("Invalid phone length constraint: " + cleaned);
 }
 
 export async function POST(req: Request) {
   try {
-    // 1. Authenticate Admin
-    const authHeader = req.headers.get('Authorization');
-    const token = authHeader?.split(' ')[1];
-    
-    // Check if valid using standard verifyAdminToken or check session
     const supabase = await createServerClient();
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     
-    let adminId: string | null = null;
-
-    if (session?.user) {
-      // Validate role
-      const { data: userData } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
-      
-      if (userData?.role !== 'admin' && userData?.role !== 'superadmin') {
-        return NextResponse.json({ error: 'Unauthorized role' }, { status: 403 });
-      }
-      adminId = session.user.id;
-    } else {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Execution Context Unauthorized. Missing session token.' }, { status: 401 });
     }
 
-    // 2. Parse and Validate Payload
+    const { data: userData } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+      
+    if (userData?.role !== 'admin' && userData?.role !== 'superadmin') {
+      return NextResponse.json({ error: 'Execution Context Unauthorized. Insufficient privilege escalation.' }, { status: 403 });
+    }
+
+    const adminId = session.user.id;
     const body = await req.json();
     const parsedData = BroadcastPayloadSchema.safeParse(body);
     
     if (!parsedData.success) {
-      return NextResponse.json({ 
-        error: 'Validation Failed', 
-        details: parsedData.error.issues 
-      }, { status: 400 });
+      return NextResponse.json({ error: 'Payload Validation Failed', details: parsedData.error.issues }, { status: 400 });
     }
 
     const { campaignName, channelType, template, contacts } = parsedData.data;
 
-    // 3. Create Log Entry
     const { data: logEntry, error: logError } = await supabase
       .from('marketing_broadcast_logs')
       .insert({
@@ -79,88 +62,80 @@ export async function POST(req: Request) {
         recipient_count: contacts.length,
         success_count: 0,
         fail_count: 0,
-        execution_status: 'In Progress',
+        execution_status: 'PROCESSING',
         created_by: adminId
       })
       .select('id')
       .single();
 
     if (logError) {
-      logger.error('Failed to create broadcast log', { error: logError });
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+      logger.error('Failed to create broadcast row', { error: logError });
+      return NextResponse.json({ error: 'Database Retention Failure' }, { status: 500 });
     }
 
-    // 4. Fire Async Processing & Return Immediate 202
-    processBroadcast(logEntry.id, campaignName, channelType, template, contacts);
+    processBatchDelivery(logEntry.id, campaignName, channelType, template, contacts);
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Broadcast initiated successfully',
+      message: 'Batch pipeline initialized',
       logId: logEntry.id
     }, { status: 202 });
 
   } catch (error) {
-    logger.error('Broadcast API Error', { error });
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    logger.error('Broadcast Execution Route Error', { error });
+    return NextResponse.json({ error: 'Internal Server Fault' }, { status: 500 });
   }
 }
 
-async function processBroadcast(
+async function processBatchDelivery(
   logId: string, 
   campaignName: string, 
-  channelType: 'WhatsApp' | 'Email', 
+  channelType: 'whatsapp' | 'email', 
   template: string, 
   contacts: z.infer<typeof ContactRowSchema>[]
 ) {
-  const supabase = createServiceClient(); // Background worker client
+  const supabase = createServiceClient();
   let successCount = 0;
   let failCount = 0;
+  const failureObjects: { id: string, reason: string }[] = [];
 
   let whatsappService: WhatsAppService | null = null;
-  if (channelType === 'WhatsApp') {
+  if (channelType === 'whatsapp') {
     whatsappService = new WhatsAppService();
   }
 
   for (const contact of contacts) {
     try {
-      // Resolve dynamic variables (e.g., {{COUPON_CODE}}, {{NAME}})
-      const personalizedMessage = template
-        .replace(/{{NAME}}/g, contact.name)
-        // Add more dynamic vars here if needed
+      const resolvedMessage = template.replace(/{{NAME}}/g, contact.name);
       
-      if (channelType === 'WhatsApp' && contact.phone && whatsappService) {
-        const formattedPhone = formatIndianPhoneNumber(contact.phone);
-        
-        // This relies on your existing WhatsAppService implementations.
-        // Assuming there is a generic send method or we use sendPromotionalMessage if it takes freeform.
-        // If it requires a template ID, the user's setup might be using Infobip raw text dispatch.
-        // For standard Infobip dispatch:
-        await whatsappService.sendMessage(formattedPhone, personalizedMessage, 'text');
-        
+      if (channelType === 'whatsapp' && contact.phone && whatsappService) {
+        const formattedPhone = enforceIndianFormatting(contact.phone);
+        await whatsappService.sendMessage(formattedPhone, resolvedMessage, 'text');
         successCount++;
-      } else if (channelType === 'Email' && contact.email) {
+      } else if (channelType === 'email' && contact.email) {
         await improvedEmailService.sendEmail({
           to: contact.email,
           subject: campaignName,
-          html: personalizedMessage.replace(/\n/g, '<br/>'),
+          html: resolvedMessage.replace(/\n/g, '<br/>'),
         });
         successCount++;
       } else {
-        failCount++; // Missing required channel contact info
+        failCount++;
+        failureObjects.push({ id: contact.name, reason: "Missing channel configuration requirements" });
       }
-    } catch (err) {
-      logger.error('Broadcast dispatch item failed', { contact, error: err });
+    } catch (e: any) {
       failCount++;
+      failureObjects.push({ id: contact.name, reason: e.message || "Pipeline Transmission Failed" });
     }
   }
 
-  // Finalize Log
   await supabase
     .from('marketing_broadcast_logs')
     .update({
       success_count: successCount,
       fail_count: failCount,
-      execution_status: 'Completed'
+      execution_status: 'COMPLETED',
+      failure_summary: failureObjects.length ? JSON.stringify(failureObjects) : null
     })
     .eq('id', logId);
 }

@@ -1,6 +1,4 @@
 import { logger } from '../logger';
-import { getRedis } from '../redis';
-import { createServiceClient } from '../supabase/server';
 
 const SUPERADMIN_SESSION_TTL_SECONDS = 60 * 60 * 24;
 
@@ -97,21 +95,6 @@ export async function verifySuperadminSessionToken(token: string | undefined | n
     return null;
   }
 
-  // Revocation check via Redis
-  try {
-    const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(encodedPayload))) as SuperadminSessionPayload;
-    const redis = getRedis();
-    if (redis && payload.jti) {
-      const isRevoked = await redis.get(`revoked_superadmin_jti:${payload.jti}`);
-      if (isRevoked) {
-        logger.warn('Revoked superadmin token attempt detected', { jti: payload.jti, email: payload.email });
-        return null;
-      }
-    }
-  } catch (err) {
-    return null;
-  }
-
   const expectedSignature = await hmacSha256(encodedPayload, secret);
   let actualSignature: Uint8Array;
   try {
@@ -140,36 +123,6 @@ export async function verifySuperadminSessionToken(token: string | undefined | n
       return null;
     }
 
-    // Check if JTI is in blocklist (for revocation/logout)
-    if (payload.jti) {
-      // Primary: Redis
-      const redis = getRedis();
-      if (redis) {
-        const isBlocked = await redis.get(`blocklist:jti:${payload.jti}`);
-        if (isBlocked) {
-          logger.warn('Superadmin session revocation check: JTI is blocked (Redis)', { jti: payload.jti });
-          return null;
-        }
-      }
-
-      // Secondary: Database (Fallback)
-      try {
-        const supabase = createServiceClient();
-        const { data: dbBlocked } = await supabase
-          .from('superadmin_token_blocklist')
-          .select('jti')
-          .eq('jti', payload.jti)
-          .maybeSingle();
-        
-        if (dbBlocked) {
-          logger.warn('Superadmin session revocation check: JTI is blocked (DB)', { jti: payload.jti });
-          return null;
-        }
-      } catch (dbError) {
-        logger.error('Failed to check token blocklist in DB', { error: dbError });
-      }
-    }
-
     return payload as SuperadminSessionPayload;
   } catch {
     return null;
@@ -177,40 +130,9 @@ export async function verifySuperadminSessionToken(token: string | undefined | n
 }
 
 export async function revokeSuperadminSessionToken(token: string) {
-  const [version, encodedPayload] = token.split('.');
-  if (version !== 'v1' || !encodedPayload) return;
-
-  try {
-    const payloadText = new TextDecoder().decode(base64UrlDecode(encodedPayload));
-    const payload = JSON.parse(payloadText) as Partial<SuperadminSessionPayload>;
-    
-    if (payload.jti && payload.exp) {
-      const now = Math.floor(Date.now() / 1000);
-      const ttl = payload.exp - now;
-      if (ttl > 0) {
-        // Primary: Redis
-        const redis = getRedis();
-        if (redis) {
-          await redis.set(`blocklist:jti:${payload.jti}`, '1', 'EX', ttl);
-        }
-
-        // Secondary: Database
-        try {
-          const supabase = createServiceClient();
-          await supabase.from('superadmin_token_blocklist').insert({
-            jti: payload.jti,
-            expires_at: new Date(payload.exp * 1000).toISOString()
-          });
-        } catch (dbError) {
-          logger.error('Failed to persist token revocation to DB', { error: dbError });
-        }
-        
-        logger.info('Superadmin session revoked (Redis + DB)', { jti: payload.jti });
-      }
-    }
-  } catch (error) {
-    logger.error('Failed to revoke superadmin session', { error });
-  }
+  // Purely env-based sessions do not support persistent blocklists in this version.
+  // Session revocation is managed by expiring the client-side cookie.
+  logger.info('Superadmin session marked for revocation via client cookie deletion.');
 }
 
 export { SUPERADMIN_SESSION_TTL_SECONDS };

@@ -128,15 +128,10 @@ export async function POST(req: Request) {
         const formattedPhone = customerPhone.replace(/[^\d]/g, '');
         const phoneWithCode = formattedPhone.startsWith('91') ? formattedPhone : `91${formattedPhone}`;
         
-        await sendWhatsAppNotification(phoneWithCode, {
-          type: 'advance_payment_request',
-          customer_name: quote.customer_name,
-          quote_id: quote_id.substring(0, 8),
-          advance_amount: advance_amount.toLocaleString('en-IN'),
-          total_amount: total_amount.toLocaleString('en-IN'),
-          payment_method,
-          action_url: `${process.env.NEXT_PUBLIC_APP_URL}/quotes/${quote_id}/advance-payment`,
-        });
+        await sendWhatsAppNotification(
+          phoneWithCode, 
+          `🚨 *ADVANCE PAYMENT REQUEST*\n\nCustomer: ${quote.customer_name}\nAdvance Amount: ₹${advance_amount.toLocaleString('en-IN')}\nTotal Quote: ₹${total_amount.toLocaleString('en-IN')}\nPayment Method: ${payment_method === 'payu' ? 'Online (PayU)' : 'Wire Transfer'}\n\nPlease confirm and proceed with payment: ${process.env.NEXT_PUBLIC_APP_URL}/quotes/${quote_id}/advance-payment`
+        );
       }
     } catch (whatsappError: any) {
       logger.warn('Failed to send WhatsApp notification:', whatsappError.message);

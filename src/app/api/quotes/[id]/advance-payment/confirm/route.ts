@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       .single();
 
     if (updateError) {
-      logger.error('Failed to confirm advance payment:', updateError);
+      logger.error('Failed to confirm advance payment:', { updateError });
       return NextResponse.json(
         { success: false, error: 'Failed to confirm advance payment' },
         { status: 500 }

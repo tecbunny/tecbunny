@@ -40,8 +40,14 @@ import {
   FALLBACK_IP_PRICING,
   FALLBACK_HDD_OPTIONS,
   FALLBACK_MONITOR_OPTION,
+  FALLBACK_MONITOR_OPTIONS,
+  FALLBACK_WALL_MOUNT_ADDON,
+  FALLBACK_SPIKE_GUARD_OPTION,
+  FALLBACK_RACK_OPTIONS,
+  FALLBACK_CONDUIT_PIPE_OPTIONS,
   FALLBACK_INSTALLATION_OPTION,
   buildPricingCatalog,
+  calculateTotals,
   pickCapacityOption,
   calculateQuantity,
   calculateCableQuantity,
@@ -75,7 +81,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
   const [system, setSystem] = useState<SetupSystem>('analog');
   const [premiseType, setPremiseType] = useState<'Residential' | 'Commercial' | 'Industrial'>('Residential');
   const [itSystemCount, setItSystemCount] = useState<number>(1);
-  const [automationEnabled, setAutomationEnabled] = useState<boolean>(false);
+  const [automationEnabled, setAutomationEnabled] = useState<boolean>(true);
   const [alarmEnabled, setAlarmEnabled] = useState<boolean>(false);
   const [cameraCount, setCameraCount] = useState<number>(4);
   const [cameraCountInput, setCameraCountInput] = useState<string>('4');
@@ -97,6 +103,12 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
     selectableHddOptions[1]?.id ?? selectableHddOptions[0]?.id ?? FALLBACK_HDD_OPTIONS[0].id
   );
   const [monitorIncluded, setMonitorIncluded] = useState<boolean>(false);
+  const [monitorId, setMonitorId] = useState<string>(FALLBACK_MONITOR_OPTIONS[0]?.id ?? 'monitor-19');
+  const [wallMountIncluded, setWallMountIncluded] = useState<boolean>(false);
+  const [spikeGuardIncluded, setSpikeGuardIncluded] = useState<boolean>(false);
+  const [rackId, setRackId] = useState<string | null>(null);
+  const [conduitPipeId, setConduitPipeId] = useState<string | null>(null);
+  const [conduitMeters, setConduitMeters] = useState<number>(0);
   const [installationIncluded, setInstallationIncluded] = useState<boolean>(true);
   const [quoteDownloading, setQuoteDownloading] = useState<boolean>(false);
   const [isBidding, setIsBidding] = useState(false);
@@ -269,50 +281,28 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
     }
   }, [cameraCount, ipPricing, ipSelections.nvrId, ipSelections.poeId]);
 
-  const totals: Totals = useMemo(() => {
-    const systemSummary = system === 'analog'
-      ? buildAnalogSystemSummary(cameraCount, analogSelections, analogPricing)
-      : buildIpSystemSummary(cameraCount, ipSelections, ipPricing);
-
-    const hdd = selectableHddOptions.find((entry) => entry.id === hddId) ?? selectableHddOptions[0];
-    const monitorMrp = monitorIncluded ? monitorOption.mrp ?? 0 : 0;
-    const monitorSale = monitorIncluded ? monitorOption.sale : 0;
-    const installationMrp = installationIncluded ? installationOption.mrp ?? installationOption.sale : 0;
-    const installationSale = installationIncluded ? installationOption.sale : 0;
-
-    const overallMrp = systemSummary.mrp + (hdd.mrp ?? 0) + monitorMrp + installationMrp;
-    const overallSale = systemSummary.sale + hdd.sale + monitorSale + installationSale;
-    
-    // Ensure MRP is never less than sale price (data integrity check)
-    const validatedMrp = Math.max(overallMrp, overallSale);
-    const validatedSale = Math.min(overallSale, validatedMrp);
-    
-    const discountAmount = Math.max(0, Math.round(validatedMrp - validatedSale));
-    const discountPercent = validatedMrp > 0 ? (discountAmount / validatedMrp) * 100 : 0;
-
-    return {
-      system: systemSummary,
-      hdd: { mrp: hdd.mrp ?? 0, sale: hdd.sale, label: hdd.label },
-      monitor: { mrp: monitorMrp, sale: monitorSale, included: monitorIncluded },
-      installation: { mrp: installationMrp, sale: installationSale, included: installationIncluded },
-      overall: {
-        mrp: validatedMrp,
-        sale: validatedSale,
-        discountAmount,
-        discountPercent,
-      },
-    } satisfies Totals;
-  }, [analogPricing, analogSelections, cameraCount, hddId, installationIncluded, installationOption, monitorIncluded, monitorOption, ipPricing, ipSelections, selectableHddOptions, system]);
+  const totals: Totals = useMemo(() => calculateTotals({
+    system,
+    cameraCount,
+    analogSelections,
+    ipSelections,
+    hddId,
+    monitorIncluded,
+    installationIncluded,
+    automationEnabled,
+    pricingCatalog,
+  }), [analogPricing, analogSelections, automationEnabled, cameraCount, calculateTotals, hddId, installationIncluded, installationOption, monitorIncluded, monitorOption, ipPricing, ipSelections, pricingCatalog, selectableHddOptions, system]);
 
   const inlineQuoteSummary = useMemo(() => {
     const systemLabel = system === 'analog' ? 'Analog DVR' : 'IP NVR';
     const hddLabel = selectableHddOptions.find((entry) => entry.id === hddId)?.label ?? 'Surveillance HDD';
+    const itSystemsLabel = itSystemCount > 0 ? `${itSystemCount} IT system${itSystemCount > 1 ? 's' : ''}` : 'No IT systems';
     const extras: string[] = [];
     if (monitorIncluded) extras.push('monitor');
     if (installationIncluded) extras.push('installation');
     const extrasLabel = extras.length ? ` | Add-ons: ${extras.join(', ')}` : '';
-    return `${systemLabel} | ${cameraCount} cameras | HDD: ${hddLabel}${extrasLabel} | Sale total ${formatCurrency(totals.overall.sale)}`;
-  }, [cameraCount, hddId, installationIncluded, monitorIncluded, selectableHddOptions, system, totals.overall.sale]);
+    return `${systemLabel} | ${cameraCount} cameras | ${itSystemsLabel} | HDD: ${hddLabel}${extrasLabel} | Sale total ${formatCurrency(totals.overall.sale)}`;
+  }, [cameraCount, hddId, installationIncluded, itSystemCount, monitorIncluded, selectableHddOptions, system, totals.overall.sale]);
 
   const handleInlineQuoteDownload = async () => {
     if (!user) {
@@ -354,14 +344,71 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
         });
       }
 
+      // Add new accessories
+      if (monitorIncluded) {
+        const selectedMonitor = FALLBACK_MONITOR_OPTIONS.find((m) => m.id === monitorId) || FALLBACK_MONITOR_OPTIONS[0];
+        items.push({
+          description: selectedMonitor.label,
+          mrp: selectedMonitor.mrp || 0,
+          sale: selectedMonitor.sale,
+        });
+
+        if (wallMountIncluded) {
+          items.push({
+            description: FALLBACK_WALL_MOUNT_ADDON.label,
+            mrp: FALLBACK_WALL_MOUNT_ADDON.mrp || 0,
+            sale: FALLBACK_WALL_MOUNT_ADDON.sale,
+          });
+        }
+      }
+
+      if (spikeGuardIncluded) {
+        items.push({
+          description: FALLBACK_SPIKE_GUARD_OPTION.label,
+          mrp: FALLBACK_SPIKE_GUARD_OPTION.mrp || 0,
+          sale: FALLBACK_SPIKE_GUARD_OPTION.sale,
+        });
+      }
+
+      if (rackId) {
+        const selectedRack = FALLBACK_RACK_OPTIONS.find((r) => r.id === rackId) || null;
+        if (selectedRack) {
+          items.push({
+            description: selectedRack.label,
+            mrp: selectedRack.mrp || 0,
+            sale: selectedRack.sale,
+          });
+        }
+      }
+
+      if (conduitPipeId && conduitMeters > 0) {
+        const selectedConduit = FALLBACK_CONDUIT_PIPE_OPTIONS.find((c) => c.id === conduitPipeId) || null;
+        if (selectedConduit) {
+          const conduitCost = selectedConduit.sale * conduitMeters;
+          items.push({
+            description: `${selectedConduit.label} × ${conduitMeters}m`,
+            mrp: conduitCost,
+            sale: conduitCost,
+          });
+        }
+      }
+
       const customSetupConfig = {
         system,
         cameraCount,
+        itSystemCount,
         analogSelections,
         ipSelections,
         hddId,
         monitorIncluded,
+        monitorId,
+        wallMountIncluded,
+        spikeGuardIncluded,
+        rackId,
+        conduitPipeId,
+        conduitMeters,
         installationIncluded,
+        automationEnabled,
       };
 
       const response = await fetch('/api/quotes', {
@@ -440,12 +487,14 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
       const customSetupConfig = {
         system,
         cameraCount,
+        itSystemCount,
         analogSelections,
         ipSelections,
         hddId,
         monitorIncluded,
         installationIncluded,
-        totals
+        automationEnabled,
+        totals,
       };
 
       const res = await fetch('/api/quotes/bid', {
@@ -850,6 +899,19 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
             />
             <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Supported range: 1 to 32 cameras.</p>
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="it-system-count">Number of IT systems</Label>
+            <Input
+              id="it-system-count"
+              type="number"
+              min={0}
+              max={20}
+              value={itSystemCount}
+              onChange={handleItRangeChange}
+              className={inputClassName}
+            />
+            <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>IT systems are tracked separately from CCTV camera count.</p>
+          </div>
         </CardContent>
       </Card>
 
@@ -882,37 +944,123 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
             </Select>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className={cn('flex items-start gap-3 rounded-md border p-4', isTech && 'border-white/10 bg-white/5')}>
-              <Checkbox id="monitor-required" checked={monitorIncluded} onCheckedChange={(checked) => setMonitorIncluded(Boolean(checked))} aria-label="Include surveillance monitor" />
-              <div>
-                <Label htmlFor="monitor-required" className="text-base font-semibold">Include surveillance monitor</Label>
-                <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>
-                  {monitorIncluded ? 'Currently included: ' : 'Adds: '}
-                  {monitorOption.label} ({formatCurrency(monitorOption.sale)} sale{monitorOption.mrp ? ` · ${formatCurrency(monitorOption.mrp)} MRP` : ''}).
-                </p>
-              </div>
-            </div>
-            <div className={cn('flex items-start gap-3 rounded-md border p-4', isTech && 'border-white/10 bg-white/5')}>
-              <Checkbox id="installation-required" checked={installationIncluded} onCheckedChange={(checked) => setInstallationIncluded(Boolean(checked))} aria-label="Include installation service" />
-              <div className="flex-1">
-                <Label htmlFor="installation-required" className="text-base font-semibold">Include installation service</Label>
-                <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>
-                  {installationIncluded ? 'Currently included: ' : 'Adds: '}
-                  {installationOption.label} ({formatCurrency(installationOption.sale)} sale{installationOption.mrp ? ` · ${formatCurrency(installationOption.mrp)} MRP` : ' · No MRP'}).
-                </p>
-                {installationIncluded && (
-                  <div className="mt-3">
-                    <FreeInstallationOfferBanner 
-                      installationPrice={installationOption.sale} 
-                      isEligible={true}
-                      variant="inline"
-                    />
+          <Card className={cardClassName}>
+            <CardHeader>
+              <CardTitle className={cardHeaderClassName}>Optional Accessories</CardTitle>
+              <CardDescription className={cardDescriptionClassName}>Add-on options for your setup</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Monitor Selection */}
+              {monitorIncluded && (
+                <div className="space-y-2">
+                  <Label htmlFor="monitor-select">Monitor Size</Label>
+                  <Select value={monitorId} onValueChange={setMonitorId}>
+                    <SelectTrigger id="monitor-select" className={selectTriggerClassName}>
+                      <SelectValue placeholder="Select monitor size" />
+                    </SelectTrigger>
+                    <SelectContent className={selectContentClassName}>
+                      {FALLBACK_MONITOR_OPTIONS.map((option) => (
+                        <SelectItem key={option.id} value={option.id} className={selectItemClassName}>
+                          <div className="flex flex-col">
+                            <span>{option.label}</span>
+                            <span className={cn('text-xs', selectMutedClassName)}>
+                              {formatCurrency(option.sale)} sale
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Wall Mount Add-on */}
+              {monitorIncluded && (
+                <div className={cn('flex items-start gap-3 rounded-md border p-3', isTech && 'border-white/10 bg-white/5')}>
+                  <Checkbox id="wall-mount" checked={wallMountIncluded} onCheckedChange={(checked) => setWallMountIncluded(Boolean(checked))} />
+                  <div>
+                    <Label htmlFor="wall-mount" className="text-sm font-semibold">Wall Mount Installation</Label>
+                    <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>
+                      +{formatCurrency(FALLBACK_WALL_MOUNT_ADDON.sale)}
+                    </p>
                   </div>
-                )}
+                </div>
+              )}
+
+              {/* Spike Guard */}
+              <div className={cn('flex items-start gap-3 rounded-md border p-3', isTech && 'border-white/10 bg-white/5')}>
+                <Checkbox id="spike-guard" checked={spikeGuardIncluded} onCheckedChange={(checked) => setSpikeGuardIncluded(Boolean(checked))} />
+                <div>
+                  <Label htmlFor="spike-guard" className="text-sm font-semibold">{FALLBACK_SPIKE_GUARD_OPTION.label}</Label>
+                  <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>
+                    +{formatCurrency(FALLBACK_SPIKE_GUARD_OPTION.sale)}
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
+
+              {/* Rack Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="rack-select">Rack Cabinet (Optional)</Label>
+                <Select value={rackId || ''} onValueChange={(val) => setRackId(val || null)}>
+                  <SelectTrigger id="rack-select" className={selectTriggerClassName}>
+                    <SelectValue placeholder="Select or skip rack cabinet" />
+                  </SelectTrigger>
+                  <SelectContent className={selectContentClassName}>
+                    <SelectItem value="" className={selectItemClassName}>
+                      <span>None (Skip Rack)</span>
+                    </SelectItem>
+                    {FALLBACK_RACK_OPTIONS.map((option) => (
+                      <SelectItem key={option.id} value={option.id} className={selectItemClassName}>
+                        <div className="flex flex-col">
+                          <span>{option.label}</span>
+                          <span className={cn('text-xs', selectMutedClassName)}>
+                            {formatCurrency(option.sale)} sale
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Conduit Pipe Selection and Metering */}
+              <div className="space-y-2">
+                <Label htmlFor="conduit-select">Conduit Pipe Type (Optional)</Label>
+                <Select value={conduitPipeId || ''} onValueChange={(val) => setConduitPipeId(val || null)}>
+                  <SelectTrigger id="conduit-select" className={selectTriggerClassName}>
+                    <SelectValue placeholder="Select or skip conduit pipe" />
+                  </SelectTrigger>
+                  <SelectContent className={selectContentClassName}>
+                    <SelectItem value="" className={selectItemClassName}>
+                      <span>None (Skip Conduit)</span>
+                    </SelectItem>
+                    {FALLBACK_CONDUIT_PIPE_OPTIONS.map((option) => (
+                      <SelectItem key={option.id} value={option.id} className={selectItemClassName}>
+                        <span>{option.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Conduit Meter Input */}
+              {conduitPipeId && (
+                <div className="space-y-2">
+                  <Label htmlFor="conduit-meters">Length in Meters</Label>
+                  <Input
+                    id="conduit-meters"
+                    type="number"
+                    min={0}
+                    max={500}
+                    value={conduitMeters}
+                    onChange={(e) => setConduitMeters(Math.max(0, Number.parseInt(e.target.value, 10) || 0))}
+                    placeholder="Enter length in meters"
+                    className={inputClassName}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
 
@@ -961,6 +1109,24 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                 <Badge variant="outline" className={isTech ? 'border-white/20 text-slate-300' : undefined}>Not included</Badge>
               )}
             </div>
+            {totals.installationLabor.sale > 0 && (
+              <>
+                <div className={cn('flex items-center justify-between text-xs', isTech ? 'text-slate-400' : 'text-slate-500')}>
+                  <span>Installation Labor Breakdown:</span>
+                </div>
+                {totals.installationLabor.breakdown.map((line, idx) => (
+                  <div key={idx} className={cn('flex items-center justify-between text-xs pl-4', isTech ? 'text-slate-500' : 'text-slate-600')}>
+                    <span>{line}</span>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                  <span className={isTech ? 'text-cyan-300 font-semibold' : 'font-semibold'}>Installation Labor</span>
+                  <span className={isTech ? 'text-cyan-300 font-semibold' : 'font-semibold'}>
+                    {formatCurrency(totals.installationLabor.sale)}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           {totals.installation.included && (

@@ -107,6 +107,77 @@ export const FALLBACK_MONITOR_OPTION: PriceEntry = {
   sale: 7499,
 };
 
+export const FALLBACK_MONITOR_OPTIONS: PriceEntry[] = [
+  {
+    id: 'monitor-19',
+    label: '19" Surveillance Monitor',
+    mrp: 9999,
+    sale: 7499,
+  },
+  {
+    id: 'monitor-21',
+    label: '21" Surveillance Monitor',
+    mrp: 12999,
+    sale: 9999,
+  },
+  {
+    id: 'monitor-24',
+    label: '24" Surveillance Monitor',
+    mrp: 15999,
+    sale: 11999,
+  },
+];
+
+export const FALLBACK_WALL_MOUNT_ADDON: PriceEntry = {
+  id: 'wall-mount-addon',
+  label: 'Wall Mount Installation Kit',
+  mrp: 699,
+  sale: 499,
+};
+
+export const FALLBACK_SPIKE_GUARD_OPTION: PriceEntry = {
+  id: 'spike-guard',
+  label: 'Spike Guard / Power Surge Protector',
+  mrp: 1999,
+  sale: 1299,
+};
+
+export const FALLBACK_RACK_OPTIONS: PriceEntry[] = [
+  {
+    id: 'rack-2u',
+    label: 'Rack Cabinet - 2U',
+    mrp: 4999,
+    sale: 3299,
+  },
+  {
+    id: 'rack-3u',
+    label: 'Rack Cabinet - 3U',
+    mrp: 5999,
+    sale: 3999,
+  },
+  {
+    id: 'rack-4u',
+    label: 'Rack Cabinet - 4U',
+    mrp: 6999,
+    sale: 4599,
+  },
+];
+
+export const FALLBACK_CONDUIT_PIPE_OPTIONS: PriceEntry[] = [
+  {
+    id: 'conduit-open',
+    label: 'Open Conduit Pipe (₹10/mtr)',
+    mrp: 10,
+    sale: 10,
+  },
+  {
+    id: 'conduit-concealed',
+    label: 'Concealed Conduit Pipe (₹4/mtr)',
+    mrp: 4,
+    sale: 4,
+  },
+];
+
 export const FALLBACK_INSTALLATION_OPTION: PriceEntry = {
   id: 'installation',
   label: 'On-site Installation & Configuration',
@@ -537,11 +608,49 @@ export function calculateQuantity(cameraCount: number, capacity: number): number
 }
 
 const AVERAGE_RUN_METERS_PER_CAMERA = 25;
+const INSTALLATION_LABOR_PER_CAMERA = 299;
+const INSTALLATION_SETUP_CONFIGURATION_COST = 1000;
+const INSTALLATION_LABOR_PER_METER_CABLE = 2;
 
 export function calculateCableQuantity(cameraCount: number, cable: CablePriceEntry): number {
   const totalRun = Math.max(1, cameraCount) * AVERAGE_RUN_METERS_PER_CAMERA;
   const coverage = Math.max(1, cable.coverageMeters);
   return Math.max(1, Math.ceil(totalRun / coverage));
+}
+
+export function calculateCableMetersForLabor(cameraCount: number): number {
+  return cameraCount > 0 ? cameraCount * AVERAGE_RUN_METERS_PER_CAMERA : 0;
+}
+
+export function roundUpToThousandMinusOne(value: number): number {
+  if (value <= 0) {
+    return 0;
+  }
+  return Math.max(0, Math.ceil(value / 1000) * 1000 - 1);
+}
+
+export function calculateInstallationLaborCharges(cameraCount: number): {
+  sale: number;
+  breakdown: string[];
+} {
+  const cameraCountClamped = Math.max(0, cameraCount);
+  const cameraLaborCost = cameraCountClamped * INSTALLATION_LABOR_PER_CAMERA;
+  const cableMeters = calculateCableMetersForLabor(cameraCountClamped);
+  const cableLaborCost = cableMeters * INSTALLATION_LABOR_PER_METER_CABLE;
+  const setupConfigCost = cameraCountClamped > 0 ? INSTALLATION_SETUP_CONFIGURATION_COST : 0;
+  const rawTotal = cameraLaborCost + cableLaborCost + setupConfigCost;
+
+  const breakdown: string[] = [];
+  if (cameraCountClamped > 0) {
+    breakdown.push(`${cameraCountClamped} camera installation @ ₹${INSTALLATION_LABOR_PER_CAMERA}/unit`);
+    breakdown.push(`${cableMeters} m cable laying @ ₹${INSTALLATION_LABOR_PER_METER_CABLE}/m`);
+    breakdown.push(`Setup & configuration: ₹${INSTALLATION_SETUP_CONFIGURATION_COST}`);
+  }
+
+  return {
+    sale: roundUpToThousandMinusOne(rawTotal),
+    breakdown,
+  };
 }
 
 export function recommendedAnalogDvrCapacity(cameraCount: number): number {
@@ -602,6 +711,7 @@ export interface Totals {
   hdd: { mrp: number; sale: number; label: string };
   monitor: { mrp: number; sale: number; included: boolean };
   installation: { mrp: number; sale: number; included: boolean };
+  installationLabor: { sale: number; breakdown: string[] };
   overall: { mrp: number; sale: number; discountAmount: number; discountPercent: number };
 }
 
@@ -683,6 +793,7 @@ export interface CalculateTotalsInput {
   hddId: string;
   monitorIncluded: boolean;
   installationIncluded: boolean;
+  automationEnabled?: boolean;
   pricingCatalog: ReturnType<typeof buildPricingCatalog>;
 }
 
@@ -694,6 +805,7 @@ export function calculateTotals({
   hddId,
   monitorIncluded,
   installationIncluded,
+  automationEnabled = false,
   pricingCatalog
 }: CalculateTotalsInput): Totals {
   const analogPricing = pricingCatalog.analog;
@@ -706,6 +818,8 @@ export function calculateTotals({
     ? buildAnalogSystemSummary(cameraCount, analogSelections, analogPricing)
     : buildIpSystemSummary(cameraCount, ipSelections, ipPricing);
 
+  const installationLaborCharges = automationEnabled ? calculateInstallationLaborCharges(cameraCount) : { sale: 0, breakdown: [] };
+
   const hdd = selectableHddOptions.find((entry) => entry.id === hddId) ?? selectableHddOptions[0];
   const monitorMrp = monitorIncluded ? monitorOption.mrp ?? 0 : 0;
   const monitorSale = monitorIncluded ? monitorOption.sale : 0;
@@ -713,7 +827,7 @@ export function calculateTotals({
   const installationSale = installationIncluded ? installationOption.sale : 0;
 
   const overallMrp = systemSummary.mrp + (hdd.mrp ?? 0) + monitorMrp + installationMrp;
-  const overallSale = systemSummary.sale + hdd.sale + monitorSale + installationSale;
+  const overallSale = systemSummary.sale + hdd.sale + monitorSale + installationSale + installationLaborCharges.sale;
   
   const validatedMrp = Math.max(overallMrp, overallSale);
   const validatedSale = Math.min(overallSale, validatedMrp);
@@ -726,6 +840,7 @@ export function calculateTotals({
     hdd: { mrp: hdd.mrp ?? 0, sale: hdd.sale, label: hdd.label },
     monitor: { mrp: monitorMrp, sale: monitorSale, included: monitorIncluded },
     installation: { mrp: installationMrp, sale: installationSale, included: installationIncluded },
+    installationLabor: installationLaborCharges,
     overall: {
       mrp: validatedMrp,
       sale: validatedSale,

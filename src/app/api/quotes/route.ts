@@ -66,11 +66,13 @@ export async function POST(req: NextRequest) {
       const {
         system,
         cameraCount,
+        itSystemCount = 0,
         analogSelections,
         ipSelections,
         hddId,
         monitorIncluded,
-        installationIncluded
+        installationIncluded,
+        automationEnabled = true,
       } = customSetupConfig;
 
       const totals = calculateTotals({
@@ -81,6 +83,7 @@ export async function POST(req: NextRequest) {
         hddId,
         monitorIncluded,
         installationIncluded,
+        automationEnabled,
         pricingCatalog
       });
 
@@ -116,6 +119,22 @@ export async function POST(req: NextRequest) {
           description: `Installation (${installationOption.label})`,
           mrp: totals.installation.mrp,
           sale: totals.installation.sale,
+        });
+      }
+
+      if (totals.installationLabor.sale > 0) {
+        items.push({
+          description: `Installation Labor (₹${totals.installationLabor.sale})`,
+          mrp: totals.installationLabor.sale,
+          sale: totals.installationLabor.sale,
+        });
+      }
+
+      if (itSystemCount > 0) {
+        items.push({
+          description: `IT Systems (${itSystemCount} ${itSystemCount > 1 ? 'Systems' : 'System'})`,
+          mrp: 0,
+          sale: 0,
         });
       }
 

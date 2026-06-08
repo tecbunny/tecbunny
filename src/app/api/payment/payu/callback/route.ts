@@ -291,7 +291,7 @@ export async function POST(request: NextRequest) {
         }
 
         // High-Velocity Recovery Logic
-        await triggerPaymentRecovery(orderId, payload, siteUrl);
+        await triggerPaymentRecovery(orderId, payload, new URL(siteUrl));
       }
     }
 

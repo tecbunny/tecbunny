@@ -67,7 +67,7 @@ export async function middleware(request: NextRequest) {
     }
     // Set a client-side state cookie for context-aware rendering/pricing
     // In production, this would be encrypted; using base64 for this implementation
-    const contextValue = Buffer.from(JSON.stringify(sourceContext)).toString('base64')
+    const contextValue = btoa(JSON.stringify(sourceContext))
     response.cookies.set('tb_source_context', contextValue, {
       maxAge: 60 * 60 * 24 * 7, // 1 week
       path: '/',

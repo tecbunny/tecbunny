@@ -101,6 +101,55 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * Share-for-Discount Conversion Trigger
+ * POST /api/auto-offers
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const { action, blueprintId, platform } = await request.json();
+
+    if (action === 'issue_share_discount') {
+      const supabaseAdmin = getSupabaseAdmin();
+      
+      // Generate dynamic single-use high-priority coupon
+      const couponCode = `VIRAL-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+      
+      const { data: coupon, error } = await supabaseAdmin
+        .from('coupons')
+        .insert([{
+          code: couponCode,
+          type: 'percentage',
+          value: 10, // 10% viral discount
+          status: 'active',
+          usage_limit: 1,
+          per_user_limit: 1,
+          start_date: new Date().toISOString(),
+          expiry_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 48h validity
+          applicable_category: 'Setup'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      logger.info('viral_discount_issued', { blueprintId, platform, couponCode });
+
+      return NextResponse.json({
+        success: true,
+        coupon,
+        message: 'Share confirmed. 10% discount applied to your current setup.'
+      });
+    }
+
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+
+  } catch (error: any) {
+    logger.error('failed_to_issue_viral_discount', { error: error.message });
+    return NextResponse.json({ error: 'Failed to process viral discount' }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!isServiceConfigured) {

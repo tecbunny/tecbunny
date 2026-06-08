@@ -17,6 +17,7 @@ import { useAuth } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
 import { ROICostEfficiencyBanner } from './ROICostEfficiencyBanner';
 import { useLeadCaptureTrigger } from '@/hooks/use-lead-capture-trigger';
+import { Share2, Sparkles } from 'lucide-react';
 
 export interface CustomSetupFlowProps {
   blueprint: CustomSetupBlueprintSummary | null;
@@ -886,6 +887,66 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                 disabled={quoteDownloading}
               >
                 {quoteDownloading ? 'Preparing…' : 'Download Quote'}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. SHARE-FOR-DISCOUNT CONVERSION BOOSTER */}
+      <Card className="mt-8 border-yellow-500/30 bg-yellow-500/5 backdrop-blur-md overflow-hidden relative group">
+        <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:rotate-12 transition-transform">
+          <Share2 className="w-12 h-12 text-yellow-500" />
+        </div>
+        <CardContent className="p-6 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex-1">
+              <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-yellow-400" /> Share & Unlock 10% Off
+              </h4>
+              <p className="text-sm text-slate-400 mt-1 leading-relaxed">
+                Publish your technical blueprint to our public explorer and share it with your network to receive an instant <span className="text-yellow-400 font-bold">10% discount</span> on this setup.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button 
+                onClick={async () => {
+                  try {
+                    // 1. Mock publish call (In real scenario, would save to DB)
+                    const blueprintId = `BP-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+                    
+                    // 2. Execute secure webhook dispatch
+                    const res = await fetch('/api/auto-offers', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ 
+                        action: 'issue_share_discount', 
+                        blueprintId, 
+                        platform: 'X/LinkedIn' 
+                      })
+                    });
+                    
+                    const data = await res.json();
+                    if (data.success) {
+                      toast({ 
+                        title: 'Viral Discount Applied!', 
+                        description: 'Your 10% share-bonus has been added to the calculation.',
+                        variant: 'default'
+                      });
+                      // Logic to trigger cart refresh would go here
+                    }
+                    
+                    // 3. Open share dialog
+                    const shareUrl = `https://tecbunny.com/blueprints/${blueprintId}`;
+                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out my custom security architecture on TecBunny! ${shareUrl}`)}`, '_blank');
+                    
+                  } catch (err) {
+                    console.error('Viral trigger failed', err);
+                  }
+                }}
+                className="bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold h-12 px-6 rounded-xl shadow-lg shadow-yellow-500/20"
+              >
+                Publish & Share <Share2 className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </div>

@@ -18,6 +18,15 @@ BEGIN;
 -- ============================================================================
 
 
+-- Standard helper to update updated_at timestamp
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
 -- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- 1. Custom Enums & Types
 -- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -33,6 +42,852 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- ============================================================================
+-- Fresh Supabase account bootstrap
+-- ============================================================================
+-- The historical migrations below were consolidated from an already-running
+-- project, so some later ALTER TABLE / RLS / RPC statements assume older tables
+-- already exist. Keep this bootstrap section before those statements so this
+-- file can initialize a brand-new Supabase project without missing core tables.
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'sales_agent_status') THEN
+    CREATE TYPE sales_agent_status AS ENUM ('pending', 'approved', 'rejected');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'redemption_status') THEN
+    CREATE TYPE redemption_status AS ENUM ('pending', 'approved', 'rejected', 'processed');
+  END IF;
+END;
+$$;
+
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT,
+  full_name TEXT,
+  email TEXT UNIQUE,
+  mobile TEXT,
+  phone TEXT,
+  avatar_url TEXT,
+  role TEXT NOT NULL DEFAULT 'customer',
+  customer_type TEXT DEFAULT 'B2C',
+  customer_category TEXT DEFAULT 'Normal',
+  address JSONB DEFAULT '{}'::JSONB,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  handle TEXT UNIQUE,
+  name TEXT NOT NULL,
+  title TEXT,
+  description TEXT,
+  short_description TEXT,
+  category TEXT,
+  subcategory TEXT,
+  brand TEXT,
+  model TEXT,
+  model_number TEXT,
+  sku TEXT,
+  barcode TEXT,
+  price NUMERIC(12,2) DEFAULT 0,
+  base_price NUMERIC(12,2),
+  cost_price NUMERIC(12,2),
+  mrp NUMERIC(12,2),
+  offer_price NUMERIC(12,2),
+  stock_quantity INTEGER NOT NULL DEFAULT 0,
+  min_stock_level INTEGER NOT NULL DEFAULT 0,
+  image TEXT,
+  images TEXT[] DEFAULT '{}'::TEXT[],
+  additional_images TEXT[] DEFAULT '{}'::TEXT[],
+  features JSONB NOT NULL DEFAULT '[]'::JSONB,
+  specifications JSONB NOT NULL DEFAULT '{}'::JSONB,
+  tags TEXT[] DEFAULT '{}'::TEXT[],
+  status product_lifecycle_status NOT NULL DEFAULT 'draft',
+  product_type TEXT DEFAULT 'physical',
+  popularity INTEGER NOT NULL DEFAULT 0,
+  rating NUMERIC(3,2) NOT NULL DEFAULT 0,
+  review_count INTEGER NOT NULL DEFAULT 0,
+  warranty TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  prioritized BOOLEAN NOT NULL DEFAULT FALSE,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number TEXT UNIQUE,
+  customer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  agent_id UUID,
+  customer_name TEXT,
+  customer_email TEXT,
+  customer_phone TEXT,
+  customer_mobile TEXT,
+  billing_address JSONB DEFAULT '{}'::JSONB,
+  shipping_address JSONB DEFAULT '{}'::JSONB,
+  items JSONB NOT NULL DEFAULT '{}'::JSONB,
+  subtotal NUMERIC(12,2) NOT NULL DEFAULT 0,
+  discount NUMERIC(12,2) NOT NULL DEFAULT 0,
+  discount_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+  tax NUMERIC(12,2) NOT NULL DEFAULT 0,
+  gst_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+  shipping NUMERIC(12,2) NOT NULL DEFAULT 0,
+  shipping_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+  total NUMERIC(12,2) NOT NULL DEFAULT 0,
+  payment_method TEXT,
+  payment_status TEXT DEFAULT 'Awaiting Payment',
+  payment_reference TEXT,
+  status TEXT NOT NULL DEFAULT 'Pending',
+  type TEXT,
+  source TEXT DEFAULT 'online',
+  delivery_address TEXT,
+  notes TEXT,
+  internal_notes TEXT,
+  processed_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  pickup_code TEXT,
+  cancellation_reason TEXT,
+  cancelled_at TIMESTAMPTZ,
+  cancelled_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  approved_at TIMESTAMPTZ,
+  shipped_at TIMESTAMPTZ,
+  delivered_at TIMESTAMPTZ,
+  tracking_number TEXT,
+  courier_name TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.order_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID NOT NULL,
+  product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+  product_name TEXT,
+  product_sku TEXT,
+  quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+  unit_price NUMERIC(12,2) NOT NULL DEFAULT 0,
+  total_price NUMERIC(12,2) NOT NULL DEFAULT 0,
+  serial_numbers TEXT[] DEFAULT '{}'::TEXT[],
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.order_otp_verifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID NOT NULL,
+  otp_code TEXT,
+  phone TEXT,
+  email TEXT,
+  verified BOOLEAN NOT NULL DEFAULT FALSE,
+  verified_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.order_cancellations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
+  reason TEXT,
+  cancelled_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.customers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  name TEXT,
+  email TEXT,
+  phone TEXT,
+  mobile TEXT,
+  whatsapp_number TEXT,
+  address JSONB DEFAULT '{}'::JSONB,
+  customer_type TEXT DEFAULT 'B2C',
+  customer_category TEXT DEFAULT 'Normal',
+  total_orders INTEGER NOT NULL DEFAULT 0,
+  total_spent NUMERIC(12,2) NOT NULL DEFAULT 0,
+  last_order_at TIMESTAMPTZ,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID REFERENCES public.orders(id) ON DELETE SET NULL,
+  amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'INR',
+  provider TEXT,
+  method TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  transaction_id TEXT,
+  reference_id TEXT,
+  raw_payload JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.payment_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID REFERENCES public.orders(id) ON DELETE SET NULL,
+  payment_id UUID REFERENCES public.payments(id) ON DELETE SET NULL,
+  provider TEXT,
+  transaction_id TEXT,
+  amount NUMERIC(12,2) DEFAULT 0,
+  status TEXT,
+  payload JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.settings (
+  key TEXT PRIMARY KEY,
+  value JSONB,
+  category TEXT,
+  description TEXT,
+  is_public BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.system_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB,
+  description TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.page_content (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  page_key TEXT UNIQUE,
+  key TEXT,
+  title TEXT,
+  content JSONB NOT NULL DEFAULT '{}'::JSONB,
+  data JSONB NOT NULL DEFAULT '{}'::JSONB,
+  status TEXT NOT NULL DEFAULT 'published',
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.analytics_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  session_id TEXT,
+  event_type TEXT NOT NULL,
+  resource_id TEXT,
+  resource_type TEXT,
+  properties JSONB NOT NULL DEFAULT '{}'::JSONB,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  type TEXT,
+  status TEXT NOT NULL DEFAULT 'new',
+  customer_name TEXT,
+  customer_email TEXT,
+  customer_phone TEXT,
+  message TEXT,
+  source TEXT,
+  payload JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.security_audit_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  action TEXT NOT NULL,
+  resource TEXT,
+  details JSONB NOT NULL DEFAULT '{}'::JSONB,
+  ip_address TEXT,
+  user_agent TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.security_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT UNIQUE,
+  setting_key TEXT UNIQUE,
+  value JSONB NOT NULL DEFAULT '{}'::JSONB,
+  setting_value JSONB,
+  description TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.user_mfa_status (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  totp_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  phone_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  webauthn_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  backup_codes_generated BOOLEAN NOT NULL DEFAULT FALSE,
+  secret TEXT,
+  recovery_codes TEXT[] DEFAULT '{}'::TEXT[],
+  last_verified_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.otp_codes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  phone TEXT,
+  otp TEXT NOT NULL,
+  otp_code TEXT,
+  type TEXT NOT NULL DEFAULT 'signup',
+  channel TEXT,
+  used BOOLEAN NOT NULL DEFAULT FALSE,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.otp_verifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  phone TEXT,
+  otp_code TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'signup',
+  channel TEXT,
+  used BOOLEAN NOT NULL DEFAULT FALSE,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.otp_rate_limits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  limit_key TEXT NOT NULL,
+  limit_type TEXT NOT NULL,
+  requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.user_communication_preferences (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "userId" UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  preferredOTPChannel TEXT NOT NULL DEFAULT 'whatsapp',
+  emailNotifications BOOLEAN NOT NULL DEFAULT TRUE,
+  whatsappNotifications BOOLEAN NOT NULL DEFAULT TRUE,
+  orderUpdates BOOLEAN NOT NULL DEFAULT TRUE,
+  serviceUpdates BOOLEAN NOT NULL DEFAULT TRUE,
+  securityAlerts BOOLEAN NOT NULL DEFAULT TRUE,
+  phone TEXT,
+  email TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.webhook_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id TEXT,
+  provider TEXT,
+  event_type TEXT,
+  status TEXT NOT NULL DEFAULT 'received',
+  payload JSONB NOT NULL DEFAULT '{}'::JSONB,
+  processed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.webhook_stats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider TEXT,
+  event_type TEXT,
+  total_count INTEGER NOT NULL DEFAULT 0,
+  success_count INTEGER NOT NULL DEFAULT 0,
+  failure_count INTEGER NOT NULL DEFAULT 0,
+  last_event_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.whatsapp_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id UUID,
+  phone TEXT,
+  whatsapp_message_id TEXT,
+  direction TEXT,
+  message_type TEXT,
+  body TEXT,
+  status TEXT,
+  payload JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.customer_interactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id UUID REFERENCES public.customers(id) ON DELETE SET NULL,
+  channel TEXT,
+  interaction_type TEXT,
+  summary TEXT,
+  payload JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.services (
+  id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  title         TEXT,
+  name          TEXT,
+  slug          TEXT          UNIQUE,
+  description   TEXT,
+  short_description TEXT,
+  details       TEXT,
+  icon          TEXT,
+  icon_name     TEXT,
+  badge         TEXT,
+  features      JSONB         NOT NULL DEFAULT '[]'::JSONB,
+  feature_list  JSONB,
+  is_active     BOOLEAN       NOT NULL DEFAULT TRUE,
+  status        TEXT          DEFAULT 'active',
+  price         NUMERIC(12,2),
+  base_price    NUMERIC(12,2),
+  currency      TEXT          NOT NULL DEFAULT 'INR',
+  duration_days INTEGER,
+  duration_hours INTEGER,
+  category      TEXT          DEFAULT 'Support',
+  display_order INTEGER       NOT NULL DEFAULT 0,
+  sort_order    INTEGER       NOT NULL DEFAULT 0,
+  requirements  JSONB         NOT NULL DEFAULT '[]'::JSONB,
+  is_featured   BOOLEAN       NOT NULL DEFAULT FALSE,
+  metadata      JSONB         NOT NULL DEFAULT '{}'::JSONB,
+  created_by    UUID          REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at    TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.service_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  service_id UUID REFERENCES public.services(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  customer_name TEXT,
+  customer_email TEXT,
+  customer_phone TEXT,
+  address JSONB DEFAULT '{}'::JSONB,
+  message TEXT,
+  status TEXT NOT NULL DEFAULT 'new',
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.service_tickets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  service_request_id UUID REFERENCES public.service_requests(id) ON DELETE SET NULL,
+  service_id UUID REFERENCES public.services(id) ON DELETE SET NULL,
+  customer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  engineer_id UUID,
+  status TEXT NOT NULL DEFAULT 'open',
+  priority TEXT DEFAULT 'normal',
+  notes TEXT,
+  completion_notes TEXT,
+  engineer_notes TEXT,
+  service_charge NUMERIC(12,2) DEFAULT 0,
+  parts_cost NUMERIC(12,2) DEFAULT 0,
+  total_cost NUMERIC(12,2) DEFAULT 0,
+  actual_duration INTEGER,
+  photos TEXT[] DEFAULT '{}'::TEXT[],
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.service_parts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_id UUID REFERENCES public.service_tickets(id) ON DELETE CASCADE,
+  part_name TEXT NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  unit_cost NUMERIC(12,2) NOT NULL DEFAULT 0,
+  warranty_days INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.service_engineers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  phone TEXT,
+  email TEXT,
+  skills TEXT[] DEFAULT '{}'::TEXT[],
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.faqs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category TEXT NOT NULL DEFAULT 'General',
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    display_order INTEGER NOT NULL DEFAULT 0,
+    is_published BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.sales_agents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  name TEXT,
+  email TEXT,
+  phone TEXT,
+  status sales_agent_status NOT NULL DEFAULT 'pending',
+  agent_code TEXT UNIQUE,
+  commission_rate NUMERIC(5,2) DEFAULT 0,
+  points_balance NUMERIC(12,2) NOT NULL DEFAULT 0,
+  total_points NUMERIC(12,2) NOT NULL DEFAULT 0,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.sales_agent_commissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  agent_id UUID REFERENCES public.sales_agents(id) ON DELETE SET NULL,
+  order_id UUID,
+  order_total NUMERIC(12,2) DEFAULT 0,
+  commission_amount NUMERIC(12,2) DEFAULT 0,
+  commission_rate NUMERIC(5,2) DEFAULT 0,
+  commission_rate_snapshot JSONB DEFAULT '{}'::JSONB,
+  points_awarded NUMERIC(12,2) DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'pending',
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.agent_commission_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  rule JSONB NOT NULL DEFAULT '{}'::JSONB,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.agent_redemption_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  agent_id UUID REFERENCES public.sales_agents(id) ON DELETE CASCADE,
+  points_to_redeem NUMERIC(12,2) NOT NULL DEFAULT 0,
+  amount NUMERIC(12,2) DEFAULT 0,
+  status redemption_status NOT NULL DEFAULT 'pending',
+  notes TEXT,
+  processed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.purchases (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+  supplier_name TEXT,
+  invoice_number TEXT,
+  quantity INTEGER NOT NULL DEFAULT 0,
+  unit_cost NUMERIC(12,2) DEFAULT 0,
+  total_cost NUMERIC(12,2) DEFAULT 0,
+  serial_numbers TEXT[] DEFAULT '{}'::TEXT[],
+  purchase_date DATE DEFAULT CURRENT_DATE,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.inventory_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
+  serial_number TEXT,
+  status TEXT NOT NULL DEFAULT 'available',
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.product_options (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  values JSONB NOT NULL DEFAULT '[]'::JSONB,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.product_variants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
+  title TEXT,
+  sku TEXT,
+  options JSONB NOT NULL DEFAULT '{}'::JSONB,
+  price NUMERIC(12,2),
+  mrp NUMERIC(12,2),
+  stock_quantity INTEGER NOT NULL DEFAULT 0,
+  image TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.offers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  code TEXT UNIQUE,
+  discount_type TEXT,
+  discount_value NUMERIC(12,2) DEFAULT 0,
+  starts_at TIMESTAMPTZ,
+  ends_at TIMESTAMPTZ,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.auto_offers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  conditions JSONB NOT NULL DEFAULT '{}'::JSONB,
+  actions JSONB NOT NULL DEFAULT '{}'::JSONB,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  starts_at TIMESTAMPTZ,
+  ends_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.discounts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code TEXT UNIQUE,
+  title TEXT,
+  description TEXT,
+  discount_type TEXT,
+  discount_value NUMERIC(12,2) NOT NULL DEFAULT 0,
+  usage_limit INTEGER,
+  used_count INTEGER NOT NULL DEFAULT 0,
+  starts_at TIMESTAMPTZ,
+  ends_at TIMESTAMPTZ,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.coupons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code TEXT UNIQUE NOT NULL,
+  title TEXT,
+  description TEXT,
+  discount_type TEXT,
+  discount_value NUMERIC(12,2) NOT NULL DEFAULT 0,
+  min_order_value NUMERIC(12,2) DEFAULT 0,
+  max_discount NUMERIC(12,2),
+  usage_limit INTEGER,
+  used_count INTEGER NOT NULL DEFAULT 0,
+  starts_at TIMESTAMPTZ,
+  ends_at TIMESTAMPTZ,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.customer_offers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id UUID,
+  offer_id UUID REFERENCES public.offers(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'available',
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.customer_discounts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id UUID,
+  discount_id UUID REFERENCES public.discounts(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'available',
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.customer_promotions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id UUID,
+  promotion_type TEXT,
+  title TEXT,
+  description TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.offer_usage (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  offer_id UUID REFERENCES public.offers(id) ON DELETE SET NULL,
+  coupon_id UUID REFERENCES public.coupons(id) ON DELETE SET NULL,
+  order_id UUID REFERENCES public.orders(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  discount_amount NUMERIC(12,2) DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.contact_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT,
+  email TEXT,
+  phone TEXT,
+  subject TEXT,
+  message TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'new',
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.custom_setup_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE,
+  description TEXT,
+  config JSONB NOT NULL DEFAULT '{}'::JSONB,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.custom_setup_systems (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id UUID REFERENCES public.custom_setup_templates(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  slug TEXT,
+  description TEXT,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.custom_setup_components (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  system_id UUID REFERENCES public.custom_setup_systems(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  slug TEXT,
+  component_type TEXT,
+  required BOOLEAN NOT NULL DEFAULT FALSE,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.custom_setup_component_options (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  component_id UUID REFERENCES public.custom_setup_components(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+  label TEXT NOT NULL,
+  value TEXT,
+  price_delta NUMERIC(12,2) DEFAULT 0,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  display_order INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.custom_setup_variables (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT UNIQUE NOT NULL,
+  value JSONB NOT NULL DEFAULT '{}'::JSONB,
+  description TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.expenses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  category TEXT,
+  amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+  expense_date DATE DEFAULT CURRENT_DATE,
+  notes TEXT,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.images (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  url TEXT NOT NULL,
+  path TEXT,
+  bucket TEXT DEFAULT 'images',
+  alt TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.data (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT UNIQUE,
+  value JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
+CREATE INDEX IF NOT EXISTS idx_products_handle ON public.products(handle);
+CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category);
+CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON public.orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status_created ON public.orders(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON public.order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_created_at ON public.analytics_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_otp_rate_limits_lookup ON public.otp_rate_limits(limit_key, limit_type, requested_at DESC);
+
+CREATE OR REPLACE VIEW public.product_analytics_view AS
+SELECT
+  p.id,
+  COALESCE(p.title, p.name) AS title,
+  COUNT(a.id)::INTEGER AS view_count,
+  MAX(a.created_at) AS last_viewed_at
+FROM public.products p
+LEFT JOIN public.analytics_events a
+  ON a.resource_id = p.id::TEXT
+ AND a.event_type IN ('product_view', 'view_product')
+GROUP BY p.id, p.title, p.name;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES
+  ('images', 'images', TRUE),
+  ('hero-banners', 'hero-banners', TRUE),
+  ('TecBunny Solution', 'TecBunny Solution', TRUE)
+ON CONFLICT (id) DO NOTHING;
+
+-- Compatibility columns consolidated in section 1 or handled via specific migrations below.
+
+CREATE INDEX IF NOT EXISTS idx_orders_order_id ON public.orders(order_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_stats_date ON public.webhook_stats(date DESC);
+CREATE INDEX IF NOT EXISTS idx_offers_active_priority ON public.offers(is_active, priority DESC);
+CREATE INDEX IF NOT EXISTS idx_auto_offers_active_priority ON public.auto_offers(is_active, priority DESC);
 
 -- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 -- 2. Table Creation (New Tables Added via Migrations)
@@ -86,6 +941,21 @@ CREATE TABLE IF NOT EXISTS public.innovation_devices (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.innovation_modes
+  ALTER COLUMN key DROP NOT NULL,
+  ALTER COLUMN label DROP NOT NULL,
+  ALTER COLUMN sub DROP NOT NULL,
+  ALTER COLUMN title DROP NOT NULL,
+  ALTER COLUMN description DROP NOT NULL,
+  ALTER COLUMN icon DROP NOT NULL,
+  ALTER COLUMN rec_id DROP NOT NULL;
+
+ALTER TABLE public.innovation_devices
+  ALTER COLUMN title DROP NOT NULL,
+  ALTER COLUMN description DROP NOT NULL,
+  ALTER COLUMN accent DROP NOT NULL,
+  ALTER COLUMN icon DROP NOT NULL;
 
 -- Stock Movements Ledger Table
 CREATE TABLE IF NOT EXISTS public.stock_movements (
@@ -143,6 +1013,10 @@ CREATE TABLE IF NOT EXISTS public.product_pricing (
 );
 
 CREATE INDEX IF NOT EXISTS idx_product_pricing_lookup ON public.product_pricing (product_id, customer_type, customer_category, is_active);
+
+ALTER TABLE public.product_pricing
+  ADD COLUMN IF NOT EXISTS title TEXT,
+  ADD COLUMN IF NOT EXISTS category TEXT;
 
 -- Product Archive Compliance Log Table
 CREATE TABLE IF NOT EXISTS public.product_archive_log (
@@ -232,7 +1106,27 @@ STABLE
 SECURITY INVOKER
 SET search_path = public, pg_temp
 AS $$
-  SELECT COALESCE(auth.jwt() -> 'app_metadata' ->> 'role', 'customer');
+  SELECT COALESCE(
+    CASE 
+      WHEN (auth.jwt() -> 'app_metadata' ->> 'role') IN ('superadmin', 'super-admin', 'super admin', 'super_admin') THEN 'superadmin'
+      ELSE auth.jwt() -> 'app_metadata' ->> 'role'
+    END,
+    'customer'
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_superadmin_user()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid()
+      AND role = 'superadmin'
+  );
 $$;
 
 CREATE OR REPLACE FUNCTION public.is_admin_user()
@@ -245,7 +1139,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid()
-      AND role = 'admin'
+      AND role IN ('admin', 'superadmin')
   );
 $$;
 
@@ -259,7 +1153,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid()
-      AND role IN ('admin', 'manager')
+      AND role IN ('admin', 'manager', 'superadmin')
   );
 $$;
 
@@ -273,7 +1167,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid()
-      AND role IN ('admin', 'manager', 'sales', 'accounts')
+      AND role IN ('admin', 'manager', 'sales', 'accounts', 'superadmin')
   );
 $$;
 
@@ -722,12 +1616,23 @@ DECLARE
   v_order_id        UUID;
   v_created_order   JSONB;
   v_order_items_val JSONB;
+  v_cart_items      JSONB;
 BEGIN
+  v_cart_items := CASE
+    WHEN jsonb_typeof(p_items) = 'array' THEN p_items
+    WHEN jsonb_typeof(p_items->'cart_items') = 'array' THEN p_items->'cart_items'
+    ELSE '[]'::JSONB
+  END;
+
+  IF jsonb_array_length(v_cart_items) = 0 THEN
+    RAISE EXCEPTION 'Order must contain at least one cart item' USING ERRCODE = 'P0001';
+  END IF;
+
   PERFORM 1 FROM public.products
-   WHERE id IN (SELECT (value->>'id')::uuid FROM jsonb_array_elements(p_items))
+   WHERE id IN (SELECT (value->>'id')::uuid FROM jsonb_array_elements(v_cart_items))
    ORDER BY id FOR UPDATE;
 
-  FOR v_item IN SELECT (value->>'id')::uuid AS id, (value->>'quantity')::integer AS quantity, (value->>'name')::text AS name FROM jsonb_array_elements(p_items) LOOP
+  FOR v_item IN SELECT (value->>'id')::uuid AS id, (value->>'quantity')::integer AS quantity, (value->>'name')::text AS name FROM jsonb_array_elements(v_cart_items) LOOP
     DECLARE
       v_stock_quantity INTEGER;
     BEGIN
@@ -743,27 +1648,28 @@ BEGIN
 
   v_order_id := gen_random_uuid();
 
-  FOR v_item IN SELECT (value->>'id')::uuid AS id, (value->>'quantity')::integer AS quantity FROM jsonb_array_elements(p_items) LOOP
+  FOR v_item IN SELECT (value->>'id')::uuid AS id, (value->>'quantity')::integer AS quantity FROM jsonb_array_elements(v_cart_items) LOOP
     PERFORM public.record_atomic_stock_movement(
       v_item.id, 'online_sale', v_item.quantity, v_order_id::text, 'online_order', 'Atomic order checkout placement', false, p_customer_id
     );
   END LOOP;
 
   v_order_items_val := jsonb_build_object(
-    'cart_items', p_items, 'customer_email', p_customer_email, 'customer_phone', p_customer_phone, 'delivery_address', p_delivery_address,
+    'cart_items', v_cart_items, 'customer_email', p_customer_email, 'customer_phone', p_customer_phone, 'delivery_address', p_delivery_address,
     'pickup_store', CASE WHEN p_order_type = 'Pickup' THEN p_delivery_address ELSE null END, 'payment_method', p_payment_method,
     'customer_notes', p_notes, 'agent_id', p_agent_id, 'otp_required', CASE WHEN p_agent_id IS NOT NULL THEN true ELSE false END
   );
 
   INSERT INTO public.orders (
-    id, customer_name, customer_id, status, subtotal, gst_amount, total, type, items, delivery_address, notes, payment_method,
-    customer_email, customer_phone, discount_amount, shipping_amount, payment_status, created_at
+    id, order_id, customer_name, customer_id, status, subtotal, gst_amount, total, total_amount, amount, type, order_type,
+    items, delivery_address, notes, payment_method, customer_email, customer_phone, discount_amount, shipping_amount, payment_status, created_at
   ) VALUES (
-    v_order_id, p_customer_name, p_customer_id, 'Pending', p_subtotal, p_gst_amount, p_total, p_order_type, v_order_items_val, p_delivery_address,
-    p_notes, p_payment_method, p_customer_email, p_customer_phone, p_discount_amount, p_shipping_amount, p_payment_status, NOW()
+    v_order_id, v_order_id::TEXT, p_customer_name, p_customer_id, 'Pending', p_subtotal, p_gst_amount, p_total, p_total, p_total,
+    p_order_type, p_order_type, v_order_items_val, p_delivery_address, p_notes, p_payment_method, p_customer_email, p_customer_phone,
+    p_discount_amount, p_shipping_amount, p_payment_status, NOW()
   ) RETURNING jsonb_build_object(
     'id', id, 'customer_name', customer_name, 'customer_id', customer_id, 'status', status, 'subtotal', subtotal, 'gst_amount', gst_amount,
-    'total', total, 'type', type, 'items', items, 'delivery_address', delivery_address, 'notes', notes, 'payment_method', payment_method,
+    'total', total, 'total_amount', total_amount, 'order_id', order_id, 'type', type, 'items', items, 'delivery_address', delivery_address, 'notes', notes, 'payment_method', payment_method,
     'customer_email', customer_email, 'customer_phone', customer_phone, 'discount_amount', discount_amount, 'shipping_amount', shipping_amount,
     'payment_status', payment_status, 'created_at', created_at
   ) INTO v_created_order;
@@ -939,42 +1845,17 @@ GRANT EXECUTE ON FUNCTION public.is_staff_member() TO authenticated;
 ALTER FUNCTION public.decrement_stock_with_serials SET search_path = '';
 ALTER FUNCTION public.decrement_product_stock SET search_path = '';
 
-REVOKE EXECUTE ON FUNCTION public.is_admin(uuid) FROM PUBLIC, anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.is_staff(uuid) FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.set_contact_messages_updated_at() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.sync_product_name() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.update_page_content_updated_at() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.update_updated_at_column() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_updated_at() FROM PUBLIC, anon, authenticated;
 
 
 -- ============================================================================
 -- Source: 20260604000500_services_icon_name.sql
 -- ============================================================================
-
--- ============================================================================
--- Migration: Add icon_name column to services table
--- File:      20260604000500_services_icon_name.sql
--- Purpose:   The application code references services.icon_name but the column
---            does not exist in the remote database, causing a build-time error:
---            "column services.icon_name does not exist" (code 42703).
---            This migration adds the column safely with IF NOT EXISTS guards
---            and also ensures the full services table exists if it was never
---            created (for fresh environments).
--- ============================================================================
-
-
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
--- 1. Ensure the services table exists (idempotent)
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-CREATE TABLE IF NOT EXISTS public.services (
-  id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
-  title         TEXT,
-  name          TEXT,
-  description   TEXT,
-  details       TEXT,
-  icon          TEXT,
-  icon_name     TEXT,
+Table services consolidated in Section 1.icon_name     TEXT,
   badge         TEXT,
   features      JSONB         NOT NULL DEFAULT '[]'::JSONB,
   feature_list  JSONB,
@@ -1058,17 +1939,7 @@ $$;
 -- Supabase SQL Migration: FAQ System
 -- file: supabase/migrations/20260604001000_faq_system.sql
 
--- 1. Create table `faqs`
-CREATE TABLE IF NOT EXISTS public.faqs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    category TEXT NOT NULL,
-    question TEXT NOT NULL,
-    answer TEXT NOT NULL,
-    display_order INTEGER NOT NULL DEFAULT 0,
-    is_published BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
+-- Table faqs consolidated in Section 1.
 
 -- 2. Enable Row Level Security
 ALTER TABLE public.faqs ENABLE ROW LEVEL SECURITY;
@@ -1100,21 +1971,12 @@ WITH CHECK (
     ((auth.jwt() -> 'user_metadata' ->> 'role') IN ('admin', 'super_admin'))
 );
 
--- 6. Create updated_at trigger function
-CREATE OR REPLACE FUNCTION public.handle_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = now();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
 -- 7. Attach trigger to faqs table
 DROP TRIGGER IF EXISTS set_faqs_updated_at ON public.faqs;
 CREATE TRIGGER set_faqs_updated_at
     BEFORE UPDATE ON public.faqs
     FOR EACH ROW
-    EXECUTE FUNCTION public.handle_updated_at();
+    EXECUTE FUNCTION public.update_updated_at_column();
 
 -- ============================================================================
 -- Source: 20260604001500_database_fixes.sql
@@ -1455,82 +2317,7 @@ $$;
 -- Purpose:   Updates RLS checks and helpers to support the 'superadmin' role,
 --            and restricts security tables exclusively to 'superadmin' users.
 
--- 1. Helper to fetch role from JWT app_metadata
-CREATE OR REPLACE FUNCTION public.get_jwt_role()
-RETURNS text
-LANGUAGE sql
-STABLE
-SECURITY INVOKER
-SET search_path = public, pg_temp
-AS $$
-  SELECT COALESCE(
-    CASE 
-      WHEN (auth.jwt() -> 'app_metadata' ->> 'role') IN ('superadmin', 'super-admin', 'super admin', 'super_admin') THEN 'superadmin'
-      ELSE auth.jwt() -> 'app_metadata' ->> 'role'
-    END,
-    'customer'
-  );
-$$;
-
--- 2. Helper to verify if user is superadmin
-CREATE OR REPLACE FUNCTION public.is_superadmin_user()
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public, pg_temp
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid()
-      AND role = 'superadmin'
-  );
-$$;
-
--- 3. Redefine is_admin_user to include superadmin
-CREATE OR REPLACE FUNCTION public.is_admin_user()
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public, pg_temp
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid()
-      AND role IN ('admin', 'superadmin')
-  );
-$$;
-
--- 4. Redefine is_manager_or_admin to include superadmin
-CREATE OR REPLACE FUNCTION public.is_manager_or_admin()
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public, pg_temp
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid()
-      AND role IN ('admin', 'manager', 'superadmin')
-  );
-$$;
-
--- 5. Redefine is_staff_member to include superadmin
-CREATE OR REPLACE FUNCTION public.is_staff_member()
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public, pg_temp
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid()
-      AND role IN ('admin', 'manager', 'sales', 'accounts', 'superadmin')
-  );
-$$;
+-- Security helpers consolidated in section 4.
 
 -- 6. Restrict security_settings & security_audit_log tables strictly to superadmin
 DROP POLICY IF EXISTS security_audit_log_admin_only ON public.security_audit_log;
@@ -1547,9 +2334,7 @@ CREATE POLICY security_settings_superadmin_only ON public.security_settings FOR 
 -- Date: 2026-06-05
 -- Purpose: Seeds the default prompt configurations into the settings table so that they are no longer hardcoded in Next.js codebase.
 
-ALTER TABLE public.settings
-  ADD COLUMN IF NOT EXISTS description TEXT,
-  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+-- Redundant column additions removed.
 
 WITH seed_settings(key, value_text, description, updated_at) AS (
   VALUES
@@ -1916,10 +2701,7 @@ INSERT INTO public.hsn_codes (code, tax_rate_id, gst_rate, description)
 SELECT '8544', id, 18.00, 'Insulated wire, cable and other conductors' FROM public.tax_rates WHERE name = 'GST 18%'
 ON CONFLICT (code) DO NOTHING;
 
--- 7. Seed default settings keys
-ALTER TABLE public.settings
-  ADD COLUMN IF NOT EXISTS description TEXT,
-  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+-- Redundant column additions removed (already handled in earlier ALTER sections).
 
 WITH seed_settings(key, value_text, description, updated_at) AS (
   VALUES
@@ -2047,6 +2829,458 @@ ALTER TABLE public.products
 CREATE INDEX IF NOT EXISTS idx_products_hsn_code ON public.products (hsn_code);
 CREATE INDEX IF NOT EXISTS idx_products_gst_rate ON public.products (gst_rate);
 CREATE INDEX IF NOT EXISTS idx_products_tax_ai_review ON public.products (tax_ai_reviewed, tax_ai_classified_at DESC);
+
+-- ============================================================================
+-- Compatibility RPCs required by the application
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.auto_cancel_stale_orders_v1(
+  p_cutoff TIMESTAMPTZ,
+  p_limit INTEGER DEFAULT 100,
+  p_reason TEXT DEFAULT 'Automatically cancelled after 24 hours without payment confirmation.'
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_order RECORD;
+  v_item RECORD;
+  v_cancelled INTEGER := 0;
+  v_restored_items INTEGER := 0;
+  v_stale_statuses TEXT[] := ARRAY['Pending', 'Awaiting Payment'];
+  v_stale_payment_statuses TEXT[] := ARRAY[
+    'Awaiting Payment',
+    'Payment Confirmation Pending',
+    'Pending',
+    'Payment Failed',
+    'Payment Cancelled'
+  ];
+BEGIN
+  FOR v_order IN
+    SELECT id, items
+    FROM public.orders
+    WHERE status = ANY(v_stale_statuses)
+      AND created_at <= p_cutoff
+      AND (payment_status = ANY(v_stale_payment_statuses) OR payment_status IS NULL)
+    ORDER BY created_at ASC
+    LIMIT GREATEST(COALESCE(p_limit, 100), 1)
+    FOR UPDATE SKIP LOCKED
+  LOOP
+    UPDATE public.orders
+    SET
+      status = 'Cancelled',
+      payment_status = 'Payment Cancelled',
+      cancellation_reason = p_reason,
+      cancelled_at = NOW(),
+      updated_at = NOW()
+    WHERE id = v_order.id
+      AND status = ANY(v_stale_statuses)
+      AND created_at <= p_cutoff
+      AND (payment_status = ANY(v_stale_payment_statuses) OR payment_status IS NULL);
+
+    IF FOUND THEN
+      v_cancelled := v_cancelled + 1;
+
+      IF v_order.items IS NOT NULL AND jsonb_typeof(v_order.items->'cart_items') = 'array' THEN
+        FOR v_item IN
+          SELECT
+            COALESCE(value->>'id', value->>'productId')::UUID AS id,
+            COALESCE((value->>'quantity')::INTEGER, 0) AS quantity
+          FROM jsonb_array_elements(v_order.items->'cart_items')
+          WHERE COALESCE(value->>'id', value->>'productId') IS NOT NULL
+            AND COALESCE(value->>'id', value->>'productId') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+            AND COALESCE(value->>'quantity', '0') ~ '^[0-9]+$'
+        LOOP
+          IF v_item.quantity > 0 THEN
+            BEGIN
+              PERFORM public.record_atomic_stock_movement(
+                v_item.id,
+                'return',
+                v_item.quantity,
+                v_order.id::TEXT,
+                'online_order',
+                'Reverted stock due to stale unpaid order auto-cancellation',
+                TRUE,
+                NULL
+              );
+              v_restored_items := v_restored_items + 1;
+            EXCEPTION WHEN OTHERS THEN
+              NULL;
+            END;
+          END IF;
+        END LOOP;
+      END IF;
+    END IF;
+  END LOOP;
+
+  RETURN jsonb_build_object(
+    'success', TRUE,
+    'cancelled', v_cancelled,
+    'restoredItems', v_restored_items
+  );
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.auto_cancel_stale_orders_v1(TIMESTAMPTZ, INTEGER, TEXT) FROM PUBLIC, anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.validate_password_strength(password TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+STABLE
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  issues TEXT[] := ARRAY[]::TEXT[];
+BEGIN
+  IF password IS NULL OR length(password) < 8 THEN
+    issues := array_append(issues, 'Password must be at least 8 characters long.');
+  END IF;
+  IF password IS NULL OR password !~ '[A-Z]' THEN
+    issues := array_append(issues, 'Password must contain an uppercase letter.');
+  END IF;
+  IF password IS NULL OR password !~ '[a-z]' THEN
+    issues := array_append(issues, 'Password must contain a lowercase letter.');
+  END IF;
+  IF password IS NULL OR password !~ '[0-9]' THEN
+    issues := array_append(issues, 'Password must contain a number.');
+  END IF;
+  IF password IS NULL OR password !~ '[^A-Za-z0-9]' THEN
+    issues := array_append(issues, 'Password must contain a special character.');
+  END IF;
+
+  RETURN jsonb_build_object(
+    'valid', cardinality(issues) = 0,
+    'score', GREATEST(0, 5 - cardinality(issues)),
+    'issues', to_jsonb(issues)
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.check_otp_rate_limit(
+  p_limit_key TEXT,
+  p_limit_type TEXT,
+  p_max_requests INTEGER DEFAULT 5,
+  p_window_minutes INTEGER DEFAULT 15
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_count INTEGER;
+BEGIN
+  DELETE FROM public.otp_rate_limits
+  WHERE requested_at < NOW() - make_interval(mins => GREATEST(COALESCE(p_window_minutes, 15), 1));
+
+  SELECT COUNT(*)
+    INTO v_count
+    FROM public.otp_rate_limits
+   WHERE limit_key = p_limit_key
+     AND limit_type = p_limit_type
+     AND requested_at >= NOW() - make_interval(mins => GREATEST(COALESCE(p_window_minutes, 15), 1));
+
+  IF v_count >= GREATEST(COALESCE(p_max_requests, 5), 1) THEN
+    RETURN jsonb_build_object('allowed', FALSE, 'count', v_count, 'remaining', 0);
+  END IF;
+
+  INSERT INTO public.otp_rate_limits(limit_key, limit_type)
+  VALUES (p_limit_key, p_limit_type);
+
+  RETURN jsonb_build_object(
+    'allowed', TRUE,
+    'count', v_count + 1,
+    'remaining', GREATEST(COALESCE(p_max_requests, 5), 1) - v_count - 1
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.increment_product_stock(
+  p_product_id UUID,
+  p_quantity INTEGER
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_qty INTEGER := GREATEST(COALESCE(p_quantity, 0), 0);
+BEGIN
+  IF v_qty = 0 THEN
+    RETURN jsonb_build_object('success', TRUE, 'quantity', 0);
+  END IF;
+
+  UPDATE public.products
+     SET stock_quantity = COALESCE(stock_quantity, 0) + v_qty,
+         updated_at = NOW()
+   WHERE id = p_product_id;
+
+  INSERT INTO public.inventory(product_id, stock)
+  VALUES (p_product_id, v_qty)
+  ON CONFLICT (product_id)
+  DO UPDATE SET stock = public.inventory.stock + EXCLUDED.stock,
+                updated_at = NOW();
+
+  RETURN jsonb_build_object('success', TRUE, 'quantity', v_qty);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.decrement_stock_with_serials(
+  p_product_id UUID,
+  p_quantity INTEGER,
+  p_serials TEXT[] DEFAULT '{}'::TEXT[]
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_qty INTEGER := GREATEST(COALESCE(p_quantity, 0), 0);
+BEGIN
+  IF v_qty = 0 THEN
+    RETURN jsonb_build_object('success', TRUE, 'quantity', 0);
+  END IF;
+
+  UPDATE public.products
+     SET stock_quantity = GREATEST(COALESCE(stock_quantity, 0) - v_qty, 0),
+         updated_at = NOW()
+   WHERE id = p_product_id;
+
+  INSERT INTO public.inventory(product_id, stock, serial_numbers)
+  VALUES (p_product_id, 0, '{}'::TEXT[])
+  ON CONFLICT (product_id)
+  DO UPDATE SET
+    stock = GREATEST(public.inventory.stock - v_qty, 0),
+    serial_numbers = COALESCE(ARRAY(
+      SELECT unnest(public.inventory.serial_numbers)
+      EXCEPT
+      SELECT unnest(COALESCE(p_serials, '{}'::TEXT[]))
+    ), '{}'::TEXT[]),
+    updated_at = NOW();
+
+  RETURN jsonb_build_object('success', TRUE, 'quantity', v_qty, 'serials', COALESCE(p_serials, '{}'::TEXT[]));
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.increment_agent_points(
+  agent_id UUID,
+  points_to_add NUMERIC
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  UPDATE public.sales_agents
+     SET points_balance = COALESCE(points_balance, 0) + COALESCE(points_to_add, 0),
+         total_points = CASE
+           WHEN COALESCE(points_to_add, 0) > 0 THEN COALESCE(total_points, 0) + COALESCE(points_to_add, 0)
+           ELSE COALESCE(total_points, 0)
+         END,
+         updated_at = NOW()
+   WHERE id = agent_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Sales agent % not found', agent_id;
+  END IF;
+
+  RETURN jsonb_build_object('success', TRUE);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.admin_set_user_role(
+  p_user_id UUID,
+  p_role TEXT,
+  p_note TEXT DEFAULT NULL
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  UPDATE public.profiles
+     SET role = p_role,
+         updated_at = NOW()
+   WHERE id = p_user_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Profile % not found', p_user_id;
+  END IF;
+
+  INSERT INTO public.security_audit_log(user_id, action, resource, details)
+  VALUES (
+    auth.uid(),
+    'admin_set_user_role',
+    'profiles',
+    jsonb_build_object('target_user_id', p_user_id, 'role', p_role, 'note', p_note)
+  );
+
+  RETURN jsonb_build_object('success', TRUE);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.check_customer_promotions()
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_inserted INTEGER := 0;
+BEGIN
+  INSERT INTO public.customer_promotions(customer_id, promotion_type, title, description, status, metadata)
+  SELECT
+    c.id,
+    'engagement',
+    'Customer follow-up',
+    'Generated promotion eligibility record.',
+    'pending',
+    jsonb_build_object('total_orders', c.total_orders, 'total_spent', c.total_spent)
+  FROM public.customers c
+  WHERE COALESCE(c.total_orders, 0) > 0
+    AND NOT EXISTS (
+      SELECT 1
+      FROM public.customer_promotions cp
+      WHERE cp.customer_id = c.id
+        AND cp.status = 'pending'
+    );
+
+  GET DIAGNOSTICS v_inserted = ROW_COUNT;
+
+  RETURN jsonb_build_object('success', TRUE, 'created', v_inserted);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.validate_password_strength(TEXT) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.check_otp_rate_limit(TEXT, TEXT, INTEGER, INTEGER) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.increment_product_stock(UUID, INTEGER) TO service_role;
+GRANT EXECUTE ON FUNCTION public.decrement_stock_with_serials(UUID, INTEGER, TEXT[]) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.increment_agent_points(UUID, NUMERIC) TO service_role;
+GRANT EXECUTE ON FUNCTION public.admin_set_user_role(UUID, TEXT, TEXT) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.check_customer_promotions() TO authenticated, service_role;
+
+
+-- ============================================================================
+-- Source: 20260606120000_lock_inventory_rls.sql
+-- ============================================================================
+-- Lock down operational inventory tables that are exposed through the public schema.
+-- Supabase requires RLS on exposed-schema tables; these policies keep direct
+-- browser access limited to authenticated staff while server RPCs continue to
+-- perform atomic stock mutations.
+
+DO $$
+BEGIN
+  IF to_regclass('public.inventory') IS NOT NULL THEN
+    ALTER TABLE public.inventory ENABLE ROW LEVEL SECURITY;
+
+    DROP POLICY IF EXISTS inventory_staff_select ON public.inventory;
+    DROP POLICY IF EXISTS inventory_staff_insert ON public.inventory;
+    DROP POLICY IF EXISTS inventory_staff_update ON public.inventory;
+    DROP POLICY IF EXISTS inventory_staff_delete ON public.inventory;
+
+    CREATE POLICY inventory_staff_select
+      ON public.inventory
+      FOR SELECT
+      TO authenticated
+      USING ((select public.is_staff_member()));
+
+    CREATE POLICY inventory_staff_insert
+      ON public.inventory
+      FOR INSERT
+      TO authenticated
+      WITH CHECK ((select public.is_staff_member()));
+
+    CREATE POLICY inventory_staff_update
+      ON public.inventory
+      FOR UPDATE
+      TO authenticated
+      USING ((select public.is_staff_member()))
+      WITH CHECK ((select public.is_staff_member()));
+
+    CREATE POLICY inventory_staff_delete
+      ON public.inventory
+      FOR DELETE
+      TO authenticated
+      USING ((select public.is_staff_member()));
+  END IF;
+
+  IF to_regclass('public.stock_movements') IS NOT NULL THEN
+    ALTER TABLE public.stock_movements ENABLE ROW LEVEL SECURITY;
+
+    DROP POLICY IF EXISTS stock_movements_staff_select ON public.stock_movements;
+    DROP POLICY IF EXISTS stock_movements_staff_insert ON public.stock_movements;
+
+    CREATE POLICY stock_movements_staff_select
+      ON public.stock_movements
+      FOR SELECT
+      TO authenticated
+      USING ((select public.is_staff_member()));
+
+    CREATE POLICY stock_movements_staff_insert
+      ON public.stock_movements
+      FOR INSERT
+      TO authenticated
+      WITH CHECK ((select public.is_staff_member()));
+  END IF;
+
+  IF to_regclass('public.purchases') IS NOT NULL THEN
+    ALTER TABLE public.purchases ENABLE ROW LEVEL SECURITY;
+
+    DROP POLICY IF EXISTS purchases_staff_select ON public.purchases;
+    DROP POLICY IF EXISTS purchases_staff_insert ON public.purchases;
+    DROP POLICY IF EXISTS purchases_staff_update ON public.purchases;
+    DROP POLICY IF EXISTS purchases_staff_delete ON public.purchases;
+
+    CREATE POLICY purchases_staff_select
+      ON public.purchases
+      FOR SELECT
+      TO authenticated
+      USING ((select public.is_staff_member()));
+
+    CREATE POLICY purchases_staff_insert
+      ON public.purchases
+      FOR INSERT
+      TO authenticated
+      WITH CHECK ((select public.is_staff_member()));
+
+    CREATE POLICY purchases_staff_update
+      ON public.purchases
+      FOR UPDATE
+      TO authenticated
+      USING ((select public.is_staff_member()))
+      WITH CHECK ((select public.is_staff_member()));
+
+    CREATE POLICY purchases_staff_delete
+      ON public.purchases
+      FOR DELETE
+      TO authenticated
+      USING ((select public.is_staff_member()));
+  END IF;
+END $$;
+
+
+-- ============================================================================
+-- Source: 20260607000001_whatsapp_message_id_dedupe.sql
+-- ============================================================================
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name = 'whatsapp_messages'
+  ) THEN
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_whatsapp_messages_message_id
+      ON public.whatsapp_messages (whatsapp_message_id)
+      WHERE whatsapp_message_id IS NOT NULL;
+  END IF;
+END $$;
 
 
 COMMIT;

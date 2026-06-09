@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2, Handshake, Check, X, Send, CreditCard } from 'lucide-react';
+import { Download, Loader2, Handshake, Check, X, Send, CreditCard, Share2, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '../../../../hooks/use-toast';
 import { Input } from '@/components/ui/input';
@@ -230,6 +230,33 @@ export default function AdminQuotesPage() {
                             <CreditCard className="h-4 w-4 mr-1" /> Advance Payment
                           </Button>
                         )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            const url = `${window.location.origin}/quotes/${quote.quote_number || quote.id}`;
+                            navigator.clipboard.writeText(url);
+                            toast({
+                              title: 'Copied!',
+                              description: 'Public link copied to clipboard.'
+                            });
+                          }}
+                          className="text-cyan-400 hover:bg-cyan-400/10 hover:text-cyan-300"
+                          title="Copy Public Link"
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            window.open(`/quotes/${quote.quote_number || quote.id}`, '_blank');
+                          }}
+                          className="text-slate-400 hover:bg-white/10 hover:text-white"
+                          title="Open Public Link"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => {
                           // Download PDF logic
                           toast({ title: 'Download', description: 'PDF download feature coming soon.' });

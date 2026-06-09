@@ -1164,9 +1164,9 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                 <Badge variant="outline" className={isTech ? 'border-white/20 text-slate-300' : undefined}>Not included</Badge>
               )}
             </div>
-            {totals.installationLabor.sale > 0 && (
+            {totals.installation.included && totals.installationLabor.breakdown && totals.installationLabor.breakdown.length > 0 && (
               <>
-                <div className={cn('flex items-center justify-between text-xs', isTech ? 'text-slate-400' : 'text-slate-500')}>
+                <div className={cn('flex items-center justify-between text-xs mt-1', isTech ? 'text-slate-400' : 'text-slate-500')}>
                   <span>Installation Labor Breakdown:</span>
                 </div>
                 {totals.installationLabor.breakdown.map((line, idx) => (
@@ -1174,12 +1174,6 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     <span>{line}</span>
                   </div>
                 ))}
-                <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                  <span className={isTech ? 'text-cyan-300 font-semibold' : 'font-semibold'}>Installation Labor</span>
-                  <span className={isTech ? 'text-cyan-300 font-semibold' : 'font-semibold'}>
-                    {formatCurrency(totals.installationLabor.sale)}
-                  </span>
-                </div>
               </>
             )}
           </div>

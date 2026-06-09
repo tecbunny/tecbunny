@@ -852,7 +852,7 @@ export function calculateTotals({
     ? buildAnalogSystemSummary(cameraCount, analogSelections, analogPricing)
     : buildIpSystemSummary(cameraCount, ipSelections, ipPricing);
 
-  const installationLaborCharges = automationEnabled ? calculateInstallationLaborCharges(cameraCount) : { sale: 0, breakdown: [] };
+  const installationLaborCharges = installationIncluded ? calculateInstallationLaborCharges(cameraCount) : { sale: 0, breakdown: [] };
 
   // Resolve HDD
   const hdd = selectableHddOptions.find((entry) => entry.id === hddId) ?? selectableHddOptions[0];
@@ -863,15 +863,9 @@ export function calculateTotals({
   const monitorMrp = monitorIncluded ? resolvedMonitorPrice.mrp : 0;
   const monitorSale = monitorIncluded ? resolvedMonitorPrice.sale : 0;
 
-  // Resolve Installation
-  const resolvedInstallationPrice = resolveAccessoryPrice(
-    installationOption.id,
-    installationOption.mrp ?? installationOption.sale ?? 0,
-    installationOption.sale,
-    accessoryPricingOverrides
-  );
-  const installationMrp = installationIncluded ? resolvedInstallationPrice.mrp : 0;
-  const installationSale = installationIncluded ? resolvedInstallationPrice.sale : 0;
+  // Resolve Installation (using dynamic installation labor charges)
+  const installationMrp = installationLaborCharges.sale;
+  const installationSale = installationLaborCharges.sale;
 
   // Resolve Wall Mount Addon
   const resolvedWallMountPrice = resolveAccessoryPrice(
@@ -949,8 +943,7 @@ export function calculateTotals({
     wallMountSale +
     spikeGuardSale +
     rackSale +
-    conduitSale +
-    installationLaborCharges.sale;
+    conduitSale;
   
   const validatedMrp = Math.max(overallMrp, overallSale);
   const validatedSale = Math.min(overallSale, validatedMrp);
@@ -967,7 +960,7 @@ export function calculateTotals({
     rack: { mrp: rackMrp, sale: rackSale, selected: !!rackId, label: rackLabel },
     conduit: { mrp: conduitMrp, sale: conduitSale, selected: !!conduitPipeId && conduitMeters > 0, label: conduitLabel, meters: conduitMeters },
     installation: { mrp: installationMrp, sale: installationSale, included: installationIncluded },
-    installationLabor: installationLaborCharges,
+    installationLabor: { sale: 0, breakdown: installationLaborCharges.breakdown },
     overall: {
       mrp: validatedMrp,
       sale: validatedSale,

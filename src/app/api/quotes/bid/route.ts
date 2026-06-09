@@ -15,13 +15,10 @@ export async function POST(req: Request) {
     // Validate: bid price must be at least 70% of quoted price
     // Calculate original price from customSetupConfig
     let originalPrice = 0;
-    if (customSetupConfig?.totals?.sale) {
+    if (customSetupConfig?.totals?.overall?.sale) {
+      originalPrice = customSetupConfig.totals.overall.sale;
+    } else if (customSetupConfig?.totals?.sale) {
       originalPrice = customSetupConfig.totals.sale;
-    } else {
-      // If customSetupConfig doesn't have totals, try to extract from selections
-      // This is a fallback; ideally the frontend should pass the total
-      const selections = customSetupConfig || {};
-      // Estimate or return error - for now we'll allow it if no data
     }
 
     const minBidPrice = originalPrice * 0.7; // 70% minimum
@@ -36,6 +33,12 @@ export async function POST(req: Request) {
 
     // If no quoteId exists yet, create one
     if (!finalQuoteId) {
+      const formattedSelections = {
+        type: 'customised_setup',
+        ...customSetupConfig,
+        totals: customSetupConfig?.totals?.overall || customSetupConfig?.totals || {}
+      };
+
       const { data, error } = await serviceClient.from('quotes').insert({
         user_id: session?.user?.id || null,
         customer_name: name,
@@ -44,7 +47,7 @@ export async function POST(req: Request) {
         customer_address: address,
         bidded_price: biddedPrice,
         summary: summary,
-        selections: customSetupConfig,
+        selections: formattedSelections,
         status: 'bidded',
         expiry_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       }).select('id').single();

@@ -90,7 +90,7 @@ export default function AdminQuotesPage() {
       return;
     }
 
-    const totalAmount = selectedQuote.counter_price || selectedQuote.bidded_price || selectedQuote.selections?.totals?.sale || 0;
+    const totalAmount = selectedQuote.counter_price || selectedQuote.bidded_price || selectedQuote.selections?.totals?.sale || selectedQuote.selections?.totals?.overall?.sale || 0;
     const advanceAmountNum = Number(advanceAmount);
 
     if (advanceAmountNum <= 0 || advanceAmountNum >= totalAmount) {
@@ -186,7 +186,7 @@ export default function AdminQuotesPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">{quote.customer_phone}</TableCell>
-                    <TableCell className="text-sm">₹{Math.round(quote.selections?.totals?.sale || 0).toLocaleString()}</TableCell>
+                    <TableCell className="text-sm">₹{Math.round(quote.selections?.totals?.sale || quote.selections?.totals?.overall?.sale || 0).toLocaleString()}</TableCell>
                     <TableCell className="text-sm font-semibold text-amber-400">{quote.bidded_price ? `₹${Math.round(quote.bidded_price).toLocaleString()}` : '-'}</TableCell>
                     <TableCell>
                       <Badge className={
@@ -220,7 +220,7 @@ export default function AdminQuotesPage() {
                             size="sm"
                             onClick={() => {
                               setSelectedQuote(quote);
-                              const total = quote.counter_price || quote.bidded_price || quote.selections?.totals?.sale || 0;
+                              const total = quote.counter_price || quote.bidded_price || quote.selections?.totals?.sale || quote.selections?.totals?.overall?.sale || 0;
                               setAdvanceAmount((total * 0.6).toFixed(2));
                               setClauses(quote.negotiation_clauses || '60% advance payment required');
                               setShowAdvanceModal(true);
@@ -256,7 +256,7 @@ export default function AdminQuotesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/5 p-4 rounded-lg border border-white/10">
                   <p className="text-xs text-slate-500 mb-1">Original Quote Total</p>
-                  <p className="text-2xl font-bold text-white">₹{Math.round(selectedQuote.selections?.totals?.sale || 0).toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-white">₹{Math.round(selectedQuote.selections?.totals?.sale || selectedQuote.selections?.totals?.overall?.sale || 0).toLocaleString()}</p>
                 </div>
                 <div className="bg-amber-500/10 p-4 rounded-lg border border-amber-500/30">
                   <p className="text-xs text-amber-400 mb-1">Customer's Bid</p>
@@ -336,11 +336,11 @@ export default function AdminQuotesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/5 p-4 rounded-lg border border-white/10">
                   <p className="text-xs text-slate-500 mb-1">Total Amount</p>
-                  <p className="text-2xl font-bold text-white">₹{Math.round(selectedQuote.counter_price || selectedQuote.bidded_price || selectedQuote.selections?.totals?.sale || 0).toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-white">₹{Math.round(selectedQuote.counter_price || selectedQuote.bidded_price || selectedQuote.selections?.totals?.sale || selectedQuote.selections?.totals?.overall?.sale || 0).toLocaleString()}</p>
                 </div>
                 <div className="bg-emerald-500/10 p-4 rounded-lg border border-emerald-500/30">
                   <p className="text-xs text-emerald-400 mb-1">Balance Due</p>
-                  <p className="text-2xl font-bold text-emerald-300">₹{Math.round((selectedQuote.counter_price || selectedQuote.bidded_price || selectedQuote.selections?.totals?.sale || 0) - Number(advanceAmount || 0)).toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-emerald-300">₹{Math.round((selectedQuote.counter_price || selectedQuote.bidded_price || selectedQuote.selections?.totals?.sale || selectedQuote.selections?.totals?.overall?.sale || 0) - Number(advanceAmount || 0)).toLocaleString()}</p>
                 </div>
               </div>
 

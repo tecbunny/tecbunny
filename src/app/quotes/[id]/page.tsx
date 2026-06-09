@@ -129,7 +129,7 @@ export default function QuoteDetailPage() {
     );
   }
 
-  const originalPrice = quote.selections?.totals?.sale || 0;
+  const originalPrice = quote.selections?.totals?.sale || quote.selections?.totals?.overall?.sale || 0;
   const bidPrice = quote.bidded_price;
   const counterPrice = quote.counter_price;
   const savings = originalPrice - (counterPrice || bidPrice || originalPrice);

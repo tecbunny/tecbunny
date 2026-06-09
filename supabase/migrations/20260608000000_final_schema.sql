@@ -70,15 +70,47 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'advance_payment_status') THEN
     CREATE TYPE advance_payment_status AS ENUM ('pending', 'confirmed', 'payment_initiated', 'paid', 'completed');
   END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'service_engineer_skill_level') THEN
+    CREATE TYPE service_engineer_skill_level AS ENUM ('junior', 'senior', 'expert');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'service_ticket_priority') THEN
+    CREATE TYPE service_ticket_priority AS ENUM ('low', 'medium', 'high', 'urgent');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'service_ticket_status') THEN
+    CREATE TYPE service_ticket_status AS ENUM ('created', 'accepted', 'rejected', 'under_process', 'hold_for_product_payment', 'rejected_by_customer', 'completed');
+  END IF;
 END;
 $$;
 
--- Ensure existing database enum has the new negotiation status values
-ALTER TYPE public.quote_status ADD VALUE IF NOT EXISTS 'bidded';
-ALTER TYPE public.quote_status ADD VALUE IF NOT EXISTS 'accepted';
-ALTER TYPE public.quote_status ADD VALUE IF NOT EXISTS 'countered';
-ALTER TYPE public.quote_status ADD VALUE IF NOT EXISTS 'rejected';
-ALTER TYPE public.quote_status ADD VALUE IF NOT EXISTS 'declined';
+-- Ensure existing database enum has the new negotiation status values (Transaction-safe block insertion)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'quote_status') THEN
+    INSERT INTO pg_catalog.pg_enum (enumtypid, enumlabel, enumsortorder)
+    SELECT 'public.quote_status'::regtype, 'bidded', (SELECT COALESCE(MAX(enumsortorder), 0) + 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype)
+    WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'bidded');
+
+    INSERT INTO pg_catalog.pg_enum (enumtypid, enumlabel, enumsortorder)
+    SELECT 'public.quote_status'::regtype, 'accepted', (SELECT COALESCE(MAX(enumsortorder), 0) + 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype)
+    WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'accepted');
+
+    INSERT INTO pg_catalog.pg_enum (enumtypid, enumlabel, enumsortorder)
+    SELECT 'public.quote_status'::regtype, 'countered', (SELECT COALESCE(MAX(enumsortorder), 0) + 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype)
+    WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'countered');
+
+    INSERT INTO pg_catalog.pg_enum (enumtypid, enumlabel, enumsortorder)
+    SELECT 'public.quote_status'::regtype, 'rejected', (SELECT COALESCE(MAX(enumsortorder), 0) + 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype)
+    WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'rejected');
+
+    INSERT INTO pg_catalog.pg_enum (enumtypid, enumlabel, enumsortorder)
+    SELECT 'public.quote_status'::regtype, 'declined', (SELECT COALESCE(MAX(enumsortorder), 0) + 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype)
+    WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'declined');
+  END IF;
+END;
+$$;
 
 -- ============================================================================
 -- 2. Core Table Creation
@@ -127,6 +159,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   offer_price NUMERIC(12,2),
   stock_quantity INTEGER NOT NULL DEFAULT 0,
   min_stock_level INTEGER NOT NULL DEFAULT 0,
+  stock_status TEXT DEFAULT 'in_stock',
   image TEXT,
   images TEXT[] DEFAULT '{}'::TEXT[],
   additional_images TEXT[] DEFAULT '{}'::TEXT[],
@@ -166,6 +199,17 @@ CREATE TABLE IF NOT EXISTS public.products (
   tax_ai_reviewed            BOOLEAN       NOT NULL DEFAULT FALSE,
   tax_ai_reviewed_by         UUID,
   tax_ai_reviewed_at         TIMESTAMPTZ
+);
+
+-- Product Archive Log Table
+CREATE TABLE IF NOT EXISTS public.product_archive_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
+  product_snapshot JSONB NOT NULL,
+  archived_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  archived_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  reason TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Orders Table
@@ -493,7 +537,7 @@ CREATE TABLE IF NOT EXISTS public.payment_recovery_queue (
 -- Advance Payment Requests Table
 CREATE TABLE IF NOT EXISTS public.advance_payment_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  quote_id UUID NOT NULL REFERENCES public.quotes(id) ON DELETE CASCADE,
+  quote_id UUID NOT NULL, -- references quotes defined below via alter table to prevent cyclic reference errors
   admin_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   advance_amount NUMERIC(12,2) NOT NULL,
   total_amount NUMERIC(12,2) NOT NULL,
@@ -513,9 +557,24 @@ CREATE TABLE IF NOT EXISTS public.advance_payment_requests (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Alter table to establish relationship between advance_payment_requests and quotes
+ALTER TABLE public.advance_payment_requests
+ADD CONSTRAINT fk_advance_payment_quote FOREIGN KEY (quote_id) REFERENCES public.quotes(id) ON DELETE CASCADE;
+
 -- Add advance_payment_id to quotes table
 ALTER TABLE public.quotes 
 ADD COLUMN IF NOT EXISTS advance_payment_id UUID REFERENCES public.advance_payment_requests(id) ON DELETE SET NULL;
+
+-- Coupons Table
+CREATE TABLE IF NOT EXISTS public.coupons (
+  code TEXT PRIMARY KEY,
+  status TEXT NOT NULL DEFAULT 'active',
+  type TEXT NOT NULL DEFAULT 'percentage',
+  value NUMERIC(10,2) NOT NULL,
+  expiry_date TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 -- Marketing Broadcast Logs Table
 CREATE TABLE IF NOT EXISTS public.marketing_broadcast_logs (
@@ -544,6 +603,125 @@ CREATE TABLE IF NOT EXISTS public.free_installation_slots (
   UNIQUE(month)
 );
 
+-- Sales Agents Table
+CREATE TABLE IF NOT EXISTS public.sales_agents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  referral_code TEXT NOT NULL UNIQUE,
+  points_balance NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+  commission_rate NUMERIC(5,2) NOT NULL DEFAULT 5.00,
+  status public.sales_agent_status NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Sales Agent Commissions Table
+CREATE TABLE IF NOT EXISTS public.sales_agent_commissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  agent_id UUID NOT NULL REFERENCES public.sales_agents(id) ON DELETE CASCADE,
+  order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
+  order_total NUMERIC(12,2) NOT NULL DEFAULT 0,
+  pre_tax_amount NUMERIC(12,2) DEFAULT 0,
+  gst_amount NUMERIC(12,2) DEFAULT 0,
+  commission_rate NUMERIC(5,2) DEFAULT 0,
+  commission_amount NUMERIC(12,2) DEFAULT 0,
+  commission_rate_snapshot JSONB DEFAULT '{}'::JSONB,
+  points_awarded NUMERIC(12,2) DEFAULT 0,
+  commission_rule_id UUID,
+  status TEXT DEFAULT 'pending',
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Agent Commission Rules Table
+CREATE TABLE IF NOT EXISTS public.agent_commission_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  agent_id UUID NOT NULL REFERENCES public.sales_agents(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
+  product_category TEXT,
+  commission_rate NUMERIC(5,2) NOT NULL DEFAULT 5.00,
+  min_order_value NUMERIC(12,2),
+  valid_from TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  valid_to TIMESTAMPTZ,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Agent Redemption Requests Table
+CREATE TABLE IF NOT EXISTS public.agent_redemption_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  agent_id UUID NOT NULL REFERENCES public.sales_agents(id) ON DELETE CASCADE,
+  points_to_redeem NUMERIC(10,2) NOT NULL CHECK (points_to_redeem > 0),
+  status public.redemption_status NOT NULL DEFAULT 'pending',
+  bank_details JSONB DEFAULT '{}'::JSONB,
+  notes TEXT,
+  requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  processed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Service Engineers Table
+CREATE TABLE IF NOT EXISTS public.service_engineers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  employee_id TEXT,
+  specializations TEXT[] DEFAULT '{}'::TEXT[],
+  skill_level public.service_engineer_skill_level NOT NULL DEFAULT 'junior',
+  available_hours JSONB DEFAULT '{}'::JSONB,
+  is_available BOOLEAN NOT NULL DEFAULT TRUE,
+  current_location JSONB,
+  service_radius INTEGER NOT NULL DEFAULT 50,
+  rating NUMERIC(3,2) NOT NULL DEFAULT 0,
+  total_services INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Service Tickets Table
+CREATE TABLE IF NOT EXISTS public.service_tickets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  service_id UUID REFERENCES public.services(id) ON DELETE SET NULL,
+  customer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  customer_name TEXT NOT NULL,
+  customer_email TEXT NOT NULL,
+  customer_phone TEXT,
+  customer_address TEXT,
+  issue_description TEXT NOT NULL,
+  priority public.service_ticket_priority NOT NULL DEFAULT 'medium',
+  status public.service_ticket_status NOT NULL DEFAULT 'created',
+  assigned_engineer_id UUID REFERENCES public.service_engineers(id) ON DELETE SET NULL,
+  assigned_at TIMESTAMPTZ,
+  scheduled_date TIMESTAMPTZ,
+  started_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ,
+  estimated_duration INTEGER,
+  actual_duration INTEGER,
+  service_charge NUMERIC(12,2),
+  parts_cost NUMERIC(12,2),
+  total_cost NUMERIC(12,2),
+  customer_rating INTEGER,
+  customer_feedback TEXT,
+  engineer_notes TEXT,
+  photos TEXT[] DEFAULT '{}'::TEXT[],
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Service Parts Table
+CREATE TABLE IF NOT EXISTS public.service_parts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_id UUID NOT NULL REFERENCES public.service_tickets(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+  part_name TEXT NOT NULL,
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  unit_cost NUMERIC(12,2) NOT NULL DEFAULT 0,
+  total_cost NUMERIC(12,2) GENERATED ALWAYS AS (quantity * unit_cost) STORED,
+  warranty_days INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ============================================================================
 -- 3. Optimization Indexes
 -- ============================================================================
@@ -551,6 +729,25 @@ CREATE TABLE IF NOT EXISTS public.free_installation_slots (
 CREATE INDEX IF NOT EXISTS quotes_user_idx ON public.quotes(user_id);
 CREATE INDEX IF NOT EXISTS quotes_expiry_idx ON public.quotes(expiry_at);
 CREATE INDEX IF NOT EXISTS idx_stock_movements_product ON public.stock_movements (product_id, created_at DESC);
+
+-- Triggers for updated_at
+CREATE TRIGGER trg_sales_agents_updated_at BEFORE UPDATE ON public.sales_agents FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_agent_commission_rules_updated_at BEFORE UPDATE ON public.agent_commission_rules FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_agent_redemption_requests_updated_at BEFORE UPDATE ON public.agent_redemption_requests FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_service_engineers_updated_at BEFORE UPDATE ON public.service_engineers FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TRIGGER trg_service_tickets_updated_at BEFORE UPDATE ON public.service_tickets FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Optimization indexes for new tables
+CREATE INDEX IF NOT EXISTS idx_sales_agents_user_id ON public.sales_agents(user_id);
+CREATE INDEX IF NOT EXISTS idx_sales_agents_referral ON public.sales_agents(referral_code);
+CREATE INDEX IF NOT EXISTS idx_sales_agent_commissions_agent ON public.sales_agent_commissions(agent_id);
+CREATE INDEX IF NOT EXISTS idx_sales_agent_commissions_order ON public.sales_agent_commissions(order_id);
+CREATE INDEX IF NOT EXISTS idx_agent_commission_rules_agent ON public.agent_commission_rules(agent_id);
+CREATE INDEX IF NOT EXISTS idx_agent_redemption_requests_agent ON public.agent_redemption_requests(agent_id);
+CREATE INDEX IF NOT EXISTS idx_service_engineers_user_id ON public.service_engineers(user_id);
+CREATE INDEX IF NOT EXISTS idx_service_tickets_customer ON public.service_tickets(customer_id);
+CREATE INDEX IF NOT EXISTS idx_service_tickets_engineer ON public.service_tickets(assigned_engineer_id);
+CREATE INDEX IF NOT EXISTS idx_service_parts_ticket ON public.service_parts(ticket_id);
 
 -- New indexes for marketing logic and advance payments
 CREATE INDEX IF NOT EXISTS idx_payment_recovery_order ON public.payment_recovery_queue(order_id);
@@ -572,6 +769,7 @@ CREATE INDEX IF NOT EXISTS idx_products_tax_ai_review ON public.products (tax_ai
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_order_id ON public.payment_transactions(order_id);
 CREATE INDEX IF NOT EXISTS idx_superadmin_token_blocklist_expiry ON public.superadmin_token_blocklist(expires_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_whatsapp_messages_message_id ON public.whatsapp_messages (whatsapp_message_id) WHERE whatsapp_message_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_coupons_expiry ON public.coupons(expiry_date);
 
 -- ============================================================================
 -- 4. JWT & Role Helpers
@@ -586,6 +784,7 @@ SET search_path = public, pg_temp
 AS $$
   SELECT COALESCE(
     CASE 
+      WHEN auth.role() = 'service_role' THEN 'service_role'
       WHEN (auth.jwt() -> 'app_metadata' ->> 'role') IN ('superadmin', 'super-admin', 'super admin', 'super_admin') THEN 'superadmin'
       ELSE auth.jwt() -> 'app_metadata' ->> 'role'
     END,
@@ -600,7 +799,7 @@ STABLE
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
-  SELECT EXISTS (
+  SELECT auth.role() = 'service_role' OR EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid()
       AND role = 'superadmin'
@@ -614,7 +813,7 @@ STABLE
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
-  SELECT EXISTS (
+  SELECT auth.role() = 'service_role' OR EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid()
       AND role IN ('admin', 'superadmin')
@@ -628,7 +827,7 @@ STABLE
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
-  SELECT EXISTS (
+  SELECT auth.role() = 'service_role' OR EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid()
       AND role IN ('admin', 'manager', 'superadmin')
@@ -642,7 +841,7 @@ STABLE
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
-  SELECT EXISTS (
+  SELECT auth.role() = 'service_role' OR EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid()
       AND role IN ('admin', 'manager', 'sales', 'accounts', 'superadmin')
@@ -674,15 +873,26 @@ CREATE TRIGGER trg_sync_profile_role
   FOR EACH ROW
   EXECUTE FUNCTION public.sync_profile_role_to_auth();
 
--- Role change protection trigger
+-- Role change protection trigger (Hardened to guard INSERT and UPDATE)
 CREATE OR REPLACE FUNCTION public.protect_profile_role_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF OLD.role IS DISTINCT FROM NEW.role AND NOT (
-        public.is_manager_or_admin() OR 
-        (auth.jwt() -> 'app_metadata' ->> 'role') IN ('admin', 'superadmin')
-    ) THEN
-        NEW.role := OLD.role;
+    IF TG_OP = 'INSERT' THEN
+        IF NEW.role IS DISTINCT FROM 'customer' AND NOT (
+            public.is_admin_user() OR 
+            auth.role() = 'service_role' OR
+            (auth.jwt() -> 'app_metadata' ->> 'role') IN ('admin', 'superadmin')
+        ) THEN
+            NEW.role := 'customer';
+        END IF;
+    ELSIF TG_OP = 'UPDATE' THEN
+        IF OLD.role IS DISTINCT FROM NEW.role AND NOT (
+            public.is_admin_user() OR 
+            auth.role() = 'service_role' OR
+            (auth.jwt() -> 'app_metadata' ->> 'role') IN ('admin', 'superadmin')
+        ) THEN
+            NEW.role := OLD.role;
+        END IF;
     END IF;
     RETURN NEW;
 END;
@@ -691,7 +901,7 @@ SET search_path = public, pg_temp;
 
 DROP TRIGGER IF EXISTS tr_protect_profile_role_column ON public.profiles;
 CREATE TRIGGER tr_protect_profile_role_column
-BEFORE UPDATE ON public.profiles
+BEFORE INSERT OR UPDATE ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.protect_profile_role_column();
 
 -- ============================================================================
@@ -700,6 +910,7 @@ FOR EACH ROW EXECUTE FUNCTION public.protect_profile_role_column();
 
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quotes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inventory ENABLE ROW LEVEL SECURITY;
@@ -714,12 +925,24 @@ ALTER TABLE public.security_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.superadmin_token_blocklist ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_archive_log ENABLE ROW LEVEL SECURITY;
-
 ALTER TABLE public.wishlist_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_recovery_queue ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.advance_payment_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.marketing_broadcast_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.free_installation_slots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_agents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sales_agent_commissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.agent_commission_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.agent_redemption_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.service_engineers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.service_tickets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.service_parts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.innovation_modes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.innovation_devices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.whatsapp_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_otp_verifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 
 -- Product Policies
 DROP POLICY IF EXISTS rls_products_public_read ON public.products;
@@ -741,9 +964,25 @@ CREATE POLICY "Customers can view own orders" ON public.orders FOR SELECT TO aut
 DROP POLICY IF EXISTS "Staff can view all orders" ON public.orders;
 CREATE POLICY "Staff can view all orders" ON public.orders FOR SELECT TO authenticated USING (public.is_staff_member());
 
+-- Order Items Policies
+DROP POLICY IF EXISTS "Customers can view own order items" ON public.order_items;
+CREATE POLICY "Customers can view own order items" ON public.order_items FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.orders WHERE orders.id = order_items.order_id AND orders.customer_id = auth.uid()));
+DROP POLICY IF EXISTS "Staff can view all order items" ON public.order_items;
+CREATE POLICY "Staff can view all order items" ON public.order_items FOR SELECT TO authenticated USING (public.is_staff_member());
+
 -- Inventory Policies
 DROP POLICY IF EXISTS inventory_staff_all ON public.inventory;
 CREATE POLICY inventory_staff_all ON public.inventory FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
+
+-- Stock Movements Policies
+DROP POLICY IF EXISTS "Staff can manage all stock movements" ON public.stock_movements;
+CREATE POLICY "Staff can manage all stock movements" ON public.stock_movements FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
+
+-- Services Policies
+DROP POLICY IF EXISTS "Allow public read access to active services" ON public.services;
+CREATE POLICY "Allow public read access to active services" ON public.services FOR SELECT USING (is_active = true AND status = 'active');
+DROP POLICY IF EXISTS "Staff can manage all services" ON public.services;
+CREATE POLICY "Staff can manage all services" ON public.services FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
 
 -- FAQ Policies
 DROP POLICY IF EXISTS "Allow public read access to published FAQs" ON public.faqs;
@@ -751,27 +990,19 @@ CREATE POLICY "Allow public read access to published FAQs" ON public.faqs FOR SE
 
 -- Payment Transactions Policies
 DROP POLICY IF EXISTS "Staff can view all payment transactions" ON public.payment_transactions;
-CREATE POLICY "Staff can view all payment transactions" ON public.payment_transactions
-  FOR SELECT TO authenticated USING (public.is_staff_member());
+CREATE POLICY "Staff can view all payment transactions" ON public.payment_transactions FOR SELECT TO authenticated USING (public.is_staff_member());
 DROP POLICY IF EXISTS "Customers can view own payment transactions" ON public.payment_transactions;
-CREATE POLICY "Customers can view own payment transactions" ON public.payment_transactions
-  FOR SELECT TO authenticated USING (
-    EXISTS (
-      SELECT 1 FROM public.orders
-      WHERE orders.id = payment_transactions.order_id
-        AND orders.customer_id = auth.uid()
-    )
-  );
+CREATE POLICY "Customers can view own payment transactions" ON public.payment_transactions FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.orders WHERE orders.id = payment_transactions.order_id AND orders.customer_id = auth.uid()));
 
 -- Product Archive Log Policies
 DROP POLICY IF EXISTS "Staff can view product archive log" ON public.product_archive_log;
-CREATE POLICY "Staff can view product archive log" ON public.product_archive_log
-  FOR SELECT TO authenticated USING (public.is_manager_or_admin());
+CREATE POLICY "Staff can view product archive log" ON public.product_archive_log FOR SELECT TO authenticated USING (public.is_manager_or_admin());
+DROP POLICY IF EXISTS "Staff can insert product archive log" ON public.product_archive_log;
+CREATE POLICY "Staff can insert product archive log" ON public.product_archive_log FOR INSERT TO authenticated WITH CHECK (public.is_manager_or_admin());
 
 -- Superadmin Token Blocklist Policies
 DROP POLICY IF EXISTS "Superadmins can manage token blocklist" ON public.superadmin_token_blocklist;
-CREATE POLICY "Superadmins can manage token blocklist" ON public.superadmin_token_blocklist
-  FOR ALL TO authenticated USING (public.is_superadmin_user()) WITH CHECK (public.is_superadmin_user());
+CREATE POLICY "Superadmins can manage token blocklist" ON public.superadmin_token_blocklist FOR ALL TO authenticated USING (public.is_superadmin_user()) WITH CHECK (public.is_superadmin_user());
 
 -- Security Table Policies
 DROP POLICY IF EXISTS security_audit_log_superadmin_only ON public.security_audit_log;
@@ -787,65 +1018,157 @@ CREATE POLICY "Users can insert own wishlist items" ON public.wishlist_items FOR
 DROP POLICY IF EXISTS "Users can delete own wishlist items" ON public.wishlist_items;
 CREATE POLICY "Users can delete own wishlist items" ON public.wishlist_items FOR DELETE TO authenticated USING (profile_id = auth.uid());
 
--- Advance Payment Requests Policies
+-- Quotes Policies
+DROP POLICY IF EXISTS "Users can read own quotes" ON public.quotes;
+CREATE POLICY "Users can read own quotes" ON public.quotes FOR SELECT TO authenticated USING (user_id = auth.uid());
+DROP POLICY IF EXISTS "Users can insert own quotes" ON public.quotes;
+CREATE POLICY "Users can insert own quotes" ON public.quotes FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+DROP POLICY IF EXISTS "Users can update own quotes" ON public.quotes;
+CREATE POLICY "Users can update own quotes" ON public.quotes FOR UPDATE TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+DROP POLICY IF EXISTS "Staff can manage all quotes" ON public.quotes;
+CREATE POLICY "Staff can manage all quotes" ON public.quotes FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
+
+-- Advance Payment Requests Policies (Hardened to use secure functions instead of insecure auth.jwt() ->> 'role')
 DROP POLICY IF EXISTS "Customers can view their own advance requests" ON public.advance_payment_requests;
 CREATE POLICY "Customers can view their own advance requests" ON public.advance_payment_requests FOR SELECT USING (EXISTS (SELECT 1 FROM public.quotes WHERE quotes.id = advance_payment_requests.quote_id AND quotes.user_id = auth.uid()));
 DROP POLICY IF EXISTS "Admins can view all advance requests" ON public.advance_payment_requests;
-CREATE POLICY "Admins can view all advance requests" ON public.advance_payment_requests FOR SELECT TO authenticated USING (auth.jwt() ->> 'role' IN ('admin', 'superadmin', 'manager'));
+CREATE POLICY "Admins can view all advance requests" ON public.advance_payment_requests FOR SELECT TO authenticated USING (public.is_manager_or_admin());
 DROP POLICY IF EXISTS "Admins can create advance requests" ON public.advance_payment_requests;
-CREATE POLICY "Admins can create advance requests" ON public.advance_payment_requests FOR INSERT TO authenticated WITH CHECK (auth.jwt() ->> 'role' IN ('admin', 'superadmin', 'manager'));
+CREATE POLICY "Admins can create advance requests" ON public.advance_payment_requests FOR INSERT TO authenticated WITH CHECK (public.is_manager_or_admin());
 DROP POLICY IF EXISTS "Admins can update advance requests" ON public.advance_payment_requests;
-CREATE POLICY "Admins can update advance requests" ON public.advance_payment_requests FOR UPDATE TO authenticated USING (auth.jwt() ->> 'role' IN ('admin', 'superadmin', 'manager')) WITH CHECK (auth.jwt() ->> 'role' IN ('admin', 'superadmin', 'manager'));
+CREATE POLICY "Admins can update advance requests" ON public.advance_payment_requests FOR UPDATE TO authenticated USING (public.is_manager_or_admin()) WITH CHECK (public.is_manager_or_admin());
 DROP POLICY IF EXISTS "Customers can update their advance requests" ON public.advance_payment_requests;
 CREATE POLICY "Customers can update their advance requests" ON public.advance_payment_requests FOR UPDATE USING (EXISTS (SELECT 1 FROM public.quotes WHERE quotes.id = advance_payment_requests.quote_id AND quotes.user_id = auth.uid()));
 
+-- Sales Agents Policies
+DROP POLICY IF EXISTS "Users can apply for sales agent" ON public.sales_agents;
+CREATE POLICY "Users can apply for sales agent" ON public.sales_agents FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+DROP POLICY IF EXISTS "Agents and staff can view agent data" ON public.sales_agents;
+CREATE POLICY "Agents and staff can view agent data" ON public.sales_agents FOR SELECT TO authenticated USING (user_id = auth.uid() OR public.is_staff_member());
+DROP POLICY IF EXISTS "Staff can manage agents" ON public.sales_agents;
+CREATE POLICY "Staff can manage agents" ON public.sales_agents FOR ALL TO authenticated USING (public.is_manager_or_admin());
+
+-- Sales Agent Commissions Policies
+DROP POLICY IF EXISTS "Agents can view own commissions" ON public.sales_agent_commissions;
+CREATE POLICY "Agents can view own commissions" ON public.sales_agent_commissions FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.sales_agents WHERE sales_agents.id = sales_agent_commissions.agent_id AND sales_agents.user_id = auth.uid()));
+DROP POLICY IF EXISTS "Staff can view all commissions" ON public.sales_agent_commissions;
+CREATE POLICY "Staff can view all commissions" ON public.sales_agent_commissions FOR SELECT TO authenticated USING (public.is_staff_member());
+DROP POLICY IF EXISTS "Staff can insert commissions" ON public.sales_agent_commissions;
+CREATE POLICY "Staff can insert commissions" ON public.sales_agent_commissions FOR INSERT TO authenticated WITH CHECK (public.is_staff_member());
+DROP POLICY IF EXISTS "Staff can manage commissions" ON public.sales_agent_commissions;
+CREATE POLICY "Staff can manage commissions" ON public.sales_agent_commissions FOR ALL TO authenticated USING (public.is_manager_or_admin());
+
+-- Agent Commission Rules Policies
+DROP POLICY IF EXISTS "Agents can view rules" ON public.agent_commission_rules;
+CREATE POLICY "Agents can view rules" ON public.agent_commission_rules FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.sales_agents WHERE sales_agents.id = agent_commission_rules.agent_id AND sales_agents.user_id = auth.uid()) OR public.is_staff_member());
+DROP POLICY IF EXISTS "Admins can manage rules" ON public.agent_commission_rules;
+CREATE POLICY "Admins can manage rules" ON public.agent_commission_rules FOR ALL TO authenticated USING (public.is_manager_or_admin());
+
+-- Agent Redemption Requests Policies
+DROP POLICY IF EXISTS "Agents can view own redemptions" ON public.agent_redemption_requests;
+CREATE POLICY "Agents can view own redemptions" ON public.agent_redemption_requests FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.sales_agents WHERE sales_agents.id = agent_redemption_requests.agent_id AND sales_agents.user_id = auth.uid()));
+DROP POLICY IF EXISTS "Agents can insert redemptions" ON public.agent_redemption_requests;
+CREATE POLICY "Agents can insert redemptions" ON public.agent_redemption_requests FOR INSERT TO authenticated WITH CHECK (EXISTS (SELECT 1 FROM public.sales_agents WHERE sales_agents.id = agent_redemption_requests.agent_id AND sales_agents.user_id = auth.uid()));
+DROP POLICY IF EXISTS "Staff can view all redemptions" ON public.agent_redemption_requests;
+CREATE POLICY "Staff can view all redemptions" ON public.agent_redemption_requests FOR SELECT TO authenticated USING (public.is_staff_member());
+DROP POLICY IF EXISTS "Staff can update redemptions" ON public.agent_redemption_requests;
+CREATE POLICY "Staff can update redemptions" ON public.agent_redemption_requests FOR UPDATE TO authenticated USING (public.is_staff_member());
+
+-- Service Engineers Policies
+DROP POLICY IF EXISTS "Engineers can view own profile" ON public.service_engineers;
+CREATE POLICY "Engineers can view own profile" ON public.service_engineers FOR SELECT TO authenticated USING (user_id = auth.uid());
+DROP POLICY IF EXISTS "Staff can view all engineers" ON public.service_engineers;
+CREATE POLICY "Staff can view all engineers" ON public.service_engineers FOR SELECT TO authenticated USING (public.is_staff_member());
+DROP POLICY IF EXISTS "Admins can manage engineers" ON public.service_engineers;
+CREATE POLICY "Admins can manage engineers" ON public.service_engineers FOR ALL TO authenticated USING (public.is_manager_or_admin());
+
+-- Service Tickets Policies
+DROP POLICY IF EXISTS "Customers can view own tickets" ON public.service_tickets;
+CREATE POLICY "Customers can view own tickets" ON public.service_tickets FOR SELECT TO authenticated USING (customer_id = auth.uid());
+DROP POLICY IF EXISTS "Engineers can view assigned tickets" ON public.service_tickets;
+CREATE POLICY "Engineers can view assigned tickets" ON public.service_tickets FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.service_engineers WHERE service_engineers.id = service_tickets.assigned_engineer_id AND service_engineers.user_id = auth.uid()));
+DROP POLICY IF EXISTS "Staff can view all tickets" ON public.service_tickets;
+CREATE POLICY "Staff can view all tickets" ON public.service_tickets FOR SELECT TO authenticated USING (public.is_staff_member());
+DROP POLICY IF EXISTS "Customers can create tickets" ON public.service_tickets;
+CREATE POLICY "Customers can create tickets" ON public.service_tickets FOR INSERT TO authenticated WITH CHECK (customer_id = auth.uid());
+DROP POLICY IF EXISTS "Engineers can update assigned tickets" ON public.service_tickets;
+CREATE POLICY "Engineers can update assigned tickets" ON public.service_tickets FOR UPDATE TO authenticated USING (EXISTS (SELECT 1 FROM public.service_engineers WHERE service_engineers.id = service_tickets.assigned_engineer_id AND service_engineers.user_id = auth.uid()) OR public.is_staff_member());
+DROP POLICY IF EXISTS "Admins can manage tickets" ON public.service_tickets;
+CREATE POLICY "Admins can manage tickets" ON public.service_tickets FOR ALL TO authenticated USING (public.is_manager_or_admin());
+
+-- Service Parts Policies
+DROP POLICY IF EXISTS "Engineers and customers can view parts" ON public.service_parts;
+CREATE POLICY "Engineers and customers can view parts" ON public.service_parts FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.service_tickets WHERE service_tickets.id = service_parts.ticket_id AND (service_tickets.customer_id = auth.uid() OR EXISTS (SELECT 1 FROM public.service_engineers WHERE service_engineers.id = service_tickets.assigned_engineer_id AND service_engineers.user_id = auth.uid()))) OR public.is_staff_member());
+DROP POLICY IF EXISTS "Staff can manage parts" ON public.service_parts;
+CREATE POLICY "Staff can manage parts" ON public.service_parts FOR ALL TO authenticated USING (public.is_staff_member());
+
 -- Marketing Broadcast Logs Policies
 DROP POLICY IF EXISTS "Admins can insert broadcast logs" ON public.marketing_broadcast_logs;
-CREATE POLICY "Admins can insert broadcast logs" 
-ON public.marketing_broadcast_logs 
-FOR INSERT 
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE profiles.id = auth.uid() 
-    AND profiles.role IN ('admin', 'superadmin')
-  )
-);
-
+CREATE POLICY "Admins can insert broadcast logs" ON public.marketing_broadcast_logs FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('admin', 'superadmin')));
 DROP POLICY IF EXISTS "Admins can view broadcast logs" ON public.marketing_broadcast_logs;
-CREATE POLICY "Admins can view broadcast logs" 
-ON public.marketing_broadcast_logs 
-FOR SELECT 
-USING (
-  EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE profiles.id = auth.uid() 
-    AND profiles.role IN ('admin', 'superadmin')
-  )
-);
-
+CREATE POLICY "Admins can view broadcast logs" ON public.marketing_broadcast_logs FOR SELECT USING (EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('admin', 'superadmin')));
 DROP POLICY IF EXISTS "Service role full access on marketing_broadcast_logs" ON public.marketing_broadcast_logs;
-CREATE POLICY "Service role full access on marketing_broadcast_logs"
-ON public.marketing_broadcast_logs
-FOR ALL
-USING (auth.role() = 'service_role')
-WITH CHECK (auth.role() = 'service_role');
+CREATE POLICY "Service role full access on marketing_broadcast_logs" ON public.marketing_broadcast_logs FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
 
--- Free Installation Slots Policies
+-- Free Installation Slots Policies (Hardened to prevent unauthorized direct modifications)
 DROP POLICY IF EXISTS "Allow public read access to free installation slots" ON public.free_installation_slots;
-CREATE POLICY "Allow public read access to free installation slots" 
-ON public.free_installation_slots 
-FOR SELECT 
-TO public
-USING (true);
-
+CREATE POLICY "Allow public read access to free installation slots" ON public.free_installation_slots FOR SELECT TO public USING (true);
 DROP POLICY IF EXISTS "Allow authenticated update of free installation slots" ON public.free_installation_slots;
-CREATE POLICY "Allow authenticated update of free installation slots" 
-ON public.free_installation_slots 
-FOR UPDATE 
-TO authenticated
-USING (auth.role() = 'authenticated')
-WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated update of free installation slots" ON public.free_installation_slots FOR UPDATE TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
+
+-- Innovation Modes Policies
+DROP POLICY IF EXISTS "Allow public read access to active innovation modes" ON public.innovation_modes;
+CREATE POLICY "Allow public read access to active innovation modes" ON public.innovation_modes FOR SELECT USING (is_active = true);
+DROP POLICY IF EXISTS "Admins can manage innovation modes" ON public.innovation_modes;
+CREATE POLICY "Admins can manage innovation modes" ON public.innovation_modes FOR ALL TO authenticated USING (public.is_manager_or_admin()) WITH CHECK (public.is_manager_or_admin());
+
+-- Innovation Devices Policies
+DROP POLICY IF EXISTS "Allow public read access to active innovation devices" ON public.innovation_devices;
+CREATE POLICY "Allow public read access to active innovation devices" ON public.innovation_devices FOR SELECT USING (is_active = true);
+DROP POLICY IF EXISTS "Admins can manage innovation devices" ON public.innovation_devices;
+CREATE POLICY "Admins can manage innovation devices" ON public.innovation_devices FOR ALL TO authenticated USING (public.is_manager_or_admin()) WITH CHECK (public.is_manager_or_admin());
+
+-- Settings Policies
+DROP POLICY IF EXISTS "Allow public read access to public settings" ON public.settings;
+CREATE POLICY "Allow public read access to public settings" ON public.settings FOR SELECT USING (is_public = true);
+DROP POLICY IF EXISTS "Admins can manage settings" ON public.settings;
+CREATE POLICY "Admins can manage settings" ON public.settings FOR ALL TO authenticated USING (public.is_manager_or_admin()) WITH CHECK (public.is_manager_or_admin());
+
+-- Whatsapp Messages Policies
+DROP POLICY IF EXISTS "Staff can manage whatsapp messages" ON public.whatsapp_messages;
+CREATE POLICY "Staff can manage whatsapp messages" ON public.whatsapp_messages FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
+
+-- Order OTP Verifications Policies
+DROP POLICY IF EXISTS "Staff can manage OTP verifications" ON public.order_otp_verifications;
+CREATE POLICY "Staff can manage OTP verifications" ON public.order_otp_verifications FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
+
+-- Tax Rates Policies
+DROP POLICY IF EXISTS "Allow public read access to tax rates" ON public.tax_rates;
+CREATE POLICY "Allow public read access to tax rates" ON public.tax_rates FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admins can manage tax rates" ON public.tax_rates;
+CREATE POLICY "Admins can manage tax rates" ON public.tax_rates FOR ALL TO authenticated USING (public.is_manager_or_admin()) WITH CHECK (public.is_manager_or_admin());
+
+-- HSN Codes Policies
+DROP POLICY IF EXISTS "Allow public read access to hsn codes" ON public.hsn_codes;
+CREATE POLICY "Allow public read access to hsn codes" ON public.hsn_codes FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Admins can manage hsn codes" ON public.hsn_codes;
+CREATE POLICY "Admins can manage hsn codes" ON public.hsn_codes FOR ALL TO authenticated USING (public.is_manager_or_admin()) WITH CHECK (public.is_manager_or_admin());
+
+-- Policies Table Policies
+DROP POLICY IF EXISTS "Allow public read access to published policies" ON public.policies;
+CREATE POLICY "Allow public read access to published policies" ON public.policies FOR SELECT USING (is_published = true);
+DROP POLICY IF EXISTS "Admins can manage policies" ON public.policies;
+CREATE POLICY "Admins can manage policies" ON public.policies FOR ALL TO authenticated USING (public.is_manager_or_admin()) WITH CHECK (public.is_manager_or_admin());
+
+-- Payment Recovery Queue Policies
+DROP POLICY IF EXISTS "Staff can manage payment recovery queue" ON public.payment_recovery_queue;
+CREATE POLICY "Staff can manage payment recovery queue" ON public.payment_recovery_queue FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
+
+-- Coupons Policies
+DROP POLICY IF EXISTS "Allow public read access to active coupons" ON public.coupons;
+CREATE POLICY "Allow public read access to active coupons" ON public.coupons FOR SELECT USING (status = 'active' AND expiry_date > NOW());
+DROP POLICY IF EXISTS "Admins can manage coupons" ON public.coupons;
+CREATE POLICY "Admins can manage coupons" ON public.coupons FOR ALL TO authenticated USING (public.is_manager_or_admin()) WITH CHECK (public.is_manager_or_admin());
 
 -- ============================================================================
 -- 6. Core Database Functions
@@ -865,11 +1188,91 @@ AS $$
 DECLARE
   v_product RECORD;
 BEGIN
+  IF NOT public.is_manager_or_admin() THEN
+    RAISE EXCEPTION 'Access denied';
+  END IF;
+
   SELECT id, title, status, is_deleted INTO v_product FROM public.products WHERE id = p_product_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Product % not found', p_product_id; END IF;
   IF v_product.is_deleted THEN RAISE EXCEPTION 'Product % is already deleted', p_product_id; END IF;
-  UPDATE public.products SET is_deleted = TRUE, deleted_at = NOW(), deleted_by = p_deleted_by, status = 'archived', archived_at = NOW(), archived_by = p_deleted_by, archive_reason = p_reason, updated_at = NOW() WHERE id = p_product_id;
+  
+  UPDATE public.products 
+  SET is_deleted = TRUE, 
+      deleted_at = NOW(), 
+      deleted_by = p_deleted_by, 
+      status = 'archived', 
+      archived_at = NOW(), 
+      archived_by = p_deleted_by, 
+      archive_reason = p_reason, 
+      updated_at = NOW() 
+  WHERE id = p_product_id;
+
+  -- Write snapshot to product_archive_log
+  INSERT INTO public.product_archive_log (product_id, product_snapshot, archived_at, archived_by, reason)
+  SELECT id, to_jsonb(p.*), NOW(), p_deleted_by, p_reason
+  FROM public.products p
+  WHERE id = p_product_id;
+
   RETURN jsonb_build_object('product_id', p_product_id, 'title', v_product.title, 'archived_at', NOW(), 'archived_by', p_deleted_by, 'reason', p_reason);
+END;
+$$;
+
+-- Restore Product
+CREATE OR REPLACE FUNCTION public.restore_product(
+  p_product_id   UUID,
+  p_restored_by  UUID
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_product RECORD;
+BEGIN
+  IF NOT public.is_manager_or_admin() THEN
+    RAISE EXCEPTION 'Access denied';
+  END IF;
+
+  SELECT id, title, status, is_deleted INTO v_product FROM public.products WHERE id = p_product_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Product % not found', p_product_id; END IF;
+  IF NOT v_product.is_deleted THEN RAISE EXCEPTION 'Product % is not archived', p_product_id; END IF;
+  
+  UPDATE public.products 
+  SET is_deleted = FALSE, 
+      status = 'active', 
+      deleted_at = NULL, 
+      deleted_by = NULL, 
+      archived_at = NULL, 
+      archived_by = NULL, 
+      archive_reason = NULL, 
+      updated_at = NOW(),
+      updated_by = p_restored_by
+  WHERE id = p_product_id;
+  
+  RETURN jsonb_build_object('product_id', p_product_id, 'title', v_product.title, 'restored_at', NOW(), 'restored_by', p_restored_by);
+END;
+$$;
+
+-- Increment Agent Points
+CREATE OR REPLACE FUNCTION public.increment_agent_points(
+  agent_id UUID,
+  points_to_add NUMERIC
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  IF NOT public.is_staff_member() THEN
+    RAISE EXCEPTION 'Access denied';
+  END IF;
+
+  UPDATE public.sales_agents
+  SET points_balance = COALESCE(points_balance, 0) + points_to_add,
+      updated_at = NOW()
+  WHERE id = agent_id;
 END;
 $$;
 
@@ -914,7 +1317,7 @@ BEGIN
 END;
 $$;
 
--- Atomic Order Inventory Allocation
+-- Atomic Order Inventory Allocation (Sorted processing to prevent deadlocks and hardened params)
 CREATE OR REPLACE FUNCTION public.allocate_order_inventory_atomic(
   p_customer_name   TEXT,
   p_customer_id     UUID,
@@ -941,23 +1344,29 @@ AS $$
 DECLARE
   v_item         RECORD;
   v_order_id     UUID;
-  v_product_id   UUID;
-  v_qty          INTEGER;
   v_order_row    JSONB;
 BEGIN
+  IF p_customer_id IS DISTINCT FROM auth.uid() AND NOT public.is_staff_member() THEN
+    RETURN jsonb_build_object('success', FALSE, 'error', 'Access denied: cannot allocate inventory for another user');
+  END IF;
+
   INSERT INTO public.orders (
     customer_id, customer_name, customer_email, customer_phone, delivery_address, notes, payment_method, subtotal, gst_amount, total, discount_amount, shipping_amount, payment_status, status, items, agent_id
   ) VALUES (
     p_customer_id, p_customer_name, p_customer_email, p_customer_phone, p_delivery_address, p_notes, p_payment_method, p_subtotal, p_gst_amount, p_total, p_discount_amount, p_shipping_amount, COALESCE(p_payment_status, 'Awaiting Payment'), 'Pending', p_items, p_agent_id
   ) RETURNING id INTO v_order_id;
 
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items->'cart_items') AS x
+  -- Process and lock products in consistent sorted order to prevent concurrency deadlocks
+  FOR v_item IN 
+    SELECT 
+      COALESCE((value->>'product_id')::UUID, (value->>'id')::UUID) AS product_id,
+      (value->>'quantity')::INTEGER AS quantity
+    FROM jsonb_array_elements(p_items->'cart_items')
+    WHERE COALESCE((value->>'product_id')::UUID, (value->>'id')::UUID) IS NOT NULL
+    ORDER BY 1 -- Sort consistently by product ID
   LOOP
-    v_product_id := (v_item.value->>'product_id')::UUID;
-    IF v_product_id IS NULL THEN v_product_id := (v_item.value->>'id')::UUID; END IF;
-    v_qty := (v_item.value->>'quantity')::INTEGER;
-    IF v_product_id IS NOT NULL AND v_qty > 0 THEN
-      PERFORM public.record_atomic_stock_movement(v_product_id, 'online_sale', v_qty, v_order_id::TEXT, 'online_order', 'Inventory allocated for order ' || v_order_id, FALSE, p_customer_id);
+    IF v_item.quantity > 0 THEN
+      PERFORM public.record_atomic_stock_movement(v_item.product_id, 'online_sale', v_item.quantity, v_order_id::TEXT, 'online_order', 'Inventory allocated for order ' || v_order_id, FALSE, p_customer_id);
     END IF;
   END LOOP;
   SELECT to_jsonb(o.*) INTO v_order_row FROM public.orders o WHERE id = v_order_id;
@@ -967,7 +1376,7 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
--- Atomic OTP Verification
+-- Atomic OTP Verification (Hardened for authorization check)
 CREATE OR REPLACE FUNCTION public.verify_order_otp_atomic(
   p_order_id       UUID,
   p_customer_phone TEXT,
@@ -983,6 +1392,14 @@ DECLARE
   v_otp_record RECORD;
   v_now        TIMESTAMPTZ := NOW();
 BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.orders 
+    WHERE id = p_order_id 
+      AND (customer_id = auth.uid() OR customer_id IS NULL OR public.is_staff_member())
+  ) THEN
+    RETURN jsonb_build_object('success', FALSE, 'error', 'Access denied');
+  END IF;
+
   SELECT * INTO v_otp_record FROM public.order_otp_verifications WHERE order_id = p_order_id AND customer_phone = p_customer_phone AND verified = FALSE FOR UPDATE;
   IF NOT FOUND THEN RETURN jsonb_build_object('success', FALSE, 'error', 'OTP not found or already verified'); END IF;
   IF v_otp_record.expires_at < v_now THEN RETURN jsonb_build_object('success', FALSE, 'error', 'OTP has expired'); END IF;
@@ -998,7 +1415,7 @@ BEGIN
 END;
 $$;
 
--- Transaction-safe Order Status Update
+-- Transaction-safe Order Status Update (Hardened for authorization, checks transitions, sorted stock reversion)
 CREATE OR REPLACE FUNCTION public.update_order_status_v1(
   target_order_id UUID,
   new_status TEXT,
@@ -1023,6 +1440,20 @@ BEGIN
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Order % not found', target_order_id;
+  END IF;
+
+  -- Authorization check
+  IF NOT public.is_staff_member() THEN
+    IF auth.uid() IS NULL OR auth.uid() IS DISTINCT FROM (SELECT customer_id FROM public.orders WHERE id = target_order_id) THEN
+      RAISE EXCEPTION 'Access denied';
+    END IF;
+    -- Customer is calling. They can only transition to 'Cancelled' and only if current status is 'Pending'.
+    IF new_status IS DISTINCT FROM 'Cancelled' THEN
+      RAISE EXCEPTION 'Customers can only cancel orders';
+    END IF;
+    IF v_current_status IS DISTINCT FROM 'Pending' THEN
+      RAISE EXCEPTION 'Only pending orders can be cancelled';
+    END IF;
   END IF;
 
   IF v_current_status IN ('Cancelled', 'Rejected', 'Completed', 'Delivered') AND new_status NOT IN ('Cancelled', 'Rejected', 'Completed', 'Delivered') THEN
@@ -1065,7 +1496,15 @@ BEGIN
     WHERE id = target_order_id;
 
     IF v_current_status NOT IN ('Cancelled', 'Rejected') AND v_items_json IS NOT NULL THEN
-      FOR v_item IN SELECT (value->>'id')::uuid AS id, (value->>'quantity')::integer AS quantity FROM jsonb_array_elements(v_items_json->'cart_items') LOOP
+      -- Revert stock using sorted IDs to prevent deadlocks
+      FOR v_item IN 
+        SELECT 
+          COALESCE((value->>'id')::uuid, (value->>'product_id')::uuid) AS id, 
+          (value->>'quantity')::integer AS quantity 
+        FROM jsonb_array_elements(v_items_json->'cart_items') 
+        WHERE COALESCE((value->>'id')::uuid, (value->>'product_id')::uuid) IS NOT NULL
+        ORDER BY 1 -- Sort consistently
+      LOOP
         PERFORM public.record_atomic_stock_movement(
           v_item.id,
           'return',
@@ -1083,7 +1522,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public, pg_temp;
 
--- Transaction-safe Service Completion
+-- Transaction-safe Service Completion (Hardened for authorization and parts fields)
 CREATE OR REPLACE FUNCTION public.complete_service_ticket_v1(
   p_ticket_id          UUID,
   p_engineer_notes     TEXT,
@@ -1103,6 +1542,18 @@ DECLARE
   v_total_cost NUMERIC := 0;
   v_current_status TEXT;
 BEGIN
+  -- Authorization check: caller must be staff or the assigned service engineer
+  IF NOT (
+    public.is_staff_member() OR
+    EXISTS (
+      SELECT 1 FROM public.service_engineers 
+      WHERE service_engineers.id = (SELECT assigned_engineer_id FROM public.service_tickets WHERE id = p_ticket_id)
+        AND service_engineers.user_id = auth.uid()
+    )
+  ) THEN
+    RAISE EXCEPTION 'Access denied: you are not authorized to complete this service ticket';
+  END IF;
+
   SELECT status INTO v_current_status
   FROM public.service_tickets
   WHERE id = p_ticket_id
@@ -1117,11 +1568,11 @@ BEGIN
   END IF;
 
   IF p_parts_used IS NOT NULL AND jsonb_array_length(p_parts_used) > 0 THEN
-    FOR v_part IN SELECT * FROM jsonb_to_recordset(p_parts_used) AS x(part_name TEXT, quantity INTEGER, unit_cost NUMERIC, warranty_days INTEGER) LOOP
+    FOR v_part IN SELECT * FROM jsonb_to_recordset(p_parts_used) AS x(product_id UUID, part_name TEXT, quantity INTEGER, unit_cost NUMERIC, warranty_days INTEGER) LOOP
       INSERT INTO public.service_parts (
-        ticket_id, part_name, quantity, unit_cost, warranty_days
+        ticket_id, product_id, part_name, quantity, unit_cost, warranty_days
       ) VALUES (
-        p_ticket_id, v_part.part_name, v_part.quantity, v_part.unit_cost, COALESCE(v_part.warranty_days, 0)
+        p_ticket_id, v_part.product_id, v_part.part_name, v_part.quantity, v_part.unit_cost, COALESCE(v_part.warranty_days, 0)
       );
       v_total_parts_cost := v_total_parts_cost + (v_part.quantity * v_part.unit_cost);
     END LOOP;
@@ -1241,39 +1692,48 @@ CREATE TRIGGER advance_payment_status_change_trigger
 AFTER UPDATE ON public.advance_payment_requests
 FOR EACH ROW EXECUTE FUNCTION public.track_advance_payment_status_change();
 
--- Free Installation Slots Functions
+-- Free Installation Slots Functions (Hardened for concurrency and direct order linkage)
 CREATE OR REPLACE FUNCTION public.get_or_create_monthly_slot()
 RETURNS TABLE (id UUID, remaining_slots INTEGER) AS $$
 DECLARE
   v_month DATE;
-  v_slot_record RECORD;
 BEGIN
   v_month := DATE_TRUNC('month', CURRENT_DATE)::DATE;
   
-  -- Try to get existing record
-  SELECT * INTO v_slot_record FROM public.free_installation_slots WHERE month = v_month;
+  -- Concurrent-safe upsert with DO NOTHING to prevent unique constraints crashes
+  INSERT INTO public.free_installation_slots (month, total_slots, remaining_slots, confirmed_count)
+  VALUES (v_month, 10, 10, 0)
+  ON CONFLICT (month) DO NOTHING;
   
-  IF v_slot_record IS NULL THEN
-    -- Create new record for this month
-    INSERT INTO public.free_installation_slots (month, total_slots, remaining_slots, confirmed_count)
-    VALUES (v_month, 10, 10, 0)
-    RETURNING free_installation_slots.id, free_installation_slots.remaining_slots INTO id, remaining_slots;
-  ELSE
-    id := v_slot_record.id;
-    remaining_slots := v_slot_record.remaining_slots;
-  END IF;
+  SELECT f.id, f.remaining_slots INTO id, remaining_slots
+  FROM public.free_installation_slots f
+  WHERE f.month = v_month;
   
   RETURN NEXT;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public, pg_temp;
 
-CREATE OR REPLACE FUNCTION public.decrement_free_installation_slot()
+CREATE OR REPLACE FUNCTION public.decrement_free_installation_slot(p_order_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
   v_month DATE;
-  v_remaining INTEGER;
+  v_customer_id UUID;
 BEGIN
+  -- Validate that order exists, is owned by caller or caller is staff, and hasn't had slot decremented
+  SELECT customer_id INTO v_customer_id FROM public.orders WHERE id = p_order_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Order % not found', p_order_id;
+  END IF;
+
+  IF (v_customer_id IS NULL OR auth.uid() IS NULL OR v_customer_id IS DISTINCT FROM auth.uid()) AND NOT public.is_staff_member() THEN
+    RAISE EXCEPTION 'Access denied';
+  END IF;
+
+  IF COALESCE((SELECT (metadata->>'free_installation_slot_decremented')::BOOLEAN FROM public.orders WHERE id = p_order_id), FALSE) THEN
+    RETURN TRUE; -- already decremented
+  END IF;
+
   v_month := DATE_TRUNC('month', CURRENT_DATE)::DATE;
   
   UPDATE public.free_installation_slots 
@@ -1281,6 +1741,11 @@ BEGIN
       confirmed_count = confirmed_count + 1,
       updated_at = NOW()
   WHERE month = v_month;
+  
+  UPDATE public.orders 
+  SET used_free_installation = TRUE,
+      metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{free_installation_slot_decremented}', 'true'::jsonb)
+  WHERE id = p_order_id;
   
   RETURN TRUE;
 END;
@@ -1303,6 +1768,8 @@ ON CONFLICT (name) DO UPDATE SET rate = EXCLUDED.rate;
 REVOKE ALL ON FUNCTION public.cleanup_expired_superadmin_tokens() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.prune_old_logs() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.soft_delete_product(uuid, uuid, text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.restore_product(uuid, uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.increment_agent_points(uuid, numeric) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.record_atomic_stock_movement(uuid, text, integer, text, text, text, boolean, uuid) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.allocate_order_inventory_atomic(text, uuid, text, text, text, text, text, numeric, numeric, numeric, numeric, numeric, text, text, jsonb, uuid) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.verify_order_otp_atomic(uuid, text, text, integer) FROM PUBLIC, anon, authenticated;
@@ -1318,49 +1785,37 @@ REVOKE ALL ON FUNCTION public.update_updated_at_column() FROM PUBLIC, anon, auth
 REVOKE ALL ON FUNCTION public.match_wishlist_coupons() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.track_advance_payment_status_change() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.get_or_create_monthly_slot() FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.decrement_free_installation_slot() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.decrement_free_installation_slot(uuid) FROM PUBLIC, anon, authenticated;
 
 -- Explicitly grant execute to authorized roles
 GRANT EXECUTE ON FUNCTION public.is_superadmin_user() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_admin_user() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_manager_or_admin() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_staff_member() TO authenticated;
-GRANT EXECUTE ON FUNCTION public.verify_order_otp_atomic(UUID, TEXT, TEXT, INTEGER) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.allocate_order_inventory_atomic(TEXT, UUID, TEXT, TEXT, TEXT, TEXT, TEXT, NUMERIC, NUMERIC, NUMERIC, NUMERIC, NUMERIC, TEXT, TEXT, JSONB, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.verify_order_otp_atomic(UUID, TEXT, TEXT, INTEGER) TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION public.allocate_order_inventory_atomic(TEXT, UUID, TEXT, TEXT, TEXT, TEXT, TEXT, NUMERIC, NUMERIC, NUMERIC, NUMERIC, NUMERIC, TEXT, TEXT, JSONB, UUID) TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION public.update_order_status_v1(uuid, text, text, jsonb, text, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.complete_service_ticket_v1(uuid, text, numeric, integer, text[], jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.match_wishlist_coupons() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.track_advance_payment_status_change() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_or_create_monthly_slot() TO authenticated;
-GRANT EXECUTE ON FUNCTION public.decrement_free_installation_slot() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.decrement_free_installation_slot(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.restore_product(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.increment_agent_points(uuid, numeric) TO authenticated;
 
--- Sequence generation for human-readable quote numbers (format: YYYYMMXXXXX)
+-- Sequence generation for human-readable quote numbers (format: YYYYMMXXXXX) - concurrent-safe via database sequence
+CREATE SEQUENCE IF NOT EXISTS public.quotes_quote_number_seq START 1;
+
 CREATE OR REPLACE FUNCTION public.generate_quote_number()
 RETURNS TRIGGER AS $$
-DECLARE
-  seq_prefix TEXT;
-  next_serial INTEGER;
 BEGIN
-  -- Check if quote_number is already set manually
-  IF NEW.quote_number IS NOT NULL THEN
-    RETURN NEW;
+  IF NEW.quote_number IS NULL THEN
+    NEW.quote_number := to_char(NOW(), 'YYYYMM') || lpad(nextval('public.quotes_quote_number_seq')::text, 5, '0');
   END IF;
-
-  -- Get YYYYMM prefix
-  seq_prefix := to_char(NOW(), 'YYYYMM');
-  
-  -- Find the next serial for this prefix
-  SELECT COALESCE(MAX(SUBSTRING(quote_number FROM 7)::INTEGER), 0) + 1
-  INTO next_serial
-  FROM public.quotes
-  WHERE quote_number LIKE seq_prefix || '%';
-  
-  -- Assign formatted quote number (YYYYMMXXXXX)
-  NEW.quote_number := seq_prefix || lpad(next_serial::text, 5, '0');
-  
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp;
 
 -- Grant execute and create trigger
 REVOKE ALL ON FUNCTION public.generate_quote_number() FROM PUBLIC, anon, authenticated;
@@ -1371,5 +1826,25 @@ CREATE TRIGGER before_insert_quote
 BEFORE INSERT ON public.quotes
 FOR EACH ROW
 EXECUTE FUNCTION public.generate_quote_number();
+
+-- Sequence generation for human-readable order numbers (format: ORD-YYYYMMXXXXX)
+CREATE SEQUENCE IF NOT EXISTS public.orders_order_number_seq START 1;
+
+CREATE OR REPLACE FUNCTION public.generate_order_number()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.order_number IS NULL THEN
+    NEW.order_number := 'ORD-' || to_char(NOW(), 'YYYYMM') || lpad(nextval('public.orders_order_number_seq')::text, 5, '0');
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp;
+
+DROP TRIGGER IF EXISTS before_insert_order ON public.orders;
+CREATE TRIGGER before_insert_order
+BEFORE INSERT ON public.orders
+FOR EACH ROW
+EXECUTE FUNCTION public.generate_order_number();
 
 COMMIT;

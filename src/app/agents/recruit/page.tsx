@@ -33,7 +33,7 @@ export default function AgentRecruitPage() {
               <Link href="/auth/signup?role=agent">Apply Now to Join</Link>
             </Button>
             <Button size="lg" variant="outline" className="h-12 border-white/10 px-8 hover:bg-white/5" asChild>
-              <Link href="https://wa.me/917387375651?text=Hi!%20I'm%20interested%20in%20becoming%20a%20TecBunny%20Agent.">
+              <Link href="https://wa.me/919604136010?text=Hi!%20I'm%20interested%20in%20becoming%20a%20TecBunny%20Agent.">
                 Chat with Partner Support
               </Link>
             </Button>
@@ -48,7 +48,7 @@ export default function AgentRecruitPage() {
             <h2 className="mb-4 text-3xl font-bold text-white">Why TecBunny?</h2>
             <p className="text-slate-400 text-lg">Designed for the modern tech professional.</p>
           </div>
-          
+
           <div className="grid gap-8 md:grid-cols-3">
             {[
               {
@@ -104,27 +104,27 @@ export default function AgentRecruitPage() {
               </div>
             </div>
             <div className="flex-1">
-               <div className="relative rounded-3xl border border-cyan-500/20 bg-slate-950 p-8 shadow-2xl">
-                 <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-cyan-500/10 blur-2xl" />
-                 <h3 className="mb-6 text-2xl font-bold text-white">Agent Milestone Program</h3>
-                 <div className="space-y-6">
-                    <div className="relative pl-8 before:absolute before:left-0 before:top-2 before:h-full before:w-[2px] before:bg-slate-800">
-                       <div className="absolute -left-[5px] top-2 h-[10px] w-[10px] rounded-full bg-cyan-500" />
-                       <p className="text-xs font-bold uppercase tracking-widest text-cyan-400">Silver Tier</p>
-                       <p className="text-sm text-slate-300 mt-1">₹0 - ₹50k Monthly Sales. 5% Base Commission.</p>
-                    </div>
-                    <div className="relative pl-8 before:absolute before:left-0 before:top-2 before:h-full before:w-[2px] before:bg-slate-800">
-                       <div className="absolute -left-[5px] top-2 h-[10px] w-[10px] rounded-full bg-blue-500" />
-                       <p className="text-xs font-bold uppercase tracking-widest text-blue-400">Gold Tier</p>
-                       <p className="text-sm text-slate-300 mt-1">₹50k - ₹2L Monthly Sales. 7.5% Commission + Bonus.</p>
-                    </div>
-                    <div className="relative pl-8">
-                       <div className="absolute -left-[5px] top-2 h-[10px] w-[10px] rounded-full bg-emerald-500" />
-                       <p className="text-xs font-bold uppercase tracking-widest text-emerald-400">Elite Tier</p>
-                       <p className="text-sm text-slate-300 mt-1">₹2L+ Monthly Sales. 10% Commission + Priority Support.</p>
-                    </div>
-                 </div>
-               </div>
+              <div className="relative rounded-3xl border border-cyan-500/20 bg-slate-950 p-8 shadow-2xl">
+                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-cyan-500/10 blur-2xl" />
+                <h3 className="mb-6 text-2xl font-bold text-white">Agent Milestone Program</h3>
+                <div className="space-y-6">
+                  <div className="relative pl-8 before:absolute before:left-0 before:top-2 before:h-full before:w-[2px] before:bg-slate-800">
+                    <div className="absolute -left-[5px] top-2 h-[10px] w-[10px] rounded-full bg-cyan-500" />
+                    <p className="text-xs font-bold uppercase tracking-widest text-cyan-400">Silver Tier</p>
+                    <p className="text-sm text-slate-300 mt-1">₹0 - ₹50k Monthly Sales. 5% Base Commission.</p>
+                  </div>
+                  <div className="relative pl-8 before:absolute before:left-0 before:top-2 before:h-full before:w-[2px] before:bg-slate-800">
+                    <div className="absolute -left-[5px] top-2 h-[10px] w-[10px] rounded-full bg-blue-500" />
+                    <p className="text-xs font-bold uppercase tracking-widest text-blue-400">Gold Tier</p>
+                    <p className="text-sm text-slate-300 mt-1">₹50k - ₹2L Monthly Sales. 7.5% Commission + Bonus.</p>
+                  </div>
+                  <div className="relative pl-8">
+                    <div className="absolute -left-[5px] top-2 h-[10px] w-[10px] rounded-full bg-emerald-500" />
+                    <p className="text-xs font-bold uppercase tracking-widest text-emerald-400">Elite Tier</p>
+                    <p className="text-sm text-slate-300 mt-1">₹2L+ Monthly Sales. 10% Commission + Priority Support.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

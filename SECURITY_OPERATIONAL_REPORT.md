@@ -29,7 +29,7 @@ Scope: Next.js app routes, Supabase access patterns, OTP and email gateways, CRM
 ### Issue 1.3: Legacy OTP endpoints exposed sensitive flows without authentication
 - File and lines: `src/app/api/otp/generate/route.ts:22-29`, `67-99`, `101-120`, `152-163`, `179-181`; `src/app/api/otp/verify/route.ts:14-18`, `192-196`; `src/app/api/otp/resend/route.ts:10-15`, `127-131`
 - Exact flaw: Legacy `/api/otp/generate`, `/api/otp/verify`, and `/api/otp/resend` were callable without an authenticated session. The generate response also included raw provider response metadata.
-- Potential impact: OTP spam, OTP status probing, provider data leakage, and brute-force staging against a known phone target such as `+917387375651`.
+- Potential impact: OTP spam, OTP status probing, provider data leakage, and brute-force staging against a known phone target such as `+919604136010`.
 - Remediation performed:
   1. Added `requireApiRole()` to generate, verify, resend, and status handlers.
   2. For `agent_order`, require an approved sales agent record bound to `access.session.user.id`.
@@ -221,7 +221,7 @@ Scope: Next.js app routes, Supabase access patterns, OTP and email gateways, CRM
 ### OTP Gateway
 - File and lines: `src/app/api/otp/generate/route.ts:101-120`; `src/lib/otp-service.ts:31-32`, `48-85`, `156-256`, `271-292`; `src/lib/otp-manager.ts:564-586`, `592-603`
 - Exact flaw: OTP systems are split across `OTPManager` and `OtpService`; some flows use 5-minute expiry and others 10-minute expiry. `OtpService.generateOtp` returns `otp_code`, and order status update reads it for pickup code generation.
-- Test target: For `+917387375651`, the reviewed flow would normalize/format phone values in WhatsApp sending paths and rate limit by phone in `/api/otp/generate` when `OTP_RATE_LIMIT_BYPASS` is not enabled.
+- Test target: For `+91 9604136010`, the reviewed flow would normalize/format phone values in WhatsApp sending paths and rate limit by phone in `/api/otp/generate` when `OTP_RATE_LIMIT_BYPASS` is not enabled.
 - Potential impact: Inconsistent expiry/attempt policies, OTP disclosure to server callers, and brute-force weaknesses if bypass flags are enabled or routes are unauthenticated.
 - Remediation performed:
   1. Legacy OTP routes now require auth.
@@ -230,7 +230,7 @@ Scope: Next.js app routes, Supabase access patterns, OTP and email gateways, CRM
 - Remaining action:
   1. Consolidate to one OTP service with one expiry and attempt policy.
   2. Never return OTP codes to API callers except a strictly internal pickup-code pre-generation path.
-  3. Add brute-force tests: 4 wrong submissions lock the OTP after 3 attempts; expired OTPs fail; repeated requests for `+917387375651` hit rate limits.
+  3. Add brute-force tests: 4 wrong submissions lock the OTP after 3 attempts; expired OTPs fail; repeated requests for `+919604136010` hit rate limits.
   4. Store blocklist/rate limit state in a durable shared store.
 
 ### Email Gateway

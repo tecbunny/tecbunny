@@ -37,6 +37,7 @@ export async function middleware(request: NextRequest) {
     { path: '/api/promotions/claim-viral', methods: ['POST'] },
     { path: '/api/promotions/free-installation-claim', methods: ['POST'] },
     { path: '/api/warranty/activate', methods: ['POST'] },
+    { path: '/api/quotes/bid', methods: ['POST'] },
   ]
   
   // Check if the current path is in the public API routes

@@ -12,6 +12,10 @@ type SuperadminSessionPayload = {
 
 const textEncoder = new TextEncoder();
 
+// Cache variables for cryptographic keys to prevent GC thrashing and CPU overhead
+let cachedKeySecret: string | null = null;
+let cachedCryptoKey: CryptoKey | null = null;
+
 function base64UrlEncode(bytes: Uint8Array) {
   let binary = '';
   bytes.forEach((byte) => {
@@ -41,14 +45,18 @@ function getSessionSecret() {
 }
 
 async function hmacSha256(data: string, secret: string) {
-  const key = await crypto.subtle.importKey(
-    'raw',
-    textEncoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  return new Uint8Array(await crypto.subtle.sign('HMAC', key, textEncoder.encode(data)));
+  // Lazily import and cache the key using standard Web Crypto API
+  if (!cachedCryptoKey || cachedKeySecret !== secret) {
+    cachedCryptoKey = await crypto.subtle.importKey(
+      'raw',
+      textEncoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    cachedKeySecret = secret;
+  }
+  return new Uint8Array(await crypto.subtle.sign('HMAC', cachedCryptoKey, textEncoder.encode(data)));
 }
 
 function timingSafeEqual(a: Uint8Array, b: Uint8Array) {

@@ -117,10 +117,10 @@ const PLAN_TIERS = [
 ];
 
 const LOG_LINES = [
-  { left: '> Active_Sites', right: '142 [ONLINE]', tone: 'text-emerald-300' },
-  { left: '> Network_Uptime', right: '99.98% [NOMINAL]', tone: 'text-cyan-300' },
-  { left: '> Monitored_Chs', right: '1,840 [SECURE]', tone: 'text-emerald-300' },
-  { left: '> Dispatch_SLA', right: '< 2 Hrs [GUARANTEED]', tone: 'text-amber-300' },
+  { left: '> Active_AMC_Sites', right: '47 [ONLINE]', tone: 'text-emerald-300' },
+  { left: '> Avg_Response_Time', right: '9.2 Hours [NOMINAL]', tone: 'text-cyan-300' },
+  { left: '> Hardware_Warranty', right: '1-3 Years [DIRECT]', tone: 'text-emerald-300' },
+  { left: '> On_Site_Cover', right: 'Goa & MH [ACTIVE]', tone: 'text-amber-300' },
 ];
 
 function applyMagneticEffect(event: React.MouseEvent<HTMLElement>) {
@@ -513,12 +513,12 @@ export default function HomePage() {
 
               <div className="flex gap-8 border-t border-white/5 pt-8">
                 <div>
-                  <p className="text-2xl font-bold text-white font-tech">120+</p>
-                  <p className="text-xs uppercase tracking-wider text-slate-400">Projects</p>
+                  <p className="text-2xl font-bold text-white font-tech">100+</p>
+                  <p className="text-xs uppercase tracking-wider text-slate-400">Installations</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white font-tech">24/7</p>
-                  <p className="text-xs uppercase tracking-wider text-slate-400">Support</p>
+                  <p className="text-2xl font-bold text-white font-tech">SLA</p>
+                  <p className="text-xs uppercase tracking-wider text-slate-400">Direct Support</p>
                 </div>
               </div>
             </div>

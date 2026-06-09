@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
-
-import { logger } from '@/lib/logger';
+import { useState } from 'react';
 
 export interface PaymentMethod {
   id: string;
@@ -21,11 +19,9 @@ export interface PaymentMethod {
     industryType?: string;
     channelId?: string;
     environment?: string;
-    // COD specific
     minOrderAmount?: string;
     maxOrderAmount?: string;
     instructions?: string;
-    // UPI specific
     upiId?: string;
     upiName?: string;
   };
@@ -37,14 +33,14 @@ export interface PaymentSettings {
   upi: PaymentMethod;
 }
 
-const defaultPaymentSettings: PaymentSettings = {
+const staticPaymentSettings: PaymentSettings = {
   payu: {
     id: 'payu',
     name: 'PayU',
     type: 'online',
     enabled: true,
     config: {
-      environment: 'test' // Configure via VS Code: 'test' or 'production'
+      environment: 'test'
     }
   },
   cod: {
@@ -64,20 +60,15 @@ const defaultPaymentSettings: PaymentSettings = {
 };
 
 export function usePaymentMethods() {
-  const [paymentMethods, setPaymentMethods] = useState<PaymentSettings>(defaultPaymentSettings);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [paymentMethods] = useState<PaymentSettings>(staticPaymentSettings);
 
   const fetchPaymentSettings = async () => {
-    // Settings are now managed via code (VS Code)
-    // We simulate a fetch by just setting the default (hardcoded) settings
-    setLoading(false);
-    setPaymentMethods(defaultPaymentSettings);
+    // No-op: Settings are strictly managed via codebase configuration.
   };
 
   const updatePaymentMethod = async (methodId: string, updates: Partial<PaymentMethod>) => {
-    console.warn('Payment settings are managed via code. Updates via UI are disabled.');
-    return { success: false, error: 'Settings are managed via code' };
+    // Updates via UI are disabled as payment options are code-driven
+    return { success: false, error: 'Payment configurations are code-managed.' };
   };
 
   const getEnabledPaymentMethods = () => {
@@ -92,14 +83,10 @@ export function usePaymentMethods() {
     return Object.values(paymentMethods).filter(method => method.enabled && method.type === 'offline');
   };
 
-  useEffect(() => {
-    fetchPaymentSettings();
-  }, []);
-
   return {
     paymentMethods,
-    loading,
-    error,
+    loading: false,
+    error: null,
     updatePaymentMethod,
     fetchPaymentSettings,
     getEnabledPaymentMethods,

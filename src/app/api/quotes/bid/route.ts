@@ -44,7 +44,8 @@ export async function POST(req: Request) {
         bidded_price: biddedPrice,
         summary: summary,
         selections: customSetupConfig,
-        status: 'bidded'
+        status: 'bidded',
+        expiry_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       }).select('id').single();
 
       if (error) throw error;

@@ -94,22 +94,32 @@ CREATE OR REPLACE FUNCTION track_advance_payment_status_change()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.status IS DISTINCT FROM OLD.status THEN
-    INSERT INTO audit_logs (
-      table_name,
-      record_id,
+    INSERT INTO public.security_audit_log (
+      user_id,
       action,
-      old_value,
-      new_value,
-      changed_by,
-      created_at
+      resource,
+      details,
+      severity,
+      event_type,
+      event_data
     ) VALUES (
-      'advance_payment_requests',
-      NEW.id,
-      'status_update',
-      OLD.status,
-      NEW.status,
       auth.uid(),
-      NOW()
+      'status_update',
+      'advance_payment_requests',
+      jsonb_build_object(
+        'table_name', 'advance_payment_requests',
+        'record_id', NEW.id,
+        'old_value', OLD.status,
+        'new_value', NEW.status
+      ),
+      'info',
+      'advance_payment_status_change',
+      jsonb_build_object(
+        'table_name', 'advance_payment_requests',
+        'record_id', NEW.id,
+        'old_value', OLD.status,
+        'new_value', NEW.status
+      )
     );
   END IF;
   RETURN NEW;

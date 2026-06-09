@@ -32,7 +32,7 @@ BEGIN
     FROM public.wishlist_items 
     WHERE profile_id = NEW.profile_id;
 
-    IF user_wishlist_count >= 3 AND NOT EXISTS (SELECT 1 FROM public.orders WHERE customer_email = (SELECT email FROM auth.users WHERE id = NEW.profile_id)) THEN
+    IF user_wishlist_count >= 3 AND NOT EXISTS (SELECT 1 FROM public.orders WHERE customer_email = (SELECT email FROM public.profiles WHERE id = NEW.profile_id)) THEN
         -- Find an active seasonal coupon
         SELECT code INTO available_coupon_code 
         FROM public.coupons 
@@ -88,5 +88,7 @@ CREATE TABLE IF NOT EXISTS public.payment_recovery_queue (
     last_attempt_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.payment_recovery_queue ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_payment_recovery_order ON public.payment_recovery_queue(order_id);

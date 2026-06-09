@@ -23,7 +23,7 @@ export function useLeadCaptureTrigger(delayMs: number = 45000) {
       description: "You've been exploring for a while! Get an instant personalized consultation or a limited-time hardware bundle voucher now.",
       action: (
         <button
-          onClick={() => window.open('https://wa.me/919604136010text=Hi!%20I%20need%20help%20with%20my%20customised%20setup.', '_blank')}
+          onClick={() => window.open('https://wa.me/919604136010?text=Hi!%20I%20need%20help%20with%20my%20customised%20setup.', '_blank')}
           className="rounded bg-cyan-600 px-3 py-1 text-xs font-medium text-white hover:bg-cyan-500"
         >
           Chat on WhatsApp

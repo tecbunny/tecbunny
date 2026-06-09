@@ -386,11 +386,11 @@ export function Header() {
           </div>
 
           {/* Mobile: cart icon + hamburger */}
-          <div className="flex items-center gap-1.5 lg:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
             <CartSheet>
               <button
                 type="button"
-                className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                className="relative flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
                 aria-label="Open cart"
               >
                 <ShoppingCart size={16} />
@@ -402,7 +402,7 @@ export function Header() {
               </button>
             </CartSheet>
             <button
-              className="h-9 w-9 rounded-lg border border-white/10 p-1.5 text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 p-1.5 text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
               onClick={() =>
                 setMobileMenuOpen((open) => {
                   const next = !open;
@@ -422,7 +422,7 @@ export function Header() {
 
       <div
         id="mobile-menu"
-        className={`absolute left-0 top-full w-full border-t border-white/5 bg-slate-950/95 backdrop-blur-xl md:hidden transition-all duration-500
+        className={`absolute left-0 top-full w-full border-t border-white/5 bg-slate-950/95 backdrop-blur-xl lg:hidden transition-all duration-500
           ${mobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}
         `}
       >

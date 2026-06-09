@@ -1075,3 +1075,38 @@
     background-size: 32px 32px;
   }
 }
+
+/* Reserve space for the fixed promo banner so mobile content is not obscured */
+html[data-promo-banner="collapsed"] .site-shell {
+  padding-bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+html[data-promo-banner="expanded"] .site-shell {
+  padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 1024px) {
+  html[data-promo-banner="collapsed"] .site-shell,
+  html[data-promo-banner="expanded"] .site-shell {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Lift floating widgets above the promo strip on small screens */
+@media (max-width: 1023px) {
+  html[data-promo-banner="collapsed"] .floating-ai-anchor {
+    bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  html[data-promo-banner="expanded"] .floating-ai-anchor {
+    bottom: calc(11rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  html[data-promo-banner="collapsed"] .regional-trust-popup {
+    bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  html[data-promo-banner="expanded"] .regional-trust-popup {
+    bottom: calc(13rem + env(safe-area-inset-bottom, 0px));
+  }
+}

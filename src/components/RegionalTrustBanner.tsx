@@ -86,7 +86,7 @@ export const RegionalTrustBanner = ({ className }: RegionalTrustBannerProps) => 
 
       {/* Floating Real-Time Proximity Popup */}
       <div
-        className={`fixed bottom-24 left-4 md:bottom-24 md:left-6 z-[60] transition-all duration-500 ease-in-out transform ${
+        className={`regional-trust-popup fixed bottom-24 left-4 md:bottom-24 md:left-6 z-[60] transition-all duration-500 ease-in-out transform ${
           showPopup ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none"
         }`}
       >

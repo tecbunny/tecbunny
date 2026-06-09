@@ -302,7 +302,7 @@ export default function RootLayout({
           <AppProvider>
             <OrderProvider>
               <TechShell>
-                <div className="flex min-h-screen flex-col bg-background text-foreground">
+                <div className="site-shell flex min-h-screen flex-col bg-background text-foreground">
                   <Suspense fallback={<div className="h-16 border-b" />}>
                     <Header />
                   </Suspense>

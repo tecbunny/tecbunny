@@ -19,7 +19,7 @@ export function FloatingAIAssistant() {
   const aiHref = '/ai-research';
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="floating-ai-anchor fixed bottom-6 right-4 z-50 sm:right-6">
       {open && (
         <div className="mb-3 w-[290px] rounded-2xl border border-white/10 bg-slate-900/95 p-4 text-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur">
           <div className="flex items-start justify-between gap-2">

@@ -441,7 +441,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
             <div className="reveal-section space-y-8 is-revealed" data-reveal-id="hero-copy">
               <h1 className="text-4xl font-bold leading-[1.12] text-white sm:text-5xl md:text-6xl xl:text-7xl font-tech" aria-label="Technology Solutions and Services">
-                <span className="glitch-text block pb-2" data-text="Technology">Technology</span>
+                <span className="glitch-text pb-2" data-text="Technology">Technology</span>
                 <span className="block bg-gradient-to-r from-[#06b6d4] via-blue-500 to-[#8b5cf6] bg-clip-text pt-1 text-transparent">
                   Solutions & Services
                 </span>
@@ -470,7 +470,7 @@ export default function HomePage() {
                   className="magnetic-btn relative inline-flex h-12 overflow-hidden rounded-lg p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
                 >
                   <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]"></span>
-                  <span className="inline-flex h-full w-full items-center justify-center rounded-lg bg-slate-950 px-8 py-1 text-sm font-medium text-white backdrop-blur-3xl transition-colors hover:bg-slate-900">
+                  <span className="inline-flex h-full w-full items-center justify-center rounded-lg bg-slate-950 px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors hover:bg-slate-900">
                     Start Project
                   </span>
                 </Link>
@@ -545,7 +545,7 @@ export default function HomePage() {
       <RegionalTrustBanner />
 
       {/* Partner Brands Strip */}
-      <section className="border-y border-white/5 bg-slate-950/80 py-10">
+      <section className="border-y border-white/5 bg-slate-950/80 py-8 sm:py-10">
         <div className="container mx-auto px-6">
           <p className="text-center text-xs font-semibold uppercase tracking-[0.35em] text-slate-500 mb-6">
             Authorized Solutions & Brand Partnerships
@@ -570,7 +570,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-slate-950 py-24 reveal-section is-revealed" data-reveal-id="pillars">
+      <section className="bg-slate-950 py-12 sm:py-24 reveal-section is-revealed" data-reveal-id="pillars">
         <div className="container mx-auto px-6">
           <div className="mb-14 max-w-2xl">
             <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Core pillars</span>
@@ -606,9 +606,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-black/40 py-24 reveal-section is-revealed" data-reveal-id="plans">
+      <section className="bg-black/40 py-12 sm:py-24 reveal-section is-revealed" data-reveal-id="plans">
         <div className="container mx-auto grid gap-12 px-6 lg:grid-cols-2 lg:items-center">
-          <div className={cn('reveal-item relative rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-10', revealDelayClass(0))}>
+          <div className={cn('reveal-item relative rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-5 sm:p-10', revealDelayClass(0))}>
             <div className="ambient-blob pointer-events-none absolute -left-6 top-10 h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-cyan-500/20 blur-2xl" aria-hidden="true"></div>
             <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute -bottom-8 right-6 h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-violet-500/20 blur-2xl" aria-hidden="true"></div>
             <h3 className="text-2xl font-semibold text-white sm:text-3xl">Operational clarity, not complexity.</h3>
@@ -667,7 +667,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section ref={hardwareRef} className="bg-slate-950 py-24 reveal-section is-revealed" data-reveal-id="hardware">
+      <section ref={hardwareRef} className="bg-slate-950 py-12 sm:py-24 reveal-section is-revealed" data-reveal-id="hardware">
         <div className="container mx-auto px-6">
           <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -759,7 +759,7 @@ export default function HomePage() {
       </section>
 
       {/* Recent Installations Gallery */}
-      <section className="bg-slate-950 py-24 border-t border-white/5">
+      <section className="bg-slate-950 py-12 sm:py-24 border-t border-white/5">
         <div className="container mx-auto px-6">
           <div className="mb-14 max-w-2xl">
             <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Case Studies</span>
@@ -804,7 +804,7 @@ export default function HomePage() {
 
 
 
-      <section className="bg-slate-900/50 py-24 reveal-section is-revealed" data-reveal-id="about">
+      <section className="bg-slate-900/50 py-12 sm:py-24 reveal-section is-revealed" data-reveal-id="about">
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-slate-300 space-y-6 text-sm sm:text-base leading-relaxed">
             <h2 className="text-3xl font-semibold text-white mb-8">Goa & Maharashtra’s Trusted Technology Integrator</h2>
@@ -821,9 +821,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-black/60 py-24 reveal-section is-revealed" data-reveal-id="cta">
+      <section className="bg-black/60 py-12 sm:py-24 reveal-section is-revealed" data-reveal-id="cta">
         <div className="container mx-auto px-6">
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-500/10 via-slate-900 to-violet-500/10 p-10">
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-500/10 via-slate-900 to-violet-500/10 p-6 sm:p-8 md:p-10">
             <div className="ambient-blob pointer-events-none absolute -left-20 top-10 h-40 w-40 rounded-full bg-cyan-500/20 blur-3xl" aria-hidden="true"></div>
             <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute -bottom-20 right-0 h-40 w-40 rounded-full bg-violet-500/20 blur-3xl" aria-hidden="true"></div>
             <div className="relative z-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">

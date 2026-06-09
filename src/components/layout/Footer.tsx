@@ -189,7 +189,7 @@ export function Footer() {
   const activeSocialPlatforms = socialPlatforms.filter(({ key }) => Boolean(socialLinks[key]));
 
   return (
-    <footer className="footer-custom relative overflow-hidden bg-[#030712] border-t border-white/10 pt-12 pb-8 font-sans shadow-[0_-4px_20px_rgba(6,182,212,0.05)]">
+    <footer className="footer-custom relative overflow-hidden bg-[#030712] border-t border-white/10 pt-8 pb-6 sm:pt-12 sm:pb-8 font-sans shadow-[0_-4px_20px_rgba(6,182,212,0.05)]">
       <div className="absolute top-0 right-0 h-48 w-48 sm:h-64 sm:w-64 rounded-full bg-brand-purple/5 blur-[80px] pointer-events-none" />
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 mb-12 pb-12 border-b border-white/5">
@@ -229,7 +229,7 @@ export function Footer() {
               <button
                 type="submit"
                 disabled={subscribeStatus === 'loading'}
-                className="px-6 py-3 bg-white/5 border border-white/10 hover:bg-brand-cyan hover:text-brand-dark hover:border-brand-cyan text-white text-base font-bold font-tech rounded-lg transition-all duration-300"
+                className="w-full sm:w-auto px-6 py-3 bg-white/5 border border-white/10 hover:bg-brand-cyan hover:text-brand-dark hover:border-brand-cyan text-white text-base font-bold font-tech rounded-lg transition-all duration-300"
               >
                 {subscribeStatus === 'loading' ? 'SUBSCRIBING...' : 'SUBSCRIBE'}
               </button>
@@ -322,11 +322,13 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-white/5 text-sm text-slate-400">
-          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6">
+          <div className="flex flex-col items-center gap-1.5 md:flex-row md:items-center md:gap-6 text-center md:text-left">
             <p>© 2025 TecBunny. All rights reserved. Built with ❤️ and innovation.</p>
-            <p className="font-mono">CIN: U80200GA2025PTC017488</p>
-            <span className="hidden md:inline text-white/10">|</span>
-            <p className="font-mono">GSTIN: {companyInfo.gstin || '30AAMCT1608G1ZO'}</p>
+            <div className="flex flex-col items-center gap-1 sm:flex-row sm:gap-4">
+              <p className="font-mono text-xs sm:text-sm">CIN: U80200GA2025PTC017488</p>
+              <span className="hidden sm:inline text-white/10">|</span>
+              <p className="font-mono text-xs sm:text-sm">GSTIN: {companyInfo.gstin || '30AAMCT1608G1ZO'}</p>
+            </div>
           </div>
 
           {activeSocialPlatforms.length > 0 && (

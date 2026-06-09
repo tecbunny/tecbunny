@@ -2,7 +2,7 @@
 
 @layer base {
   html {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   * {
@@ -159,6 +159,8 @@
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
     padding: 0;
+    /* Prevent horizontal overflow caused by glitch pseudo-elements & absolute blobs */
+    overflow-x: hidden;
   }
 
   img,
@@ -184,17 +186,17 @@
   }
   
   h1 {
-    font-size: 2.25rem;
+    font-size: clamp(1.75rem, 5vw, 2.25rem);
     font-weight: 700;
   }
   
   h2 {
-    font-size: 1.875rem;
+    font-size: clamp(1.375rem, 4vw, 1.875rem);
     font-weight: 600;
   }
   
   h3 {
-    font-size: 1.5rem;
+    font-size: clamp(1.125rem, 3vw, 1.5rem);
     font-weight: 600;
   }
   
@@ -221,8 +223,14 @@
     button,
     [role="button"],
     .btn {
-      min-height: 48px;
-      min-width: 48px;
+      min-height: 44px;
+    }
+
+    /* Prevent iOS auto-zoom on focused inputs */
+    input,
+    select,
+    textarea {
+      font-size: 1rem !important;
     }
   }
 }
@@ -330,7 +338,7 @@
     border: 1px solid hsl(var(--border));
     background-color: hsl(var(--background));
     padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
+    font-size: 1rem; /* ≥16px prevents iOS auto-zoom */
     transition: border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
   }
   
@@ -674,7 +682,14 @@
   .glitch-text {
     position: relative;
     display: inline-block;
-    white-space: nowrap;
+    /* Allow wrapping on mobile to prevent horizontal overflow */
+    white-space: normal;
+  }
+
+  @media (min-width: 640px) {
+    .glitch-text {
+      white-space: nowrap;
+    }
   }
 
   .glitch-text::before,
@@ -995,7 +1010,7 @@
     background: rgba(15, 23, 42, 0.6);
     padding: 0.85rem 1rem;
     color: #f8fafc;
-    font-size: 0.9rem;
+    font-size: 1rem; /* ≥16px prevents iOS auto-zoom */
     transition: all 0.2s ease;
   }
 

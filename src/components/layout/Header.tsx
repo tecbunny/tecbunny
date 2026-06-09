@@ -212,15 +212,16 @@ export function Header() {
 
       <div className="mx-auto max-w-[1360px] px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="relative z-20 flex w-[260px] flex-shrink-0 items-center gap-3 group xl:w-[300px]">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/50 bg-white/95 p-1.5 shadow-[0_10px_30px_rgba(15,23,42,0.35)] ring-1 ring-cyan-200/30 transition-transform group-hover:scale-105">
-              <Logo width={44} height={44} className="drop-shadow-sm" />
+          <Link href="/" className="relative z-20 flex min-w-0 flex-shrink items-center gap-2 sm:gap-3 group sm:w-[260px] xl:w-[300px]">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl sm:h-14 sm:w-14 border border-white/50 bg-white/95 p-1 sm:p-1.5 shadow-[0_10px_30px_rgba(15,23,42,0.35)] ring-1 ring-cyan-200/30 transition-transform group-hover:scale-105">
+              <Logo width={32} height={32} className="drop-shadow-sm sm:hidden" />
+              <Logo width={44} height={44} className="drop-shadow-sm hidden sm:block" />
             </span>
             <div className="flex min-w-0 flex-col">
-              <span className="font-tech text-xl font-bold leading-none tracking-wide text-white xl:text-2xl">
+              <span className="font-tech text-base font-bold leading-none tracking-wide text-white sm:text-xl xl:text-2xl">
                 TECBUNNY<span className="text-cyan-300 animate-pulse">.</span>
               </span>
-              <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.22em] text-slate-500 transition-colors group-hover:text-cyan-300 xl:text-[10px]">
+              <span className="mt-1 text-[8px] sm:text-[9px] font-medium uppercase tracking-[0.18em] sm:tracking-[0.22em] text-slate-500 transition-colors group-hover:text-cyan-300 xl:text-[10px]">
                 Solutions Pvt Ltd
               </span>
             </div>
@@ -384,21 +385,38 @@ export function Header() {
             </Link>
           </div>
 
-          <button
-            className="lg:hidden h-10 w-10 rounded-lg border border-white/10 p-1.5 text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
-            onClick={() =>
-              setMobileMenuOpen((open) => {
-                const next = !open;
-                if (!next) {
-                  setMobileSubmenuOpen(null);
-                }
-                return next;
-              })
-            }
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          {/* Mobile: cart icon + hamburger */}
+          <div className="flex items-center gap-1.5 lg:hidden">
+            <CartSheet>
+              <button
+                type="button"
+                className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                aria-label="Open cart"
+              >
+                <ShoppingCart size={16} />
+                {cartCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-cyan-400 px-0.5 text-[9px] font-bold text-slate-900">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            </CartSheet>
+            <button
+              className="h-9 w-9 rounded-lg border border-white/10 p-1.5 text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+              onClick={() =>
+                setMobileMenuOpen((open) => {
+                  const next = !open;
+                  if (!next) {
+                    setMobileSubmenuOpen(null);
+                  }
+                  return next;
+                })
+              }
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
       </div>
 

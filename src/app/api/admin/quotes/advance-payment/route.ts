@@ -171,10 +171,17 @@ export async function GET(req: Request) {
       );
     }
 
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(quoteId);
+    let realQuoteId = quoteId;
+    if (!isUuid) {
+      const { data: q } = await supabase.from('quotes').select('id').eq('quote_number', quoteId).single();
+      if (q) realQuoteId = q.id;
+    }
+
     const { data: advancePayment, error } = await supabase
       .from('advance_payment_requests')
       .select('*')
-      .eq('quote_id', quoteId)
+      .eq('quote_id', realQuoteId)
       .order('created_at', { ascending: false })
       .single();
 

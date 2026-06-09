@@ -141,7 +141,7 @@ export default function QuoteDetailPage() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Your Quote</h1>
-          <p className="text-slate-400">Quote ID: {quote.id}</p>
+          <p className="text-slate-400">Quote Number: {quote.quote_number || quote.id}</p>
         </div>
 
         <Separator className="bg-white/10" />

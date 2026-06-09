@@ -179,7 +179,12 @@ export default function AdminQuotesPage() {
                 {quotes.map((quote) => (
                   <TableRow key={quote.id} className="border-white/10 hover:bg-white/5">
                     <TableCell className="text-sm">{format(new Date(quote.created_at), 'MMM dd, yyyy')}</TableCell>
-                    <TableCell className="font-medium">{quote.customer_name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div>{quote.customer_name}</div>
+                      <div className="text-[10px] font-normal text-slate-500 font-mono">
+                        {quote.quote_number || quote.id.substring(0, 8)}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-sm">{quote.customer_phone}</TableCell>
                     <TableCell className="text-sm">₹{Math.round(quote.selections?.totals?.sale || 0).toLocaleString()}</TableCell>
                     <TableCell className="text-sm font-semibold text-amber-400">{quote.bidded_price ? `₹${Math.round(quote.bidded_price).toLocaleString()}` : '-'}</TableCell>

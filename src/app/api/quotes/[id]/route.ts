@@ -10,11 +10,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
 
-    const { data, error } = await supabase
-      .from('quotes')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    let query = supabase.from('quotes').select('*');
+    if (isUuid) {
+      query = query.eq('id', id);
+    } else {
+      query = query.eq('quote_number', id);
+    }
+
+    const { data, error } = await query.single();
 
     if (error) throw error;
 

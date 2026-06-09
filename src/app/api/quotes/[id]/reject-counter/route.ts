@@ -10,11 +10,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const { id } = await params;
 
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    let realId = id;
+    if (!isUuid) {
+      const { data: q } = await supabase.from('quotes').select('id').eq('quote_number', id).single();
+      if (q) realId = q.id;
+    }
+
     // Update quote status to 'rejected' (customer rejected counter-offer)
     const { data, error } = await supabase
       .from('quotes')
       .update({ status: 'declined' })
-      .eq('id', id)
+      .eq('id', realId)
       .select()
       .single();
 

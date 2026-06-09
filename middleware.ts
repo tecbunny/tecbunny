@@ -50,12 +50,12 @@ export async function middleware(request: NextRequest) {
   )
 
   // Matches public customer-facing quote detail and decision endpoints:
-  // /api/quotes/<uuid>
-  // /api/quotes/<uuid>/accept-counter
-  // /api/quotes/<uuid>/reject-counter
-  // /api/quotes/<uuid>/advance-payment/confirm
-  // /api/quotes/<uuid>/advance-payment/generate-link
-  const quoteUuidRegex = /^\/api\/quotes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\/(accept-counter|reject-counter|advance-payment\/confirm|advance-payment\/generate-link))?$/i;
+  // /api/quotes/<uuid_or_11_digit_quote_number>
+  // /api/quotes/<uuid_or_11_digit_quote_number>/accept-counter
+  // /api/quotes/<uuid_or_11_digit_quote_number>/reject-counter
+  // /api/quotes/<uuid_or_11_digit_quote_number>/advance-payment/confirm
+  // /api/quotes/<uuid_or_11_digit_quote_number>/advance-payment/generate-link
+  const quoteUuidRegex = /^\/api\/quotes\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d{11})(\/(accept-counter|reject-counter|advance-payment\/confirm|advance-payment\/generate-link))?$/i;
   const isPublicQuoteRoute = quoteUuidRegex.test(pathname);
   
   // GET /api/admin/quotes/advance-payment is public (used by public checkout/payment flow)

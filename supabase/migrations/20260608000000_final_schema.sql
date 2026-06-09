@@ -247,6 +247,7 @@ CREATE TABLE IF NOT EXISTS public.payment_transactions (
 -- Quotes Table
 CREATE TABLE IF NOT EXISTS public.quotes (
   id           UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  quote_number TEXT         UNIQUE,
   user_id      UUID         REFERENCES auth.users (id) ON DELETE CASCADE,
   customer_name TEXT        NOT NULL,
   customer_email TEXT       NOT NULL,
@@ -1332,5 +1333,43 @@ GRANT EXECUTE ON FUNCTION public.match_wishlist_coupons() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.track_advance_payment_status_change() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_or_create_monthly_slot() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.decrement_free_installation_slot() TO authenticated;
+
+-- Sequence generation for human-readable quote numbers (format: YYYYMMXXXXX)
+CREATE OR REPLACE FUNCTION public.generate_quote_number()
+RETURNS TRIGGER AS $$
+DECLARE
+  seq_prefix TEXT;
+  next_serial INTEGER;
+BEGIN
+  -- Check if quote_number is already set manually
+  IF NEW.quote_number IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- Get YYYYMM prefix
+  seq_prefix := to_char(NOW(), 'YYYYMM');
+  
+  -- Find the next serial for this prefix
+  SELECT COALESCE(MAX(SUBSTRING(quote_number FROM 7)::INTEGER), 0) + 1
+  INTO next_serial
+  FROM public.quotes
+  WHERE quote_number LIKE seq_prefix || '%';
+  
+  -- Assign formatted quote number (YYYYMMXXXXX)
+  NEW.quote_number := seq_prefix || lpad(next_serial::text, 5, '0');
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute and create trigger
+REVOKE ALL ON FUNCTION public.generate_quote_number() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.generate_quote_number() TO authenticated, anon;
+
+DROP TRIGGER IF EXISTS before_insert_quote ON public.quotes;
+CREATE TRIGGER before_insert_quote
+BEFORE INSERT ON public.quotes
+FOR EACH ROW
+EXECUTE FUNCTION public.generate_quote_number();
 
 COMMIT;

@@ -3,6 +3,7 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
   ChevronRight,
@@ -181,6 +182,32 @@ function useFinePointer() {
 }
 
 export default function HomePage() {
+  const router = useRouter();
+  const [quoteNumberInput, setQuoteNumberInput] = React.useState('');
+  const [lookupLoading, setLookupLoading] = React.useState(false);
+  const [lookupError, setLookupError] = React.useState('');
+
+  const handleLookupSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const inputVal = quoteNumberInput.trim();
+    if (!inputVal) return;
+    
+    setLookupLoading(true);
+    setLookupError('');
+    
+    fetch(`/api/quotes/${inputVal}`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Quote not found');
+        }
+        router.push(`/quotes/${inputVal}`);
+      })
+      .catch(() => {
+        setLookupError('Invalid quote number or quote not found.');
+        setLookupLoading(false);
+      });
+  };
+
   const prefersReducedMotion = usePrefersReducedMotion();
   const hasFinePointer = useFinePointer();
   const [featuredProducts, setFeaturedProducts] = React.useState<DbProduct[]>([]);
@@ -526,6 +553,42 @@ export default function HomePage() {
               <div className="absolute -inset-4 -z-10 rounded-2xl bg-[#06b6d4]/20 blur-xl"></div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Quotation Status Quick Lookup */}
+      <section className="relative -mt-8 mb-12 z-20 container mx-auto px-4 sm:px-6">
+        <div className="max-w-xl mx-auto rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-6 shadow-xl shadow-cyan-500/5 backdrop-blur-md">
+          <h3 className="text-sm font-semibold text-white font-tech tracking-wider uppercase mb-2 text-center flex items-center justify-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+            Check Quotation Status
+          </h3>
+          <p className="text-xs text-slate-400 text-center mb-4">
+            Enter your YYYYMMXXXXX quote number or ID to track revisions, approval, or proceed with payment.
+          </p>
+          <form onSubmit={handleLookupSubmit} className="flex gap-2">
+            <input
+              type="text"
+              placeholder="e.g. 20260600001"
+              value={quoteNumberInput}
+              onChange={(e) => {
+                setQuoteNumberInput(e.target.value);
+                setLookupError('');
+              }}
+              className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+              disabled={lookupLoading}
+            />
+            <button
+              type="submit"
+              disabled={lookupLoading || !quoteNumberInput.trim()}
+              className="bg-cyan-500 text-slate-950 font-semibold text-sm px-6 py-2.5 rounded-lg hover:bg-cyan-400 disabled:opacity-50 transition flex items-center justify-center gap-1.5"
+            >
+              {lookupLoading ? 'Checking...' : 'Track'}
+            </button>
+          </form>
+          {lookupError && (
+            <p className="text-xs text-rose-400 mt-2 text-center">{lookupError}</p>
+          )}
         </div>
       </section>
 

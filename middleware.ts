@@ -18,6 +18,8 @@ const SHARED_CONTENT_SECURITY_POLICY = [
 ].join('; ')
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
   // Define public API routes that don't require authentication
   const publicApiRoutes: Array<{ path: string; methods?: string[] }> = [
     { path: '/api/auth' },     // Auth endpoints (signin, callback, etc)
@@ -38,20 +40,35 @@ export async function middleware(request: NextRequest) {
     { path: '/api/promotions/free-installation-claim', methods: ['POST'] },
     { path: '/api/warranty/activate', methods: ['POST'] },
     { path: '/api/quotes/bid', methods: ['POST'] },
+    { path: '/api/uploads/quote-documents', methods: ['POST'] },
   ]
   
   // Check if the current path is in the public API routes
-  const isPublicApiRoute = publicApiRoutes.some(route =>
+  let isPublicApiRoute = publicApiRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route.path)
     && (!route.methods || route.methods.includes(request.method))
   )
+
+  // Matches public customer-facing quote detail and decision endpoints:
+  // /api/quotes/<uuid>
+  // /api/quotes/<uuid>/accept-counter
+  // /api/quotes/<uuid>/reject-counter
+  // /api/quotes/<uuid>/advance-payment/confirm
+  // /api/quotes/<uuid>/advance-payment/generate-link
+  const quoteUuidRegex = /^\/api\/quotes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\/(accept-counter|reject-counter|advance-payment\/confirm|advance-payment\/generate-link))?$/i;
+  const isPublicQuoteRoute = quoteUuidRegex.test(pathname);
+  
+  // GET /api/admin/quotes/advance-payment is public (used by public checkout/payment flow)
+  const isPublicAdminAdvancePayment = pathname === '/api/admin/quotes/advance-payment' && request.method === 'GET';
+
+  if (isPublicQuoteRoute || isPublicAdminAdvancePayment) {
+    isPublicApiRoute = true;
+  }
 
   const requestHeaders = new Headers(request.headers)
   // Correlation ID
   let correlationId = requestHeaders.get('x-correlation-id') || crypto.randomUUID()
   requestHeaders.set('x-correlation-id', correlationId)
-
-  const pathname = request.nextUrl.pathname
 
   // Superadmin session validation via Edge Runtime Web Crypto
   const superadminCookie = request.cookies.get('superadmin-session')?.value
@@ -209,7 +226,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // API Route Guards for each Role Tier (allow Superadmin to access admin API routes)
-    if (pathname.startsWith('/api/admin') && userRole !== 'admin' && !isSuperadmin) {
+    if (pathname.startsWith('/api/admin') && !isPublicApiRoute && userRole !== 'admin' && !isSuperadmin) {
       return finalizeResponse(NextResponse.json({ error: 'Not Found' }, { status: 404 }))
     }
     if (pathname.startsWith('/api/manager') && userRole !== 'manager' && !isSuperadmin) {

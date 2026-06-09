@@ -52,7 +52,7 @@ $$;
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'quote_status') THEN
-    CREATE TYPE quote_status AS ENUM ('created', 'sent', 'downloaded', 'expired');
+    CREATE TYPE quote_status AS ENUM ('created', 'sent', 'downloaded', 'expired', 'bidded', 'accepted', 'countered', 'rejected', 'declined');
   END IF;
   
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_lifecycle_status') THEN
@@ -72,6 +72,13 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- Ensure existing database enum has the new negotiation status values
+ALTER TYPE public.quote_status ADD VALUE IF NOT EXISTS 'bidded';
+ALTER TYPE public.quote_status ADD VALUE IF NOT EXISTS 'accepted';
+ALTER TYPE public.quote_status ADD VALUE IF NOT EXISTS 'countered';
+ALTER TYPE public.quote_status ADD VALUE IF NOT EXISTS 'rejected';
+ALTER TYPE public.quote_status ADD VALUE IF NOT EXISTS 'declined';
 
 -- ============================================================================
 -- 2. Core Table Creation

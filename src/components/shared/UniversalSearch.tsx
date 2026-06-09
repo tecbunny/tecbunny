@@ -135,14 +135,14 @@ export function UniversalSearch({
                     
                     {filter.type === 'select' && (
                       <Select
-                        value={filter.value || ''}
-                        onValueChange={(value) => onFilterChange?.(filter.id, value)}
+                        value={filter.value || '__all__'}
+                        onValueChange={(value) => onFilterChange?.(filter.id, value === '__all__' ? '' : value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={`Select ${filter.label.toLowerCase()}`} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All</SelectItem>
+                          <SelectItem value="__all__">All</SelectItem>
                           {filter.options?.map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}

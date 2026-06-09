@@ -1001,12 +1001,12 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
               {/* Rack Selection */}
               <div className="space-y-2">
                 <Label htmlFor="rack-select">Rack Cabinet (Optional)</Label>
-                <Select value={rackId || ''} onValueChange={(val) => setRackId(val || null)}>
+                <Select value={rackId ?? 'none'} onValueChange={(val) => setRackId(val === 'none' ? null : val)}>
                   <SelectTrigger id="rack-select" className={selectTriggerClassName}>
                     <SelectValue placeholder="Select or skip rack cabinet" />
                   </SelectTrigger>
                   <SelectContent className={selectContentClassName}>
-                    <SelectItem value="" className={selectItemClassName}>
+                    <SelectItem value="none" className={selectItemClassName}>
                       <span>None (Skip Rack)</span>
                     </SelectItem>
                     {FALLBACK_RACK_OPTIONS.map((option) => (
@@ -1026,12 +1026,12 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
               {/* Conduit Pipe Selection and Metering */}
               <div className="space-y-2">
                 <Label htmlFor="conduit-select">Conduit Pipe Type (Optional)</Label>
-                <Select value={conduitPipeId || ''} onValueChange={(val) => setConduitPipeId(val || null)}>
+                <Select value={conduitPipeId ?? 'none'} onValueChange={(val) => setConduitPipeId(val === 'none' ? null : val)}>
                   <SelectTrigger id="conduit-select" className={selectTriggerClassName}>
                     <SelectValue placeholder="Select or skip conduit pipe" />
                   </SelectTrigger>
                   <SelectContent className={selectContentClassName}>
-                    <SelectItem value="" className={selectItemClassName}>
+                    <SelectItem value="none" className={selectItemClassName}>
                       <span>None (Skip Conduit)</span>
                     </SelectItem>
                     {FALLBACK_CONDUIT_PIPE_OPTIONS.map((option) => (

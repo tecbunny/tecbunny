@@ -17,6 +17,7 @@ import { Logo } from '@/components/ui/logo';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/hooks';
+import { MgmtMobileNav } from '@/components/mgmt/MgmtMobileNav';
 
 const navItems = [
   { href: '/mgmt/sales-external', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -38,7 +39,11 @@ export function SalesExternalSidebar() {
     }
   };
 
+  const mobileSections = [{ title: 'External Sales', items: navItems }];
+
   return (
+    <>
+    <MgmtMobileNav title="External Sales" sections={mobileSections} />
     <aside className="hidden w-64 flex-col border-r bg-background p-4 sm:flex min-h-screen">
       <div className="flex items-center gap-2 mb-8">
         <Logo className="h-8 w-8 text-primary" />
@@ -75,5 +80,6 @@ export function SalesExternalSidebar() {
          </Button>
       </div>
     </aside>
+    </>
   );
 }

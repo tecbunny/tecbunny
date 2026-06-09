@@ -1082,7 +1082,7 @@ html[data-promo-banner="collapsed"] .site-shell {
 }
 
 html[data-promo-banner="expanded"] .site-shell {
-  padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(13rem + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 1024px) {
@@ -1099,7 +1099,7 @@ html[data-promo-banner="expanded"] .site-shell {
   }
 
   html[data-promo-banner="expanded"] .floating-ai-anchor {
-    bottom: calc(11rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(13.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   html[data-promo-banner="collapsed"] .regional-trust-popup {
@@ -1107,6 +1107,6 @@ html[data-promo-banner="expanded"] .site-shell {
   }
 
   html[data-promo-banner="expanded"] .regional-trust-popup {
-    bottom: calc(13rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(15rem + env(safe-area-inset-bottom, 0px));
   }
 }

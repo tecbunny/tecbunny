@@ -15,6 +15,7 @@ import { Logo } from '../ui/logo';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { useAuth } from '@/lib/hooks';
+import { MgmtMobileNav } from '@/components/mgmt/MgmtMobileNav';
 
 const navItems = [
   { href: '/mgmt/accounts', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,7 +37,11 @@ export function AccountsSidebar() {
     }
   };
 
+  const mobileSections = [{ title: 'Accounts', items: navItems }];
+
   return (
+    <>
+    <MgmtMobileNav title="Accounts" sections={mobileSections} />
     <aside className="hidden w-64 flex-col border-r bg-background p-4 sm:flex">
       <div className="flex items-center gap-2 mb-8">
         <Logo className="h-8 w-8 text-primary" />
@@ -73,5 +78,6 @@ export function AccountsSidebar() {
          </Button>
       </div>
     </aside>
+    </>
   );
 }

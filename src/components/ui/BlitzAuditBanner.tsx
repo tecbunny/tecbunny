@@ -23,7 +23,6 @@ function readDismissed(): boolean {
 
 function dismissForSession() {
   if (typeof window === "undefined") return;
-  // Hide for the rest of this browser session (tab lifetime).
   window.sessionStorage.setItem(DISMISS_STORAGE_KEY, String(Date.now() + 12 * 60 * 60 * 1000));
 }
 
@@ -36,16 +35,22 @@ function syncPromoBannerState(state: PromoBannerState) {
   }
 }
 
+function normalizeMobile(value: string) {
+  return value.replace(/\D/g, "");
+}
+
 const EXCLUDED_PREFIXES = ["/mgmt", "/superadmin", "/staff", "/checkout", "/auth"];
 
 export function BlitzAuditBanner() {
-  const [slots, setSlots] = useState(3);
+  const [slots, setSlots] = useState<number | null>(null);
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
+  const [otpId, setOtpId] = useState<string | null>(null);
   const [step, setStep] = useState<"phone" | "otp" | "success">("phone");
   const [dismissed, setDismissed] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
   const pathname = usePathname();
 
@@ -55,14 +60,28 @@ export function BlitzAuditBanner() {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setSlots((prev) => (prev > 1 ? prev - 1 : prev));
-    }, 120000);
-    return () => clearInterval(timer);
+    let cancelled = false;
+    const loadSlots = async () => {
+      try {
+        const response = await fetch("/api/free-installation-slots", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!cancelled && typeof data?.remainingSlots === "number") {
+          setSlots(data.remainingSlots);
+        }
+      } catch {
+        if (!cancelled) setSlots(10);
+      }
+    };
+    void loadSlots();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const isExcluded = EXCLUDED_PREFIXES.some((prefix) => pathname?.startsWith(prefix));
-  const isVisible = hydrated && !dismissed && step !== "success" && !isExcluded;
+  const slotsDisplay = slots ?? "—";
+  const isVisible = hydrated && !dismissed && step !== "success" && !isExcluded && slots !== 0;
 
   useEffect(() => {
     if (!isVisible) {
@@ -84,37 +103,79 @@ export function BlitzAuditBanner() {
   };
 
   const handleRequestOtp = async () => {
-    if (phone.length < 10) {
+    const mobile = normalizeMobile(phone);
+    if (mobile.length < 10) {
       toast({ variant: "destructive", title: "Invalid Phone Number" });
       return;
     }
-    await fetch("/api/auth/send-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone }),
-    });
-    setStep("otp");
-    setExpanded(true);
-    toast({ title: "OTP Sent", description: "Check your messages." });
+
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, type: "signup" }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || data?.error || "Failed to send OTP");
+      }
+      if (!data?.otpId) {
+        throw new Error("OTP reference missing. Please try again.");
+      }
+      setOtpId(String(data.otpId));
+      setStep("otp");
+      setExpanded(true);
+      toast({ title: "OTP Sent", description: "Check your messages." });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "OTP Failed",
+        description: error instanceof Error ? error.message : "Could not send OTP.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleVerifyAndClaim = async () => {
-    if (otp.length < 4) {
-      toast({ variant: "destructive", title: "Invalid OTP" });
+    const mobile = normalizeMobile(phone);
+    if (!/^\d{6}$/.test(otp)) {
+      toast({ variant: "destructive", title: "Invalid OTP", description: "Enter the 6-digit code." });
+      return;
+    }
+    if (!otpId) {
+      toast({ variant: "destructive", title: "Session expired", description: "Please request a new OTP." });
+      setStep("phone");
       return;
     }
 
-    await fetch("/api/services/tickets", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "FREE_INSTALLATION_CLAIM", priority: "URGENT", phone }),
-    });
-    setStep("success");
-    syncPromoBannerState("hidden");
-    toast({
-      title: "Offer Claimed",
-      description: "Our team will contact you to verify your free installation.",
-    });
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/promotions/free-installation-claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, otp, otpId }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.error || "Could not claim offer");
+      }
+      setStep("success");
+      syncPromoBannerState("hidden");
+      toast({
+        title: "Offer Claimed",
+        description: "Our team will contact you to verify your free installation.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Claim Failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!isVisible) return null;
@@ -125,14 +186,13 @@ export function BlitzAuditBanner() {
       role="region"
       aria-label="Free installation offer"
     >
-      {/* Mobile + tablet: collapsed strip */}
       <div className={`px-3 py-2.5 lg:hidden ${expanded ? "hidden" : "block"}`}>
         <div className="mx-auto flex max-w-7xl items-center gap-2">
           <p className="min-w-0 flex-1 text-xs font-bold leading-snug sm:text-sm">
             <span className="mr-1">⚡</span>
             Free Installation —{" "}
             <span className="whitespace-nowrap">
-              <span className="rounded bg-white px-1.5 py-0.5 font-black text-red-600">{slots}</span> slots left
+              <span className="rounded bg-white px-1.5 py-0.5 font-black text-red-600">{slotsDisplay}</span> slots left
             </span>
           </p>
           <button
@@ -161,17 +221,14 @@ export function BlitzAuditBanner() {
         </div>
       </div>
 
-      {/* Mobile expanded + desktop full layout */}
-      <div
-        className={`p-3 sm:p-4 ${expanded ? "block" : "hidden lg:block"}`}
-      >
+      <div className={`p-3 sm:p-4 ${expanded ? "block" : "hidden lg:block"}`}>
         <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start justify-between gap-3 lg:block">
             <div className="min-w-0">
               <h3 className="text-base font-extrabold sm:text-xl">⚡ MONTHLY FREE INSTALLATION OFFER</h3>
               <p className="mt-1 text-xs font-medium sm:text-sm">
                 First 10 confirmed orders get 100% Free Installation. Only{" "}
-                <span className="rounded bg-white px-2 py-0.5 font-black text-lg text-red-600">{slots}</span> slots
+                <span className="rounded bg-white px-2 py-0.5 font-black text-lg text-red-600">{slotsDisplay}</span> slots
                 remaining this month!
               </p>
             </div>
@@ -210,9 +267,10 @@ export function BlitzAuditBanner() {
                 <button
                   type="button"
                   onClick={handleRequestOtp}
-                  className="whitespace-nowrap rounded-md bg-black px-6 py-3 font-extrabold shadow-lg transition-colors hover:bg-gray-900 sm:py-2"
+                  disabled={submitting}
+                  className="whitespace-nowrap rounded-md bg-black px-6 py-3 font-extrabold shadow-lg transition-colors hover:bg-gray-900 disabled:opacity-60 sm:py-2"
                 >
-                  CLAIM SLOT NOW
+                  {submitting ? "SENDING..." : "CLAIM SLOT NOW"}
                 </button>
               </>
             ) : (
@@ -224,14 +282,15 @@ export function BlitzAuditBanner() {
                   className="w-full rounded-md px-4 py-3 text-center font-bold tracking-widest text-black outline-none focus:ring-4 focus:ring-red-400 sm:py-2 lg:w-48"
                   value={otp}
                   maxLength={6}
-                  onChange={(e) => setOtp(e.target.value)}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                 />
                 <button
                   type="button"
                   onClick={handleVerifyAndClaim}
-                  className="whitespace-nowrap rounded-md bg-black px-6 py-3 font-extrabold shadow-lg transition-colors hover:bg-gray-900 sm:py-2"
+                  disabled={submitting}
+                  className="whitespace-nowrap rounded-md bg-black px-6 py-3 font-extrabold shadow-lg transition-colors hover:bg-gray-900 disabled:opacity-60 sm:py-2"
                 >
-                  VERIFY & DISPATCH
+                  {submitting ? "VERIFYING..." : "VERIFY & DISPATCH"}
                 </button>
               </>
             )}

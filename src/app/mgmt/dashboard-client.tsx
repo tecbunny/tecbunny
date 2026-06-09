@@ -36,10 +36,18 @@ export default function ManagementDashboard() {
         case 'admin':
           redirectPath = '/mgmt/admin';
           break;
+        case 'manager':
+          redirectPath = '/mgmt/manager';
+          break;
         case 'sales':
         case 'service_engineer':
-        case 'manager':
           redirectPath = '/mgmt/sales';
+          break;
+        case 'sales-staff':
+          redirectPath = '/mgmt/sales-staff';
+          break;
+        case 'sales-external':
+          redirectPath = '/mgmt/sales-external';
           break;
         case 'accounts':
           redirectPath = '/mgmt/accounts';

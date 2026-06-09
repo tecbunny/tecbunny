@@ -22,7 +22,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
     if (redirectRef.current) return;
     if (!user) {
       redirectRef.current = true;
-      router.replace('/auth/signin');
+      router.replace('/staff/login');
       return;
     }
     const userRole = (user as any)?.role || 'customer';
@@ -57,7 +57,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
 
   return (
     <div
-      className="admin-shell flex min-h-screen w-full items-start bg-[#030712] text-slate-200"
+      className="admin-shell flex min-h-screen w-full flex-col items-start bg-[#030712] text-slate-200 sm:flex-row"
       data-auth-state={authorized ? 'authorized' : (loading ? 'checking' : 'redirecting')}
     >
       <a
@@ -71,7 +71,7 @@ export default function AdminLayoutClient({ children }: AdminLayoutClientProps) 
       </div>
       <main
         id="admin-main"
-        className="relative flex-1 p-4 sm:p-6 focus:outline-none"
+        className="relative w-full flex-1 p-4 pt-16 focus:outline-none sm:p-6 sm:pt-6"
         tabIndex={-1}
         data-sidebar-ready={authorized || undefined}
         aria-label="Admin main content"

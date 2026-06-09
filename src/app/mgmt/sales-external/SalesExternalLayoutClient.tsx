@@ -36,7 +36,7 @@ export default function SalesExternalLayoutClient({ children }: SalesExternalLay
 
   return (
     <div
-      className="sales-external-shell flex min-h-screen w-full items-start bg-slate-950 text-slate-200"
+      className="sales-external-shell flex min-h-screen w-full flex-col items-start bg-slate-950 text-slate-200 sm:flex-row"
       data-auth-state={authorized ? 'authorized' : (loading ? 'checking' : 'redirecting')}
     >
       <a
@@ -50,7 +50,7 @@ export default function SalesExternalLayoutClient({ children }: SalesExternalLay
       </div>
       <main
         id="sales-external-main"
-        className="relative flex-1 p-4 sm:p-6 focus:outline-none"
+        className="relative w-full flex-1 p-4 pt-16 focus:outline-none sm:p-6 sm:pt-6"
         tabIndex={-1}
         data-sidebar-ready={authorized || undefined}
         aria-label="Sales External main content"

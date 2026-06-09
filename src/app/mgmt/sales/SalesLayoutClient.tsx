@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/hooks';
 import { SalesSidebar } from '@/components/sales/SalesSidebar';
 import { Toaster } from '@/components/ui/toaster';
 
-const SALES_ROLES = new Set(['sales', 'manager', 'admin']);
+const SALES_ROLES = new Set(['sales', 'service_engineer']);
 
 interface SalesLayoutClientProps {
   children: React.ReactNode;
@@ -21,7 +21,7 @@ export default function SalesLayoutClient({ children }: SalesLayoutClientProps) 
   React.useEffect(() => {
     if (!loading) {
       if (!user || !SALES_ROLES.has(user.role)) {
-        router.replace('/');
+        router.replace('/staff/login?denied=1');
         return;
       }
       setTimeout(() => setNavReady(true), 0);
@@ -37,11 +37,11 @@ export default function SalesLayoutClient({ children }: SalesLayoutClientProps) 
   }
 
   return (
-    <div className={`flex w-full items-start bg-muted/40${!navReady ? ' pointer-events-none select-none opacity-80' : ''}${!navReady ? ' transition-opacity' : ''}`}>
+    <div className={`flex w-full flex-col items-start bg-muted/40 sm:flex-row${!navReady ? ' pointer-events-none select-none opacity-80' : ''}${!navReady ? ' transition-opacity' : ''}`}>
       <div className={!navReady ? 'animate-pulse' : undefined}>
         <SalesSidebar />
       </div>
-      <main className="flex-1 p-4 sm:p-6">{children}</main>
+      <main className="w-full flex-1 p-4 pt-16 sm:p-6 sm:pt-6">{children}</main>
       <Toaster />
     </div>
   );

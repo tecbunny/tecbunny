@@ -15,7 +15,6 @@ import {
   Package,
   Archive,
   BarChart2,
-  Megaphone,
 } from 'lucide-react';
 
 import { logger } from '@/lib/logger';
@@ -23,6 +22,7 @@ import { Logo } from '@/components/ui/logo';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/hooks';
+import { MgmtMobileNav } from '@/components/mgmt/MgmtMobileNav';
 
 const navItems = [
   { href: '/mgmt/manager', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -33,8 +33,9 @@ const navItems = [
   { href: '/mgmt/manager/purchase', label: 'Purchase Entry', icon: Archive },
   { href: '/mgmt/manager/invoice-lookup', label: 'Invoice Lookup', icon: FileSearch },
   { href: '/mgmt/manager/reports', label: 'Reports', icon: BarChart2 },
-  { href: '/mgmt/admin/broadcast-desk', label: 'Broadcast Desk', icon: Megaphone },
 ];
+
+export const managerNavSections = [{ title: 'Manager', items: navItems }];
 
 export function ManagerSidebar() {
   const pathname = usePathname();
@@ -51,6 +52,8 @@ export function ManagerSidebar() {
   };
 
   return (
+    <>
+    <MgmtMobileNav title="Manager" sections={managerNavSections} />
     <aside className="hidden w-64 flex-col border-r bg-background p-4 sm:flex min-h-screen">
       <div className="flex items-center gap-2 mb-8">
         <Logo className="h-8 w-8 text-primary" />
@@ -87,5 +90,6 @@ export function ManagerSidebar() {
          </Button>
       </div>
     </aside>
+    </>
   );
 }

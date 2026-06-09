@@ -39,6 +39,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/hooks';
 
 import { Separator } from '../ui/separator';
+import { MgmtMobileNav } from '@/components/mgmt/MgmtMobileNav';
 
 type NavItem = {
   href: string;
@@ -52,7 +53,7 @@ type NavSection = {
   items: NavItem[];
 };
 
-const navSections: NavSection[] = [
+export const adminNavSections: NavSection[] = [
   {
     title: 'Overview',
     items: [
@@ -85,7 +86,7 @@ export function AdminSidebar() {
 
   // (Optional) Explicit prefetch safeguard; Next's Link prefetch covers this
   React.useEffect(() => {
-    navSections.forEach(section => {
+    adminNavSections.forEach(section => {
       section.items.forEach(item => {
         try { (router as any).prefetch?.(item.href); } catch {}
       });
@@ -102,6 +103,8 @@ export function AdminSidebar() {
   };
 
   return (
+    <>
+    <MgmtMobileNav title="Admin" sections={adminNavSections} />
     <aside className="hidden w-64 flex-col border-r border-white/10 bg-[#030712] p-4 sm:flex">
       <div className="flex items-center gap-2 mb-8">
         <Logo className="h-8 w-8 text-cyan-300" />
@@ -109,7 +112,7 @@ export function AdminSidebar() {
       </div>
 
       <nav className="flex-1 space-y-6">
-        {navSections.map(section => (
+        {adminNavSections.map(section => (
           <div key={section.title}>
             <p className="px-3 py-2 text-xs font-semibold uppercase tracking-widest text-slate-500">{section.title}</p>
             {section.items.map(item => {
@@ -152,5 +155,6 @@ export function AdminSidebar() {
          </Button>
       </div>
     </aside>
+    </>
   );
 }

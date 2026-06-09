@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { ViralWarrantyModal } from "@/components/ui/ViralWarrantyModal";
 
+function normalizeMobile(value: string) {
+  return value.replace(/\D/g, "");
+}
+
 export default function WarrantyActivationPage() {
   const params = useParams();
   const serialNumber = params.serialNumber as string;
@@ -11,25 +15,79 @@ export default function WarrantyActivationPage() {
   const [step, setStep] = useState<"init" | "phone" | "otp" | "activated">("init");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
+  const [otpId, setOtpId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [deviceDetails, setDeviceDetails] = useState<{ type: string; model: string } | null>(null);
 
   useEffect(() => {
-    setDeviceDetails({ type: "IP_CAMERA", model: "SEC-PRO-9000" });
+    setDeviceDetails({ type: "DEFAULT", model: serialNumber });
   }, [serialNumber]);
 
   const handleRequestOtp = async () => {
-    if (phone.length < 10) return;
-    await fetch("/api/auth/send-otp", { method: "POST", body: JSON.stringify({ phone }) });
-    setStep("otp");
+    const mobile = normalizeMobile(phone);
+    if (mobile.length < 10) {
+      setError("Enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, type: "signup" }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || data?.error || "Failed to send OTP");
+      }
+      if (!data?.otpId) {
+        throw new Error("OTP reference missing. Please try again.");
+      }
+      setOtpId(String(data.otpId));
+      setStep("otp");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send OTP");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleVerifyAndActivate = async () => {
-    if (otp.length < 4) return;
-    await fetch("/api/admin/inventory/warranty/register", {
-      method: "POST",
-      body: JSON.stringify({ serialNumber, phone, deviceType: deviceDetails?.type }),
-    });
-    setStep("activated");
+    const mobile = normalizeMobile(phone);
+    if (!/^\d{6}$/.test(otp)) {
+      setError("Enter the 6-digit OTP.");
+      return;
+    }
+    if (!otpId) {
+      setError("Session expired. Request a new OTP.");
+      setStep("phone");
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/warranty/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serialNumber, mobile, otp, otpId }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.error || "Activation failed");
+      }
+      if (data?.device) {
+        setDeviceDetails(data.device);
+      }
+      setStep("activated");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Activation failed");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -43,27 +101,59 @@ export default function WarrantyActivationPage() {
         <div className="space-y-4">
           <p>{`> INITIALIZING HARDWARE VERIFICATION...`}</p>
           <p>{`> SERIAL DETECTED: ${serialNumber}`}</p>
-          {deviceDetails && <p>{`> DEVICE MATCH: ${deviceDetails.model} [${deviceDetails.type}]`}</p>}
-          
+          {deviceDetails && (
+            <p>{`> DEVICE MATCH: ${deviceDetails.model} [${deviceDetails.type}]`}</p>
+          )}
+
+          {error && <p className="text-rose-400">{`> ERROR: ${error}`}</p>}
+
           {step === "init" && (
-            <button onClick={() => setStep("phone")} className="mt-6 bg-green-900/30 border border-green-500 text-green-400 hover:bg-green-500 hover:text-black px-6 py-2 transition-all uppercase tracking-wider text-sm font-bold">
+            <button
+              onClick={() => setStep("phone")}
+              className="mt-6 bg-green-900/30 border border-green-500 text-green-400 hover:bg-green-500 hover:text-black px-6 py-2 transition-all uppercase tracking-wider text-sm font-bold"
+            >
               Authenticate & Unlock Warranty
             </button>
           )}
 
           {step === "phone" && (
-            <div className="mt-4 flex gap-3 animate-in fade-in zoom-in duration-300">
+            <div className="mt-4 flex flex-wrap gap-3 animate-in fade-in zoom-in duration-300">
               <span className="py-2">{`> ENTER MOBILE:`}</span>
-              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="bg-transparent border-b border-green-500 text-green-400 focus:outline-none focus:border-green-300 px-2 w-48" />
-              <button onClick={handleRequestOtp} className="bg-green-500 text-black px-4 py-1 hover:bg-green-400 font-bold">TRANSMIT</button>
+              <input
+                type="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="bg-transparent border-b border-green-500 text-green-400 focus:outline-none focus:border-green-300 px-2 w-48 min-h-[44px]"
+              />
+              <button
+                onClick={handleRequestOtp}
+                disabled={submitting}
+                className="bg-green-500 text-black px-4 py-2 hover:bg-green-400 font-bold min-h-[44px] disabled:opacity-60"
+              >
+                {submitting ? "SENDING..." : "TRANSMIT"}
+              </button>
             </div>
           )}
 
           {step === "otp" && (
-            <div className="mt-4 flex gap-3 animate-in fade-in zoom-in duration-300">
+            <div className="mt-4 flex flex-wrap gap-3 animate-in fade-in zoom-in duration-300">
               <span className="py-2">{`> ENTER OTP:`}</span>
-              <input type="text" value={otp} onChange={e => setOtp(e.target.value)} className="bg-transparent border-b border-green-500 text-green-400 focus:outline-none focus:border-green-300 px-2 w-32 tracking-widest" />
-              <button onClick={handleVerifyAndActivate} className="bg-green-500 text-black px-4 py-1 hover:bg-green-400 font-bold">VERIFY</button>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={otp}
+                maxLength={6}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                className="bg-transparent border-b border-green-500 text-green-400 focus:outline-none focus:border-green-300 px-2 w-32 tracking-widest min-h-[44px]"
+              />
+              <button
+                onClick={handleVerifyAndActivate}
+                disabled={submitting}
+                className="bg-green-500 text-black px-4 py-2 hover:bg-green-400 font-bold min-h-[44px] disabled:opacity-60"
+              >
+                {submitting ? "VERIFYING..." : "VERIFY"}
+              </button>
             </div>
           )}
 
@@ -76,7 +166,7 @@ export default function WarrantyActivationPage() {
           )}
         </div>
       </div>
-      
+
       {step === "activated" && <ViralWarrantyModal phone={phone} serialNumber={serialNumber} />}
     </div>
   );

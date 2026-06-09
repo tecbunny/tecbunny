@@ -1,7 +1,5 @@
-import { redirect } from 'next/navigation';
-
-// export const dynamic = 'force-dynamic';
+import SalesOrders from '../../sales/orders/sales-orders';
 
 export default function Page() {
-  redirect('/mgmt/sales/orders');
+  return <SalesOrders />;
 }

@@ -188,8 +188,10 @@ export function Header() {
       case 'manager':
         return '/mgmt/manager';
       case 'sales-staff':
-      case 'sales':
         return '/mgmt/sales-staff';
+      case 'sales':
+      case 'service_engineer':
+        return '/mgmt/sales';
       case 'sales-external':
         return '/mgmt/sales-external';
       default:
@@ -492,14 +494,6 @@ export function Header() {
               )}
             </div>
           ))}
-          <Link
-            href="/contact"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex min-h-[40px] items-center justify-between rounded-lg px-4 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
-          >
-            Contact Support
-            <ChevronRight size={16} className="text-slate-500" />
-          </Link>
           {showDashboard && (
             <Link
               href={dashboardHref}

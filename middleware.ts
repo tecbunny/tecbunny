@@ -32,6 +32,11 @@ export async function middleware(request: NextRequest) {
     { path: '/api/analytics' }, // Public analytics tracking
     { path: '/api/captcha' },  // Public captcha config/verification
     { path: '/api/payment/payu/callback', methods: ['POST'] }, // Signed gateway callback
+    { path: '/api/contact-messages', methods: ['POST'] },
+    { path: '/api/free-installation-slots' },
+    { path: '/api/promotions/claim-viral', methods: ['POST'] },
+    { path: '/api/promotions/free-installation-claim', methods: ['POST'] },
+    { path: '/api/warranty/activate', methods: ['POST'] },
   ]
   
   // Check if the current path is in the public API routes
@@ -249,7 +254,8 @@ export async function middleware(request: NextRequest) {
         '/mgmt/admin/orders',
         '/mgmt/admin/purchase',
         '/mgmt/admin/invoice-lookup',
-        '/mgmt/admin/quotes'
+        '/mgmt/admin/quotes',
+        '/mgmt/admin/broadcast-desk',
       ];
       const isAllowed = allowedAdminPaths.some(p => pathname === p || pathname.startsWith(p + '/'));
       if (!isAllowed) {
@@ -278,7 +284,7 @@ export async function middleware(request: NextRequest) {
       return finalizeResponse(response);
     }
     if (pathname.startsWith('/mgmt/sales') && pathname !== '/mgmt/sales-staff' && !pathname.startsWith('/mgmt/sales-staff/') && pathname !== '/mgmt/sales-external' && !pathname.startsWith('/mgmt/sales-external/')) {
-      if (userRole !== 'sales' && userRole !== 'sales-staff') {
+      if (userRole !== 'sales' && userRole !== 'service_engineer') {
         return finalizeResponse(new NextResponse('Not Found', { status: 404 }))
       }
     }

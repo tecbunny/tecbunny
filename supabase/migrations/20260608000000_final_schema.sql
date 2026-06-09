@@ -66,6 +66,10 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'redemption_status') THEN
     CREATE TYPE redemption_status AS ENUM ('pending', 'approved', 'rejected', 'processed');
   END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'advance_payment_status') THEN
+    CREATE TYPE advance_payment_status AS ENUM ('pending', 'confirmed', 'payment_initiated', 'paid', 'completed');
+  END IF;
 END;
 $$;
 
@@ -87,6 +91,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   customer_category TEXT DEFAULT 'Normal',
   address JSONB DEFAULT '{}'::JSONB,
   metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  marketing_metadata JSONB DEFAULT '{}'::jsonb,
+  last_visit_at TIMESTAMPTZ DEFAULT NOW(),
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -128,6 +134,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   warranty TEXT,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   prioritized BOOLEAN NOT NULL DEFAULT FALSE,
+  bulk_pricing_tiers JSONB DEFAULT '[]'::jsonb,
   created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -196,6 +203,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   tracking_number TEXT,
   courier_name TEXT,
   otp_verified BOOLEAN NOT NULL DEFAULT FALSE,
+  used_free_installation BOOLEAN DEFAULT FALSE,
   metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -235,6 +243,11 @@ CREATE TABLE IF NOT EXISTS public.quotes (
   user_id      UUID         REFERENCES auth.users (id) ON DELETE CASCADE,
   customer_name TEXT        NOT NULL,
   customer_email TEXT       NOT NULL,
+  customer_phone TEXT,
+  customer_address TEXT,
+  bidded_price NUMERIC,
+  counter_price NUMERIC,
+  negotiation_clauses TEXT,
   gst_included BOOLEAN      NOT NULL DEFAULT FALSE,
   expiry_at    TIMESTAMPTZ  NOT NULL,
   summary      TEXT,
@@ -446,6 +459,83 @@ CREATE TABLE IF NOT EXISTS public.order_otp_verifications (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Wishlist Items Table
+CREATE TABLE IF NOT EXISTS public.wishlist_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    profile_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(profile_id, product_id)
+);
+
+-- Recovery Queue for Payment Failures
+CREATE TABLE IF NOT EXISTS public.payment_recovery_queue (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id TEXT NOT NULL,
+    customer_email TEXT,
+    customer_phone TEXT,
+    failure_reason TEXT,
+    recovery_status TEXT DEFAULT 'pending',
+    attempts INT DEFAULT 0,
+    last_attempt_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Advance Payment Requests Table
+CREATE TABLE IF NOT EXISTS public.advance_payment_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  quote_id UUID NOT NULL REFERENCES public.quotes(id) ON DELETE CASCADE,
+  admin_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  advance_amount NUMERIC(12,2) NOT NULL,
+  total_amount NUMERIC(12,2) NOT NULL,
+  payment_method TEXT DEFAULT 'payu',
+  payment_terms TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  customer_notes TEXT,
+  final_quotation_url TEXT,
+  payu_payment_id TEXT,
+  transaction_id TEXT,
+  payment_reference TEXT,
+  confirmed_at TIMESTAMPTZ,
+  payment_completed_at TIMESTAMPTZ,
+  rejected_at TIMESTAMPTZ,
+  rejection_reason TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Add advance_payment_id to quotes table
+ALTER TABLE public.quotes 
+ADD COLUMN IF NOT EXISTS advance_payment_id UUID REFERENCES public.advance_payment_requests(id) ON DELETE SET NULL;
+
+-- Marketing Broadcast Logs Table
+CREATE TABLE IF NOT EXISTS public.marketing_broadcast_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    campaign_name TEXT NOT NULL,
+    channel_type TEXT NOT NULL CHECK (channel_type IN ('whatsapp', 'email')),
+    recipient_count INTEGER NOT NULL DEFAULT 0,
+    success_count INTEGER NOT NULL DEFAULT 0,
+    fail_count INTEGER NOT NULL DEFAULT 0,
+    execution_status TEXT NOT NULL DEFAULT 'PENDING' CHECK (execution_status IN ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED')),
+    failure_summary JSONB,
+    created_by UUID REFERENCES auth.users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Free Installation Slots Table
+CREATE TABLE IF NOT EXISTS public.free_installation_slots (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  month DATE NOT NULL,
+  total_slots INTEGER NOT NULL DEFAULT 10,
+  remaining_slots INTEGER NOT NULL DEFAULT 10,
+  confirmed_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(month)
+);
+
 -- ============================================================================
 -- 3. Optimization Indexes
 -- ============================================================================
@@ -453,6 +543,13 @@ CREATE TABLE IF NOT EXISTS public.order_otp_verifications (
 CREATE INDEX IF NOT EXISTS quotes_user_idx ON public.quotes(user_id);
 CREATE INDEX IF NOT EXISTS quotes_expiry_idx ON public.quotes(expiry_at);
 CREATE INDEX IF NOT EXISTS idx_stock_movements_product ON public.stock_movements (product_id, created_at DESC);
+
+-- New indexes for marketing logic and advance payments
+CREATE INDEX IF NOT EXISTS idx_payment_recovery_order ON public.payment_recovery_queue(order_id);
+CREATE INDEX IF NOT EXISTS idx_advance_payment_requests_quote_id ON public.advance_payment_requests(quote_id);
+CREATE INDEX IF NOT EXISTS idx_advance_payment_requests_status ON public.advance_payment_requests(status);
+CREATE INDEX IF NOT EXISTS idx_advance_payment_requests_admin_id ON public.advance_payment_requests(admin_id);
+CREATE INDEX IF NOT EXISTS idx_free_installation_slots_month ON public.free_installation_slots(month);
 CREATE INDEX IF NOT EXISTS idx_inventory_product_id ON public.inventory(product_id);
 CREATE INDEX IF NOT EXISTS idx_services_is_active ON public.services (is_active);
 CREATE INDEX IF NOT EXISTS faqs_published_category_order_idx ON public.faqs (is_published, category, display_order);
@@ -610,6 +707,12 @@ ALTER TABLE public.payment_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.superadmin_token_blocklist ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_archive_log ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE public.wishlist_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.payment_recovery_queue ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.advance_payment_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.marketing_broadcast_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.free_installation_slots ENABLE ROW LEVEL SECURITY;
+
 -- Product Policies
 DROP POLICY IF EXISTS rls_products_public_read ON public.products;
 CREATE POLICY rls_products_public_read ON public.products FOR SELECT USING (is_deleted = FALSE AND status = 'active');
@@ -667,6 +770,74 @@ DROP POLICY IF EXISTS security_audit_log_superadmin_only ON public.security_audi
 CREATE POLICY security_audit_log_superadmin_only ON public.security_audit_log FOR ALL TO authenticated USING (public.is_superadmin_user()) WITH CHECK (public.is_superadmin_user());
 DROP POLICY IF EXISTS security_settings_superadmin_only ON public.security_settings;
 CREATE POLICY security_settings_superadmin_only ON public.security_settings FOR ALL TO authenticated USING (public.is_superadmin_user()) WITH CHECK (public.is_superadmin_user());
+
+-- Wishlist Policies
+DROP POLICY IF EXISTS "Users can view own wishlist items" ON public.wishlist_items;
+CREATE POLICY "Users can view own wishlist items" ON public.wishlist_items FOR SELECT TO authenticated USING (profile_id = auth.uid());
+DROP POLICY IF EXISTS "Users can insert own wishlist items" ON public.wishlist_items;
+CREATE POLICY "Users can insert own wishlist items" ON public.wishlist_items FOR INSERT TO authenticated WITH CHECK (profile_id = auth.uid());
+DROP POLICY IF EXISTS "Users can delete own wishlist items" ON public.wishlist_items;
+CREATE POLICY "Users can delete own wishlist items" ON public.wishlist_items FOR DELETE TO authenticated USING (profile_id = auth.uid());
+
+-- Advance Payment Requests Policies
+DROP POLICY IF EXISTS "Customers can view their own advance requests" ON public.advance_payment_requests;
+CREATE POLICY "Customers can view their own advance requests" ON public.advance_payment_requests FOR SELECT USING (EXISTS (SELECT 1 FROM public.quotes WHERE quotes.id = advance_payment_requests.quote_id AND quotes.user_id = auth.uid()));
+DROP POLICY IF EXISTS "Admins can view all advance requests" ON public.advance_payment_requests;
+CREATE POLICY "Admins can view all advance requests" ON public.advance_payment_requests FOR SELECT TO authenticated USING (auth.jwt() ->> 'role' IN ('admin', 'superadmin', 'manager'));
+DROP POLICY IF EXISTS "Admins can create advance requests" ON public.advance_payment_requests;
+CREATE POLICY "Admins can create advance requests" ON public.advance_payment_requests FOR INSERT TO authenticated WITH CHECK (auth.jwt() ->> 'role' IN ('admin', 'superadmin', 'manager'));
+DROP POLICY IF EXISTS "Admins can update advance requests" ON public.advance_payment_requests;
+CREATE POLICY "Admins can update advance requests" ON public.advance_payment_requests FOR UPDATE TO authenticated USING (auth.jwt() ->> 'role' IN ('admin', 'superadmin', 'manager')) WITH CHECK (auth.jwt() ->> 'role' IN ('admin', 'superadmin', 'manager'));
+DROP POLICY IF EXISTS "Customers can update their advance requests" ON public.advance_payment_requests;
+CREATE POLICY "Customers can update their advance requests" ON public.advance_payment_requests FOR UPDATE USING (EXISTS (SELECT 1 FROM public.quotes WHERE quotes.id = advance_payment_requests.quote_id AND quotes.user_id = auth.uid()));
+
+-- Marketing Broadcast Logs Policies
+DROP POLICY IF EXISTS "Admins can insert broadcast logs" ON public.marketing_broadcast_logs;
+CREATE POLICY "Admins can insert broadcast logs" 
+ON public.marketing_broadcast_logs 
+FOR INSERT 
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid() 
+    AND profiles.role IN ('admin', 'superadmin')
+  )
+);
+
+DROP POLICY IF EXISTS "Admins can view broadcast logs" ON public.marketing_broadcast_logs;
+CREATE POLICY "Admins can view broadcast logs" 
+ON public.marketing_broadcast_logs 
+FOR SELECT 
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE profiles.id = auth.uid() 
+    AND profiles.role IN ('admin', 'superadmin')
+  )
+);
+
+DROP POLICY IF EXISTS "Service role full access on marketing_broadcast_logs" ON public.marketing_broadcast_logs;
+CREATE POLICY "Service role full access on marketing_broadcast_logs"
+ON public.marketing_broadcast_logs
+FOR ALL
+USING (auth.role() = 'service_role')
+WITH CHECK (auth.role() = 'service_role');
+
+-- Free Installation Slots Policies
+DROP POLICY IF EXISTS "Allow public read access to free installation slots" ON public.free_installation_slots;
+CREATE POLICY "Allow public read access to free installation slots" 
+ON public.free_installation_slots 
+FOR SELECT 
+TO public
+USING (true);
+
+DROP POLICY IF EXISTS "Allow authenticated update of free installation slots" ON public.free_installation_slots;
+CREATE POLICY "Allow authenticated update of free installation slots" 
+ON public.free_installation_slots 
+FOR UPDATE 
+TO authenticated
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
 
 -- ============================================================================
 -- 6. Core Database Functions
@@ -967,6 +1138,147 @@ BEGIN
 END;
 $$;
 
+-- Wishlist matchmaking function and trigger
+CREATE OR REPLACE FUNCTION public.match_wishlist_coupons()
+RETURNS TRIGGER AS $$
+DECLARE
+    user_wishlist_count INT;
+    available_coupon_code TEXT;
+    marketing_meta JSONB;
+BEGIN
+    SELECT COUNT(*) INTO user_wishlist_count 
+    FROM public.wishlist_items 
+    WHERE profile_id = NEW.profile_id;
+
+    IF user_wishlist_count >= 3 AND NOT EXISTS (
+        SELECT 1 FROM public.orders 
+        WHERE customer_email = (SELECT email FROM public.profiles WHERE id = NEW.profile_id)
+    ) THEN
+        SELECT code INTO available_coupon_code 
+        FROM public.coupons 
+        WHERE status = 'active' 
+        AND type = 'percentage'
+        AND expiry_date > NOW()
+        ORDER BY value DESC
+        LIMIT 1;
+
+        IF available_coupon_code IS NOT NULL THEN
+            SELECT marketing_metadata INTO marketing_meta FROM public.profiles WHERE id = NEW.profile_id;
+            marketing_meta = jsonb_set(
+                COALESCE(marketing_meta, '{}'::jsonb), 
+                '{suggested_coupon}', 
+                jsonb_build_object(
+                    'code', available_coupon_code,
+                    'reason', 'wishlist_loyalty',
+                    'matched_at', NOW()
+                )
+            );
+            
+            UPDATE public.profiles 
+            SET marketing_metadata = marketing_meta 
+            WHERE id = NEW.profile_id;
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp;
+
+DROP TRIGGER IF EXISTS trigger_match_wishlist_coupons ON public.wishlist_items;
+CREATE TRIGGER trigger_match_wishlist_coupons
+AFTER INSERT ON public.wishlist_items
+FOR EACH ROW EXECUTE FUNCTION public.match_wishlist_coupons();
+
+-- Advance payment status change tracking function and trigger
+CREATE OR REPLACE FUNCTION public.track_advance_payment_status_change()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.status IS DISTINCT FROM OLD.status THEN
+    INSERT INTO public.security_audit_log (
+      user_id,
+      action,
+      resource,
+      details,
+      severity,
+      event_type,
+      event_data
+    ) VALUES (
+      auth.uid(),
+      'status_update',
+      'advance_payment_requests',
+      jsonb_build_object(
+        'table_name', 'advance_payment_requests',
+        'record_id', NEW.id,
+        'old_value', OLD.status,
+        'new_value', NEW.status
+      ),
+      'info',
+      'advance_payment_status_change',
+      jsonb_build_object(
+        'table_name', 'advance_payment_requests',
+        'record_id', NEW.id,
+        'old_value', OLD.status,
+        'new_value', NEW.status
+      )
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp;
+
+DROP TRIGGER IF EXISTS advance_payment_status_change_trigger ON public.advance_payment_requests;
+CREATE TRIGGER advance_payment_status_change_trigger
+AFTER UPDATE ON public.advance_payment_requests
+FOR EACH ROW EXECUTE FUNCTION public.track_advance_payment_status_change();
+
+-- Free Installation Slots Functions
+CREATE OR REPLACE FUNCTION public.get_or_create_monthly_slot()
+RETURNS TABLE (id UUID, remaining_slots INTEGER) AS $$
+DECLARE
+  v_month DATE;
+  v_slot_record RECORD;
+BEGIN
+  v_month := DATE_TRUNC('month', CURRENT_DATE)::DATE;
+  
+  -- Try to get existing record
+  SELECT * INTO v_slot_record FROM public.free_installation_slots WHERE month = v_month;
+  
+  IF v_slot_record IS NULL THEN
+    -- Create new record for this month
+    INSERT INTO public.free_installation_slots (month, total_slots, remaining_slots, confirmed_count)
+    VALUES (v_month, 10, 10, 0)
+    RETURNING free_installation_slots.id, free_installation_slots.remaining_slots INTO id, remaining_slots;
+  ELSE
+    id := v_slot_record.id;
+    remaining_slots := v_slot_record.remaining_slots;
+  END IF;
+  
+  RETURN NEXT;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp;
+
+CREATE OR REPLACE FUNCTION public.decrement_free_installation_slot()
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_month DATE;
+  v_remaining INTEGER;
+BEGIN
+  v_month := DATE_TRUNC('month', CURRENT_DATE)::DATE;
+  
+  UPDATE public.free_installation_slots 
+  SET remaining_slots = GREATEST(0, remaining_slots - 1),
+      confirmed_count = confirmed_count + 1,
+      updated_at = NOW()
+  WHERE month = v_month;
+  
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp;
+
 -- ============================================================================
 -- 7. Seed Defaults
 -- ============================================================================
@@ -995,6 +1307,10 @@ REVOKE ALL ON FUNCTION public.is_staff_member() FROM PUBLIC, anon, authenticated
 REVOKE ALL ON FUNCTION public.protect_profile_role_column() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.sync_profile_role_to_auth() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.update_updated_at_column() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.match_wishlist_coupons() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.track_advance_payment_status_change() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.get_or_create_monthly_slot() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.decrement_free_installation_slot() FROM PUBLIC, anon, authenticated;
 
 -- Explicitly grant execute to authorized roles
 GRANT EXECUTE ON FUNCTION public.is_superadmin_user() TO authenticated;
@@ -1005,5 +1321,9 @@ GRANT EXECUTE ON FUNCTION public.verify_order_otp_atomic(UUID, TEXT, TEXT, INTEG
 GRANT EXECUTE ON FUNCTION public.allocate_order_inventory_atomic(TEXT, UUID, TEXT, TEXT, TEXT, TEXT, TEXT, NUMERIC, NUMERIC, NUMERIC, NUMERIC, NUMERIC, TEXT, TEXT, JSONB, UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.update_order_status_v1(uuid, text, text, jsonb, text, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.complete_service_ticket_v1(uuid, text, numeric, integer, text[], jsonb) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.match_wishlist_coupons() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.track_advance_payment_status_change() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_or_create_monthly_slot() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.decrement_free_installation_slot() TO authenticated;
 
 COMMIT;

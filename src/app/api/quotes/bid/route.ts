@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { createServerClient, createServiceClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
 
@@ -7,6 +7,7 @@ export async function POST(req: Request) {
   try {
     const supabase = await createServerClient();
     const { data: { session } } = await supabase.auth.getSession();
+    const serviceClient = createServiceClient();
     
     const body = await req.json();
     const { quoteId, name, email, phone, address, biddedPrice, summary, customSetupConfig } = body;
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
 
     // If no quoteId exists yet, create one
     if (!finalQuoteId) {
-      const { data, error } = await supabase.from('quotes').insert({
+      const { data, error } = await serviceClient.from('quotes').insert({
         user_id: session?.user?.id || null,
         customer_name: name,
         customer_email: email,
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
       if (error) throw error;
       finalQuoteId = data.id;
     } else {
-      const { error } = await supabase.from('quotes').update({
+      const { error } = await serviceClient.from('quotes').update({
         customer_name: name,
         customer_email: email,
         customer_phone: phone,

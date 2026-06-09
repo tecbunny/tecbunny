@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     logger.error('Bid submission failed', { error });
     return NextResponse.json({ 
       error: 'Failed to submit bid', 
-      details: error instanceof Error ? error.message : String(error) 
+      details: typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error)
     }, { status: 500 });
   }
 }

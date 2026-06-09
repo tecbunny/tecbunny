@@ -555,6 +555,53 @@ function calculateComponentTotalsForPricing(
   return { sale: normalizedSale, mrp: normalizedMrp };
 }
 
+const ACCESSORIES_META = [
+  {
+    category: 'Surveillance Monitors',
+    items: [
+      { id: 'monitor-19', label: '19" Surveillance Monitor', defaultMrp: 9999, defaultSale: 7499 },
+      { id: 'monitor-21', label: '21" Surveillance Monitor', defaultMrp: 12999, defaultSale: 9999 },
+      { id: 'monitor-24', label: '24" Surveillance Monitor', defaultMrp: 15999, defaultSale: 11999 },
+    ],
+  },
+  {
+    category: 'Surveillance Storage (HDD)',
+    items: [
+      { id: 'hdd-500', label: '500 GB Surveillance HDD', defaultMrp: 3499, defaultSale: 2699 },
+      { id: 'hdd-1tb', label: '1 TB Surveillance HDD', defaultMrp: 4499, defaultSale: 3399 },
+      { id: 'hdd-2tb', label: '2 TB Surveillance HDD', defaultMrp: 5999, defaultSale: 4699 },
+    ],
+  },
+  {
+    category: 'Power & Protection Add-ons',
+    items: [
+      { id: 'wall-mount-addon', label: 'Wall Mount Installation Kit', defaultMrp: 699, defaultSale: 499 },
+      { id: 'spike-guard', label: 'Spike Guard / Power Surge Protector', defaultMrp: 1999, defaultSale: 1299 },
+    ],
+  },
+  {
+    category: 'Rack Cabinets',
+    items: [
+      { id: 'rack-2u', label: 'Rack Cabinet - 2U', defaultMrp: 4999, defaultSale: 3299 },
+      { id: 'rack-3u', label: 'Rack Cabinet - 3U', defaultMrp: 5999, defaultSale: 3999 },
+      { id: 'rack-4u', label: 'Rack Cabinet - 4U', defaultMrp: 6999, defaultSale: 4599 },
+    ],
+  },
+  {
+    category: 'Conduit Pipe Options (Per Meter)',
+    items: [
+      { id: 'conduit-open', label: 'Open Conduit Pipe (₹10/mtr)', defaultMrp: 10, defaultSale: 10 },
+      { id: 'conduit-concealed', label: 'Concealed Conduit Pipe (₹4/mtr)', defaultMrp: 4, defaultSale: 4 },
+    ],
+  },
+  {
+    category: 'Core Services',
+    items: [
+      { id: 'installation', label: 'On-site Installation & Configuration', defaultMrp: 4500, defaultSale: 4500 },
+    ],
+  },
+];
+
 export default function AdminCustomSetupManager() {
   const { toast } = useToast();
   const [loadingTemplates, setLoadingTemplates] = useState(false);
@@ -565,6 +612,77 @@ export default function AdminCustomSetupManager() {
   const [templateCurrency, setTemplateCurrency] = useState<string>('INR');
   const [pricingDraft, setPricingDraft] = useState<PricingDraftState>({});
   const [salePricingDraft, setSalePricingDraft] = useState<PricingDraftState>({});
+
+  const [accessoryPricing, setAccessoryPricing] = useState<Record<string, { mrp: number; sale: number }>>({});
+  const [loadingAccessories, setLoadingAccessories] = useState(false);
+  const [savingAccessories, setSavingAccessories] = useState(false);
+
+  const fetchAccessoryPricing = useCallback(async () => {
+    setLoadingAccessories(true);
+    try {
+      const response = await fetch('/api/settings?key=custom_setup_accessory_pricing');
+      const result = await response.json();
+      if (response.ok && result.value) {
+        setAccessoryPricing(result.value);
+      }
+    } catch (error) {
+      logger.error('price_manager.fetch_accessory_pricing_failed', { error });
+    } finally {
+      setLoadingAccessories(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAccessoryPricing();
+  }, [fetchAccessoryPricing]);
+
+  const handleAccessoryPriceChange = (id: string, field: 'mrp' | 'sale', value: string) => {
+    setAccessoryPricing((previous) => {
+      const parsed = Number.parseFloat(value);
+      const val = Number.isNaN(parsed) ? 0 : parsed;
+      const current = previous[id] || { mrp: 0, sale: 0 };
+      return {
+        ...previous,
+        [id]: {
+          ...current,
+          [field]: val,
+        },
+      };
+    });
+  };
+
+  const handleSaveAccessories = async () => {
+    setSavingAccessories(true);
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'custom_setup_accessory_pricing',
+          value: accessoryPricing,
+          description: 'Overrides for customised setup accessories pricing',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save accessory prices');
+      }
+
+      toast({
+        title: 'Accessories updated',
+        description: 'Accessory prices have been updated successfully.',
+      });
+      fetchAccessoryPricing();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Failed to save accessory prices',
+        description: error instanceof Error ? error.message : 'Please try again later.',
+      });
+    } finally {
+      setSavingAccessories(false);
+    }
+  };
   
   const deferredPricingDraft = useDeferredValue(pricingDraft);
   const deferredSalePricingDraft = useDeferredValue(salePricingDraft);
@@ -1038,6 +1156,7 @@ export default function AdminCustomSetupManager() {
       <Tabs defaultValue="pricing" className="space-y-6">
         <TabsList className="w-full max-w-xl justify-start">
           <TabsTrigger value="pricing">Pricing manager</TabsTrigger>
+          <TabsTrigger value="accessories">Other Accessories</TabsTrigger>
           <TabsTrigger value="preview">Estimator preview</TabsTrigger>
         </TabsList>
 
@@ -1193,6 +1312,97 @@ export default function AdminCustomSetupManager() {
               </Card>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="accessories">
+          <Card className="border-primary/20 shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-xl">Accessories Pricing</CardTitle>
+                <CardDescription>
+                  Configure MRP and Sale prices for optional setup components and services.
+                </CardDescription>
+              </div>
+              <Button onClick={handleSaveAccessories} disabled={savingAccessories || loadingAccessories}>
+                <Save className={`mr-2 h-4 w-4 ${savingAccessories ? 'animate-spin' : ''}`} />
+                Save Accessory Prices
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {loadingAccessories && (
+                <div className="flex items-center justify-center py-12 text-muted-foreground">
+                  <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
+                  Loading accessory prices...
+                </div>
+              )}
+              {!loadingAccessories && (
+                <div className="space-y-8">
+                  {ACCESSORIES_META.map((category) => (
+                    <div key={category.category} className="space-y-4">
+                      <h3 className="text-lg font-semibold border-b pb-2 text-foreground">{category.category}</h3>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[300px]">Accessory Name</TableHead>
+                              <TableHead className="w-[180px]">MRP (Default)</TableHead>
+                              <TableHead className="w-[180px]">Sale Price (Default)</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {category.items.map((item) => {
+                              const values = accessoryPricing[item.id] || { mrp: undefined, sale: undefined };
+                              const mrpValue = values.mrp !== undefined && values.mrp !== null ? values.mrp.toString() : '';
+                              const saleValue = values.sale !== undefined && values.sale !== null ? values.sale.toString() : '';
+                              return (
+                                <TableRow key={item.id}>
+                                  <TableCell className="font-medium text-foreground">
+                                    {item.label}
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder={item.defaultMrp.toString()}
+                                        value={mrpValue}
+                                        onChange={(e) => handleAccessoryPriceChange(item.id, 'mrp', e.target.value)}
+                                        className="w-32"
+                                      />
+                                      <span className="text-xs text-muted-foreground">
+                                        (₹{item.defaultMrp})
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder={item.defaultSale.toString()}
+                                        value={saleValue}
+                                        onChange={(e) => handleAccessoryPriceChange(item.id, 'sale', e.target.value)}
+                                        className="w-32"
+                                      />
+                                      <span className="text-xs text-muted-foreground">
+                                        (₹{item.defaultSale})
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="preview">

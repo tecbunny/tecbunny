@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
 import { buildPdf, loadCompanyInfo } from '@/lib/pdf-generator';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import { getCustomSetupBlueprintSummary } from '@/lib/custom-setup-service';
 import { DEFAULT_CUSTOM_SETUP_TEMPLATE_SLUG } from '@/lib/custom-setup.constants';
@@ -63,6 +63,22 @@ export async function POST(req: NextRequest) {
       const blueprint = await getCustomSetupBlueprintSummary(DEFAULT_CUSTOM_SETUP_TEMPLATE_SLUG);
       const pricingCatalog = buildPricingCatalog(blueprint);
 
+      // Fetch accessory pricing overrides from settings
+      let overrides = null;
+      try {
+        const serviceSupabase = await createServiceClient();
+        const { data: settingData } = await serviceSupabase
+          .from('settings')
+          .select('*')
+          .eq('key', 'custom_setup_accessory_pricing')
+          .maybeSingle();
+        if (settingData && settingData.value) {
+          overrides = settingData.value;
+        }
+      } catch (err) {
+        logger.error('quotes.fetch_accessory_pricing_failed', { error: err });
+      }
+
       const {
         system,
         cameraCount,
@@ -71,6 +87,12 @@ export async function POST(req: NextRequest) {
         ipSelections,
         hddId,
         monitorIncluded,
+        monitorId = 'monitor-19',
+        wallMountIncluded = false,
+        spikeGuardIncluded = false,
+        rackId = null,
+        conduitPipeId = null,
+        conduitMeters = 0,
         installationIncluded,
         automationEnabled = true,
       } = customSetupConfig;
@@ -82,15 +104,21 @@ export async function POST(req: NextRequest) {
         ipSelections,
         hddId,
         monitorIncluded,
+        monitorId,
+        wallMountIncluded,
+        spikeGuardIncluded,
+        rackId,
+        conduitPipeId,
+        conduitMeters,
         installationIncluded,
         automationEnabled,
-        pricingCatalog
+        pricingCatalog,
+        accessoryPricingOverrides: overrides,
       });
 
       const systemLabel = system === 'analog' ? 'Analog DVR' : 'IP NVR';
       const selectableHddOptions = pricingCatalog.hddOptions.length ? pricingCatalog.hddOptions : FALLBACK_HDD_OPTIONS;
       const hddLabel = selectableHddOptions.find((entry) => entry.id === hddId)?.label ?? 'Surveillance HDD';
-      const monitorOption = pricingCatalog.monitorOption;
       const installationOption = pricingCatalog.installationOption;
 
       const items = [
@@ -108,9 +136,41 @@ export async function POST(req: NextRequest) {
 
       if (totals.monitor.included) {
         items.push({
-          description: `Monitor (${monitorOption.label})`,
+          description: `Monitor (${totals.monitor.label})`,
           mrp: totals.monitor.mrp,
           sale: totals.monitor.sale,
+        });
+      }
+
+      if (totals.wallMount.included) {
+        items.push({
+          description: 'Wall Mount Installation Kit',
+          mrp: totals.wallMount.mrp,
+          sale: totals.wallMount.sale,
+        });
+      }
+
+      if (totals.spikeGuard.included) {
+        items.push({
+          description: 'Spike Guard / Power Surge Protector',
+          mrp: totals.spikeGuard.mrp,
+          sale: totals.spikeGuard.sale,
+        });
+      }
+
+      if (totals.rack.selected) {
+        items.push({
+          description: totals.rack.label,
+          mrp: totals.rack.mrp,
+          sale: totals.rack.sale,
+        });
+      }
+
+      if (totals.conduit.selected) {
+        items.push({
+          description: `${totals.conduit.label} × ${totals.conduit.meters}m`,
+          mrp: totals.conduit.mrp,
+          sale: totals.conduit.sale,
         });
       }
 

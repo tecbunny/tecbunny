@@ -84,6 +84,7 @@ function isAllowedPublicKey(key: string) {
     'whatsapp_template_string',
     'facebook_pixel_id',
     'default_gst_rate',
+    'custom_setup_accessory_pricing',
   ];
   return allowList.includes(key);
 }

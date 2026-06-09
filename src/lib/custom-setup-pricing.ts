@@ -709,7 +709,11 @@ export interface IpSelections {
 export interface Totals {
   system: { mrp: number; sale: number; breakdown: string[] };
   hdd: { mrp: number; sale: number; label: string };
-  monitor: { mrp: number; sale: number; included: boolean };
+  monitor: { mrp: number; sale: number; included: boolean; label: string };
+  wallMount: { mrp: number; sale: number; included: boolean };
+  spikeGuard: { mrp: number; sale: number; included: boolean };
+  rack: { mrp: number; sale: number; selected: boolean; label: string };
+  conduit: { mrp: number; sale: number; selected: boolean; label: string; meters: number };
   installation: { mrp: number; sale: number; included: boolean };
   installationLabor: { sale: number; breakdown: string[] };
   overall: { mrp: number; sale: number; discountAmount: number; discountPercent: number };
@@ -792,9 +796,32 @@ export interface CalculateTotalsInput {
   ipSelections: IpSelections;
   hddId: string;
   monitorIncluded: boolean;
+  monitorId?: string;
+  wallMountIncluded?: boolean;
+  spikeGuardIncluded?: boolean;
+  rackId?: string | null;
+  conduitPipeId?: string | null;
+  conduitMeters?: number;
   installationIncluded: boolean;
   automationEnabled?: boolean;
   pricingCatalog: ReturnType<typeof buildPricingCatalog>;
+  accessoryPricingOverrides?: Record<string, { mrp: number; sale: number }> | null;
+}
+
+export function resolveAccessoryPrice(
+  id: string,
+  defaultMrp: number,
+  defaultSale: number,
+  overrides?: Record<string, { mrp: number; sale: number }> | null
+): { mrp: number; sale: number } {
+  if (overrides && overrides[id]) {
+    const override = overrides[id];
+    return {
+      mrp: typeof override.mrp === 'number' ? override.mrp : (typeof override.sale === 'number' ? override.sale : defaultMrp),
+      sale: typeof override.sale === 'number' ? override.sale : defaultSale,
+    };
+  }
+  return { mrp: defaultMrp, sale: defaultSale };
 }
 
 export function calculateTotals({
@@ -804,14 +831,21 @@ export function calculateTotals({
   ipSelections,
   hddId,
   monitorIncluded,
+  monitorId = 'monitor-19',
+  wallMountIncluded = false,
+  spikeGuardIncluded = false,
+  rackId = null,
+  conduitPipeId = null,
+  conduitMeters = 0,
   installationIncluded,
   automationEnabled = false,
-  pricingCatalog
+  pricingCatalog,
+  accessoryPricingOverrides = null,
 }: CalculateTotalsInput): Totals {
   const analogPricing = pricingCatalog.analog;
   const ipPricing = pricingCatalog.ip;
   const selectableHddOptions = pricingCatalog.hddOptions.length ? pricingCatalog.hddOptions : FALLBACK_HDD_OPTIONS;
-  const monitorOption = pricingCatalog.monitorOption;
+  const monitorOption = FALLBACK_MONITOR_OPTIONS.find((entry) => entry.id === monitorId) ?? FALLBACK_MONITOR_OPTIONS[0];
   const installationOption = pricingCatalog.installationOption;
 
   const systemSummary = system === 'analog'
@@ -820,14 +854,103 @@ export function calculateTotals({
 
   const installationLaborCharges = automationEnabled ? calculateInstallationLaborCharges(cameraCount) : { sale: 0, breakdown: [] };
 
+  // Resolve HDD
   const hdd = selectableHddOptions.find((entry) => entry.id === hddId) ?? selectableHddOptions[0];
-  const monitorMrp = monitorIncluded ? monitorOption.mrp ?? 0 : 0;
-  const monitorSale = monitorIncluded ? monitorOption.sale : 0;
-  const installationMrp = installationIncluded ? installationOption.mrp ?? installationOption.sale : 0;
-  const installationSale = installationIncluded ? installationOption.sale : 0;
+  const resolvedHddPrice = resolveAccessoryPrice(hdd.id, hdd.mrp ?? 0, hdd.sale, accessoryPricingOverrides);
 
-  const overallMrp = systemSummary.mrp + (hdd.mrp ?? 0) + monitorMrp + installationMrp;
-  const overallSale = systemSummary.sale + hdd.sale + monitorSale + installationSale + installationLaborCharges.sale;
+  // Resolve Monitor
+  const resolvedMonitorPrice = resolveAccessoryPrice(monitorOption.id, monitorOption.mrp ?? 0, monitorOption.sale, accessoryPricingOverrides);
+  const monitorMrp = monitorIncluded ? resolvedMonitorPrice.mrp : 0;
+  const monitorSale = monitorIncluded ? resolvedMonitorPrice.sale : 0;
+
+  // Resolve Installation
+  const resolvedInstallationPrice = resolveAccessoryPrice(
+    installationOption.id,
+    installationOption.mrp ?? installationOption.sale ?? 0,
+    installationOption.sale,
+    accessoryPricingOverrides
+  );
+  const installationMrp = installationIncluded ? resolvedInstallationPrice.mrp : 0;
+  const installationSale = installationIncluded ? resolvedInstallationPrice.sale : 0;
+
+  // Resolve Wall Mount Addon
+  const resolvedWallMountPrice = resolveAccessoryPrice(
+    'wall-mount-addon',
+    FALLBACK_WALL_MOUNT_ADDON.mrp ?? 0,
+    FALLBACK_WALL_MOUNT_ADDON.sale,
+    accessoryPricingOverrides
+  );
+  const wallMountMrp = (monitorIncluded && wallMountIncluded) ? resolvedWallMountPrice.mrp : 0;
+  const wallMountSale = (monitorIncluded && wallMountIncluded) ? resolvedWallMountPrice.sale : 0;
+
+  // Resolve Spike Guard
+  const resolvedSpikeGuardPrice = resolveAccessoryPrice(
+    'spike-guard',
+    FALLBACK_SPIKE_GUARD_OPTION.mrp ?? 0,
+    FALLBACK_SPIKE_GUARD_OPTION.sale,
+    accessoryPricingOverrides
+  );
+  const spikeGuardMrp = spikeGuardIncluded ? resolvedSpikeGuardPrice.mrp : 0;
+  const spikeGuardSale = spikeGuardIncluded ? resolvedSpikeGuardPrice.sale : 0;
+
+  // Resolve Rack Cabinet
+  let rackMrp = 0;
+  let rackSale = 0;
+  let rackLabel = 'None';
+  if (rackId) {
+    const rackOption = FALLBACK_RACK_OPTIONS.find((entry) => entry.id === rackId);
+    if (rackOption) {
+      const resolvedRackPrice = resolveAccessoryPrice(
+        rackOption.id,
+        rackOption.mrp ?? 0,
+        rackOption.sale,
+        accessoryPricingOverrides
+      );
+      rackMrp = resolvedRackPrice.mrp;
+      rackSale = resolvedRackPrice.sale;
+      rackLabel = rackOption.label;
+    }
+  }
+
+  // Resolve Conduit Pipe
+  let conduitMrp = 0;
+  let conduitSale = 0;
+  let conduitLabel = 'None';
+  if (conduitPipeId && conduitMeters > 0) {
+    const conduitOption = FALLBACK_CONDUIT_PIPE_OPTIONS.find((entry) => entry.id === conduitPipeId);
+    if (conduitOption) {
+      const resolvedConduitPrice = resolveAccessoryPrice(
+        conduitOption.id,
+        conduitOption.mrp ?? 0,
+        conduitOption.sale,
+        accessoryPricingOverrides
+      );
+      conduitMrp = resolvedConduitPrice.mrp * conduitMeters;
+      conduitSale = resolvedConduitPrice.sale * conduitMeters;
+      conduitLabel = conduitOption.label;
+    }
+  }
+
+  const overallMrp =
+    systemSummary.mrp +
+    resolvedHddPrice.mrp +
+    monitorMrp +
+    installationMrp +
+    wallMountMrp +
+    spikeGuardMrp +
+    rackMrp +
+    conduitMrp;
+
+  const overallSale =
+    systemSummary.sale +
+    resolvedHddPrice.sale +
+    monitorSale +
+    installationSale +
+    wallMountSale +
+    spikeGuardSale +
+    rackSale +
+    conduitSale +
+    installationLaborCharges.sale;
   
   const validatedMrp = Math.max(overallMrp, overallSale);
   const validatedSale = Math.min(overallSale, validatedMrp);
@@ -837,8 +960,12 @@ export function calculateTotals({
 
   return {
     system: systemSummary,
-    hdd: { mrp: hdd.mrp ?? 0, sale: hdd.sale, label: hdd.label },
-    monitor: { mrp: monitorMrp, sale: monitorSale, included: monitorIncluded },
+    hdd: { mrp: resolvedHddPrice.mrp, sale: resolvedHddPrice.sale, label: hdd.label },
+    monitor: { mrp: monitorMrp, sale: monitorSale, included: monitorIncluded, label: monitorOption.label },
+    wallMount: { mrp: wallMountMrp, sale: wallMountSale, included: monitorIncluded && wallMountIncluded },
+    spikeGuard: { mrp: spikeGuardMrp, sale: spikeGuardSale, included: spikeGuardIncluded },
+    rack: { mrp: rackMrp, sale: rackSale, selected: !!rackId, label: rackLabel },
+    conduit: { mrp: conduitMrp, sale: conduitSale, selected: !!conduitPipeId && conduitMeters > 0, label: conduitLabel, meters: conduitMeters },
     installation: { mrp: installationMrp, sale: installationSale, included: installationIncluded },
     installationLabor: installationLaborCharges,
     overall: {

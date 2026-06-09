@@ -57,6 +57,7 @@ import {
   formatCurrency,
   buildAnalogSystemSummary,
   buildIpSystemSummary,
+  resolveAccessoryPrice,
 } from '@/lib/custom-setup-pricing';
 
 export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupFlowProps) {
@@ -106,6 +107,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
   const [monitorId, setMonitorId] = useState<string>(FALLBACK_MONITOR_OPTIONS[0]?.id ?? 'monitor-19');
   const [wallMountIncluded, setWallMountIncluded] = useState<boolean>(false);
   const [spikeGuardIncluded, setSpikeGuardIncluded] = useState<boolean>(false);
+  const [accessoryPricing, setAccessoryPricing] = useState<Record<string, { mrp: number; sale: number }> | null>(null);
   const [rackId, setRackId] = useState<string | null>(null);
   const [conduitPipeId, setConduitPipeId] = useState<string | null>(null);
   const [conduitMeters, setConduitMeters] = useState<number>(0);
@@ -250,6 +252,17 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
   }, [selectableHddOptions]);
 
   useEffect(() => {
+    fetch('/api/settings?key=custom_setup_accessory_pricing')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.value) {
+          setAccessoryPricing(data.value);
+        }
+      })
+      .catch((err) => console.error('Failed to load accessory pricing overrides:', err));
+  }, []);
+
+  useEffect(() => {
     const recommendedDvrCapacity = recommendedAnalogDvrCapacity(cameraCount);
     const recommendedDvr = pickCapacityOption(analogPricing.dvr, recommendedDvrCapacity);
     const currentDvr = analogPricing.dvr.find((entry) => entry.id === analogSelections.dvrId);
@@ -288,10 +301,17 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
     ipSelections,
     hddId,
     monitorIncluded,
+    monitorId,
+    wallMountIncluded,
+    spikeGuardIncluded,
+    rackId,
+    conduitPipeId,
+    conduitMeters,
     installationIncluded,
     automationEnabled,
     pricingCatalog,
-  }), [analogPricing, analogSelections, automationEnabled, cameraCount, calculateTotals, hddId, installationIncluded, installationOption, monitorIncluded, monitorOption, ipPricing, ipSelections, pricingCatalog, selectableHddOptions, system]);
+    accessoryPricingOverrides: accessoryPricing,
+  }), [analogPricing, analogSelections, automationEnabled, cameraCount, calculateTotals, hddId, installationIncluded, installationOption, monitorIncluded, monitorOption, ipPricing, ipSelections, pricingCatalog, selectableHddOptions, system, monitorId, wallMountIncluded, spikeGuardIncluded, rackId, conduitPipeId, conduitMeters, accessoryPricing]);
 
   const inlineQuoteSummary = useMemo(() => {
     const systemLabel = system === 'analog' ? 'Analog DVR' : 'IP NVR';
@@ -330,9 +350,41 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
 
       if (totals.monitor.included) {
         items.push({
-          description: `Monitor (${monitorOption.label})`,
+          description: `Monitor (${totals.monitor.label})`,
           mrp: totals.monitor.mrp,
           sale: totals.monitor.sale,
+        });
+      }
+
+      if (totals.wallMount.included) {
+        items.push({
+          description: 'Wall Mount Installation Kit',
+          mrp: totals.wallMount.mrp,
+          sale: totals.wallMount.sale,
+        });
+      }
+
+      if (totals.spikeGuard.included) {
+        items.push({
+          description: 'Spike Guard / Power Surge Protector',
+          mrp: totals.spikeGuard.mrp,
+          sale: totals.spikeGuard.sale,
+        });
+      }
+
+      if (totals.rack.selected) {
+        items.push({
+          description: totals.rack.label,
+          mrp: totals.rack.mrp,
+          sale: totals.rack.sale,
+        });
+      }
+
+      if (totals.conduit.selected) {
+        items.push({
+          description: `${totals.conduit.label} × ${totals.conduit.meters}m`,
+          mrp: totals.conduit.mrp,
+          sale: totals.conduit.sale,
         });
       }
 
@@ -342,55 +394,6 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
           mrp: totals.installation.mrp,
           sale: totals.installation.sale,
         });
-      }
-
-      // Add new accessories
-      if (monitorIncluded) {
-        const selectedMonitor = FALLBACK_MONITOR_OPTIONS.find((m) => m.id === monitorId) || FALLBACK_MONITOR_OPTIONS[0];
-        items.push({
-          description: selectedMonitor.label,
-          mrp: selectedMonitor.mrp || 0,
-          sale: selectedMonitor.sale,
-        });
-
-        if (wallMountIncluded) {
-          items.push({
-            description: FALLBACK_WALL_MOUNT_ADDON.label,
-            mrp: FALLBACK_WALL_MOUNT_ADDON.mrp || 0,
-            sale: FALLBACK_WALL_MOUNT_ADDON.sale,
-          });
-        }
-      }
-
-      if (spikeGuardIncluded) {
-        items.push({
-          description: FALLBACK_SPIKE_GUARD_OPTION.label,
-          mrp: FALLBACK_SPIKE_GUARD_OPTION.mrp || 0,
-          sale: FALLBACK_SPIKE_GUARD_OPTION.sale,
-        });
-      }
-
-      if (rackId) {
-        const selectedRack = FALLBACK_RACK_OPTIONS.find((r) => r.id === rackId) || null;
-        if (selectedRack) {
-          items.push({
-            description: selectedRack.label,
-            mrp: selectedRack.mrp || 0,
-            sale: selectedRack.sale,
-          });
-        }
-      }
-
-      if (conduitPipeId && conduitMeters > 0) {
-        const selectedConduit = FALLBACK_CONDUIT_PIPE_OPTIONS.find((c) => c.id === conduitPipeId) || null;
-        if (selectedConduit) {
-          const conduitCost = selectedConduit.sale * conduitMeters;
-          items.push({
-            description: `${selectedConduit.label} × ${conduitMeters}m`,
-            mrp: conduitCost,
-            sale: conduitCost,
-          });
-        }
       }
 
       const customSetupConfig = {
@@ -950,6 +953,17 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
               <CardDescription className={cardDescriptionClassName}>Add-on options for your setup</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Monitor Included Checkbox */}
+              <div className={cn('flex items-start gap-3 rounded-md border p-3', isTech && 'border-white/10 bg-white/5')}>
+                <Checkbox id="monitor-included" checked={monitorIncluded} onCheckedChange={(checked) => setMonitorIncluded(Boolean(checked))} />
+                <div>
+                  <Label htmlFor="monitor-included" className="text-sm font-semibold">Include Surveillance Monitor</Label>
+                  <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>
+                    Add a surveillance monitor to view your camera feeds on-site
+                  </p>
+                </div>
+              </div>
+
               {/* Monitor Selection */}
               {monitorIncluded && (
                 <div className="space-y-2">
@@ -959,16 +973,19 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                       <SelectValue placeholder="Select monitor size" />
                     </SelectTrigger>
                     <SelectContent className={selectContentClassName}>
-                      {FALLBACK_MONITOR_OPTIONS.map((option) => (
-                        <SelectItem key={option.id} value={option.id} className={selectItemClassName}>
-                          <div className="flex flex-col">
-                            <span>{option.label}</span>
-                            <span className={cn('text-xs', selectMutedClassName)}>
-                              {formatCurrency(option.sale)} sale
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
+                      {FALLBACK_MONITOR_OPTIONS.map((option) => {
+                        const resolved = resolveAccessoryPrice(option.id, option.mrp ?? 0, option.sale, accessoryPricing);
+                        return (
+                          <SelectItem key={option.id} value={option.id} className={selectItemClassName}>
+                            <div className="flex flex-col">
+                              <span>{option.label}</span>
+                              <span className={cn('text-xs', selectMutedClassName)}>
+                                {resolved.mrp ? `${formatCurrency(resolved.mrp)} MRP · ` : ''}{formatCurrency(resolved.sale)} sale
+                              </span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -981,7 +998,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                   <div>
                     <Label htmlFor="wall-mount" className="text-sm font-semibold">Wall Mount Installation</Label>
                     <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>
-                      +{formatCurrency(FALLBACK_WALL_MOUNT_ADDON.sale)}
+                      +{formatCurrency(resolveAccessoryPrice('wall-mount-addon', FALLBACK_WALL_MOUNT_ADDON.mrp ?? 0, FALLBACK_WALL_MOUNT_ADDON.sale, accessoryPricing).sale)}
                     </p>
                   </div>
                 </div>
@@ -993,7 +1010,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                 <div>
                   <Label htmlFor="spike-guard" className="text-sm font-semibold">{FALLBACK_SPIKE_GUARD_OPTION.label}</Label>
                   <p className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>
-                    +{formatCurrency(FALLBACK_SPIKE_GUARD_OPTION.sale)}
+                    +{formatCurrency(resolveAccessoryPrice('spike-guard', FALLBACK_SPIKE_GUARD_OPTION.mrp ?? 0, FALLBACK_SPIKE_GUARD_OPTION.sale, accessoryPricing).sale)}
                   </p>
                 </div>
               </div>
@@ -1009,16 +1026,19 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     <SelectItem value="none" className={selectItemClassName}>
                       <span>None (Skip Rack)</span>
                     </SelectItem>
-                    {FALLBACK_RACK_OPTIONS.map((option) => (
-                      <SelectItem key={option.id} value={option.id} className={selectItemClassName}>
-                        <div className="flex flex-col">
-                          <span>{option.label}</span>
-                          <span className={cn('text-xs', selectMutedClassName)}>
-                            {formatCurrency(option.sale)} sale
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
+                    {FALLBACK_RACK_OPTIONS.map((option) => {
+                      const resolved = resolveAccessoryPrice(option.id, option.mrp ?? 0, option.sale, accessoryPricing);
+                      return (
+                        <SelectItem key={option.id} value={option.id} className={selectItemClassName}>
+                          <div className="flex flex-col">
+                            <span>{option.label}</span>
+                            <span className={cn('text-xs', selectMutedClassName)}>
+                              {resolved.mrp ? `${formatCurrency(resolved.mrp)} MRP · ` : ''}{formatCurrency(resolved.sale)} sale
+                            </span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -1034,11 +1054,14 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                     <SelectItem value="none" className={selectItemClassName}>
                       <span>None (Skip Conduit)</span>
                     </SelectItem>
-                    {FALLBACK_CONDUIT_PIPE_OPTIONS.map((option) => (
-                      <SelectItem key={option.id} value={option.id} className={selectItemClassName}>
-                        <span>{option.label}</span>
-                      </SelectItem>
-                    ))}
+                    {FALLBACK_CONDUIT_PIPE_OPTIONS.map((option) => {
+                      const resolved = resolveAccessoryPrice(option.id, option.mrp ?? 0, option.sale, accessoryPricing);
+                      return (
+                        <SelectItem key={option.id} value={option.id} className={selectItemClassName}>
+                          <span>{option.label.split(' (')[0]} (₹{resolved.sale}/mtr)</span>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -1099,6 +1122,38 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                 <Badge variant="outline" className={isTech ? 'border-white/20 text-slate-300' : undefined}>Not included</Badge>
               )}
             </div>
+            {totals.wallMount.included && (
+              <div className="flex items-center justify-between">
+                <span>Wall Mount</span>
+                <span>
+                  {formatCurrency(totals.wallMount.sale)} sale{totals.wallMount.mrp ? ` · ${formatCurrency(totals.wallMount.mrp)} MRP` : ''}
+                </span>
+              </div>
+            )}
+            {totals.spikeGuard.included && (
+              <div className="flex items-center justify-between">
+                <span>Spike Guard</span>
+                <span>
+                  {formatCurrency(totals.spikeGuard.sale)} sale{totals.spikeGuard.mrp ? ` · ${formatCurrency(totals.spikeGuard.mrp)} MRP` : ''}
+                </span>
+              </div>
+            )}
+            {totals.rack.selected && (
+              <div className="flex items-center justify-between">
+                <span>{totals.rack.label}</span>
+                <span>
+                  {formatCurrency(totals.rack.sale)} sale{totals.rack.mrp ? ` · ${formatCurrency(totals.rack.mrp)} MRP` : ''}
+                </span>
+              </div>
+            )}
+            {totals.conduit.selected && (
+              <div className="flex items-center justify-between">
+                <span>{totals.conduit.label} ({totals.conduit.meters}m)</span>
+                <span>
+                  {formatCurrency(totals.conduit.sale)} sale{totals.conduit.mrp ? ` · ${formatCurrency(totals.conduit.mrp)} MRP` : ''}
+                </span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span>Installation</span>
               {totals.installation.included ? (

@@ -166,7 +166,7 @@ export const PartnerBrandsEditor = ({
       </div>
 
       <Button type="button" variant="outline" onClick={handleAdd} className="w-full flex items-center justify-center gap-2">
-        <Plus className="h-4 w-4" /> Add Partner Brand
+        <Plus className="h-4 w-4" /> Add Product Brand
       </Button>
     </div>
   );

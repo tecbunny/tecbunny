@@ -713,7 +713,7 @@ export default function HomePage() {
       <section className="border-y border-white/5 bg-slate-950/80 py-8 sm:py-10">
         <div className="container mx-auto px-6">
           <p className="text-center text-xs font-semibold uppercase tracking-[0.35em] text-slate-500 mb-6">
-            Authorized Solutions & Brand Partnerships
+            Authorized Product Brands
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 md:gap-x-16 opacity-65">
             {partnerBrands.map((brand) => (

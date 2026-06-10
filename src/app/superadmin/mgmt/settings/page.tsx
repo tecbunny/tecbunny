@@ -30,6 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { PartnerBrandsEditor } from '@/components/admin/PartnerBrandsEditor';
+import { SingleImageUploader } from '@/components/admin/SingleImageUploader';
 
 type SettingField = {
   key: string;
@@ -66,7 +67,7 @@ const sections: SettingSection[] = [
     icon: Package,
     href: '/superadmin/mgmt/products',
     fields: [
-      { key: 'partnerBrands', label: 'Partner brands', description: 'Comma-separated brand list used across product pages.', type: 'textarea' },
+      { key: 'partnerBrands', label: 'Product brands', description: 'Manage the product brands available for selection and displayed on the homepage.', type: 'textarea' },
       { key: 'product_low_stock_threshold', label: 'Low stock threshold', description: 'Default threshold for low-stock warnings.', type: 'number' },
     ],
   },
@@ -409,6 +410,12 @@ export default function SuperadminSettingsPage() {
                               onChange={(val) => updateValue(field.key, val)}
                             />
                           </div>
+                        ) : field.key === 'logoUrl' || field.key === 'faviconUrl' ? (
+                          <SingleImageUploader 
+                            value={values[field.key] ?? ''}
+                            onChange={(val) => updateValue(field.key, val)}
+                            type={field.key === 'logoUrl' ? 'logo' : 'favicon'}
+                          />
                         ) : field.type === 'textarea' ? (
                           <Textarea
                             id={field.key}

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useViralAttribution } from '@/hooks/use-viral-attribution';
 import { toast } from '@/hooks/use-toast';
+import { InteractiveTopologyDiagram } from './InteractiveTopologyDiagram';
 
 interface BlueprintShowcaseProps {
   blueprint: any;
@@ -64,14 +65,7 @@ export function BlueprintShowcase({ blueprint }: BlueprintShowcaseProps) {
         </div>
 
         {/* Technical Diagram Block */}
-        <div className="rounded-3xl border border-white/10 bg-slate-950 p-8 overflow-hidden min-h-[400px] flex items-center justify-center relative">
-          <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#22d3ee_1px,transparent_1px)] [background-size:20px_20px]" />
-          <div className="text-center z-10">
-            <Network className="h-16 w-16 text-cyan-400 mx-auto mb-4" />
-            <h3 className="text-white text-lg">Logic Diagram: {config.systemType}</h3>
-            <p className="text-slate-500 text-sm mt-2">Physical node distribution mapping.</p>
-          </div>
-        </div>
+        <InteractiveTopologyDiagram config={config} />
       </div>
 
       {/* Sidebar Inbound Conversion */}

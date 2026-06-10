@@ -943,49 +943,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Recent Installations Gallery */}
-      <section className="bg-slate-950 py-12 sm:py-24 border-t border-white/5">
-        <div className="container mx-auto px-6">
-          <div className="mb-14 max-w-2xl">
-            <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Case Studies</span>
-            <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">Recent Installations</h2>
-            <p className="mt-4 text-sm text-slate-400 sm:text-base">
-              Take a look at how we deploy security, IT networking, and home automation solutions across Goa and Maharashtra.
-            </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                title: 'Luxury Coastal Resort & Spa',
-                location: 'Calangute, Goa',
-                description: 'Designed and deployed a full 64-channel IP CCTV surveillance network and high-density guest Wi-Fi coverage across resort wings.',
-                tag: 'Resort IP CCTV'
-              },
-              {
-                title: 'Industrial Manufacturing Complex',
-                location: 'Mahad, Maharashtra',
-                description: 'Implemented multi-site server setups, structured optical fiber cabling, and biometric attendance/RFID door locks for 150+ workers.',
-                tag: 'IT Infrastructure & Access Control'
-              },
-              {
-                title: 'High-End Automated Villa',
-                location: 'Panaji, Goa',
-                description: 'Retrofitted a residential villa with wireless smart controls, automated perimeter alarms, smart locks, and motorized curtains.',
-                tag: 'Home Automation'
-              }
-            ].map((project) => (
-              <div key={project.title} className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 flex flex-col justify-between hover:border-cyan-400/30 transition-all duration-300">
-                <div>
-                  <span className="inline-block rounded bg-cyan-500/10 px-2.5 py-1 text-xs font-semibold text-cyan-300 mb-4">{project.tag}</span>
-                  <h3 className="text-lg font-semibold text-white mb-2">{project.title}</h3>
-                  <p className="text-xs text-slate-500 mb-4">{project.location}</p>
-                  <p className="text-sm text-slate-400">{project.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
 
 

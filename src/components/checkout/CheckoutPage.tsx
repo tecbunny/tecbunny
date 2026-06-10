@@ -61,6 +61,47 @@ export default function CheckoutPage() {
     installDate: '',
     siteStatus: ''
   });
+  const [isFetchingGst, setIsFetchingGst] = useState(false);
+  const [gstError, setGstError] = useState('');
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    if (customerInfo.gstin && customerInfo.gstin.length === 15) {
+      const fetchGstDetails = async () => {
+        setIsFetchingGst(true);
+        setGstError('');
+        try {
+          const res = await fetch(`/api/gst-verify?gstin=${customerInfo.gstin.toUpperCase()}`);
+          const data = await res.json();
+          if (data.success && data.data) {
+            setCustomerInfo(prev => ({
+              ...prev,
+              name: prev.name || data.data.businessName,
+              address: prev.address || data.data.address,
+              city: prev.city || data.data.city,
+              state: data.data.state || prev.state,
+              pincode: prev.pincode || data.data.pincode
+            }));
+            toast({ title: 'GST Details Auto-filled', description: 'Address and name pre-filled from your GSTIN.' });
+          } else if (!data.success && data.error) {
+            setGstError(data.error);
+          }
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setIsFetchingGst(false);
+        }
+      };
+      
+      timeoutId = setTimeout(fetchGstDetails, 600);
+    } else {
+      setGstError('');
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [customerInfo.gstin, toast]);
 
   useEffect(() => {
     if (!quoteId) return;
@@ -740,12 +781,19 @@ export default function CheckoutPage() {
                     <input
                       type="text"
                       id="gstin"
+                      maxLength={15}
                       value={customerInfo.gstin}
-                      onChange={(event) => handleInputChange('gstin', event.target.value)}
-                      className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
+                      onChange={(event) => handleInputChange('gstin', event.target.value.toUpperCase())}
+                      className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${gstError ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
                       placeholder=" "
                     />
-                    <label htmlFor="gstin" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">GSTIN (Optional - B2B)</label>
+                    <label htmlFor="gstin" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none flex items-center gap-2">
+                      GSTIN (Optional - B2B)
+                      {isFetchingGst && <span className="h-3 w-3 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>}
+                    </label>
+                    {gstError && (
+                      <span className="text-[10px] text-red-400 mt-1 block pl-1">{gstError}</span>
+                    )}
                   </div>
                 </div>
               </div>

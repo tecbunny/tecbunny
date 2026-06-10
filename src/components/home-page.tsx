@@ -15,6 +15,9 @@ import {
   CheckCircle2,
   Layers,
   Lock,
+  Sliders,
+  FileText,
+  TrendingDown,
 } from 'lucide-react';
 
 import { getProductDisplayImage } from '@/lib/image-utils';
@@ -293,7 +296,7 @@ export default function HomePage() {
         setProductsLoading(true);
         setProductsError(null);
 
-        const response = await fetch('/api/products?status=active&limit=12');
+        const response = await fetch('/api/products?status=active&limit=12', { cache: 'no-store' });
         if (!response.ok) {
           throw new Error('Failed to load products');
         }
@@ -556,39 +559,138 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Quotation Status Quick Lookup */}
-      <section className="relative -mt-8 mb-12 z-20 container mx-auto px-4 sm:px-6">
-        <div className="max-w-xl mx-auto rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-6 shadow-xl shadow-cyan-500/5 backdrop-blur-md">
-          <h3 className="text-sm font-semibold text-white font-tech tracking-wider uppercase mb-2 text-center flex items-center justify-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
-            Check Quotation Status
-          </h3>
-          <p className="text-xs text-slate-400 text-center mb-4">
-            Enter your YYYYMMXXXXX quote number or ID to track revisions, approval, or proceed with payment.
-          </p>
-          <form onSubmit={handleLookupSubmit} className="flex gap-2">
-            <input
-              type="text"
-              placeholder="e.g. 20260600001"
-              value={quoteNumberInput}
-              onChange={(e) => {
-                setQuoteNumberInput(e.target.value);
-                setLookupError('');
-              }}
-              className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-              disabled={lookupLoading}
-            />
-            <button
-              type="submit"
-              disabled={lookupLoading || !quoteNumberInput.trim()}
-              className="bg-cyan-500 text-slate-950 font-semibold text-sm px-6 py-2.5 rounded-lg hover:bg-cyan-400 disabled:opacity-50 transition flex items-center justify-center gap-1.5"
-            >
-              {lookupLoading ? 'Checking...' : 'Track'}
-            </button>
-          </form>
-          {lookupError && (
-            <p className="text-xs text-rose-400 mt-2 text-center">{lookupError}</p>
-          )}
+      {/* Instant Quote & Negotiation System Promotion */}
+      <section className="relative py-16 sm:py-20 bg-slate-950/40 border-y border-white/5 overflow-hidden">
+        {/* Glow effects */}
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 -translate-x-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+            {/* Left Column: Promotion Info */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/5 px-3 py-1 text-xs font-semibold text-cyan-300">
+                <Sparkles size={14} className="animate-pulse" />
+                Instant Quotation & Live Negotiation
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white font-tech leading-tight animate-reveal">
+                Design Your CCTV Setup. <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-violet-400">
+                  Negotiate Your Price Instantly.
+                </span>
+              </h2>
+              <p className="text-base text-slate-400 max-w-2xl leading-relaxed">
+                Why wait for manual sales proposals? Use our custom setup configurator to design your security and IT ecosystem, preview exact retail vs. discount totals, and submit your own bid price directly.
+              </p>
+              
+              {/* Feature grid */}
+              <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 border border-white/10 text-cyan-400">
+                    <Sliders size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Live Customization</h3>
+                    <p className="text-xs text-slate-400 mt-1">Adjust cameras, cabling, storage & accessories dynamically.</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 border border-white/10 text-emerald-400">
+                    <TrendingDown size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Counter-Offer Engine</h3>
+                    <p className="text-xs text-slate-400 mt-1">Submit your bid target; we auto-negotiate and review within minutes.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 border border-white/10 text-violet-400">
+                    <FileText size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Instant Formal PDF</h3>
+                    <p className="text-xs text-slate-400 mt-1">Download custom pricing summaries with 7-day validity details.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 border border-white/10 text-amber-400">
+                    <ShieldCheck size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">System Compatibility</h3>
+                    <p className="text-xs text-slate-400 mt-1">Auto-verifies storage parameters & power needs in real time.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Link
+                  href="/customised-setups"
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 px-6 py-3 text-sm font-bold text-slate-950 transition shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/20"
+                >
+                  Start Custom Setup Configurator
+                  <ArrowRight size={16} className="ml-2" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Column: Dynamic Quote Tracking Panel */}
+            <div className="lg:col-span-5">
+              <div className="relative rounded-2xl border border-white/10 bg-slate-900/40 p-6 sm:p-8 backdrop-blur-md shadow-2xl">
+                <div className="absolute top-0 right-0 p-3 text-[10px] font-mono text-slate-600">tecbunny_negotiation_v2.0</div>
+                <h3 className="text-lg font-bold text-white font-tech tracking-wider uppercase mb-2 flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 animate-pulse" />
+                  Track Active Negotiation
+                </h3>
+                <p className="text-xs text-slate-400 mb-6">
+                  Already submitted a counter-offer? Enter your YYYYMMXXXXX quote ID to track engineers' review status, download revised PDFs, or make your payment.
+                </p>
+
+                <form onSubmit={handleLookupSubmit} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label htmlFor="homepage-quote-id" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      Quote / Negotiation ID
+                    </label>
+                    <input
+                      id="homepage-quote-id"
+                      type="text"
+                      placeholder="e.g. 20260600001"
+                      value={quoteNumberInput}
+                      onChange={(e) => {
+                        setQuoteNumberInput(e.target.value);
+                        setLookupError('');
+                      }}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 transition-colors"
+                      disabled={lookupLoading}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={lookupLoading || !quoteNumberInput.trim()}
+                    className="w-full bg-cyan-500 text-slate-950 font-bold text-sm py-3 rounded-xl hover:bg-cyan-400 disabled:opacity-50 transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/10"
+                  >
+                    {lookupLoading ? 'Validating ID...' : 'Check Status & Pay'}
+                    <ArrowRight size={14} />
+                  </button>
+                </form>
+
+                {lookupError && (
+                  <div className="mt-4 rounded-lg bg-rose-500/10 border border-rose-500/20 p-3 text-xs text-rose-400 text-center animate-fade-in">
+                    {lookupError}
+                  </div>
+                )}
+
+                <div className="mt-6 border-t border-white/5 pt-6 flex items-center justify-between text-xs text-slate-500">
+                  <span>Average engineering response time:</span>
+                  <span className="text-cyan-300 font-semibold">&lt; 15 mins</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -778,8 +880,12 @@ export default function HomePage() {
             {!productsLoading &&
               featuredProducts.map((product, index) => {
                 const title = product.title || product.name || 'Product';
-                const price = Number(product.price ?? product.mrp ?? 0);
-                const oldPrice = Number(product.mrp ?? 0);
+                const gstRate = Number((product as any).gstRate ?? (product as any).gst_rate ?? 18);
+                const rawPrice = Number(product.price ?? product.mrp ?? 0);
+                const rawMrp = Number(product.mrp ?? rawPrice);
+                
+                const price = Math.round(rawPrice * (1 + gstRate / 100));
+                const oldPrice = Math.round(rawMrp * (1 + gstRate / 100));
                 const imageUrl = getProductDisplayImage(product) || '';
                 const resolvedProduct: Product = {
                   ...product,

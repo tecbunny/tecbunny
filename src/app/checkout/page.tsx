@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 
 import CheckoutPage from '@/components/checkout/CheckoutPage';
 
@@ -12,5 +13,13 @@ export const metadata: Metadata = {
 };
 
 export default function Checkout() {
-  return <CheckoutPage />;
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-[#030712] text-slate-300">
+        <div className="text-slate-400">Loading checkout...</div>
+      </div>
+    }>
+      <CheckoutPage />
+    </Suspense>
+  );
 }

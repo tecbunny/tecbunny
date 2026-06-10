@@ -26,6 +26,9 @@ interface Order {
   payment_status?: string | null;
   payment_method?: string | null;
   items?: string | Record<string, unknown> | null;
+  fullTotal?: number;
+  isPartPayment?: boolean;
+  isPendingPayment?: boolean;
 }
 
 type PaymentState = 'pending' | 'paid';
@@ -37,6 +40,7 @@ interface OrderExtras {
   delivery_address?: string;
   payment_method?: string;
   customer_notes?: string;
+  part_payment_amount?: number | null;
 }
 
 export default function UPIPaymentPage() {
@@ -110,19 +114,30 @@ export default function UPIPaymentPage() {
 
       if (error) throw error;
 
+      const extras = parseOrderExtras(data.items ?? null);
+      const isInitialConfirmed = data.payment_status === 'Payment Confirmed' || 
+        ['Payment Confirmed', 'Confirmed', 'Processing', 'Ready to Ship', 'Shipped', 'Ready for Pickup', 'Completed', 'Delivered', 'Delivered/Picked Up'].includes(data.status ?? '');
+      const isPendingPaymentMode = isInitialConfirmed && extras.part_payment_amount && (extras as any).pending_payment_status !== 'paid';
+
+      const payableAmount = isPendingPaymentMode
+        ? Number(data.total ?? 0) - Number(extras.part_payment_amount)
+        : extras.part_payment_amount ? Number(extras.part_payment_amount) : Number(data.total ?? 0);
+
       const normalizedOrder: Order = {
         id: data.id,
-        total: Number(data.total ?? 0),
+        total: payableAmount,
         status: data.status ?? 'Pending',
         created_at: data.created_at,
         customer_name: data.customer_name ?? 'Customer',
         payment_status: typeof data.payment_status === 'string' ? data.payment_status : null,
         payment_method: typeof data.payment_method === 'string' ? data.payment_method : null,
         items: data.items ?? null,
+        fullTotal: Number(data.total ?? 0),
+        isPartPayment: !!extras.part_payment_amount && !isPendingPaymentMode,
+        isPendingPayment: !!isPendingPaymentMode
       };
 
-  const extras = parseOrderExtras(data.items ?? null);
-  const resolvedPaymentMethod = normalizedOrder.payment_method ?? extras.payment_method ?? 'upi';
+      const resolvedPaymentMethod = normalizedOrder.payment_method ?? extras.payment_method ?? 'upi';
       setOrder({
         ...normalizedOrder,
         payment_method: resolvedPaymentMethod,
@@ -274,9 +289,21 @@ export default function UPIPaymentPage() {
           </CardHeader>
           <CardContent>
             <div className="flex justify-between items-center">
-              <span className="text-lg">Amount to Pay:</span>
-              <span className="text-2xl font-bold text-green-600">₹{order.total.toFixed(2)}</span>
+              <span className="text-lg">
+                {order.isPendingPayment
+                  ? 'Remaining Balance to Pay:'
+                  : order.isPartPayment
+                  ? 'Payable Part Amount:'
+                  : 'Amount to Pay:'}
+              </span>
+              <span className="text-2xl font-bold text-green-400">₹{order.total.toFixed(2)}</span>
             </div>
+            {(order.isPartPayment || order.isPendingPayment) && (
+              <div className="flex justify-between text-xs text-slate-400 mt-1">
+                <span>Total CCTV Order Amount</span>
+                <span>₹{order.fullTotal?.toFixed(2)}</span>
+              </div>
+            )}
             <div className="mt-4 grid gap-2 text-sm text-gray-600">
               {customerEmail && (
                 <div className="flex justify-between">

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { buildPdf, loadCompanyInfo } from '@/lib/pdf-generator';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,7 +21,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const { data, error } = await query.single();
 
-    if (error) throw error;
+    if (error || !data) throw error || new Error('Quote not found');
+
+    const formatParam = req.nextUrl.searchParams.get('format');
+    if (formatParam === 'pdf') {
+      const company = await loadCompanyInfo();
+      const pdfBuffer = await buildPdf({
+        company,
+        customerName: data.customer_name,
+        customerEmail: data.customer_email,
+        gstIncluded: data.gst_included,
+        summary: data.summary,
+        selections: data.selections,
+        quoteNumber: data.quote_number,
+      });
+
+      return new NextResponse(pdfBuffer, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="quote-${data.quote_number || data.id}.pdf"`,
+        },
+      });
+    }
 
     return NextResponse.json(data);
   } catch (error: any) {

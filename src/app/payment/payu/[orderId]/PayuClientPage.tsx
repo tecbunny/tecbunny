@@ -22,11 +22,14 @@ interface OrderRow {
   customer_phone?: string | null;
   status: string;
   items?: string | Record<string, unknown> | null;
+  fullTotal?: number;
+  isPartPayment?: boolean;
 }
 
 interface OrderExtras {
   customer_email?: string;
   customer_phone?: string;
+  part_payment_amount?: number | null;
 }
 
 interface PayuInitiateResponse {
@@ -108,15 +111,18 @@ function PayuPaymentContent() {
       const extras = parseOrderExtras(data.items);
       const resolvedEmail = extras.customer_email ?? data.customer_email ?? null;
       const resolvedPhone = extras.customer_phone ?? data.customer_phone ?? null;
+      const payableAmount = extras.part_payment_amount ? Number(extras.part_payment_amount) : Number(data.total ?? 0);
 
       setOrder({
         id: data.id,
-        total: Number(data.total ?? 0),
+        total: payableAmount,
         customer_name: data.customer_name ?? 'Customer',
         customer_email: resolvedEmail,
         customer_phone: resolvedPhone,
         status: data.status ?? 'Pending',
         items: data.items,
+        fullTotal: Number(data.total ?? 0),
+        isPartPayment: !!extras.part_payment_amount
       });
       setCustomerEmail(resolvedEmail);
       setCustomerPhone(resolvedPhone);
@@ -271,9 +277,15 @@ function PayuPaymentContent() {
               <span className="font-medium">{order.customer_name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Amount</span>
-              <span className="font-semibold">₹{formattedAmount}</span>
+              <span className="text-muted-foreground">{order.isPartPayment ? 'Payable Part Amount' : 'Amount'}</span>
+              <span className="font-semibold text-cyan-400">₹{formattedAmount}</span>
             </div>
+            {order.isPartPayment && (
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>Total CCTV Order Amount</span>
+                <span>₹{order.fullTotal?.toFixed(2)}</span>
+              </div>
+            )}
             {customerEmail && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Email</span>

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 
 import { logger } from '@/lib/logger';
+import { createClient } from '@/lib/supabase/client';
 
 type OTPChannel = 'whatsapp' | 'email';
 type ChannelOption = {
@@ -16,6 +17,7 @@ type ChannelOption = {
 };
 
 export function OTPVerificationContent() {
+  const supabase = useMemo(() => createClient(), []);
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -326,6 +328,13 @@ export function OTPVerificationContent() {
           // Check if we got a session for automatic signin
           if (completeResult.session && !completeResult.requiresSignIn) {
             logger.info('Account created and user signed in automatically');
+            
+            // Set browser session explicitly
+            await supabase.auth.setSession({
+              access_token: completeResult.session.access_token,
+              refresh_token: completeResult.session.refresh_token
+            });
+            
             toast.success('Welcome! Redirecting to home page...');
             
             // Clean up stored data

@@ -226,6 +226,12 @@ export interface Order {
   otp_verified?: boolean;
   otp_verified_at?: string;
   pickup_code?: string; // OTP for Pickup Verification
+  part_payment_amount?: number | null;
+  quote_id?: string | null;
+  pending_amount_requested?: boolean;
+  pending_payment_status?: 'unpaid' | 'paid';
+  pending_payment_method?: 'cash' | 'online' | null;
+  invoice_pdf_url?: string | null;
   // Related data
   sales_agent?: SalesAgent;
   status_history?: OrderStatusHistory[];

@@ -30,6 +30,7 @@ export async function POST(req: Request) {
     }
 
     let finalQuoteId = quoteId;
+    let finalQuoteNumber = '';
 
     // If no quoteId exists yet, create one
     if (!finalQuoteId) {
@@ -39,21 +40,25 @@ export async function POST(req: Request) {
         totals: customSetupConfig?.totals?.overall || customSetupConfig?.totals || {}
       };
 
+      const quoteNumber = `${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(Math.floor(10000 + Math.random() * 90000))}`;
+
       const { data, error } = await serviceClient.from('quotes').insert({
         user_id: session?.user?.id || null,
         customer_name: name,
-        customer_email: email,
+        customer_email: email || 'anonymous@tecbunny.com',
         customer_phone: phone,
         customer_address: address,
         bidded_price: biddedPrice,
         summary: summary,
         selections: formattedSelections,
         status: 'bidded',
+        quote_number: quoteNumber,
         expiry_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      }).select('id').single();
+      }).select('id, quote_number').single();
 
       if (error) throw error;
       finalQuoteId = data.id;
+      finalQuoteNumber = data.quote_number;
     } else {
       const { error } = await serviceClient.from('quotes').update({
         customer_name: name,
@@ -64,6 +69,10 @@ export async function POST(req: Request) {
         status: 'bidded'
       }).eq('id', finalQuoteId);
       if (error) throw error;
+
+      // Fetch quote number for redirect
+      const { data: q } = await serviceClient.from('quotes').select('quote_number').eq('id', finalQuoteId).single();
+      finalQuoteNumber = q?.quote_number || '';
     }
 
     // Notify Admins
@@ -76,7 +85,7 @@ export async function POST(req: Request) {
       // Ignore whatsapp failure
     }
 
-    return NextResponse.json({ success: true, quoteId: finalQuoteId });
+    return NextResponse.json({ success: true, quoteId: finalQuoteId, quoteNumber: finalQuoteNumber || finalQuoteId });
   } catch (error) {
     logger.error('Bid submission failed', { error });
     return NextResponse.json({ 

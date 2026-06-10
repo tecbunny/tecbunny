@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import { buildPdf, loadCompanyInfo } from '@/lib/pdf-generator';
@@ -67,11 +67,15 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: quote, error } = await supabase
-    .from('quotes')
-    .select('*')
-    .eq('id', quoteId)
-    .single();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(quoteId);
+  let query = supabase.from('quotes').select('*');
+  if (isUuid) {
+    query = query.eq('id', quoteId);
+  } else {
+    query = query.eq('quote_number', quoteId);
+  }
+
+  const { data: quote, error } = await query.single();
 
   if (error || !quote) {
     return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
@@ -89,13 +93,14 @@ export async function GET(
       gstIncluded: quote.gst_included,
       summary: quote.summary,
       selections: quote.selections,
+      quoteNumber: quote.quote_number,
     });
 
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="quote-${quoteId}.pdf"`,
+        'Content-Disposition': `attachment; filename="quote-${quote.quote_number || quote.id}.pdf"`,
       },
     });
   } catch (error) {

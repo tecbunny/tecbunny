@@ -46,16 +46,40 @@ async function sendEmailWithAttachment(to: string, subject: string, html: string
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { summary, selections, gstIncluded = true, customSetupConfig } = body;
+    const { 
+      summary, 
+      selections, 
+      gstIncluded = true, 
+      customSetupConfig, 
+      customerName: anonName, 
+      customerPhone: anonPhone, 
+      customerAddress: anonAddress, 
+      customerEmail: anonEmail,
+      quote_number: bodyQuoteNumber,
+      biddedPrice,
+      status: bodyStatus
+    } = body;
 
     const supabase = await createClient();
     const { data: auth, error: authError } = await supabase.auth.getUser();
-    if (authError) {
-      logger.error('quotes.auth_get_user_failed', { error: authError });
-    }
     const user = auth?.user;
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    let customerName = anonName;
+    let customerPhone = anonPhone;
+    let customerAddress = anonAddress;
+    let customerEmail = anonEmail;
+
+    if (user) {
+      customerName = customerName || (user.user_metadata?.name as string) || user.email || 'Customer';
+      customerEmail = customerEmail || user.email || 'unknown@local';
+      customerPhone = customerPhone || (user.user_metadata?.phone as string) || '';
+    }
+
+    if (!customerName) {
+      customerName = 'Customer';
+    }
+    if (!customerEmail) {
+      customerEmail = 'anonymous@tecbunny.com';
     }
 
     let finalSelections = selections;
@@ -212,10 +236,11 @@ export async function POST(req: NextRequest) {
     try {
       company = await loadCompanyInfo();
     } catch (error) {
-      logger.error('quotes.load_company_info_failed', { error, userId: user.id });
+      logger.error('quotes.load_company_info_failed', { error, userId: user?.id });
     }
-    const customerName = (user.user_metadata?.name as string) || user.email || 'Customer';
-    const customerEmail = user.email || 'unknown@local';
+
+    const quoteNumber = bodyQuoteNumber || `${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(Math.floor(10000 + Math.random() * 90000))}`;
+    const statusVal = bodyStatus || 'created';
 
     let pdfBuffer: Buffer;
     try {
@@ -226,9 +251,10 @@ export async function POST(req: NextRequest) {
         gstIncluded,
         summary,
         selections: finalSelections,
+        quoteNumber,
       });
     } catch (error) {
-      logger.error('quotes.pdf_failed', { error, userId: user.id });
+      logger.error('quotes.pdf_failed', { error, userId: user?.id });
       return NextResponse.json({
         error: 'Failed to generate quote',
         details: error instanceof Error ? error.message : 'Unknown error',
@@ -237,29 +263,36 @@ export async function POST(req: NextRequest) {
 
     const expiryAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Enforce RLS boundaries by using the user's standard client for quotes insertion
-    const insertResult = await supabase.from('quotes').insert({
-      user_id: user.id,
+    const serviceClient = createServiceClient();
+    const insertResult = await serviceClient.from('quotes').insert({
+      user_id: user?.id || null,
       customer_name: customerName,
       customer_email: customerEmail,
+      customer_phone: customerPhone || null,
+      customer_address: customerAddress || null,
+      bidded_price: biddedPrice != null ? Number(biddedPrice) : null,
+      quote_number: quoteNumber,
       gst_included: !!gstIncluded,
       expiry_at: expiryAt,
       summary: summary || null,
       selections: finalSelections ?? null,
-      status: 'created',
-    });
+      status: statusVal,
+    }).select('id, quote_number').single();
 
     if (insertResult.error) {
-      logger.error('quotes.insert_failed', { error: insertResult.error, userId: user.id });
-      // Continue to generate and return the PDF even if the DB insert fails.
+      logger.error('quotes.insert_failed', { error: insertResult.error, userId: user?.id });
     }
 
-    void sendEmailWithAttachment(
-      customerEmail,
-      'Your TecBunny Quote',
-      '<p>Please find your quote attached. Valid for 7 days.</p>',
-      pdfBuffer
-    ).catch((error) => logger.error('quotes.email_failed', { error, userId: user.id }));
+    const finalQuoteNumber = insertResult.data?.quote_number || quoteNumber;
+
+    if (customerEmail && customerEmail !== 'anonymous@tecbunny.com') {
+      void sendEmailWithAttachment(
+        customerEmail,
+        'Your TecBunny Quote',
+        `<p>Please find your quote attached. Valid for 7 days. Your quote number is <strong>${finalQuoteNumber}</strong>.</p>`,
+        pdfBuffer
+      ).catch((error) => logger.error('quotes.email_failed', { error, userId: user?.id }));
+    }
 
     const pdfArrayBuffer = Uint8Array.from(pdfBuffer).buffer;
 
@@ -267,8 +300,9 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename="quote.pdf"',
+        'Content-Disposition': `attachment; filename="quote-${finalQuoteNumber}.pdf"`,
         'Content-Length': pdfBuffer.length.toString(),
+        'X-Quote-Number': finalQuoteNumber,
       },
     });
   } catch (error) {

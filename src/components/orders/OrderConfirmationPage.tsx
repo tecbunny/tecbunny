@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { CheckCircle, Package, MapPin, Phone, Mail, Calendar, Hash } from 'lucide-react';
+import { CheckCircle, Package, MapPin, Phone, Mail, Calendar, Hash, CreditCard, FileText, AlertTriangle } from 'lucide-react';
 
 import { formatOrderNumber } from '@/lib/order-utils';
 
@@ -172,6 +172,12 @@ export default function OrderConfirmationPage({ orderId }: OrderConfirmationPage
     && !isPaymentConfirmed
     && !['Cancelled', 'Rejected'].includes(order.status);
 
+  const shouldShowPayRemaining = !!order.part_payment_amount 
+    && order.pending_payment_status !== 'paid' 
+    && order.pending_amount_requested;
+
+  const showDownloadInvoice = !!order.invoice_pdf_url;
+
   return (
     <div className="min-h-screen bg-slate-950 py-8 order-print-page">
       <div id="order-print-area" className="max-w-4xl mx-auto px-4">
@@ -188,7 +194,50 @@ export default function OrderConfirmationPage({ orderId }: OrderConfirmationPage
           </div>
         </div>
 
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Alerts / Actions for Pending Payment or Final Invoice */}
+        {shouldShowPayRemaining && (
+          <div className="mb-6 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 flex flex-col sm:flex-row items-center justify-between gap-4 no-print animate-pulse">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-6 w-6 text-amber-400 shrink-0" />
+              <div>
+                <h4 className="font-semibold text-white">Pending Balance Requested</h4>
+                <p className="text-sm text-slate-300">
+                  The admin has requested the remaining balance of ₹{(Number(order.total) - Number(order.part_payment_amount)).toFixed(2)}.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() => window.location.href = `/payment/upi/${order.id}`}
+              className="bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold px-6 w-full sm:w-auto shrink-0"
+            >
+              <CreditCard className="mr-2 h-4 w-4" />
+              Pay Remaining Balance
+            </Button>
+          </div>
+        )}
+
+        {showDownloadInvoice && (
+          <div className="mb-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-6 w-6 text-emerald-400 shrink-0" />
+              <div>
+                <h4 className="font-semibold text-white">Final Invoice Ready</h4>
+                <p className="text-sm text-slate-300">
+                  Your order is fully paid and the official invoice is ready for download.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() => window.open(order.invoice_pdf_url!, '_blank', 'noopener,noreferrer')}
+              className="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold px-6 w-full sm:w-auto shrink-0"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Download Invoice PDF
+            </Button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Order Details */}
           <Card className="border-white/10 bg-slate-900/40">
             <CardHeader>
@@ -290,6 +339,25 @@ export default function OrderConfirmationPage({ orderId }: OrderConfirmationPage
                 <span>Total Amount</span>
                 <span>₹{order.total.toFixed(2)}</span>
               </div>
+              {order.part_payment_amount && (
+                <>
+                  <Separator className="my-2" />
+                  <div className="flex justify-between text-sm text-slate-300">
+                    <span>Part Payment Paid</span>
+                    <span>₹{Number(order.part_payment_amount).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold text-amber-300 mt-2">
+                    <span>Remaining Balance</span>
+                    <span>₹{(Number(order.total) - Number(order.part_payment_amount)).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>Balance Payment Status</span>
+                    <span className={order.pending_payment_status === 'paid' ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'}>
+                      {order.pending_payment_status === 'paid' ? 'Paid' : 'Unpaid'}
+                    </span>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -389,13 +457,32 @@ export default function OrderConfirmationPage({ orderId }: OrderConfirmationPage
               Retry UPI Payment
             </Button>
           )}
-          <Button
-            onClick={() => window.open(`/orders/${order.id}/invoice`, '_blank', 'noopener,noreferrer')}
-            variant="outline"
-            className="px-6"
-          >
-            View Invoice
-          </Button>
+          {shouldShowPayRemaining && (
+            <Button
+              onClick={() => window.location.href = `/payment/upi/${order.id}`}
+              className="bg-amber-600 hover:bg-amber-700 px-6 text-white font-medium"
+            >
+              <CreditCard className="mr-2 h-4 w-4" />
+              Pay Remaining Balance
+            </Button>
+          )}
+          {showDownloadInvoice ? (
+            <Button
+              onClick={() => window.open(order.invoice_pdf_url!, '_blank', 'noopener,noreferrer')}
+              className="bg-emerald-600 hover:bg-emerald-700 px-6 text-white font-medium"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Download Final Invoice (PDF)
+            </Button>
+          ) : (
+            <Button
+              onClick={() => window.open(`/orders/${order.id}/invoice`, '_blank', 'noopener,noreferrer')}
+              variant="outline"
+              className="px-6"
+            >
+              View Invoice
+            </Button>
+          )}
           <Button
             onClick={handlePrint}
             variant="outline"

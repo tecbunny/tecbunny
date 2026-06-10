@@ -179,5 +179,11 @@ export function deserializeOrder(rawOrder: any): Order {
     seller_state_code: itemsPayload.seller_state_code ?? rawOrder?.seller_state_code ?? undefined,
     payment_method: itemsPayload.payment_method ?? rawOrder?.payment_method ?? undefined,
     notes: itemsPayload.customer_notes ?? rawOrder?.notes ?? undefined,
+    part_payment_amount: (itemsPayload as any).part_payment_amount ?? null,
+    quote_id: (itemsPayload as any).quote_id ?? null,
+    pending_amount_requested: (itemsPayload as any).pending_amount_requested ?? false,
+    pending_payment_status: (itemsPayload as any).pending_payment_status ?? 'unpaid',
+    pending_payment_method: (itemsPayload as any).pending_payment_method ?? null,
+    invoice_pdf_url: (itemsPayload as any).invoice_pdf_url ?? null,
   } as Order;
 }

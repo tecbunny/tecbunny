@@ -204,7 +204,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const amountNumber = Number(order.total ?? 0);
+    const extras = typeof order.items === 'string'
+      ? JSON.parse(order.items || '{}')
+      : (order.items || {});
+    const partPaymentAmount = extras.part_payment_amount;
+    const amountNumber = partPaymentAmount ? Number(partPaymentAmount) : Number(order.total ?? 0);
     if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
       return apiError('VALIDATION_ERROR', {
         correlationId,

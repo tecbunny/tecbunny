@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 import { ShoppingCart, CreditCard, MapPin, User, Wallet, Banknote, QrCode, Tag, Sparkles, ArrowLeft, CheckCircle, Shield, ChevronDown } from 'lucide-react';
 
@@ -36,7 +38,15 @@ export default function CheckoutPage() {
   const { createOrder, isProcessingOrder } = useOrder();
   const { getEnabledPaymentMethods, loading: paymentLoading } = usePaymentMethods();
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const quoteId = searchParams.get('quoteId');
   const pickupStores = PICKUP_STORES;
+  
+  const [quote, setQuote] = useState<any>(null);
+  const [isPartPayment, setIsPartPayment] = useState(false);
+  const [partPaymentAmount, setPartPaymentAmount] = useState('');
+  const [loadingQuote, setLoadingQuote] = useState(false);
   
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
@@ -51,6 +61,32 @@ export default function CheckoutPage() {
     installDate: '',
     siteStatus: ''
   });
+
+  useEffect(() => {
+    if (!quoteId) return;
+    setLoadingQuote(true);
+    fetch(`/api/quotes/${quoteId}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Quote not found');
+        return res.json();
+      })
+      .then(data => {
+        setQuote(data);
+        setCustomerInfo(prev => ({
+          ...prev,
+          name: data.customer_name || prev.name,
+          email: data.customer_email || prev.email,
+          phone: data.customer_phone || prev.phone,
+          address: data.customer_address || prev.address,
+        }));
+        setLoadingQuote(false);
+      })
+      .catch(err => {
+        console.error(err);
+        toast({ title: 'Error', description: 'Failed to load quote details.', variant: 'destructive' });
+        setLoadingQuote(false);
+      });
+  }, [quoteId, toast]);
   
   const [orderType, setOrderType] = useState<OrderType>('Delivery');
   const [selectedPickupStoreId, setSelectedPickupStoreId] = useState<string>('tecbunny-store-parcem');
@@ -271,24 +307,54 @@ export default function CheckoutPage() {
     totalDiscount,
   } = pricing;
 
-  const displaySubtotal = cartItems.length
-    ? (pricingSubtotal || cartSubtotal || fallbackTotals.subtotal)
-    : 0;
+  const displayItems = React.useMemo(() => {
+    if (quote) {
+      return (quote.selections?.items || []).map((item: any, idx: number) => ({
+        id: item.id || `quote-item-${idx}`,
+        name: item.description || item.name,
+        price: item.sale,
+        quantity: item.quantity || 1,
+        gstRate: item.gstRate || 18,
+      }));
+    }
+    return cartItems;
+  }, [quote, cartItems]);
 
-  const displayGstAmount = cartItems.length
-    ? (typeof pricingGstAmount === 'number' && pricingGstAmount > 0
-        ? pricingGstAmount
-        : cartGst || fallbackTotals.gstAmount)
-    : 0;
+  const displaySubtotal = React.useMemo(() => {
+    if (quote) {
+      const qTotal = quote.counter_price || quote.bidded_price || quote.selections?.totals?.sale || 0;
+      return quote.selections?.totals?.subtotal || (quote.gst_included ? qTotal / 1.18 : qTotal);
+    }
+    return cartItems.length
+      ? (pricingSubtotal || cartSubtotal || fallbackTotals.subtotal)
+      : 0;
+  }, [quote, cartItems.length, pricingSubtotal, cartSubtotal, fallbackTotals.subtotal]);
 
-  const displayTotalBeforeDiscounts = displaySubtotal + displayGstAmount;
-  const displayTotal = cartItems.length
-    ? (
-        typeof pricingFinalTotal === 'number' && pricingFinalTotal >= 0
-          ? pricingFinalTotal
-          : Math.max(0, displayTotalBeforeDiscounts - (totalDiscount || 0))
-      )
-    : 0;
+  const displayGstAmount = React.useMemo(() => {
+    if (quote) {
+      const qTotal = quote.counter_price || quote.bidded_price || quote.selections?.totals?.sale || 0;
+      const qSubtotal = quote.selections?.totals?.subtotal || (quote.gst_included ? qTotal / 1.18 : qTotal);
+      return quote.selections?.totals?.gst || (qTotal - qSubtotal);
+    }
+    return cartItems.length
+      ? (typeof pricingGstAmount === 'number' && pricingGstAmount > 0
+          ? pricingGstAmount
+          : cartGst || fallbackTotals.gstAmount)
+      : 0;
+  }, [quote, cartItems.length, pricingGstAmount, cartGst, fallbackTotals.gstAmount]);
+
+  const displayTotal = React.useMemo(() => {
+    if (quote) {
+      return quote.counter_price || quote.bidded_price || quote.selections?.totals?.sale || quote.selections?.totals?.overall?.sale || 0;
+    }
+    return cartItems.length
+      ? (
+          typeof pricingFinalTotal === 'number' && pricingFinalTotal >= 0
+            ? pricingFinalTotal
+            : Math.max(0, (pricingSubtotal || cartSubtotal || fallbackTotals.subtotal) + (typeof pricingGstAmount === 'number' && pricingGstAmount > 0 ? pricingGstAmount : cartGst || fallbackTotals.gstAmount) - (totalDiscount || 0))
+        )
+      : 0;
+  }, [quote, cartItems.length, pricingFinalTotal, pricingSubtotal, cartSubtotal, fallbackTotals.subtotal, pricingGstAmount, cartGst, totalDiscount]);
 
   const handlePlaceOrder = async () => {
     try {
@@ -339,13 +405,13 @@ export default function CheckoutPage() {
         ? resolveIndianStateInfo(customerInfo.state)
         : TECBUNNY_REGISTERED_STATE;
 
-      // Convert cart items to order items format
-      const orderItems = cartItems.map(item => ({
+      // Convert display items to order items format
+      const orderItems = displayItems.map((item: any) => ({
         productId: item.id,
         quantity: item.quantity,
         price: item.price,
         gstRate: item.gstRate || 18,
-      hsnCode: item.hsnCode,
+        hsnCode: item.hsnCode,
         name: item.name,
         serialNumbers: item.serialNumbers || []
       }));
@@ -392,7 +458,9 @@ export default function CheckoutPage() {
         total: displayTotal,
         discount_amount: totalDiscount,
         coupon_code: appliedCoupon?.code || undefined,
-        items: orderItems
+        items: orderItems,
+        part_payment_amount: isPartPayment ? Number(partPaymentAmount) : null,
+        quote_id: quote?.id || null
       };
 
       let order = await createOrder(orderData);
@@ -449,16 +517,16 @@ export default function CheckoutPage() {
   const showAdvance = selectedMethod?.type === 'online' || selectedPaymentMethod === 'upi' || selectedPaymentMethod === 'payu';
   const advanceAmount = Math.round(displayTotal * 0.5 * 100) / 100;
 
-  if (authLoading) {
+  if (authLoading || loadingQuote) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#030712] text-slate-300">
-        <div className="text-slate-400">Checking your account...</div>
+        <div className="text-slate-400">Loading checkout details...</div>
       </div>
     );
   }
 
   // Show empty cart message if no items
-  if (cartItems.length === 0) {
+  if (!quote && cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-[#030712] py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
@@ -891,7 +959,7 @@ export default function CheckoutPage() {
                   <h3 className="text-xl font-bold text-white font-tech mb-6">Invoice Preview</h3>
 
                   <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2">
-                    {cartItems.map((item) => (
+                    {displayItems.map((item: any) => (
                       <div key={item.id} className={`flex justify-between text-sm ${item.id.startsWith('service-') ? 'text-purple-300' : ''}`}>
                         <span className="text-slate-400">{item.quantity}x {item.name}</span>
                         <span className="text-white">₹{(item.price * item.quantity).toFixed(2)}</span>
@@ -923,7 +991,46 @@ export default function CheckoutPage() {
                         <span className="text-3xl font-bold text-cyan-300 font-tech">₹{displayTotal.toFixed(2)}</span>
                       </div>
                     </div>
-                    {showAdvance && (
+
+                    {/* Custom Part Payment Options */}
+                    <div className="mt-4 p-3 bg-white/5 border border-white/10 rounded-lg space-y-3">
+                      <label className="flex items-center gap-2 text-sm text-slate-200 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isPartPayment}
+                          onChange={(e) => {
+                            setIsPartPayment(e.target.checked);
+                            if (e.target.checked) {
+                              setPartPaymentAmount(String(Math.round(displayTotal * 0.5))); // default to 50%
+                            } else {
+                              setPartPaymentAmount('');
+                            }
+                          }}
+                          className="h-4 w-4 rounded border-slate-400 bg-slate-900 text-cyan-400 focus:ring-cyan-400"
+                        />
+                        Pay Custom Part Amount
+                      </label>
+                      {isPartPayment && (
+                        <div className="space-y-1">
+                          <label className="text-[11px] text-slate-400">Enter Part Payment Amount (₹)</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={displayTotal}
+                            required
+                            placeholder="Enter amount"
+                            className="w-full bg-slate-950 border border-white/10 rounded px-2.5 py-1.5 text-white text-sm focus:outline-none focus:border-cyan-400"
+                            value={partPaymentAmount}
+                            onChange={(e) => setPartPaymentAmount(e.target.value)}
+                          />
+                          <p className="text-[10px] text-slate-500">
+                            Remaining balance of ₹{Math.round(displayTotal - (Number(partPaymentAmount) || 0)).toLocaleString()} will be due later.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {showAdvance && !isPartPayment && (
                       <div className="mt-2 bg-cyan-400/10 border border-cyan-400/20 rounded p-2 text-[10px] text-cyan-300 text-center">
                         Advance Payable (50%): ₹{advanceAmount.toFixed(2)}
                       </div>

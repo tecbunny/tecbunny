@@ -105,6 +105,79 @@ export function OrderActions({ order, onStatusUpdate, variant = 'dropdown' }: Or
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [paymentReference, setPaymentReference] = React.useState(order.payment_reference ?? '');
 
+  const [isUploadInvoiceOpen, setIsUploadInvoiceOpen] = React.useState(false);
+  const [invoiceFile, setInvoiceFile] = React.useState<File | null>(null);
+  const [uploadingInvoice, setUploadingInvoice] = React.useState(false);
+
+  const handlePendingAction = async (action: 'request_pending' | 'accept_cash') => {
+    setIsProcessing(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}/pending-actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+
+      const result = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(result?.error || 'Action failed');
+
+      toast({
+        title: 'Success',
+        description: action === 'request_pending' 
+          ? 'Pending payment request sent to customer.' 
+          : 'Cash payment confirmed successfully.'
+      });
+      await onStatusUpdate();
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: err.message
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUploadInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!invoiceFile) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please select a PDF file.' });
+      return;
+    }
+
+    setUploadingInvoice(true);
+    try {
+      const formData = new FormData();
+      formData.append('action', 'upload_invoice');
+      formData.append('file', invoiceFile);
+
+      const res = await fetch(`/api/admin/orders/${order.id}/pending-actions`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(result?.error || 'Upload failed');
+
+      toast({
+        title: 'Invoice Sent',
+        description: 'Final invoice uploaded and sent to customer.'
+      });
+      setIsUploadInvoiceOpen(false);
+      setInvoiceFile(null);
+      await onStatusUpdate();
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: err.message
+      });
+    } finally {
+      setUploadingInvoice(false);
+    }
+  };
+
   const canManageOrders = isManagerClient(user);
   const canManagePickupOrders = isSalesClient(user); // Both sales and manager can manage pickup orders
 
@@ -332,6 +405,35 @@ export function OrderActions({ order, onStatusUpdate, variant = 'dropdown' }: Or
       action: handlePrintInvoice,
       variant: 'outline'
     });
+
+    const hasPartPayment = typeof order.part_payment_amount === 'number' && order.part_payment_amount > 0;
+    const isInitialPaid = order.payment_status === 'Payment Confirmed' || 
+      ['Payment Confirmed', 'Confirmed', 'Processing', 'Ready to Ship', 'Shipped', 'Ready for Pickup', 'Completed', 'Delivered', 'Delivered/Picked Up'].includes(order.status);
+    const isPendingUnpaid = hasPartPayment && isInitialPaid && order.pending_payment_status !== 'paid';
+
+    if (isPendingUnpaid) {
+      actions.push({
+        label: 'Ask for Pending Payment',
+        icon: <Clock className="h-4 w-4" />,
+        action: () => handlePendingAction('request_pending'),
+        variant: 'outline'
+      });
+      actions.push({
+        label: 'Record Cash Balance Payment',
+        icon: <CheckCircle className="h-4 w-4" />,
+        action: () => handlePendingAction('accept_cash'),
+        variant: 'outline'
+      });
+    }
+
+    if (isInitialPaid) {
+      actions.push({
+        label: 'Upload Final Invoice PDF',
+        icon: <Printer className="h-4 w-4" />,
+        action: () => setIsUploadInvoiceOpen(true),
+        variant: 'outline'
+      });
+    }
 
     if (!hasPermission) {
       return actions;
@@ -856,6 +958,59 @@ export function OrderActions({ order, onStatusUpdate, variant = 'dropdown' }: Or
                 Cancel Order
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Upload Invoice Dialog */}
+        <Dialog open={isUploadInvoiceOpen} onOpenChange={(open) => {
+          if (!open) {
+            setIsUploadInvoiceOpen(false);
+            setInvoiceFile(null);
+          }
+        }}>
+          <DialogContent className="border-white/10 bg-slate-900/95 text-slate-100 backdrop-blur-md">
+            <DialogHeader>
+              <DialogTitle>Upload Final Invoice PDF</DialogTitle>
+              <DialogDescription className="text-slate-400">
+                Upload the final invoice PDF for order {formatOrderNumber(order.id)}. An email with the invoice download link will be automatically sent to the customer.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUploadInvoice} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="invoice-file" className="text-sm font-medium text-slate-300">Select Invoice PDF</Label>
+                <Input
+                  id="invoice-file"
+                  type="file"
+                  accept=".pdf"
+                  required
+                  className="bg-white/5 border border-white/10 text-white cursor-pointer"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) setInvoiceFile(file);
+                  }}
+                />
+              </div>
+              <DialogFooter className="pt-4 gap-2">
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  onClick={() => {
+                    setIsUploadInvoiceOpen(false);
+                    setInvoiceFile(null);
+                  }}
+                  disabled={uploadingInvoice}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={uploadingInvoice || !invoiceFile}
+                  className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold"
+                >
+                  {uploadingInvoice ? 'Uploading...' : 'Upload & Send Email'}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </>

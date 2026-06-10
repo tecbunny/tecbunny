@@ -115,6 +115,8 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
   const [quoteDownloading, setQuoteDownloading] = useState<boolean>(false);
   const [isBidding, setIsBidding] = useState(false);
   const [bidForm, setBidForm] = useState({ name: '', email: '', phone: '', address: '', price: '' });
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [anonForm, setAnonForm] = useState({ name: '', phone: '', address: '', email: '' });
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
@@ -326,8 +328,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
 
   const handleInlineQuoteDownload = async () => {
     if (!user) {
-      toast({ title: 'Login required', description: 'Sign in to generate and download your quote PDF.' });
-      router.push('/auth/signin?redirect=/customised-setups');
+      setIsDownloadModalOpen(true);
       return;
     }
 
@@ -396,6 +397,22 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
         });
       }
 
+      if (totals.installationLabor.sale > 0) {
+        items.push({
+          description: `Installation Labor (₹${totals.installationLabor.sale})`,
+          mrp: totals.installationLabor.sale,
+          sale: totals.installationLabor.sale,
+        });
+      }
+
+      if (itSystemCount > 0) {
+        items.push({
+          description: `IT Systems (${itSystemCount} ${itSystemCount > 1 ? 'Systems' : 'System'})`,
+          mrp: 0,
+          sale: 0,
+        });
+      }
+
       const customSetupConfig = {
         system,
         cameraCount,
@@ -414,17 +431,183 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
         automationEnabled,
       };
 
+      const finalSelections = {
+        type: 'customised_setup',
+        systemType: systemLabel,
+        cameraCount,
+        items,
+        totals: totals.overall,
+        breakdown: totals.system.breakdown,
+      };
+
       const response = await fetch('/api/quotes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ summary: inlineQuoteSummary, gstIncluded: true, customSetupConfig }),
+        body: JSON.stringify({
+          summary: inlineQuoteSummary,
+          gstIncluded: true,
+          selections: finalSelections,
+          customSetupConfig
+        }),
       });
 
-      if (response.status === 401) {
-        toast({ title: 'Login required', description: 'Please sign in to download your quote PDF.' });
-        router.push('/auth/signin?redirect=/customised-setups');
-        return;
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        const message = err?.details || err?.error || 'Failed to generate quote';
+        throw new Error(message);
       }
+
+      const quoteNumberHeader = response.headers.get('X-Quote-Number') || 'pdf';
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `quote-${quoteNumberHeader}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast({ title: 'Quote ready', description: `Downloaded quote PDF successfully. Quote Number: ${quoteNumberHeader}` });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Quote failed', description: error?.message || 'Unable to generate quote.' });
+    } finally {
+      setQuoteDownloading(false);
+    }
+  };
+
+  const handleInlineQuoteDownloadAnon = async () => {
+    if (!anonForm.name || !anonForm.phone || !anonForm.address) {
+      toast({ variant: 'destructive', title: 'Missing fields', description: 'Name, mobile number, and address are required.' });
+      return;
+    }
+
+    setQuoteDownloading(true);
+    try {
+      const systemLabel = system === 'analog' ? 'Analog DVR' : 'IP NVR';
+      const hddLabel = selectableHddOptions.find((entry) => entry.id === hddId)?.label ?? 'Surveillance HDD';
+      const items = [
+        {
+          description: `${systemLabel} system (${cameraCount} cameras)`,
+          mrp: totals.system.mrp,
+          sale: totals.system.sale,
+        },
+        {
+          description: hddLabel,
+          mrp: totals.hdd.mrp,
+          sale: totals.hdd.sale,
+        },
+      ];
+
+      if (totals.monitor.included) {
+        items.push({
+          description: `Monitor (${totals.monitor.label})`,
+          mrp: totals.monitor.mrp,
+          sale: totals.monitor.sale,
+        });
+      }
+
+      if (totals.wallMount.included) {
+        items.push({
+          description: 'Wall Mount Installation Kit',
+          mrp: totals.wallMount.mrp,
+          sale: totals.wallMount.sale,
+        });
+      }
+
+      if (totals.spikeGuard.included) {
+        items.push({
+          description: 'Spike Guard / Power Surge Protector',
+          mrp: totals.spikeGuard.mrp,
+          sale: totals.spikeGuard.sale,
+        });
+      }
+
+      if (totals.rack.selected) {
+        items.push({
+          description: totals.rack.label,
+          mrp: totals.rack.mrp,
+          sale: totals.rack.sale,
+        });
+      }
+
+      if (totals.conduit.selected) {
+        items.push({
+          description: `${totals.conduit.label} × ${totals.conduit.meters}m`,
+          mrp: totals.conduit.mrp,
+          sale: totals.conduit.sale,
+        });
+      }
+
+      if (totals.installation.included) {
+        items.push({
+          description: `Installation (${installationOption.label})`,
+          mrp: totals.installation.mrp,
+          sale: totals.installation.sale,
+        });
+      }
+
+      if (totals.installationLabor.sale > 0) {
+        items.push({
+          description: `Installation Labor (₹${totals.installationLabor.sale})`,
+          mrp: totals.installationLabor.sale,
+          sale: totals.installationLabor.sale,
+        });
+      }
+
+      if (itSystemCount > 0) {
+        items.push({
+          description: `IT Systems (${itSystemCount} ${itSystemCount > 1 ? 'Systems' : 'System'})`,
+          mrp: 0,
+          sale: 0,
+        });
+      }
+
+      const customSetupConfig = {
+        system,
+        cameraCount,
+        itSystemCount,
+        analogSelections,
+        ipSelections,
+        hddId,
+        monitorIncluded,
+        monitorId,
+        wallMountIncluded,
+        spikeGuardIncluded,
+        rackId,
+        conduitPipeId,
+        conduitMeters,
+        installationIncluded,
+        automationEnabled,
+      };
+
+      const finalSelections = {
+        type: 'customised_setup',
+        systemType: systemLabel,
+        cameraCount,
+        items,
+        totals: totals.overall,
+        breakdown: totals.system.breakdown,
+      };
+
+      const quoteNumber = `${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(Math.floor(10000 + Math.random() * 90000))}`;
+
+      const response = await fetch('/api/quotes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          summary: inlineQuoteSummary,
+          gstIncluded: true,
+          selections: finalSelections,
+          customSetupConfig,
+          customerName: anonForm.name,
+          customerPhone: anonForm.phone,
+          customerAddress: anonForm.address,
+          customerEmail: anonForm.email || 'anonymous@tecbunny.com',
+          quote_number: quoteNumber
+        }),
+      });
 
       if (!response.ok) {
         const err = await response.json().catch(() => null);
@@ -436,15 +619,197 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'quote.pdf';
+      link.download = `quote-${quoteNumber}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      toast({ title: 'Quote ready', description: 'Downloaded quote PDF. A copy was emailed too.' });
+      toast({ title: 'Quote ready', description: `Downloaded quote PDF successfully. Quote Number: ${quoteNumber}` });
+      setIsDownloadModalOpen(false);
+      setAnonForm({ name: '', phone: '', address: '', email: '' });
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Quote failed', description: error?.message || 'Unable to generate quote.' });
+    } finally {
+      setQuoteDownloading(false);
+    }
+  };
+
+  const handleDownloadBidQuote = async () => {
+    if (!bidForm.name || !bidForm.phone || !bidForm.price || !bidForm.address) {
+      toast({ variant: 'destructive', title: 'Missing fields', description: 'Name, phone, address, and bid price are required.' });
+      return;
+    }
+
+    const originalPrice = totals?.overall?.sale || 0;
+    const bidPrice = Number(bidForm.price);
+    const minPrice = originalPrice * 0.7;
+
+    if (bidPrice < minPrice) {
+      toast({ 
+        variant: 'destructive', 
+        title: 'Bid too low', 
+        description: `Minimum bid price is ₹${Math.round(minPrice).toLocaleString()} (70% of quoted price). Your bid: ₹${Math.round(bidPrice).toLocaleString()}` 
+      });
+      return;
+    }
+
+    setQuoteDownloading(true);
+    try {
+      const systemLabel = system === 'analog' ? 'Analog DVR' : 'IP NVR';
+      const hddLabel = selectableHddOptions.find((entry) => entry.id === hddId)?.label ?? 'Surveillance HDD';
+      
+      const biddedTotals = {
+        ...totals.overall,
+        sale: bidPrice,
+        discountAmount: Math.max(0, totals.overall.mrp - bidPrice),
+        discountPercent: totals.overall.mrp > 0 ? (Math.max(0, totals.overall.mrp - bidPrice) / totals.overall.mrp) * 100 : 0
+      };
+
+      const items = [
+        {
+          description: `${systemLabel} system (${cameraCount} cameras)`,
+          mrp: totals.system.mrp,
+          sale: totals.system.sale,
+        },
+        {
+          description: hddLabel,
+          mrp: totals.hdd.mrp,
+          sale: totals.hdd.sale,
+        },
+      ];
+
+      if (totals.monitor.included) {
+        items.push({
+          description: `Monitor (${totals.monitor.label})`,
+          mrp: totals.monitor.mrp,
+          sale: totals.monitor.sale,
+        });
+      }
+
+      if (totals.wallMount.included) {
+        items.push({
+          description: 'Wall Mount Installation Kit',
+          mrp: totals.wallMount.mrp,
+          sale: totals.wallMount.sale,
+        });
+      }
+
+      if (totals.spikeGuard.included) {
+        items.push({
+          description: 'Spike Guard / Power Surge Protector',
+          mrp: totals.spikeGuard.mrp,
+          sale: totals.spikeGuard.sale,
+        });
+      }
+
+      if (totals.rack.selected) {
+        items.push({
+          description: totals.rack.label,
+          mrp: totals.rack.mrp,
+          sale: totals.rack.sale,
+        });
+      }
+
+      if (totals.conduit.selected) {
+        items.push({
+          description: `${totals.conduit.label} × ${totals.conduit.meters}m`,
+          mrp: totals.conduit.mrp,
+          sale: totals.conduit.sale,
+        });
+      }
+
+      if (totals.installation.included) {
+        items.push({
+          description: `Installation (${installationOption.label})`,
+          mrp: totals.installation.mrp,
+          sale: totals.installation.sale,
+        });
+      }
+
+      if (totals.installationLabor.sale > 0) {
+        items.push({
+          description: `Installation Labor (₹${totals.installationLabor.sale})`,
+          mrp: totals.installationLabor.sale,
+          sale: totals.installationLabor.sale,
+        });
+      }
+
+      if (itSystemCount > 0) {
+        items.push({
+          description: `IT Systems (${itSystemCount} ${itSystemCount > 1 ? 'Systems' : 'System'})`,
+          mrp: 0,
+          sale: 0,
+        });
+      }
+
+      const customSetupConfig = {
+        system,
+        cameraCount,
+        itSystemCount,
+        analogSelections,
+        ipSelections,
+        hddId,
+        monitorIncluded,
+        monitorId,
+        wallMountIncluded,
+        spikeGuardIncluded,
+        rackId,
+        conduitPipeId,
+        conduitMeters,
+        installationIncluded,
+        automationEnabled,
+      };
+
+      const finalSelections = {
+        type: 'customised_setup',
+        systemType: systemLabel,
+        cameraCount,
+        items,
+        totals: biddedTotals,
+        breakdown: totals.system.breakdown,
+      };
+
+      const quoteNumber = `${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(Math.floor(10000 + Math.random() * 90000))}`;
+
+      const response = await fetch('/api/quotes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          summary: inlineQuoteSummary,
+          gstIncluded: true,
+          selections: finalSelections,
+          customSetupConfig,
+          customerName: bidForm.name,
+          customerPhone: bidForm.phone,
+          customerAddress: bidForm.address,
+          customerEmail: bidForm.email || 'anonymous@tecbunny.com',
+          quote_number: quoteNumber,
+          biddedPrice: bidPrice,
+          status: 'bidded'
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.error || 'Failed to submit bid and generate quote');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `quote-bid-${quoteNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast({ title: 'Bid Quote ready', description: `Generated and downloaded your negotiated quote PDF. Quote Number: ${quoteNumber}` });
+      setIsBidding(false);
+      setBidForm({ name: '', email: '', phone: '', address: '', price: '' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Download failed', description: error?.message || 'Unable to download bid quote.' });
     } finally {
       setQuoteDownloading(false);
     }

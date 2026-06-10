@@ -79,13 +79,14 @@ export async function buildPdf(options: {
   gstIncluded: boolean;
   summary?: string;
   selections?: any;
+  quoteNumber?: string;
 }) {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595.28, 841.89]); // A4
   const { width: pageWidth, height: pageHeight } = page.getSize();
   const margin = 50;
 
-  const { company, customerName, customerEmail, gstIncluded, summary, selections } = options;
+  const { company, customerName, customerEmail, gstIncluded, summary, selections, quoteNumber } = options;
   const today = new Date();
   const expiry = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -145,7 +146,7 @@ export async function buildPdf(options: {
     return `${currencySymbol}${value.toLocaleString('en-IN')}`;
   };
 
-  const quoteId = `TBQ-${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}-${Math.floor(today.getTime() / 1000)}`;
+  const quoteId = quoteNumber || `TBQ-${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}-${Math.floor(today.getTime() / 1000)}`;
 
   const companyName = company?.companyName || company?.name || 'TecBunny Solutions';
   const address = company?.registeredAddress || company?.address || '';

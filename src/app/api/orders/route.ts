@@ -173,7 +173,9 @@ export async function POST(request: NextRequest) {
       payment_method: orderData.payment_method,
       customer_notes: orderData.notes,
       agent_id: orderData.agent_id || null, // Store agent info if this is an agent order
-      otp_required: !!orderData.agent_id // Flag for OTP requirement
+      otp_required: !!orderData.agent_id, // Flag for OTP requirement
+      part_payment_amount: orderData.part_payment_amount ? Number(orderData.part_payment_amount) : null,
+      quote_id: orderData.quote_id || null
     };
 
     // Execute atomic allocation and order placement via PostgreSQL RPC

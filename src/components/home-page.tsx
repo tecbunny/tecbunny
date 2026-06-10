@@ -904,14 +904,14 @@ export default function HomePage() {
                 return (
                   <div key={product.id} className={cn('reveal-item rounded-2xl border border-white/10 bg-white/5 p-5 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40 flex flex-col justify-between', revealDelayClass(index * 90))}>
                     <Link href={`/products/${product.id}`} className="group/product-link block">
-                      <div className="group/product relative mb-4 flex h-32 sm:h-40 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
+                      <div className="group/product relative mb-4 flex h-32 sm:h-40 items-center justify-center overflow-hidden rounded-xl bg-white p-2">
                         {imageUrl ? (
                           <OptimizedImage
                             src={imageUrl}
                             alt={title}
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover/product:scale-105"
+                            className="h-full w-full object-contain transition-transform duration-500 group-hover/product:scale-105"
                             transformation={{ width: 480, height: 320, quality: 75 }}
                           />
                         ) : (

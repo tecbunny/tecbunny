@@ -614,8 +614,8 @@ export default function HomePage() {
             Authorized Solutions & Brand Partnerships
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 md:gap-x-16 opacity-65">
-            {partnerBrands.map((brand, idx) => (
-              <span key={idx} className="flex items-center justify-center transition-all hover:scale-105 duration-200">
+            {partnerBrands.map((brand) => (
+              <span key={brand.name} className="flex items-center justify-center transition-all hover:scale-105 duration-200">
                 {brand.logoUrl ? (
                   <img
                     src={brand.logoUrl}
@@ -701,27 +701,42 @@ export default function HomePage() {
                 <div
                   key={plan.name}
                   className={cn(
-                    'reveal-item rounded-2xl border px-6 py-5 transition-transform duration-300 hover:-translate-y-1',
+                    'reveal-item rounded-2xl border px-6 py-5 transition-transform duration-300 hover:-translate-y-1 flex flex-col justify-between',
                     plan.highlight
                       ? 'border-cyan-400/60 bg-cyan-500/10 shadow-lg shadow-cyan-500/20'
                       : 'border-white/10 bg-white/5',
                     revealDelayClass(140 + index * 90)
                   )}
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">{plan.name}</h3>
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{plan.summary}</p>
-                    </div>
-                    <span className="text-xs font-semibold text-cyan-200">{plan.priceLabel}</span>
-                  </div>
-                  <div className="mt-4 grid gap-2 text-sm text-slate-300">
-                    {plan.items.map((item) => (
-                      <div key={item} className="flex items-center gap-2">
-                        <CheckCircle2 size={14} className="text-emerald-300" />
-                        {item}
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">{plan.name}</h3>
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{plan.summary}</p>
                       </div>
-                    ))}
+                      <span className="text-xs font-semibold text-cyan-200">{plan.priceLabel}</span>
+                    </div>
+                    <div className="mt-4 grid gap-2 text-sm text-slate-300">
+                      {plan.items.map((item) => (
+                        <div key={item} className="flex items-center gap-2">
+                          <CheckCircle2 size={14} className="text-emerald-300" />
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-6 pt-4 border-t border-white/5">
+                    <Link
+                      href={`/contact?subject=sales&service=amc_service&intent=amc_quote&message=I%20am%20interested%20in%20the%20${plan.name}%20plan.%20Please%20contact%20me.`}
+                      className={cn(
+                        "inline-flex w-full items-center justify-center rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors",
+                        plan.highlight
+                          ? "border-cyan-400 bg-cyan-500 text-slate-950 hover:bg-cyan-400 hover:text-slate-950"
+                          : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+                      )}
+                    >
+                      Get Started
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -765,13 +780,7 @@ export default function HomePage() {
                 const title = product.title || product.name || 'Product';
                 const price = Number(product.price ?? product.mrp ?? 0);
                 const oldPrice = Number(product.mrp ?? 0);
-                const imageUrl =
-                  getProductDisplayImage(product) ||
-                  (Array.isArray(product.images)
-                    ? (typeof product.images[0] === 'string'
-                        ? product.images[0]
-                        : (product.images[0] as any)?.url || '')
-                    : '');
+                const imageUrl = getProductDisplayImage(product) || '';
                 const resolvedProduct: Product = {
                   ...product,
                   title,
@@ -787,33 +796,40 @@ export default function HomePage() {
                 } as Product;
 
                 return (
-                  <div key={product.id} className={cn('reveal-item rounded-2xl border border-white/10 bg-white/5 p-5 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40', revealDelayClass(index * 90))}>
-                    <div className="group/product relative mb-4 flex h-32 sm:h-40 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
-                      {imageUrl ? (
-                        <OptimizedImage
-                          src={imageUrl}
-                          alt={title}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover/product:scale-105"
-                          transformation={{ width: 480, height: 320, quality: 75 }}
-                        />
-                      ) : (
-                        <Server size={52} className="text-slate-600" />
-                      )}
+                  <div key={product.id} className={cn('reveal-item rounded-2xl border border-white/10 bg-white/5 p-5 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40 flex flex-col justify-between', revealDelayClass(index * 90))}>
+                    <Link href={`/products/${product.id}`} className="group/product-link block">
+                      <div className="group/product relative mb-4 flex h-32 sm:h-40 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
+                        {imageUrl ? (
+                          <OptimizedImage
+                            src={imageUrl}
+                            alt={title}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover/product:scale-105"
+                            transformation={{ width: 480, height: 320, quality: 75 }}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-950 flex flex-col items-center justify-center gap-2 border border-white/5 rounded-xl text-slate-500 hover:text-cyan-400 hover:border-cyan-500/20 transition-all duration-300">
+                            <Server size={36} className="text-slate-600 group-hover/product-link:text-cyan-400 transition-colors" />
+                            <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 font-tech">Hardware</span>
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="text-sm font-semibold text-white group-hover/product-link:text-cyan-400 transition-colors line-clamp-2 min-h-[40px]">{title}</h3>
+                    </Link>
+                    <div>
+                      <div className="mt-3 flex items-center gap-2 text-sm">
+                        <span className="text-cyan-200">₹{price.toLocaleString('en-IN')}</span>
+                        {oldPrice > price && (
+                          <span className="text-slate-400 line-through">₹{oldPrice.toLocaleString('en-IN')}</span>
+                        )}
+                      </div>
+                      <AddToCartButton
+                        product={resolvedProduct}
+                        className="mt-4 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:border-cyan-400/40"
+                        size="sm"
+                      />
                     </div>
-                    <h3 className="text-sm font-semibold text-white">{title}</h3>
-                    <div className="mt-3 flex items-center gap-2 text-sm">
-                      <span className="text-cyan-200">₹{price.toLocaleString('en-IN')}</span>
-                      {oldPrice > price && (
-                        <span className="text-slate-400 line-through">₹{oldPrice.toLocaleString('en-IN')}</span>
-                      )}
-                    </div>
-                    <AddToCartButton
-                      product={resolvedProduct}
-                      className="mt-4 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:border-cyan-400/40"
-                      size="sm"
-                    />
                   </div>
                 );
               })}
@@ -834,21 +850,21 @@ export default function HomePage() {
           <div className="grid gap-6 md:grid-cols-3">
             {[
               {
-                title: 'Grand Sunset Resort & Spa',
+                title: 'Luxury Coastal Resort & Spa',
                 location: 'Calangute, Goa',
-                description: 'Designed and deployed a full 64-channel IP CCTV surveillance network and high-density guest Wi-Fi coverage across 3 resort wings.',
+                description: 'Designed and deployed a full 64-channel IP CCTV surveillance network and high-density guest Wi-Fi coverage across resort wings.',
                 tag: 'Resort IP CCTV'
               },
               {
-                title: 'Mahad Industrial Zone Facility',
+                title: 'Industrial Manufacturing Complex',
                 location: 'Mahad, Maharashtra',
-                description: 'Implemented multi-site server setups, structured optical fiber cabling, and biometric attendance/RFID door locks for 150+ staff.',
+                description: 'Implemented multi-site server setups, structured optical fiber cabling, and biometric attendance/RFID door locks for 150+ workers.',
                 tag: 'IT Infrastructure & Access Control'
               },
               {
-                title: 'Premium Smart Villa',
+                title: 'High-End Automated Villa',
                 location: 'Panaji, Goa',
-                description: 'Retrofitted an existing residential villa with wireless smart controls, automated perimeter alarms, smart locks, and motorized curtains.',
+                description: 'Retrofitted a residential villa with wireless smart controls, automated perimeter alarms, smart locks, and motorized curtains.',
                 tag: 'Home Automation'
               }
             ].map((project) => (

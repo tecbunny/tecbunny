@@ -6,6 +6,7 @@ import { ShieldCheck, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RefreshButton } from '@/components/customised-setups/RefreshButton';
 import { QuoteCTA } from '@/components/customised-setups/QuoteCTA';
+import { QuotationStatusLookup } from '@/components/customised-setups/QuotationStatusLookup';
 import CustomSetupFlow from '@/components/customised-setups/ClientCustomSetupFlow';
 import { DEFAULT_CUSTOM_SETUP_TEMPLATE_SLUG } from '@/lib/custom-setup.constants';
 import { getCustomSetupBlueprintSummary } from '@/lib/custom-setup-service';
@@ -79,8 +80,9 @@ export default async function CustomisedSetupsPage({
       </section>
 
       <section className="px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto mb-6">
+        <div className="max-w-5xl mx-auto mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <QuoteCTA />
+          <QuotationStatusLookup />
         </div>
         <CustomSetupFlow key={refreshKey} blueprint={blueprint} variant="tech" />
       </section>

@@ -29,6 +29,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { PartnerBrandsEditor } from '@/components/admin/PartnerBrandsEditor';
 
 type SettingField = {
   key: string;
@@ -401,7 +402,14 @@ export default function SuperadminSettingsPage() {
                           </Label>
                           <p className="text-xs leading-relaxed text-slate-500">{field.description}</p>
                         </div>
-                        {field.type === 'textarea' ? (
+                        {field.key === 'partnerBrands' ? (
+                          <div className="mt-2">
+                            <PartnerBrandsEditor 
+                              value={values[field.key] ?? ''}
+                              onChange={(val) => updateValue(field.key, val)}
+                            />
+                          </div>
+                        ) : field.type === 'textarea' ? (
                           <Textarea
                             id={field.key}
                             value={values[field.key] ?? ''}

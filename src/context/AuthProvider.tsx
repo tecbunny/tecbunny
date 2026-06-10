@@ -100,6 +100,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const firstLoginAttemptedRef = useRef<Set<string>>(new Set());
   const { trackEvent } = useAnalytics();
 
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    if (loading) {
+      timeoutId = setTimeout(() => {
+        setLoading(false);
+        logger.warn('AuthProvider.loading_failsafe_triggered');
+      }, 15000);
+    }
+    return () => clearTimeout(timeoutId);
+  }, [loading]);
+
   const syncGuestCartToUser = useCallback(async (userId: string, abortSignal?: AbortSignal) => {
     try {
       const { useCartStore } = await import('@/store/cartStore');

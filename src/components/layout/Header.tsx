@@ -301,7 +301,12 @@ export function Header() {
           </div>
 
           <div className="relative z-20 hidden flex-shrink-0 items-center gap-2 lg:flex xl:gap-4">
-            {!loading && !user && (
+            {loading ? (
+              <div className="flex items-center gap-2 animate-pulse">
+                <div className="h-9 w-16 rounded-full bg-white/10" />
+                <div className="h-9 w-16 rounded-full bg-cyan-500/20" />
+              </div>
+            ) : !user ? (
               <div className="flex items-center gap-2">
                 <Link
                   href="/auth/signin"
@@ -316,8 +321,7 @@ export function Header() {
                   Signup
                 </Link>
               </div>
-            )}
-            {!loading && user && (
+            ) : (
               <>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -512,7 +516,12 @@ export function Header() {
             Cart
             <ChevronRight size={16} className="text-slate-500" />
           </Link>
-          {!loading && !user && (
+          {loading ? (
+            <div className="space-y-2 animate-pulse">
+              <div className="h-10 w-full rounded-lg bg-white/10" />
+              <div className="h-10 w-full rounded-lg bg-cyan-500/10" />
+            </div>
+          ) : !user ? (
             <div className="space-y-2">
               <Link
                 href="/auth/signin"
@@ -531,8 +540,7 @@ export function Header() {
                 <ChevronRight size={16} className="text-cyan-300" />
               </Link>
             </div>
-          )}
-          {!loading && user && (
+          ) : (
             <div className="space-y-2">
               <Link
                 href="/profile"

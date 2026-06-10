@@ -109,6 +109,18 @@ export function OptimizedImage({
     return getOptimizedUrl(imgSrc, optimizationParams);
   }, [imgSrc, transformation, width, height, quality, hasError, fallbackSrc]);
 
+  // Next.js image optimizer strictly requires a valid image content-type.
+  // Extensionless URLs from Supabase or S3 often return application/octet-stream,
+  // causing the optimizer to reject them and trigger a 400 Bad Request error.
+  const isExtensionless = React.useMemo(() => {
+    try {
+      const url = new URL(optimizedSrc);
+      return !/\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(url.pathname);
+    } catch {
+      return !/\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(optimizedSrc);
+    }
+  }, [optimizedSrc]);
+
   const imageProps = {
     src: optimizedSrc,
     className: cn(className),
@@ -117,6 +129,7 @@ export function OptimizedImage({
     placeholder,
     blurDataURL,
     onError: handleError,
+    unoptimized: props.unoptimized || isExtensionless,
     ...props,
   };
 

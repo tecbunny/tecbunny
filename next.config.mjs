@@ -32,12 +32,22 @@ const nextConfig = {
     unoptimized: isStaticExport,
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 31536000,
-    remotePatterns: allowedImageHosts.map((hostname) => ({
-      protocol: 'https',
-      hostname,
-      port: '',
-      pathname: '/**',
-    })),
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
+      ...allowedImageHosts.map((hostname) => ({
+        protocol: 'https',
+        hostname,
+        port: '',
+        pathname: '/**',
+      }))
+    ],
   },
   reactStrictMode: true,
 }

@@ -107,7 +107,7 @@ const DEFAULT_CATEGORY_GST_RATES: Record<string, number> = {
   Sports: 18,
 };
 
-import { PartnerBrandsEditor } from '@/components/admin/PartnerBrandsEditor';
+
 
 const createDefaultSettings = (): SettingsFormValues => ({
   siteName: 'TecBunny',
@@ -686,31 +686,7 @@ function SiteSettingsPageContent() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Partner Brands</CardTitle>
-                  <CardDescription>
-                    Configure the product partner brands displayed on the homepage solutions strip.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="partnerBrands"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <PartnerBrandsEditor 
-                            value={field.value || ''} 
-                            onChange={field.onChange} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
+
             </TabsContent>
 
             {/* Homepage Tab */}

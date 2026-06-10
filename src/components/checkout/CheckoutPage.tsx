@@ -752,7 +752,7 @@ export default function CheckoutPage() {
 
               <div className="glass-panel p-6 rounded-2xl">
                 <h3 className="text-xl font-bold text-white font-tech mb-6 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-cyan-300" /> Delivery & Installation
+                  <MapPin className="h-5 w-5 text-cyan-300" /> {!!quote ? 'Delivery & Installation' : 'Delivery Address'}
                 </h3>
                 <div className="space-y-6">
                   <div className="input-group relative">
@@ -766,40 +766,44 @@ export default function CheckoutPage() {
                       className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.address ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
                       placeholder=" "
                     ></textarea>
-                    <label htmlFor="address" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Installation Address (Goa)</label>
+                    <label htmlFor="address" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">
+                      {!!quote ? 'Installation Address (Goa)' : 'Complete Delivery Address'}
+                    </label>
                     {fieldErrors.address && (
                       <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.address}</span>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="input-group relative">
-                      <input
-                        type="date"
-                        id="date"
-                        value={customerInfo.installDate}
-                        onChange={(event) => handleInputChange('installDate', event.target.value)}
-                        className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
-                        placeholder=" "
-                      />
-                      <label htmlFor="date" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Preferred Install Date</label>
+                  {!!quote && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="input-group relative">
+                        <input
+                          type="date"
+                          id="date"
+                          value={customerInfo.installDate}
+                          onChange={(event) => handleInputChange('installDate', event.target.value)}
+                          className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
+                          placeholder=" "
+                        />
+                        <label htmlFor="date" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Preferred Install Date</label>
+                      </div>
+                      <div className="input-group relative">
+                        <select
+                          id="readiness"
+                          value={customerInfo.siteStatus}
+                          onChange={(event) => handleInputChange('siteStatus', event.target.value)}
+                          className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors appearance-none"
+                        >
+                          <option value="" className="bg-[#0f172a]">Select Status</option>
+                          <option value="ready" className="bg-[#0f172a]">Site Ready (Plaster/Paint Done)</option>
+                          <option value="construction" className="bg-[#0f172a]">Under Construction (Cabling Phase)</option>
+                          <option value="renovation" className="bg-[#0f172a]">Renovation (Retrofit)</option>
+                        </select>
+                        <label htmlFor="readiness" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Site Status</label>
+                        <ChevronDown className="absolute right-4 top-3.5 h-4 w-4 text-slate-500 pointer-events-none" />
+                      </div>
                     </div>
-                    <div className="input-group relative">
-                      <select
-                        id="readiness"
-                        value={customerInfo.siteStatus}
-                        onChange={(event) => handleInputChange('siteStatus', event.target.value)}
-                        className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors appearance-none"
-                      >
-                        <option value="" className="bg-[#0f172a]">Select Status</option>
-                        <option value="ready" className="bg-[#0f172a]">Site Ready (Plaster/Paint Done)</option>
-                        <option value="construction" className="bg-[#0f172a]">Under Construction (Cabling Phase)</option>
-                        <option value="renovation" className="bg-[#0f172a]">Renovation (Retrofit)</option>
-                      </select>
-                      <label htmlFor="readiness" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Site Status</label>
-                      <ChevronDown className="absolute right-4 top-3.5 h-4 w-4 text-slate-500 pointer-events-none" />
-                    </div>
-                  </div>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="input-group relative">
@@ -993,44 +997,46 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Custom Part Payment Options */}
-                    <div className="mt-4 p-3 bg-white/5 border border-white/10 rounded-lg space-y-3">
-                      <label className="flex items-center gap-2 text-sm text-slate-200 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={isPartPayment}
-                          onChange={(e) => {
-                            setIsPartPayment(e.target.checked);
-                            if (e.target.checked) {
-                              setPartPaymentAmount(String(Math.round(displayTotal * 0.5))); // default to 50%
-                            } else {
-                              setPartPaymentAmount('');
-                            }
-                          }}
-                          className="h-4 w-4 rounded border-slate-400 bg-slate-900 text-cyan-400 focus:ring-cyan-400"
-                        />
-                        Pay Custom Part Amount
-                      </label>
-                      {isPartPayment && (
-                        <div className="space-y-1">
-                          <label className="text-[11px] text-slate-400">Enter Part Payment Amount (₹)</label>
+                    {!!quote && (
+                      <div className="mt-4 p-3 bg-white/5 border border-white/10 rounded-lg space-y-3">
+                        <label className="flex items-center gap-2 text-sm text-slate-200 cursor-pointer">
                           <input
-                            type="number"
-                            min={1}
-                            max={displayTotal}
-                            required
-                            placeholder="Enter amount"
-                            className="w-full bg-slate-950 border border-white/10 rounded px-2.5 py-1.5 text-white text-sm focus:outline-none focus:border-cyan-400"
-                            value={partPaymentAmount}
-                            onChange={(e) => setPartPaymentAmount(e.target.value)}
+                            type="checkbox"
+                            checked={isPartPayment}
+                            onChange={(e) => {
+                              setIsPartPayment(e.target.checked);
+                              if (e.target.checked) {
+                                setPartPaymentAmount(String(Math.round(displayTotal * 0.5))); // default to 50%
+                              } else {
+                                setPartPaymentAmount('');
+                              }
+                            }}
+                            className="h-4 w-4 rounded border-slate-400 bg-slate-900 text-cyan-400 focus:ring-cyan-400"
                           />
-                          <p className="text-[10px] text-slate-500">
-                            Remaining balance of ₹{Math.round(displayTotal - (Number(partPaymentAmount) || 0)).toLocaleString()} will be due later.
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                          Pay Custom Part Amount
+                        </label>
+                        {isPartPayment && (
+                          <div className="space-y-1">
+                            <label className="text-[11px] text-slate-400">Enter Part Payment Amount (₹)</label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={displayTotal}
+                              required
+                              placeholder="Enter amount"
+                              className="w-full bg-slate-950 border border-white/10 rounded px-2.5 py-1.5 text-white text-sm focus:outline-none focus:border-cyan-400"
+                              value={partPaymentAmount}
+                              onChange={(e) => setPartPaymentAmount(e.target.value)}
+                            />
+                            <p className="text-[10px] text-slate-500">
+                              Remaining balance of ₹{Math.round(displayTotal - (Number(partPaymentAmount) || 0)).toLocaleString()} will be due later.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                    {showAdvance && !isPartPayment && (
+                    {!!quote && showAdvance && !isPartPayment && (
                       <div className="mt-2 bg-cyan-400/10 border border-cyan-400/20 rounded p-2 text-[10px] text-cyan-300 text-center">
                         Advance Payable (50%): ₹{advanceAmount.toFixed(2)}
                       </div>

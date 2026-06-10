@@ -887,17 +887,6 @@ export default function CheckoutPage() {
 
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-6">
-                {/* Urgency Alert: Stock Shortage */}
-                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3 animate-pulse">
-                  <div className="h-5 w-5 shrink-0 rounded-full bg-amber-500/20 flex items-center justify-center">
-                    <span className="text-amber-500 font-bold text-xs">!</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-amber-200">High Demand - Low Stock</p>
-                    <p className="text-[10px] text-amber-200/70 mt-0.5">Several items in your cart are in high demand in Goa. Secure your stock now.</p>
-                  </div>
-                </div>
-
                 <div className="glass-panel p-6 rounded-2xl border-t-4 border-cyan-400">
                   <h3 className="text-xl font-bold text-white font-tech mb-6">Invoice Preview</h3>
 
@@ -987,17 +976,6 @@ export default function CheckoutPage() {
                       {' '}and{' '}
                       <Link href="/info/policies/terms" className="text-cyan-300 hover:text-white underline">Terms of Service</Link>.
                     </label>
-                  </div>
-
-                  {/* Purchase Velocity Trigger */}
-                  <div className="mb-4 flex items-center justify-center gap-2 py-1 px-3 rounded-full bg-cyan-400/10 border border-cyan-400/20">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                    </span>
-                    <p className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest">
-                      14 others viewing this in your region
-                    </p>
                   </div>
 
                   <button

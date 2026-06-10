@@ -50,7 +50,6 @@ export default function OffersPage() {
   const [featuredOffers, setFeaturedOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState({ days: '00', hours: '00', minutes: '00', seconds: '00' });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -103,32 +102,6 @@ export default function OffersPage() {
     return '';
   };
 
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date();
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-      const diff = end.getTime() - now.getTime();
-      if (diff <= 0) {
-        setCountdown({ days: '00', hours: '00', minutes: '00', seconds: '00' });
-        return;
-      }
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      setCountdown({
-        days: String(days).padStart(2, '0'),
-        hours: String(hours).padStart(2, '0'),
-        minutes: String(minutes).padStart(2, '0'),
-        seconds: String(seconds).padStart(2, '0'),
-      });
-    };
-
-    updateCountdown();
-    const intervalId = window.setInterval(updateCountdown, 1000);
-    return () => window.clearInterval(intervalId);
-  }, []);
-
   const couponOffers = useMemo(() => offers.filter((offer) => Boolean(offer.offer_code)), [offers]);
   const regularOffers = useMemo(
     () => offers.filter((offer) => !offer.is_featured && !offer.offer_code),
@@ -172,20 +145,6 @@ export default function OffersPage() {
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-base text-slate-400 sm:text-lg">
               Exclusive bundles and seasonal discounts on hardware and AMC packages. Engineered for affordability in Goa.
-            </p>
-
-            <div className="mt-10 inline-flex items-center justify-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur">
-              {['days', 'hours', 'minutes', 'seconds'].map((label) => (
-                <div key={label} className="text-center">
-                  <div className={`text-3xl font-semibold ${label === 'seconds' ? 'text-amber-300' : 'text-white'}`}>
-                    {countdown[label as keyof typeof countdown]}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-widest text-slate-500">{label}</div>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">
-              Until end of month sale
             </p>
           </div>
         </div>

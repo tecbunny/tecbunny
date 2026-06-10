@@ -195,7 +195,7 @@ export default function AboutPage() {
       <section className="bg-slate-900 py-16 text-center">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <h2 className="text-3xl font-semibold text-white">Ready to Experience the Difference?</h2>
-          <p className="mt-3 text-sm text-slate-400">Join thousands of satisfied customers who trust Tecbunny for their technology needs.</p>
+          <p className="mt-3 text-sm text-slate-400">Join local businesses and homeowners who trust Tecbunny for their technology needs.</p>
           <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link href="/products" className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-900">
               Shop Now

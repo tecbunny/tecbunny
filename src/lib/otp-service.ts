@@ -52,6 +52,7 @@ export class OtpService {
     otp_id?: string;
     expires_at?: string;
     error?: string;
+    otp_code?: string;
   }> {
     try {
       if (!this.supabase) {
@@ -84,7 +85,8 @@ export class OtpService {
         return {
           success: true,
           otp_id: existingOtp.id,
-          expires_at: existingOtp.expires_at
+          expires_at: existingOtp.expires_at,
+          otp_code: existingOtp.otp_code
         };
       }
 
@@ -145,7 +147,8 @@ export class OtpService {
       return {
         success: true,
         otp_id: otpRecord.id,
-        expires_at: expiresAt.toISOString()
+        expires_at: expiresAt.toISOString(),
+        otp_code: otpCode
       };
 
     } catch (error) {

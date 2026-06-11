@@ -100,7 +100,7 @@ export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: requestHeaders } });
 
   try {
-    const secret = process.env.SUPERADMIN_SESSION_SECRET || 'fallback-tb-secret-for-role-cache-cookie';
+    const secret = process.env.SUPERADMIN_SESSION_SECRET || (process.env.NODE_ENV === 'production' ? crypto.randomUUID() : 'fallback-tb-secret-for-role-cache-cookie');
 
     // Define public API routes that don't require authentication
     const publicApiRoutes: Array<{ path: string; methods?: string[] }> = [
@@ -138,9 +138,9 @@ export async function middleware(request: NextRequest) {
       isPublicApiRoute = true;
     }
 
-    // CSRF Protection for mutating state-change actions on admin/superadmin APIs
+    // CSRF Protection for mutating state-change actions on authenticated APIs
     const isMutatingMethod = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method);
-    if (isMutatingMethod && (checkPathPrefix(pathname, '/api/superadmin') || checkPathPrefix(pathname, '/api/admin'))) {
+    if (isMutatingMethod && checkPathPrefix(pathname, '/api') && !isPublicApiRoute) {
       const origin = request.headers.get('origin');
       const referer = request.headers.get('referer');
       const targetOrigin = request.nextUrl.origin;
@@ -207,22 +207,25 @@ export async function middleware(request: NextRequest) {
       }
 
       const lowerPath = pathname.toLowerCase();
-      if (lowerPath.startsWith('/mgmt') || lowerPath.startsWith('/auth')) {
-        res.headers.set('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
-        res.headers.set('Pragma', 'no-cache');
-        res.headers.set('Expires', '0');
-      }
-
-      if (
+      const isSensitivePath = 
         lowerPath.startsWith('/mgmt') ||
         lowerPath.startsWith('/auth') ||
         lowerPath.startsWith('/checkout') ||
         lowerPath.startsWith('/cart') ||
         lowerPath.startsWith('/profile') ||
         lowerPath.startsWith('/superadmin') ||
-        lowerPath.startsWith('/api/superadmin')
-      ) {
+        lowerPath.startsWith('/api/superadmin');
+
+      if (isSensitivePath) {
+        res.headers.set('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
+        res.headers.set('Pragma', 'no-cache');
+        res.headers.set('Expires', '0');
         res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+      }
+
+      // Add Clear-Site-Data on explicit logout to clean up client-side residue
+      if (lowerPath.endsWith('/logout')) {
+        res.headers.set('Clear-Site-Data', '"cache", "cookies", "storage"');
       }
 
       res.headers.set('X-Frame-Options', 'DENY');

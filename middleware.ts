@@ -4,8 +4,8 @@ import { verifySuperadminSessionToken } from '@/lib/auth/superadmin-session'
 
 const SHARED_CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cs.iubenda.com https://cdn.iubenda.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "script-src 'self' https://challenges.cloudflare.com https://cs.iubenda.com https://cdn.iubenda.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com",
+  "style-src 'self' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
   "connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://region1.analytics.google.com https://cloudflareinsights.com https://static.cloudflareinsights.com https://challenges.cloudflare.com",
@@ -100,7 +100,10 @@ export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: requestHeaders } });
 
   try {
-    const secret = process.env.SUPERADMIN_SESSION_SECRET || (process.env.NODE_ENV === 'production' ? crypto.randomUUID() : 'fallback-tb-secret-for-role-cache-cookie');
+    const secret = process.env.SUPERADMIN_SESSION_SECRET;
+    if (!secret) {
+      console.warn('CRITICAL WARNING: SUPERADMIN_SESSION_SECRET is missing. Role caching will be disabled.');
+    }
 
     // Define public API routes that don't require authentication
     const publicApiRoutes: Array<{ path: string; methods?: string[] }> = [
@@ -130,7 +133,7 @@ export async function middleware(request: NextRequest) {
       (!route.methods || route.methods.includes(request.method))
     );
 
-    const quoteUuidRegex = /^\/api\/quotes\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d{11})(\/(accept-counter|reject-counter|advance-payment\/confirm|advance-payment\/generate-link))?$/i;
+    const quoteUuidRegex = /^\/api\/quotes\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(\/(accept-counter|reject-counter|advance-payment\/confirm|advance-payment\/generate-link))?$/i;
     const isPublicQuoteRoute = quoteUuidRegex.test(pathname);
     const isPublicAdminAdvancePayment = pathname === '/api/admin/quotes/advance-payment' && request.method === 'GET';
 
@@ -140,7 +143,7 @@ export async function middleware(request: NextRequest) {
 
     // CSRF Protection for mutating state-change actions on authenticated APIs
     const isMutatingMethod = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method);
-    if (isMutatingMethod && checkPathPrefix(pathname, '/api') && !isPublicApiRoute) {
+    if (isMutatingMethod && checkPathPrefix(pathname, '/api')) {
       const origin = request.headers.get('origin');
       const referer = request.headers.get('referer');
       const targetOrigin = request.nextUrl.origin;
@@ -284,13 +287,37 @@ export async function middleware(request: NextRequest) {
           // Caching: check cookie signature to avoid querying relational database profiles on every request
           const needsRoleLookup = !userRole || checkPathPrefix(pathname, '/mgmt') || checkPathPrefix(pathname, '/api/mgmt');
           if (needsRoleLookup) {
-            const roleCacheValue = request.cookies.get('tb-user-role-cache')?.value;
-            const cachedRole = await verifySignedUserRole(roleCacheValue || '', user.id, secret);
+            if (secret) {
+              const roleCacheValue = request.cookies.get('tb-user-role-cache')?.value;
+              const cachedRole = await verifySignedUserRole(roleCacheValue || '', user.id, secret);
 
-            if (cachedRole) {
-              userRole = cachedRole;
+              if (cachedRole) {
+                userRole = cachedRole;
+              } else {
+                // Cache miss / expired: query DB profile once and write signature
+                const { data: profile } = await supabase
+                  .from('profiles')
+                  .select('role')
+                  .eq('id', user.id)
+                  .single();
+
+                if (profile?.role && typeof profile.role === 'string') {
+                  userRole = profile.role.trim().toLowerCase();
+                  try {
+                    const signedRole = await signUserRole(user.id, userRole, secret);
+                    response.cookies.set('tb-user-role-cache', signedRole, {
+                      maxAge: 300, // 5 minute TTL cache
+                      path: '/',
+                      sameSite: 'lax',
+                      secure: process.env.NODE_ENV === 'production'
+                    });
+                  } catch (cookieErr) {
+                    console.error('Failed to set signed role cookie cache:', cookieErr);
+                  }
+                }
+              }
             } else {
-              // Cache miss / expired: query DB profile once and write signature
+              // Graceful degradation when secret is missing: perform raw DB lookup without caching
               const { data: profile } = await supabase
                 .from('profiles')
                 .select('role')
@@ -299,17 +326,6 @@ export async function middleware(request: NextRequest) {
 
               if (profile?.role && typeof profile.role === 'string') {
                 userRole = profile.role.trim().toLowerCase();
-                try {
-                  const signedRole = await signUserRole(user.id, userRole, secret);
-                  response.cookies.set('tb-user-role-cache', signedRole, {
-                    maxAge: 300, // 5 minute TTL cache
-                    path: '/',
-                    sameSite: 'lax',
-                    secure: process.env.NODE_ENV === 'production'
-                  });
-                } catch (cookieErr) {
-                  console.error('Failed to set signed role cookie cache:', cookieErr);
-                }
               }
             }
           }
@@ -321,6 +337,10 @@ export async function middleware(request: NextRequest) {
         }
       } catch (e) {
         console.error('Middleware Supabase Error:', e);
+        return finalizeResponse(NextResponse.json(
+          { error: 'Service Unavailable', message: 'Authentication infrastructure is temporarily unavailable.' },
+          { status: 503 }
+        ));
       }
     }
 
@@ -375,8 +395,11 @@ export async function middleware(request: NextRequest) {
       if (checkPathPrefix(pathname, '/mgmt/admin')) {
         if (userRole !== 'admin') {
           const resRedirect = NextResponse.redirect(new URL('/', request.url));
-          resRedirect.cookies.delete('sb-access-token');
-          resRedirect.cookies.delete('sb-refresh-token');
+          request.cookies.getAll().forEach(cookie => {
+            if (cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')) {
+              resRedirect.cookies.delete(cookie.name);
+            }
+          });
           return finalizeResponse(resRedirect);
         }
 
@@ -394,28 +417,40 @@ export async function middleware(request: NextRequest) {
         const isAllowed = allowedAdminPaths.some(p => pathname === p || pathname.startsWith(p + '/'));
         if (!isAllowed) {
           const resRedirect = NextResponse.redirect(new URL('/', request.url));
-          resRedirect.cookies.delete('sb-access-token');
-          resRedirect.cookies.delete('sb-refresh-token');
+          request.cookies.getAll().forEach(cookie => {
+            if (cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')) {
+              resRedirect.cookies.delete(cookie.name);
+            }
+          });
           return finalizeResponse(resRedirect);
         }
       }
 
       if (checkPathPrefix(pathname, '/mgmt/manager') && userRole !== 'manager') {
         const resRedirect = NextResponse.redirect(new URL('/', request.url));
-        resRedirect.cookies.delete('sb-access-token');
-        resRedirect.cookies.delete('sb-refresh-token');
+        request.cookies.getAll().forEach(cookie => {
+          if (cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')) {
+            resRedirect.cookies.delete(cookie.name);
+          }
+        });
         return finalizeResponse(resRedirect);
       }
       if (checkPathPrefix(pathname, '/mgmt/sales-staff') && userRole !== 'sales-staff' && userRole !== 'sales') {
         const resRedirect = NextResponse.redirect(new URL('/', request.url));
-        resRedirect.cookies.delete('sb-access-token');
-        resRedirect.cookies.delete('sb-refresh-token');
+        request.cookies.getAll().forEach(cookie => {
+          if (cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')) {
+            resRedirect.cookies.delete(cookie.name);
+          }
+        });
         return finalizeResponse(resRedirect);
       }
       if (checkPathPrefix(pathname, '/mgmt/sales-external') && userRole !== 'sales-external') {
         const resRedirect = NextResponse.redirect(new URL('/', request.url));
-        resRedirect.cookies.delete('sb-access-token');
-        resRedirect.cookies.delete('sb-refresh-token');
+        request.cookies.getAll().forEach(cookie => {
+          if (cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')) {
+            resRedirect.cookies.delete(cookie.name);
+          }
+        });
         return finalizeResponse(resRedirect);
       }
       if (

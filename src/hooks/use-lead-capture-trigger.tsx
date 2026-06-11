@@ -18,6 +18,9 @@ export function useLeadCaptureTrigger(delayMs: number = 45000) {
 
   const triggerLeadCapture = () => {
     setHasTriggered(true);
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('tecbunny:lead-capture-seen', '1');
+    }
     toast({
       title: "Need Expert Assistance?",
       description: "You've been exploring for a while! Get an instant personalized consultation or a limited-time hardware bundle voucher now.",
@@ -34,6 +37,12 @@ export function useLeadCaptureTrigger(delayMs: number = 45000) {
   };
 
   useEffect(() => {
+    const alreadySeen = typeof window !== 'undefined' && window.sessionStorage.getItem('tecbunny:lead-capture-seen') === '1';
+    if (alreadySeen) {
+      setHasTriggered(true);
+      return;
+    }
+
     // Start timer on mount
     resetTimer();
 

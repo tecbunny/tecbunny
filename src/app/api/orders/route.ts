@@ -53,20 +53,19 @@ export async function POST(request: NextRequest) {
 
     const serviceSupabase = isSupabaseServiceConfigured ? createServiceClient() : await createServerClient();
 
-    if (!user) {
-      return apiError('UNAUTHORIZED', { correlationId, overrideMessage: 'Authentication required' });
-    }
+    const effectiveUserId = user?.id ?? null;
 
-    // Rate limit by user id
-    const limitCheck = await rateLimit(user.id, RATE_LIMIT, RATE_WINDOW_MS);
+    // Allow guest checkout; rate-limit by authenticated user or a guest key.
+    const rateLimitKey = effectiveUserId || `guest:${request.headers.get('x-forwarded-for') || 'unknown'}:${request.headers.get('x-real-ip') || 'unknown'}`;
+    const limitCheck = await rateLimit(rateLimitKey, RATE_LIMIT, RATE_WINDOW_MS);
     if (!limitCheck.allowed) {
-      logger.warn('orders_rate_limited', { userId: user.id });
+      logger.warn('orders_rate_limited', { userId: effectiveUserId, rateLimitKey });
       return apiError('RATE_LIMITED', { correlationId });
     }
 
     const orderData = await request.json();
 
-  logger.info('order_create_attempt', { userId: user.id });
+logger.info('order_create_attempt', { userId: effectiveUserId });
 
     // Validate required fields
     if (!orderData.customer_name || !orderData.customer_email || !orderData.customer_phone) {
@@ -81,7 +80,7 @@ export async function POST(request: NextRequest) {
         quantity: item.quantity,
         price: item.price,
       })),
-      userId: user.id,
+      userId: effectiveUserId || undefined,
       couponCode: orderData.coupon_code || orderData.couponCode || undefined,
       salesAgentId: orderData.agent_id || undefined,
     });
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     if (clientDiscountPaise > serverDiscountPaise + 100) { // 100 Paise (1 INR) tolerance
       logger.warn('order_discount_tampered', {
-        userId: user.id,
+        userId: effectiveUserId,
         clientDiscount: clientDiscountPaise / 100,
         serverDiscount: serverDiscountPaise / 100
       });
@@ -181,7 +180,7 @@ export async function POST(request: NextRequest) {
     // Execute atomic allocation and order placement via PostgreSQL RPC
     const { data: rpcResult, error: rpcError } = await serviceSupabase.rpc('allocate_order_inventory_atomic', {
       p_customer_name: orderData.customer_name,
-      p_customer_id: user.id,
+      p_customer_id: effectiveUserId,
       p_customer_email: orderData.customer_email,
       p_customer_phone: orderData.customer_phone,
       p_delivery_address: orderData.delivery_address || pickupStore || null,
@@ -200,18 +199,18 @@ export async function POST(request: NextRequest) {
     });
 
     if (rpcError) {
-      logger.error('order_create_rpc_error', { err: rpcError.message, userId: user.id });
+      logger.error('order_create_rpc_error', { err: rpcError.message, userId: effectiveUserId });
       return apiError('VALIDATION_ERROR', { correlationId, overrideMessage: rpcError.message || 'Failed to allocate stock and create order.' });
     }
 
     if (!rpcResult || !rpcResult.success || !rpcResult.order) {
-      logger.error('order_create_rpc_invalid_response', { rpcResult, userId: user.id });
+      logger.error('order_create_rpc_invalid_response', { rpcResult, userId: effectiveUserId });
       return apiError('INTERNAL_ERROR', { correlationId, overrideMessage: 'Invalid response from allocation engine.' });
     }
 
     const createdOrder = rpcResult.order;
 
-    logger.info('order_created', { orderId: createdOrder.id, userId: user.id });
+    logger.info('order_created', { orderId: createdOrder.id, userId: effectiveUserId });
 
     // Parse the additional info back for the response
     const orderItemsData = typeof createdOrder.items === 'string'
@@ -241,7 +240,7 @@ export async function POST(request: NextRequest) {
         .select('user_id')
         .eq('id', orderData.agent_id)
         .maybeSingle();
-      if (agentRecord && agentRecord.user_id === user.id) {
+      if (agentRecord && agentRecord.user_id === effectiveUserId) {
         isAgentThemselves = true;
       }
     }

@@ -18,6 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/lib/hooks';
+import { formatCurrency } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
 import type { Coupon } from '@/lib/types';
@@ -142,7 +143,7 @@ export function EnhancedCartSheet({ children }: EnhancedCartSheetProps) {
                       <Sparkles className="h-4 w-4 text-green-600" />
                       <span className="font-medium text-green-800">Auto-Applied Offer</span>
                       <Badge variant="secondary" className="bg-green-100 text-green-700">
-                        ₹{autoOfferDiscount.toFixed(2)} OFF
+                        {formatCurrency(autoOfferDiscount)} OFF
                       </Badge>
                     </div>
                     <p className="text-sm text-green-700">{autoOffer.title}</p>
@@ -178,7 +179,7 @@ export function EnhancedCartSheet({ children }: EnhancedCartSheetProps) {
                         }
                       </span>
                       <span className="font-medium text-blue-800">
-                        -₹{couponDiscount.toFixed(2)}
+                        -{formatCurrency(couponDiscount)}
                       </span>
                     </div>
                   </div>
@@ -234,14 +235,14 @@ export function EnhancedCartSheet({ children }: EnhancedCartSheetProps) {
               <div className="w-full space-y-2">
                 <div className="flex justify-between text-base">
                   <span>Subtotal</span>
-                  <span>₹{subtotalDisplay.toFixed(2)}</span>
+                  <span>{formatCurrency(subtotalDisplay)}</span>
                 </div>
                 
                 {/* Auto Offer Discount */}
                 {autoOfferDiscount > 0 && (
                   <div className="flex justify-between text-base text-green-600">
                     <span>Auto Offer ({autoOffer?.title})</span>
-                    <span>-₹{autoOfferDiscount.toFixed(2)}</span>
+                    <span>-{formatCurrency(autoOfferDiscount)}</span>
                   </div>
                 )}
                 
@@ -249,7 +250,7 @@ export function EnhancedCartSheet({ children }: EnhancedCartSheetProps) {
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-base text-blue-600">
                     <span>Discount ({appliedCoupon?.code})</span>
-                    <span>-₹{couponDiscount.toFixed(2)}</span>
+                    <span>-{formatCurrency(couponDiscount)}</span>
                   </div>
                 )}
                 
@@ -257,20 +258,20 @@ export function EnhancedCartSheet({ children }: EnhancedCartSheetProps) {
                 {totalDiscount > 0 && (
                   <div className="flex justify-between text-base font-medium text-green-700 bg-green-50 px-2 py-1 rounded">
                     <span>Total Savings</span>
-                    <span>₹{totalDiscount.toFixed(2)}</span>
+                    <span>{formatCurrency(totalDiscount)}</span>
                   </div>
                 )}
                 
                 <div className="flex justify-between text-base">
                   <span>GST</span>
-                  <span>₹{gstDisplay.toFixed(2)}</span>
+                  <span>{formatCurrency(gstDisplay)}</span>
                 </div>
                 
                 <Separator />
                 
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Grand Total</span>
-                  <span>₹{finalTotal.toFixed(2)}</span>
+                  <span>{formatCurrency(finalTotal)}</span>
                 </div>
                 
                 <p className="text-xs text-muted-foreground">Shipping calculated at checkout.</p>

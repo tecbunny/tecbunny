@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/lib/hooks';
+import { formatCurrency } from '@/lib/utils';
 import type { CartItem } from '@/lib/types';
 
 import { BRAND_LOGO_URL } from '@/components/ui/logo';
@@ -85,11 +86,11 @@ export function CartItemCard({ item }: CartItemCardProps) {
         </p>
         {!isServiceItem && typeof item.mrp === 'number' && item.mrp > unitPrice ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 line-through">₹{item.mrp.toFixed(2)}</span>
-            <span className="text-cyan-300 font-semibold text-sm">₹{unitPrice.toFixed(2)}</span>
+            <span className="text-xs text-slate-500 line-through">{formatCurrency(item.mrp)}</span>
+            <span className="text-cyan-300 font-semibold text-sm">{formatCurrency(unitPrice)}</span>
           </div>
         ) : (
-          <span className="block text-cyan-300 font-semibold text-sm">₹{unitPrice.toFixed(2)}</span>
+          <span className="block text-cyan-300 font-semibold text-sm">{formatCurrency(unitPrice)}</span>
         )}
         {isServiceItem && (
           <span className="mt-0.5 inline-flex text-[9px] uppercase font-bold text-slate-200 bg-purple-500/15 px-1.5 py-[3px] rounded">

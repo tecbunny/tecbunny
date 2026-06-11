@@ -120,18 +120,9 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     isProcessingRef.current = true;
     setIsProcessingOrder(true);
     try {
-      if (!user) {
-        toast({
-          title: 'Login Required',
-          description: 'Please sign in before placing an order.',
-          variant: 'destructive'
-        });
-        return null;
-      }
-
-      const customerName = orderData.customer_name || user.name || 'Customer';
-      const customerEmail = orderData.customer_email || user.email || '';
-      const customerPhone = orderData.customer_phone || user.mobile || '';
+      const customerName = orderData.customer_name || user?.name || 'Customer';
+      const customerEmail = orderData.customer_email || user?.email || '';
+      const customerPhone = orderData.customer_phone || user?.mobile || '';
       
       // Validate required fields
       if (!customerName || !customerEmail || !customerPhone) {

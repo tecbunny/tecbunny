@@ -439,9 +439,23 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 />
 
                 <div className="absolute top-4 left-4 z-20">
-                  <span className="bg-cyan-400 text-slate-900 text-xs font-bold px-2 py-1 rounded shadow-lg shadow-cyan-400/40">
-                    IN STOCK
-                  </span>
+                  {product.stock_status === 'out_of_stock' ? (
+                    <span className="bg-rose-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg shadow-rose-500/40">
+                      OUT OF STOCK
+                    </span>
+                  ) : product.stock_status === 'low_stock' ? (
+                    <span className="bg-amber-400 text-slate-900 text-xs font-bold px-2 py-1 rounded shadow-lg shadow-amber-400/40">
+                      LOW STOCK
+                    </span>
+                  ) : product.stock_status === 'backorder' ? (
+                    <span className="bg-slate-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg shadow-slate-500/40">
+                      BACKORDER
+                    </span>
+                  ) : (
+                    <span className="bg-cyan-400 text-slate-900 text-xs font-bold px-2 py-1 rounded shadow-lg shadow-cyan-400/40">
+                      IN STOCK
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -483,10 +497,12 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 {skuValue && (
                   <span>SKU: <span className="text-slate-200">{skuValue}</span></span>
                 )}
-                <div className="flex items-center gap-2">
-                  <StarRating rating={product.rating} size="sm" />
-                  <span className="text-xs">({product.reviewCount} reviews)</span>
-                </div>
+                {Number(product.reviewCount) > 0 && Number(product.rating) > 0 && (
+                  <div className="flex items-center gap-2">
+                    <StarRating rating={product.rating} size="sm" />
+                    <span className="text-xs">({product.reviewCount} {Number(product.reviewCount) === 1 ? 'review' : 'reviews'})</span>
+                  </div>
+                )}
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-8 backdrop-blur-sm">

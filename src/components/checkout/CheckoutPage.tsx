@@ -360,11 +360,7 @@ export default function CheckoutPage() {
     try {
       setOrderError('');
 
-      if (!user) {
-        setOrderError('Please log in to place an order.');
-        return;
-      }
-      
+      // Guest checkout is supported; sign in only if you want to save order history.
       // Run field validation
       let isValid = true;
       const fieldsToValidate = ['name', 'email', 'phone'];
@@ -538,52 +534,6 @@ export default function CheckoutPage() {
           <Button onClick={() => window.location.href = '/products'} className="bg-cyan-400 hover:bg-white text-slate-900 font-semibold">
             Continue Shopping
           </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#030712] py-16">
-        <div className="mx-auto max-w-3xl px-4">
-          <div className="glass-panel rounded-2xl p-8 text-slate-200">
-            <h2 className="text-2xl font-bold text-white mb-3">Login Required</h2>
-            <p className="text-slate-400">
-              Please sign in to place your order. Items in your cart will be waiting for you after login.
-            </p>
-            {cartCount > 0 && (
-              <p className="text-sm text-slate-500 mt-3">
-                You currently have {cartCount} {cartCount === 1 ? 'item' : 'items'} in your cart.
-              </p>
-            )}
-            <div className="flex flex-col gap-3 sm:flex-row mt-6">
-              <LoginDialog>
-                <Button size="lg" className="w-full sm:w-auto bg-cyan-400 hover:bg-white text-slate-900">
-                  Login to Continue
-                </Button>
-              </LoginDialog>
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full sm:w-auto border-white/10 text-slate-200"
-                onClick={() => {
-                  window.location.href = '/auth/signup';
-                }}
-              >
-                Create Account
-              </Button>
-            </div>
-            <Button
-              variant="ghost"
-              className="mt-4 text-slate-400 hover:text-white"
-              onClick={() => {
-                window.location.href = '/';
-              }}
-            >
-              Continue Shopping
-            </Button>
-          </div>
         </div>
       </div>
     );

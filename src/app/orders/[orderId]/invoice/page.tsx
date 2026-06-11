@@ -1,4 +1,4 @@
-﻿import { promises as fs } from 'node:fs';
+import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 import type { Metadata } from 'next';
@@ -201,7 +201,3 @@ export default async function OrderInvoicePage({ params, searchParams }: Invoice
     </div>
   );
 }
-
-]
-}
-

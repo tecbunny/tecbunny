@@ -291,7 +291,8 @@ function taxErrorResponse(error: unknown, correlationId?: string) {
 
 async function ensureProductColumns(supabase: any): Promise<Set<string> | null> {
   try {
-    const { data, error } = await supabase
+    const adminClient = isSupabaseServiceConfigured ? createServiceClient() : supabase;
+    const { data, error } = await adminClient
       .from('information_schema.columns' as any)
       .select('column_name,table_schema')
       .eq('table_name', 'products')
@@ -438,12 +439,12 @@ export async function GET(request: NextRequest) {
 
       // Apply sorting with prioritized products first
       // Always sort by prioritized status first (prioritized products at top)
-      if (!productColumns || productColumns.has('prioritized')) {
+      if (productColumns && productColumns.has('prioritized')) {
         query = query.order('prioritized', { ascending: false, nullsFirst: false });
       }
       
       // Then sort prioritized products by prioritized_at (most recently prioritized first)
-      if (!productColumns || productColumns.has('prioritized_at')) {
+      if (productColumns && productColumns.has('prioritized_at')) {
         query = query.order('prioritized_at', { ascending: false, nullsFirst: false });
       }
       

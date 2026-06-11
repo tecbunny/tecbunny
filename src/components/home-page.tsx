@@ -713,7 +713,7 @@ export default function HomePage() {
       <section className="border-y border-white/5 bg-slate-950/80 py-8 sm:py-10">
         <div className="container mx-auto px-6">
           <p className="text-center text-xs font-semibold uppercase tracking-[0.35em] text-slate-500 mb-6">
-            Authorized Solutions & Brand Partnerships
+            Authorized Product Brands
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 md:gap-x-16 opacity-65">
             {partnerBrands.map((brand) => (
@@ -904,14 +904,14 @@ export default function HomePage() {
                 return (
                   <div key={product.id} className={cn('reveal-item rounded-2xl border border-white/10 bg-white/5 p-5 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40 flex flex-col justify-between', revealDelayClass(index * 90))}>
                     <Link href={`/products/${product.id}`} className="group/product-link block">
-                      <div className="group/product relative mb-4 flex h-32 sm:h-40 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
+                      <div className="group/product relative mb-4 flex h-32 sm:h-40 items-center justify-center overflow-hidden rounded-xl bg-white p-2">
                         {imageUrl ? (
                           <OptimizedImage
                             src={imageUrl}
                             alt={title}
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover/product:scale-105"
+                            className="h-full w-full object-contain transition-transform duration-500 group-hover/product:scale-105"
                             transformation={{ width: 480, height: 320, quality: 75 }}
                           />
                         ) : (
@@ -943,49 +943,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Recent Installations Gallery */}
-      <section className="bg-slate-950 py-12 sm:py-24 border-t border-white/5">
-        <div className="container mx-auto px-6">
-          <div className="mb-14 max-w-2xl">
-            <span className="text-xs uppercase tracking-[0.4em] text-cyan-300">Case Studies</span>
-            <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">Recent Installations</h2>
-            <p className="mt-4 text-sm text-slate-400 sm:text-base">
-              Take a look at how we deploy security, IT networking, and home automation solutions across Goa and Maharashtra.
-            </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                title: 'Luxury Coastal Resort & Spa',
-                location: 'Calangute, Goa',
-                description: 'Designed and deployed a full 64-channel IP CCTV surveillance network and high-density guest Wi-Fi coverage across resort wings.',
-                tag: 'Resort IP CCTV'
-              },
-              {
-                title: 'Industrial Manufacturing Complex',
-                location: 'Mahad, Maharashtra',
-                description: 'Implemented multi-site server setups, structured optical fiber cabling, and biometric attendance/RFID door locks for 150+ workers.',
-                tag: 'IT Infrastructure & Access Control'
-              },
-              {
-                title: 'High-End Automated Villa',
-                location: 'Panaji, Goa',
-                description: 'Retrofitted a residential villa with wireless smart controls, automated perimeter alarms, smart locks, and motorized curtains.',
-                tag: 'Home Automation'
-              }
-            ].map((project) => (
-              <div key={project.title} className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 flex flex-col justify-between hover:border-cyan-400/30 transition-all duration-300">
-                <div>
-                  <span className="inline-block rounded bg-cyan-500/10 px-2.5 py-1 text-xs font-semibold text-cyan-300 mb-4">{project.tag}</span>
-                  <h3 className="text-lg font-semibold text-white mb-2">{project.title}</h3>
-                  <p className="text-xs text-slate-500 mb-4">{project.location}</p>
-                  <p className="text-sm text-slate-400">{project.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
 
 

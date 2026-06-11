@@ -29,6 +29,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { PartnerBrandsEditor } from '@/components/admin/PartnerBrandsEditor';
+import { SingleImageUploader } from '@/components/admin/SingleImageUploader';
 
 type SettingField = {
   key: string;
@@ -65,7 +67,6 @@ const sections: SettingSection[] = [
     icon: Package,
     href: '/superadmin/mgmt/products',
     fields: [
-      { key: 'partnerBrands', label: 'Partner brands', description: 'Comma-separated brand list used across product pages.', type: 'textarea' },
       { key: 'product_low_stock_threshold', label: 'Low stock threshold', description: 'Default threshold for low-stock warnings.', type: 'number' },
     ],
   },
@@ -96,10 +97,11 @@ const sections: SettingSection[] = [
   {
     id: 'brand',
     title: 'Brand Management',
-    description: 'Logo, favicon, theme colors, and brand presentation.',
+    description: 'Manage site branding and product brands.',
     icon: Palette,
     href: '/superadmin/mgmt/settings?section=brand',
     fields: [
+      { key: 'partnerBrands', label: 'Product Brands', description: 'Manage the product brands available for selection and displayed on the homepage.', type: 'textarea' },
       { key: 'site_branding', label: 'Brand name', description: 'Short brand label used in the UI.' },
       { key: 'logoUrl', label: 'Logo URL', description: 'Public logo asset path or URL.' },
       { key: 'faviconUrl', label: 'Favicon URL', description: 'Public favicon asset path or URL.' },
@@ -265,6 +267,15 @@ export default function SuperadminSettingsPage() {
       candidate.items.some((section) => section.id === requestedSection)
     );
     setActiveGroup(group?.id ?? 'core');
+
+    if (requestedSection) {
+      setTimeout(() => {
+        const el = document.getElementById(`section-${requestedSection}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+    }
   }, [router]);
 
   React.useEffect(() => {
@@ -371,7 +382,7 @@ export default function SuperadminSettingsPage() {
             {group.items.map((section) => {
               const Icon = section.icon;
               return (
-                <section key={section.id} className="rounded-lg border border-white/10 bg-slate-950/70 p-5 shadow-sm">
+                <section key={section.id} id={`section-${section.id}`} className="rounded-lg border border-white/10 bg-slate-950/70 p-5 shadow-sm">
                   <div className="mb-5 flex flex-col gap-4 border-b border-white/10 pb-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-rose-500/20 bg-rose-500/10">
@@ -401,7 +412,20 @@ export default function SuperadminSettingsPage() {
                           </Label>
                           <p className="text-xs leading-relaxed text-slate-500">{field.description}</p>
                         </div>
-                        {field.type === 'textarea' ? (
+                        {field.key === 'partnerBrands' ? (
+                          <div className="mt-2">
+                            <PartnerBrandsEditor 
+                              value={values[field.key] ?? ''}
+                              onChange={(val) => updateValue(field.key, val)}
+                            />
+                          </div>
+                        ) : field.key === 'logoUrl' || field.key === 'faviconUrl' ? (
+                          <SingleImageUploader 
+                            value={values[field.key] ?? ''}
+                            onChange={(val) => updateValue(field.key, val)}
+                            type={field.key === 'logoUrl' ? 'logo' : 'favicon'}
+                          />
+                        ) : field.type === 'textarea' ? (
                           <Textarea
                             id={field.key}
                             value={values[field.key] ?? ''}

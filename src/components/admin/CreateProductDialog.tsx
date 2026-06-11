@@ -70,6 +70,45 @@ const CATEGORIES = [
 export function CreateProductDialog({ open, onOpenChange, onProductCreated }: CreateProductDialogProps) {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [productBrands, setProductBrands] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch('/api/settings?key=partnerBrands');
+        if (res.ok) {
+          const data = await res.json();
+          const brandsStr = data?.value;
+          if (brandsStr && typeof brandsStr === 'string' && isMounted) {
+            const trimmed = brandsStr.trim();
+            let list: string[] = [];
+            if (trimmed.startsWith('[')) {
+              try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) {
+                  list = parsed.map(item => (typeof item === 'object' && item?.name ? String(item.name) : '')).filter(Boolean);
+                }
+              } catch (e) {
+                console.error('Failed to parse brands', e);
+              }
+            } else {
+              list = trimmed.split(',').map(b => b.trim()).filter(Boolean);
+            }
+            if (list.length > 0) {
+              setProductBrands(list);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch brands:', err);
+      }
+    };
+    if (open) {
+      fetchBrands();
+    }
+    return () => { isMounted = false; };
+  }, [open]);
 
   const form = useForm<ProductFormInput, any, ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -273,10 +312,31 @@ export function CreateProductDialog({ open, onOpenChange, onProductCreated }: Cr
                 name="brand"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Brand</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Hikvision" {...field} />
-                    </FormControl>
+                    <FormLabel>Product Brand</FormLabel>
+                    {productBrands.length > 0 ? (
+                      <Select 
+                        onValueChange={(val) => field.onChange(val === 'none' ? '' : val)} 
+                        value={field.value || 'none'}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select brand" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {productBrands.map((brandName) => (
+                            <SelectItem key={brandName} value={brandName}>
+                              {brandName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <FormControl>
+                        <Input placeholder="e.g. Hikvision" {...field} />
+                      </FormControl>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

@@ -268,23 +268,7 @@ function SignInForm() {
 
   return (
     <div className="min-h-screen bg-[#030712] text-slate-200 flex items-center justify-center px-4 py-16">
-      <style jsx global>{`
-        .login-card {
-          background: rgba(15, 23, 42, 0.6);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 0 40px rgba(6, 182, 212, 0.1);
-        }
-        .floating-label input:focus ~ label,
-        .floating-label input:not(:placeholder-shown) ~ label {
-          top: -0.5rem;
-          left: 0.75rem;
-          font-size: 0.75rem;
-          color: #06b6d4;
-          background-color: #0f172a;
-          padding: 0 0.25rem;
-        }
-      `}</style>
+      
 
       <div className="absolute inset-0 bg-noise opacity-10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-400/5 rounded-full blur-[100px] animate-pulse pointer-events-none" />

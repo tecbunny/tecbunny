@@ -50,7 +50,6 @@ export class OtpService {
   async generateOtp(request: OtpRequest, skipPhoneDelivery: boolean = false): Promise<{
     success: boolean;
     otp_id?: string;
-    otp_code?: string;
     expires_at?: string;
     error?: string;
   }> {

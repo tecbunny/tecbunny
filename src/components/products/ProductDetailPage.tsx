@@ -381,23 +381,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
 
   return (
     <div className="bg-[#030712] text-slate-200">
-      <style jsx global>{`
-        @keyframes scanVertical {
-          0% { top: 0%; opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { top: 100%; opacity: 0; }
-        }
-        .product-scan-line {
-          position: absolute;
-          left: 0;
-          width: 100%;
-          height: 2px;
-          background: #06b6d4;
-          box-shadow: 0 0 10px #06b6d4;
-          animation: scanVertical 3s linear infinite;
-        }
-      `}</style>
+      
 
       <div className="relative">
         <div className="absolute inset-0 bg-noise opacity-5 pointer-events-none"></div>

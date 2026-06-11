@@ -247,14 +247,7 @@ export default function SignUpPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-[#030712] text-slate-200 flex items-center justify-center px-4 py-16">
-        <style jsx global>{`
-          .signup-card {
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 40px rgba(139, 92, 246, 0.15);
-          }
-        `}</style>
+        
         <div className="absolute inset-0 bg-noise opacity-10" />
         <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] bg-purple-400/10 rounded-full blur-[100px] animate-pulse pointer-events-none" />
 
@@ -278,23 +271,7 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-[#030712] text-slate-200 flex items-center justify-center px-4 py-16">
-      <style jsx global>{`
-        .signup-card {
-          background: rgba(15, 23, 42, 0.65);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 0 40px rgba(139, 92, 246, 0.15);
-        }
-        .floating-label input:focus ~ label,
-        .floating-label input:not(:placeholder-shown) ~ label {
-          top: -0.5rem;
-          left: 0.75rem;
-          font-size: 0.75rem;
-          color: #8b5cf6;
-          background-color: #0f172a;
-          padding: 0 0.25rem;
-        }
-      `}</style>
+      
 
       <div className="absolute inset-0 bg-noise opacity-10" />
       <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-400/10 rounded-full blur-[100px] animate-pulse pointer-events-none" />

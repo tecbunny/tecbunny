@@ -203,6 +203,17 @@ export async function POST(request: NextRequest) {
       return apiError('VALIDATION_ERROR', { overrideMessage: 'Image is too large (max 4MB)', correlationId });
     }
     
+    // Magic bytes validation
+    const head = new Uint8Array(buffer.subarray(0, 16));
+    const isPng = head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47;
+    const isJpeg = head[0] === 0xff && head[1] === 0xd8;
+    const isWebp = head[0] === 0x52 && head[1] === 0x49 && head[2] === 0x46 && head[3] === 0x46; // RIFF
+    const isGif = head[0] === 0x47 && head[1] === 0x49 && head[2] === 0x46; // GIF
+    if (!(isPng || isJpeg || isWebp || isGif)) {
+      logger.warn('upload_from_url_invalid_magic_bytes', { correlationId, head: Array.from(head.subarray(0,8)) });
+      return apiError('VALIDATION_ERROR', { overrideMessage: 'Invalid image file signature', correlationId });
+    }
+
     logger.info('upload_from_url_validation_passed', { correlationId, size: buffer.length, contentType });
     
     // Upload to storage based on type

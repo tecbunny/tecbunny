@@ -10,6 +10,13 @@ const warnOnce = (message: string, details: Record<string, unknown>) => {
 
 const missingVars = (names: string[]): string[] => names.filter((name) => !process.env[name]);
 
+// FATAL GUARD: Validate service role key strictly at startup
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY.includes('placeholder')) {
+  // We only throw if this is imported during a server execution path where it's actually required,
+  // or we throw immediately. The user instructions: "Fail the server immediately at startup if critical variables are placeholders"
+  throw new Error("FATAL: SUPABASE_SERVICE_ROLE_KEY is missing or invalid. Process aborted.");
+}
+
 export const isSupabasePublicConfigured = missingVars([
   'NEXT_PUBLIC_SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_ANON_KEY',

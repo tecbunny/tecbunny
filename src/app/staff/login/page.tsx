@@ -261,14 +261,7 @@ function StaffSignInForm() {
 
   return (
     <div className="min-h-screen bg-[#030712] text-slate-200 flex flex-col items-center justify-center px-4 py-16">
-      <style jsx global>{`
-        .crm-card {
-          background: rgba(15, 23, 42, 0.7);
-          backdrop-filter: blur(24px);
-          border: 1px solid rgba(99, 102, 241, 0.2);
-          box-shadow: 0 0 50px rgba(99, 102, 241, 0.08);
-        }
-      `}</style>
+      
 
       {/* Background effects */}
       <div className="absolute inset-0 bg-noise opacity-10 pointer-events-none" />

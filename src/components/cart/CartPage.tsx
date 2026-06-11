@@ -136,19 +136,7 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-[#030712] text-slate-200">
-      <style jsx global>{`
-        .glass-panel {
-          background: rgba(15, 23, 42, 0.6);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .magnetic-btn { transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-        input[type=number]::-webkit-inner-spin-button,
-        input[type=number]::-webkit-outer-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-      `}</style>
+      
 
       <section className="pt-28 pb-16 relative">
         <div className="fixed inset-0 bg-noise opacity-5 pointer-events-none"></div>

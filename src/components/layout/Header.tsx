@@ -53,7 +53,7 @@ const navLinks = [
 export function Header() {
   useAnalytics();
   const { user, loading, logout } = useAuth();
-  const { cartCount } = useCart();
+  const { cartCount, isHydrated } = useCart();
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -370,7 +370,7 @@ export function Header() {
                 aria-label="Open cart"
               >
                 <ShoppingCart size={18} />
-                {cartCount > 0 && (
+                {isHydrated && cartCount > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-cyan-400 px-1 text-[10px] font-bold text-slate-900">
                     {cartCount}
                   </span>
@@ -400,7 +400,7 @@ export function Header() {
                 aria-label="Open cart"
               >
                 <ShoppingCart size={16} />
-                {cartCount > 0 && (
+                {isHydrated && cartCount > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-cyan-400 px-0.5 text-[9px] font-bold text-slate-900">
                     {cartCount}
                   </span>

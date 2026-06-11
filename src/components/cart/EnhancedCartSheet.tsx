@@ -42,6 +42,7 @@ export function EnhancedCartSheet({ children }: EnhancedCartSheetProps) {
     applyCoupon,
     removeCoupon,
     refreshPricing,
+    isHydrated,
   } = useCart();
   const { toast } = useToast();
   const [open, setOpen] = React.useState(false);
@@ -122,7 +123,14 @@ export function EnhancedCartSheet({ children }: EnhancedCartSheetProps) {
         </SheetHeader>
         <Separator className="my-4" />
         
-        {cartCount > 0 ? (
+        {!isHydrated ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="animate-pulse space-y-4 text-center">
+              <div className="h-12 w-12 rounded-full bg-slate-200/20 mx-auto" />
+              <div className="h-4 w-24 bg-slate-200/20 rounded mx-auto" />
+            </div>
+          </div>
+        ) : cartCount > 0 ? (
           <>
             <div className="flex-1 flex flex-col gap-4 overflow-hidden">
               {/* Cart Items */}

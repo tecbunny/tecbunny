@@ -457,10 +457,20 @@ export async function GET(request: NextRequest) {
         query = query.order('created_at', { ascending: sortOrder === 'asc' });
       }
 
-      // Add filters
-      const status = searchParams.get('status');
-      if (status) {
-        query = query.eq('status', status);
+      // Apply visibility filters at the database level for non-privileged requests
+      if (!isPrivilegedRequest) {
+        query = query.eq('status', 'active');
+        if (!productColumns || productColumns.has('is_active')) {
+          query = query.eq('is_active', true);
+        }
+        if (!productColumns || productColumns.has('is_deleted')) {
+          query = query.eq('is_deleted', false);
+        }
+      } else {
+        const status = searchParams.get('status');
+        if (status) {
+          query = query.eq('status', status);
+        }
       }
 
       const vendor = searchParams.get('vendor');

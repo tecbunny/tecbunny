@@ -204,42 +204,48 @@ export async function POST(request: Request) {
 }
 
 async function ensureCustomerUser(svc: ReturnType<typeof createServiceClient>, c: CustomerInput): Promise<string | null> {
-  // Normalize mobile if provided
   const normalizedMobile = c.mobile ? c.mobile.replace(/\D/g, '') : null;
   const mobileWithPrefix = normalizedMobile ? (normalizedMobile.startsWith('91') && normalizedMobile.length === 12 ? normalizedMobile : (normalizedMobile.length === 10 ? `91${normalizedMobile}` : normalizedMobile)) : null;
+  const email = c.email ? c.email.trim().toLowerCase() : undefined;
 
-  // 1) Try find by email or mobile in profiles
-  const supabase = svc
-  let profile: any = null
-
-  if (c.email) {
-    const { data } = await supabase.from('profiles').select('id').eq('email', c.email.trim().toLowerCase()).maybeSingle()
-    if (data) profile = data
-  }
-  if (!profile && mobileWithPrefix) {
-    const { data } = await supabase.from('profiles').select('id').eq('mobile', mobileWithPrefix).maybeSingle()
-    if (data) profile = data
-  }
-  if (profile?.id) return profile.id
-
-  // 2) Create auth user via admin API
+  // 1) Try creating the user immediately. This prevents the classic "read then create" race condition.
   const createReq: any = {
-    email: c.email ? c.email.trim().toLowerCase() : undefined,
+    email: email,
     phone: mobileWithPrefix || undefined,
     email_confirm: true,
     phone_confirm: !!mobileWithPrefix,
     user_metadata: { name: c.name, mobile: mobileWithPrefix }
+  };
+  
+  const { data: created, error } = await svc.auth.admin.createUser(createReq);
+
+  let userId: string | null = created?.user?.id || null;
+
+  // 2) If the user already exists, find their ID with a single targeted query
+  if (!userId && error) {
+    const query = svc.from('profiles').select('id');
+    if (email && mobileWithPrefix) {
+      query.or(`email.eq.${email},mobile.eq.${mobileWithPrefix}`);
+    } else if (email) {
+      query.eq('email', email);
+    } else if (mobileWithPrefix) {
+      query.eq('mobile', mobileWithPrefix);
+    }
+    const { data } = await query.limit(1).maybeSingle();
+    if (data?.id) userId = data.id;
   }
-  const { data: created, error } = await supabase.auth.admin.createUser(createReq)
-  if (error || !created?.user) return null
 
-  const newUserId = created.user.id as string
-  // 3) Upsert profile
-  await supabase
+  if (!userId) return null;
+
+  // 3) Atomic UPSERT on profiles
+  await svc
     .from('profiles')
-    .upsert({ id: newUserId, name: c.name || '', email: c.email ? c.email.trim().toLowerCase() : null, mobile: mobileWithPrefix, role: 'customer' })
+    .upsert(
+      { id: userId, name: c.name || '', email: email || null, mobile: mobileWithPrefix, role: 'customer' },
+      { onConflict: 'id', ignoreDuplicates: false }
+    );
 
-  return newUserId
+  return userId;
 }
 
 async function awardCommissionForAgent(

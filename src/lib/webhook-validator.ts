@@ -45,3 +45,18 @@ export function validateWebhookSignature(
     return false;
   }
 }
+
+/**
+ * Validates the timestamp of incoming webhooks to prevent Replay Attacks.
+ * Ensures the timestamp is within the allowed 5-minute tolerance window.
+ * @param incomingTimestamp The timestamp sent with the webhook (in seconds).
+ */
+export function validateWebhookTimestamp(incomingTimestamp: number): boolean {
+  const currentServerTime = Math.floor(Date.now() / 1000);
+  const timeToleranceInSeconds = 300; // 5-minute window
+
+  if (Math.abs(currentServerTime - incomingTimestamp) > timeToleranceInSeconds) {
+    throw new Error("Security Alert: Webhook timestamp variance too high. Potential Replay Attack.");
+  }
+  return true;
+}

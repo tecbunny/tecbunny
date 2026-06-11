@@ -1,6 +1,8 @@
 import { EmailService } from './service';
 import { EMAIL_TEMPLATES } from './types';
-import type { EmailTemplateData } from './types';
+import type { EmailTemplateData, EmailTemplateType } from './types';
+import { getEmailQueue } from './queue';
+import { logger } from '../logger';
 
 export class EmailClient {
   private static instance: EmailClient;
@@ -29,6 +31,26 @@ export class EmailClient {
     return EmailClient.instance;
   }
 
+  private async dispatchEmail(to: string | string[], templateId: EmailTemplateType, data: any, options: any): Promise<boolean> {
+    const queue = getEmailQueue();
+    if (queue) {
+      try {
+        await queue.add('send-email', { to, templateId, data, options }, { priority: options.priority === 'high' ? 1 : 5 });
+        logger.info('email_queued', { to, templateId });
+        return true;
+      } catch (error) {
+        logger.error('email_queue_failed_fallback_direct', { error: (error as Error).message });
+      }
+    }
+    // Fallback if no queue
+    try {
+      return await this.emailService.sendTemplateEmail(to, templateId, data, options);
+    } catch (error) {
+      logger.error('email_send_failed', { error: (error as Error).message });
+      return false;
+    }
+  }
+
   /**
    * Send OTP Email
    */
@@ -39,7 +61,7 @@ export class EmailClient {
       otpExpiryMinutes: expiryMinutes,
     };
 
-    return this.emailService.sendTemplateEmail(
+    return this.dispatchEmail(
       to,
       EMAIL_TEMPLATES.EMAIL_OTP_VERIFICATION,
       data,
@@ -67,7 +89,7 @@ export class EmailClient {
       discountCode: campaign.discountCode,
     };
 
-    return this.emailService.sendTemplateEmail(
+    return this.dispatchEmail(
       to,
       EMAIL_TEMPLATES.MARKETING_CAMPAIGN,
       data,
@@ -91,7 +113,7 @@ export class EmailClient {
       updateDate: update.date || new Date().toLocaleDateString(),
     };
 
-    return this.emailService.sendTemplateEmail(
+    return this.dispatchEmail(
       to,
       EMAIL_TEMPLATES.GENERAL_UPDATE,
       data,

@@ -13,8 +13,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
   return <OrderConfirmationPage orderId={orderId} />;
 }
 
-export async function generateStaticParams() {
-  return [{ orderId: '1' }]
+]
 }
 
 

@@ -14,15 +14,10 @@ interface WishlistButtonProps {
 }
 
 export function WishlistButton({ product, className }: WishlistButtonProps) {
-  const { toggleWishlist, isInWishlist } = useWishlist();
-  const [isClient, setIsClient] = React.useState(false);
+  const { toggleWishlist, isInWishlist, isHydrated } = useWishlist();
   const [busy, setBusy] = React.useState(false);
 
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const isWishlisted = isClient && isInWishlist(product.id);
+  const isWishlisted = isHydrated && isInWishlist(product.id);
 
   return (
     <Button

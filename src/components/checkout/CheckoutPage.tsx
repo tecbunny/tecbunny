@@ -582,52 +582,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-[#030712] text-slate-200 checkout-dark">
-      <style jsx global>{`
-        .checkout-dark input,
-        .checkout-dark select,
-        .checkout-dark textarea {
-          color-scheme: dark;
-        }
-        .checkout-dark input:-webkit-autofill,
-        .checkout-dark textarea:-webkit-autofill,
-        .checkout-dark select:-webkit-autofill {
-          -webkit-text-fill-color: #e2e8f0;
-          box-shadow: 0 0 0px 1000px #0f172a inset;
-          caret-color: #e2e8f0;
-        }
-        .checkout-dark input::placeholder,
-        .checkout-dark textarea::placeholder {
-          color: #94a3b8;
-        }
-        .glass-panel {
-          background: rgba(15, 23, 42, 0.6);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .magnetic-btn { transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-        .input-group input:focus ~ label,
-        .input-group input:not(:placeholder-shown) ~ label,
-        .input-group select:focus ~ label,
-        .input-group select:not(:placeholder-shown) ~ label,
-        .input-group textarea:focus ~ label,
-        .input-group textarea:not(:placeholder-shown) ~ label {
-          top: -0.6rem;
-          left: 0.75rem;
-          font-size: 0.75rem;
-          color: #06b6d4;
-          background-color: #0f172a;
-          padding: 0 0.25rem;
-        }
-        .radio-card input:checked + div {
-          border-color: #06b6d4;
-          background-color: rgba(6, 182, 212, 0.05);
-        }
-        .radio-card input:checked + div .radio-circle {
-          border-color: #06b6d4;
-          background-color: #06b6d4;
-          box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
-        }
-      `}</style>
+      
 
       <section className="pt-28 pb-16 relative">
         <div className="fixed inset-0 bg-noise opacity-5 pointer-events-none"></div>

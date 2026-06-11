@@ -170,31 +170,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#030712] text-slate-200">
-      <style jsx global>{`
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #030712; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #8b5cf6; }
-        .glass-panel {
-          background: rgba(15, 23, 42, 0.35);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.08);
-          backdrop-filter: blur(10px);
-        }
-        .nav-item {
-          border-left: 3px solid transparent;
-        }
-        .nav-item:hover {
-          color: #fff;
-          background: linear-gradient(90deg, rgba(139, 92, 246, 0.15), transparent);
-          border-left-color: #8b5cf6;
-        }
-        .nav-item.active {
-          color: #fff;
-          background: linear-gradient(90deg, rgba(139, 92, 246, 0.2), transparent);
-          border-left-color: #8b5cf6;
-        }
-      `}</style>
+      
 
       <aside className="hidden md:flex w-64 flex-col border-r border-white/5 bg-[#030712] shadow-xl shadow-purple-500/5">
         <div className="h-16 flex items-center px-6 border-b border-white/5 bg-[#030712]/95 backdrop-blur">

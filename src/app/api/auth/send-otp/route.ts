@@ -103,7 +103,8 @@ export async function POST(request: NextRequest) {
       phone: normalizedMobile,
       email: normalizedEmail,
       purpose,
-      preferredChannel
+      preferredChannel,
+      ipAddress: ip
     });
 
     if (!result.success) {

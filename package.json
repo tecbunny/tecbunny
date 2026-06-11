@@ -27,7 +27,8 @@
     "deploy:vercel": "npx vercel --prod",
     "audit:fix": "npm audit fix --force",
     "deps:check": "npm outdated",
-    "deps:update": "npm update --save"
+    "deps:update": "npm update --save",
+    "test": "vitest"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1024.0",

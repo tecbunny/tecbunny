@@ -13,12 +13,12 @@ import crypto from 'crypto';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { generateGeminiText } from '@/lib/ai/gemini-service';
+
 import { logger } from '@/lib/logger';
 import { createServiceClient, isSupabaseServiceConfigured, createClient } from '@/lib/supabase/server';
 import { getSessionWithRole } from '@/lib/auth/server-role';
 import { getSystemPrompt } from '@/lib/ai/prompts';
-import { classifyProductTax, TaxClassificationError } from '@/lib/ai/tax-classification';
+import { TaxClassificationError } from '@/lib/ai/tax-classification';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -253,6 +253,7 @@ export async function POST(request: NextRequest) {
 
     let aiRawOutput: string;
     try {
+      const { generateGeminiText } = await import('@/lib/ai/gemini-service');
       aiRawOutput = await generateGeminiText({
         prompt,
         temperature: 0.2,     // Low temperature for deterministic extraction
@@ -313,6 +314,7 @@ export async function POST(request: NextRequest) {
 
     // ── 8. Strip any AI hallucinated columns not in the live schema ───────────
     try {
+      const { classifyProductTax } = await import('@/lib/ai/tax-classification');
       const taxClassification = await classifyProductTax({
         title: payload.title ?? payload.name,
         description: payload.description,

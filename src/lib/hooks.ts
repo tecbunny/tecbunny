@@ -21,6 +21,7 @@ export const useWishlist = () => {
     toggleWishlist,
     isInWishlist,
     wishlistCount,
+    isHydrated: useWishlistStore.getState()._hasHydrated,
   };
 };
 
@@ -152,5 +153,6 @@ export const useCart = () => {
     cartTotal,
     isSessionExpired,
     resetGuestSession,
+    isHydrated,
   };
 };

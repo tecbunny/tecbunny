@@ -634,7 +634,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (typeof window !== 'undefined') {
       if (redirectTo) {
-        window.location.href = redirectTo;
+        try {
+          const url = new URL(redirectTo, window.location.origin);
+          if (url.origin === window.location.origin) {
+            window.location.href = url.href;
+            return;
+          }
+        } catch {
+          // ignore invalid URLs
+        }
+        window.location.href = '/';
       } else {
         window.location.reload();
       }

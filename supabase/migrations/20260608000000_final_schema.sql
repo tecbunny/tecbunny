@@ -1847,4 +1847,22 @@ BEFORE INSERT ON public.orders
 FOR EACH ROW
 EXECUTE FUNCTION public.generate_order_number();
 
+-- ============================================================================
+-- 9. RLS Fallback Security Automation
+-- ============================================================================
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'public'
+          AND rowsecurity = false
+    ) LOOP
+        EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY;', r.tablename);
+        RAISE NOTICE 'Auto-enabled RLS on table: public.%', r.tablename;
+    END LOOP;
+END $$;
+
 COMMIT;

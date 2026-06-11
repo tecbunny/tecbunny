@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
 import { logger } from '@/lib/logger';
-import { validateWebhookSignature } from '@/lib/webhook-validator';
+import { validateWebhookSignature, validateWebhookTimestamp } from '@/lib/webhook-validator';
 import { logWebhookEvent } from '@/lib/webhook-logger';
 import { getRedis } from '@/lib/redis';
 
@@ -40,6 +40,17 @@ export async function POST(request: NextRequest) {
 
     const signature = request.headers.get('x-webhook-signature');
     const source = request.headers.get('x-webhook-source') || 'unknown';
+    const timestampStr = request.headers.get('x-webhook-timestamp') || request.headers.get('x-payu-timestamp');
+    
+    // Webhook Timestamp Validation
+    if (timestampStr) {
+      try {
+        validateWebhookTimestamp(Number(timestampStr));
+      } catch (err: any) {
+        logger.error('Webhook timestamp validation failed:', { error: err.message });
+        return NextResponse.json({ error: 'Timestamp verification failed' }, { status: 403 });
+      }
+    }
     
     const secret = source === 'razorpay'
       ? process.env.RAZORPAY_WEBHOOK_SECRET

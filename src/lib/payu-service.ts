@@ -35,6 +35,8 @@ const GATEWAY_URL: Record<PayuEnvironment, string> = {
   production: 'https://secure.payu.in/_payment',
 };
 
+import { verifyPaymentHash } from './crypto-utils';
+
 export const sanitizeHashValue = (val: string | number | undefined | null): string => {
   if (val === undefined || val === null) return '';
   return String(val).replace(/\|/g, '').trim().replace(/\s+/g, ' ');
@@ -62,12 +64,10 @@ function collectUdfValues(source: Record<string, string | undefined>): string[] 
 }
 
 function timingSafeSha512HexEqual(expectedHex: string, candidateHex: string | undefined): boolean {
-  const expected = Buffer.from(expectedHex, 'hex');
   const cleanCandidate = candidateHex?.trim().toLowerCase() ?? '';
   const isValidSha512Hex = /^[a-f0-9]{128}$/.test(cleanCandidate);
-  const candidate = Buffer.from(isValidSha512Hex ? cleanCandidate : '0'.repeat(128), 'hex');
-
-  return isValidSha512Hex && crypto.timingSafeEqual(expected, candidate);
+  if (!isValidSha512Hex) return false;
+  return verifyPaymentHash(cleanCandidate, expectedHex);
 }
 
 export function getPayuPaymentUrl(environment: PayuEnvironment): string {

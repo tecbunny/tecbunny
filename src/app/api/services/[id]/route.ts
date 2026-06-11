@@ -57,9 +57,7 @@ export async function GET(
     return apiError('INTERNAL_ERROR', { correlationId });
   }
 }
-export async function generateStaticParams() {
-  return []
-}
+
 /**
  * PUT /api/services/[id]
  * Update a service

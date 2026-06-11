@@ -14,7 +14,7 @@ interface AddToCartButtonProps {
 }
 
 export function AddToCartButton({ product, className, size = "sm" }: AddToCartButtonProps) {
-  const { addToCart } = useCart();
+  const { addToCart, removeFromCart } = useCart();
   const [busy, setBusy] = React.useState(false);
 
   // Don't render if product is out of stock
@@ -37,15 +37,25 @@ export function AddToCartButton({ product, className, size = "sm" }: AddToCartBu
       size={size}
       className={`flex items-center justify-center ${className}`}
       disabled={busy}
-      onClick={(e) => {
+      onClick={async (e) => {
         e.preventDefault();
         e.stopPropagation();
         if (busy) return;
+        
         setBusy(true);
+        // Optimistic UI update - instantly reflects in cart
+        addToCart(product);
+        
         try {
-          addToCart(product);
+          // Simulate or perform backend API sync here
+          // await fetch('/api/cart/sync', { ... })
+          // If the network response fails: throw new Error("Sync failed")
+        } catch (error) {
+          // Rollback state if the backend fails
+          removeFromCart(product.id);
+          // Assuming toast is available globally or we log the error
+          console.error("Cart sync failed, rolled back", error);
         } finally {
-          // Release quickly; add a tiny delay to avoid double-fire
           setTimeout(() => setBusy(false), 300);
         }
       }}

@@ -3,14 +3,29 @@ import { createServerClient, createServiceClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
 
+import { z } from 'zod';
+
+const bidSchema = z.object({
+  quoteId: z.string().uuid().optional().nullable(),
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email').optional().nullable(),
+  phone: z.string().min(10, 'Invalid phone'),
+  address: z.string().optional().nullable(),
+  biddedPrice: z.number().positive('Bid must be strictly greater than 0'),
+  summary: z.string().max(1000).optional().nullable(),
+  customSetupConfig: z.any().optional().nullable()
+});
+
 export async function POST(req: Request) {
   try {
     const supabase = await createServerClient();
     const { data: { session } } = await supabase.auth.getSession();
     const serviceClient = createServiceClient();
     
-    const body = await req.json();
-    const { quoteId, name, email, phone, address, biddedPrice, summary, customSetupConfig } = body;
+    const json = await req.json();
+    const validatedData = bidSchema.parse(json);
+    const { quoteId, name, email, phone, address, biddedPrice, summary, customSetupConfig } = validatedData;
+
 
     // Validate: bid price must be at least 70% of quoted price
     // Calculate original price from customSetupConfig
@@ -60,6 +75,22 @@ export async function POST(req: Request) {
       finalQuoteId = data.id;
       finalQuoteNumber = data.quote_number;
     } else {
+      // OCC / State-Machine validation
+      const { data: existingQuote, error: checkError } = await serviceClient
+        .from('quotes')
+        .select('status')
+        .eq('id', finalQuoteId)
+        .single();
+      
+      if (checkError) throw checkError;
+      
+      // Explicit state lock to prevent stale updates or bypassing accepted contracts
+      if (!['created', 'bidded'].includes(existingQuote.status)) {
+        return NextResponse.json({ 
+          error: `State Transition Error: Cannot modify a quote that is currently in '${existingQuote.status}' state.` 
+        }, { status: 409 });
+      }
+
       const { error } = await serviceClient.from('quotes').update({
         customer_name: name,
         customer_email: email,

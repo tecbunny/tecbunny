@@ -174,6 +174,4 @@ export default async function ProductPage({ params }: ProductPageProps) {
   );
 }
 
-export async function generateStaticParams() {
-  return [];
-}
+

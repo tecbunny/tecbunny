@@ -202,7 +202,6 @@ export default async function OrderInvoicePage({ params, searchParams }: Invoice
   );
 }
 
-export async function generateStaticParams() {
-  return [{ orderId: '1' }]
+]
 }
 

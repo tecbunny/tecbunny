@@ -1705,32 +1705,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
 
   const techLayout = (
     <section className="blueprint-bg bg-[#050b14] py-10">
-      <style jsx global>{`
-        .blueprint-bg {
-          background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-          background-size: 40px 40px;
-        }
-        .selection-card { position: relative; overflow: hidden; transition: all 0.3s ease; }
-        .selection-card::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(6, 182, 212, 0.12), transparent 40%);
-          opacity: 0;
-          transition: opacity 0.5s;
-          pointer-events: none;
-        }
-        .selection-card:hover::before { opacity: 1; }
-        .selection-card.selected {
-          border-color: rgba(6, 182, 212, 0.7);
-          background-color: rgba(6, 182, 212, 0.08);
-          box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
-        }
-        .step-circle.active { background-color: #06b6d4; color: #030712; border-color: #06b6d4; }
-        .step-line.active { background-color: #06b6d4; }
-        @keyframes scanLine { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-      `}</style>
+      
 
       <div className="flex items-center justify-center mb-12">
         <div className="flex items-center">

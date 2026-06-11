@@ -126,9 +126,7 @@ export async function DELETE(
   }
 }
 
-export async function generateStaticParams() {
-  return []
-}
+
 
 export async function GET() { return Response.json({}) }
 

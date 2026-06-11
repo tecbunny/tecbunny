@@ -64,9 +64,7 @@ export async function PATCH(
   }
 }
 
-export async function generateStaticParams() {
-  return []
-}
+
 
 export async function GET() { return Response.json({}) }
 

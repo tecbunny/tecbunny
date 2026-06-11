@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
-import { buildPdf, loadCompanyInfo } from '@/lib/pdf-generator';
+
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import { getCustomSetupBlueprintSummary } from '@/lib/custom-setup-service';
@@ -234,6 +234,7 @@ export async function POST(req: NextRequest) {
 
     let company: Record<string, any> = {};
     try {
+      const { loadCompanyInfo } = await import('@/lib/pdf-generator');
       company = await loadCompanyInfo();
     } catch (error) {
       logger.error('quotes.load_company_info_failed', { error, userId: user?.id });
@@ -244,6 +245,7 @@ export async function POST(req: NextRequest) {
 
     let pdfBuffer: Buffer;
     try {
+      const { buildPdf } = await import('@/lib/pdf-generator');
       pdfBuffer = await buildPdf({
         company,
         customerName,

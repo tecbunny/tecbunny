@@ -113,12 +113,7 @@ export default function AdminDashboard() {
     };
     return (
         <div className="min-h-screen bg-[#030712] text-slate-200">
-            <style jsx global>{`
-                ::-webkit-scrollbar { width: 6px; height: 6px; }
-                ::-webkit-scrollbar-track { background: #030712; }
-                ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-                ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
-            `}</style>
+            
 
             <div className="relative">
                 <div className="absolute inset-0 bg-noise opacity-5 pointer-events-none" />

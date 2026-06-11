@@ -1,7 +1,7 @@
+export const dynamic = 'force-dynamic';
 ﻿import EditProductPage from './sales-product-edit';
 
-export async function generateStaticParams() {
-  return [{ id: '1' }];
+];
 }
 
 export default function Page() {

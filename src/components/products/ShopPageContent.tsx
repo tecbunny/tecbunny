@@ -609,7 +609,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
 
         <div className="reveal-section is-revealed mt-12" data-reveal-id="products-grid">
           {loading ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 min-h-[400px]">
+            <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(250px,1fr))] min-h-[400px]">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-4">
                   <Skeleton className="mb-4 h-48 w-full rounded-xl" />
@@ -626,7 +626,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
               ))}
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
               {filteredProducts.map((product, index) => {
                 const displayName = product.title || product.name || 'Product';
                 const imageUrl = getProductDisplayImage(product, {

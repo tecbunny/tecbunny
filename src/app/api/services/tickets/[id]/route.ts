@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { serviceManagementService } from '@/lib/service-management';
@@ -186,9 +187,7 @@ export async function PUT(
   }
 }
 
-export async function generateStaticParams() {
-  return []
-}
+
 
 export async function GET() { return Response.json({}) }
 

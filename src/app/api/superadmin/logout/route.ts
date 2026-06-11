@@ -11,6 +11,9 @@ export async function POST(request: Request) {
     path: '/',
     maxAge: 0
   });
+
+  // SECURITY: Force browser to clear sensitive data on signout
+  response.headers.set('Clear-Site-Data', '"cookies", "storage", "cache"');
   
   return response;
 }

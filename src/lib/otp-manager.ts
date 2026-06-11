@@ -29,6 +29,7 @@ export interface OTPRequest {
   enforcePreferredChannel?: boolean;
   userId?: string;
   orderId?: string;
+  ipAddress?: string;
 }
 
 export interface OTPVerification {
@@ -133,6 +134,35 @@ type ChannelSendSuccess = {
   raw?: any;
 };
 
+export async function assertOtpVelocity(phoneNumber: string, ipAddress: string = 'unknown') {
+  const redis = getRedis();
+  if (!redis) {
+    logger.warn('Redis not available for assertOtpVelocity, skipping strict rate limits');
+    return;
+  }
+
+  const phoneKey = `ratelimit:otp:phone:${phoneNumber}`;
+  const ipKey = `ratelimit:otp:ip:${ipAddress}`;
+
+  // 1. Enforce absolute 60-second delay per phone number
+  const isThrottled = await redis.get(phoneKey);
+  if (isThrottled) {
+    throw new Error("Velocity limit hit: Please wait 60 seconds before requesting another code.");
+  }
+
+  // 2. Increment rolling 24-hour phone attempt window (Max 5 OTPs per day per number)
+  const dailyTotal = await redis.incr(`otp:daily:${phoneNumber}`);
+  if (dailyTotal === 1) {
+    await redis.expire(`otp:daily:${phoneNumber}`, 86400); // 24 hours
+  }
+  if (dailyTotal > 5) {
+    throw new Error("Security policy violation: Daily request threshold exceeded for this destination.");
+  }
+
+  // Set 60-second cooldown lock
+  await redis.set(phoneKey, 'locked', 'EX', 60);
+}
+
 export class OTPManager {
   private emailTransporter: nodemailer.Transporter;
 
@@ -230,6 +260,10 @@ export class OTPManager {
         if (hasPhone) preferredChannel = 'whatsapp';
         else if (hasEmail) preferredChannel = 'email';
         else throw new Error('No contact method available');
+      }
+
+      if (hasPhone && request.phone) {
+        await assertOtpVelocity(request.phone, request.ipAddress);
       }
 
       let finalOtpId: string;

@@ -438,10 +438,14 @@ export async function GET(request: NextRequest) {
 
       // Apply sorting with prioritized products first
       // Always sort by prioritized status first (prioritized products at top)
-      query = query.order('prioritized', { ascending: false, nullsFirst: false });
+      if (!productColumns || productColumns.has('prioritized')) {
+        query = query.order('prioritized', { ascending: false, nullsFirst: false });
+      }
       
       // Then sort prioritized products by prioritized_at (most recently prioritized first)
-      query = query.order('prioritized_at', { ascending: false, nullsFirst: false });
+      if (!productColumns || productColumns.has('prioritized_at')) {
+        query = query.order('prioritized_at', { ascending: false, nullsFirst: false });
+      }
       
       // Finally apply the requested sort for non-prioritized products and as tertiary sort
       if (sortBy === 'title' || sortBy === 'name') {

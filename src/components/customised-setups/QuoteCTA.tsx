@@ -62,11 +62,11 @@ export function QuoteCTA() {
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 space-y-4">
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <p className="text-sm text-cyan-200 font-semibold">Get a PDF Quote</p>
-          <p className="text-xs text-slate-400">Signed quote with 7-day validity. Login required.</p>
+          <p className="text-sm text-primary font-semibold">Get a PDF Quote</p>
+          <p className="text-xs text-muted-foreground">Signed quote with 7-day validity. Login required.</p>
         </div>
         <Button size="sm" onClick={handleRequest} disabled={submitting || loading}>
           {submitting ? 'Preparing…' : 'Download Quote'}
@@ -83,7 +83,7 @@ export function QuoteCTA() {
             rows={3}
           />
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label className="flex items-center gap-2 text-sm text-foreground">
           <Checkbox checked={gstIncluded} onCheckedChange={(v) => setGstIncluded(Boolean(v))} aria-label="Include GST details on the quote" />
           Include GST details on the quote
         </label>

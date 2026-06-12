@@ -161,63 +161,63 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
   const amcDashOffset = 251.2 - (251.2 * amcPercent) / 100;
 
   const statusStyles: Record<string, { badge: string; border: string }> = {
-    completed: { badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', border: 'border-emerald-500' },
-    delivered: { badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', border: 'border-emerald-500' },
-    shipped: { badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30', border: 'border-blue-500' },
-    processing: { badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30', border: 'border-amber-500' },
-    pending: { badge: 'bg-zinc-800 text-zinc-400 border-zinc-700', border: 'border-zinc-600' },
+    completed: { badge: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/30', border: 'border-emerald-500' },
+    delivered: { badge: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/30', border: 'border-emerald-500' },
+    shipped: { badge: 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/30', border: 'border-blue-500' },
+    processing: { badge: 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-500/30', border: 'border-amber-500' },
+    pending: { badge: 'bg-muted text-muted-foreground border-border', border: 'border-muted-foreground/30' },
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#09090B] text-zinc-200">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       
 
-      <aside className="hidden md:flex w-64 flex-col border-r border-zinc-800 bg-[#09090B] shadow-xl shadow-blue-500/5">
-        <div className="h-16 flex items-center px-6 border-b border-zinc-800 bg-[#09090B]/95 backdrop-blur">
+      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card shadow-sm">
+        <div className="h-16 flex items-center px-6 border-b border-border bg-card/95 backdrop-blur">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 flex items-center justify-center bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <User className="h-4 w-4 text-blue-500" />
+            <div className="w-8 h-8 flex items-center justify-center bg-primary/10 rounded-lg border border-primary/20">
+              <User className="h-4 w-4 text-primary" />
             </div>
-            <span className="font-tech font-bold text-xl text-white tracking-wide">USER<span className="text-blue-500">.</span></span>
+            <span className="font-tech font-bold text-xl text-foreground tracking-wide">USER<span className="text-primary">.</span></span>
           </div>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-6 space-y-1">
-          <button className="w-full text-left nav-item active flex items-center gap-3 px-6 py-3 text-sm text-slate-400 transition-all">
-            <Shield className="h-4 w-4" /> My Overview
+          <button className="w-full text-left nav-item active flex items-center gap-3 px-6 py-3 text-sm text-foreground/80 hover:text-foreground hover:bg-muted/50 transition-all font-medium">
+            <Shield className="h-4 w-4 text-primary" /> My Overview
           </button>
-          <Link href="/orders" className="w-full text-left nav-item flex items-center gap-3 px-6 py-3 text-sm text-slate-400 transition-all">
+          <Link href="/orders" className="w-full text-left nav-item flex items-center gap-3 px-6 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
             <Camera className="h-4 w-4" /> My Orders
           </Link>
-          <Link href="/contact" className="w-full text-left nav-item flex items-center gap-3 px-6 py-3 text-sm text-slate-400 transition-all">
+          <Link href="/contact" className="w-full text-left nav-item flex items-center gap-3 px-6 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
             <Shield className="h-4 w-4" /> Support Tickets
           </Link>
 
-          <div className="px-6 mt-8 mb-2 text-xs font-bold text-slate-500 uppercase tracking-widest font-tech">Account</div>
-          <Link href="/services" className="w-full text-left nav-item flex items-center gap-3 px-6 py-3 text-sm text-slate-400 transition-all">
+          <div className="px-6 mt-8 mb-2 text-xs font-bold text-muted-foreground uppercase tracking-widest font-tech">Account</div>
+          <Link href="/services" className="w-full text-left nav-item flex items-center gap-3 px-6 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
             <Users className="h-4 w-4" /> Billing & AMC
           </Link>
-          <Link href="/account" className="w-full text-left nav-item flex items-center gap-3 px-6 py-3 text-sm text-slate-400 transition-all">
+          <Link href="/account" className="w-full text-left nav-item flex items-center gap-3 px-6 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
             <Edit className="h-4 w-4" /> Profile Settings
           </Link>
         </nav>
 
         <div className="px-6 pb-6">
-          <Link href="/" className="flex items-center gap-2 text-xs text-slate-500 hover:text-white transition-colors">
+          <Link href="/" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-3 w-3" /> Back to Website
           </Link>
         </div>
 
-        <div className="p-6 border-t border-zinc-800 bg-zinc-950/40">
+        <div className="p-6 border-t border-border bg-muted/20">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold">
               {initials || 'TB'}
             </div>
             <div>
-              <p className="text-sm font-bold text-white leading-none">{displayName}</p>
-              <p className="text-[10px] text-blue-500 leading-none mt-1">Tier: {planLabel}</p>
+              <p className="text-sm font-bold text-foreground leading-none">{displayName}</p>
+              <p className="text-[10px] text-primary leading-none mt-1 font-medium">Tier: {planLabel}</p>
             </div>
-            <button className="ml-auto text-zinc-500 hover:text-white">
+            <button className="ml-auto text-muted-foreground hover:text-foreground">
               <XCircle className="h-4 w-4" />
             </button>
           </div>
@@ -225,57 +225,57 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
       </aside>
 
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="h-16 bg-[#09090B]/80 backdrop-blur border-b border-zinc-800 flex items-center justify-between px-6">
-          <div className="flex items-center gap-2 text-sm text-zinc-400">
-            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-            System Status: <span className="text-white font-bold">SECURE</span>
+        <header className="h-16 bg-background/80 backdrop-blur border-b border-border flex items-center justify-between px-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+            System Status: <span className="text-foreground font-bold">SECURE</span>
           </div>
           <div className="flex items-center gap-4">
             <Button
               type="button"
               variant="outline"
-              className="hidden sm:flex items-center gap-2 border-blue-500/20 bg-blue-500/10 text-blue-400 text-xs hover:bg-blue-600 hover:text-white"
+              className="hidden sm:flex items-center gap-2 border-primary/20 bg-primary/10 text-primary text-xs hover:bg-primary hover:text-white"
               onClick={() => window.location.href = '/contact'}
             >
               <Plus className="h-4 w-4" /> New Request
             </Button>
-            <button className="relative p-2 text-zinc-400 hover:text-white transition-colors">
+            <button className="relative p-2 text-muted-foreground hover:text-foreground transition-colors">
               <Bell className="h-4 w-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-[#09090B]"></span>
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-background"></span>
             </button>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6 lg:p-8 relative">
+        <div className="flex-1 overflow-y-auto p-6 lg:p-8 relative bg-background">
           <div className="fixed inset-0 bg-noise opacity-5 pointer-events-none"></div>
 
           <div className="max-w-6xl mx-auto space-y-8 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 glass-panel p-8 rounded-2xl relative overflow-hidden">
+              <div className="lg:col-span-2 bento-card p-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
-                  <Shield className="h-24 w-24 text-white" />
+                  <Shield className="h-24 w-24 text-foreground" />
                 </div>
-                <h1 className="text-3xl font-bold text-white font-tech mb-2">Welcome back, {displayName}.</h1>
-                <p className="text-slate-400 mb-6 max-w-md">Your security perimeter is active. No breaches detected in the last 24 hours.</p>
+                <h1 className="text-3xl font-bold font-tech mb-2 tech-heading">Welcome back, {displayName}.</h1>
+                <p className="text-muted-foreground mb-6 max-w-md">Your security perimeter is active. No breaches detected in the last 24 hours.</p>
                 <div className="flex flex-wrap gap-4">
-                  <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-lg">
-                    <span className="block text-xs text-slate-500 uppercase">Primary Contact</span>
-                    <span className="text-white font-bold">{user.email}</span>
+                  <div className="bg-muted/50 border border-border px-4 py-2 rounded-lg">
+                    <span className="block text-xs text-muted-foreground uppercase">Primary Contact</span>
+                    <span className="font-bold text-foreground">{user.email}</span>
                   </div>
-                  <div className="bg-zinc-900/40 border border-zinc-800 px-4 py-2 rounded-lg">
-                    <span className="block text-xs text-zinc-500 uppercase">Plan</span>
-                    <span className="text-blue-500 font-bold">{planLabel}</span>
+                  <div className="bg-muted/50 border border-border px-4 py-2 rounded-lg">
+                    <span className="block text-xs text-muted-foreground uppercase">Plan</span>
+                    <span className="text-primary font-bold">{planLabel}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center relative">
-                <h3 className="text-sm font-bold text-zinc-300 absolute top-6 left-6">AMC Status</h3>
+              <div className="bento-card p-6 flex flex-col items-center justify-center relative">
+                <h3 className="text-sm font-bold text-muted-foreground absolute top-6 left-6">AMC Status</h3>
                 <div className="relative w-32 h-32 mt-4">
                   <svg className="w-full h-full" viewBox="0 0 100 100">
-                    <circle className="text-zinc-800 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent"></circle>
+                    <circle className="text-muted/40 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent"></circle>
                     <circle
-                      className="text-blue-500 stroke-current"
+                      className="text-primary stroke-current"
                       strokeWidth="8"
                       strokeLinecap="round"
                       cx="50"
@@ -288,19 +288,19 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                     ></circle>
                   </svg>
                   <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center">
-                    <span className="text-2xl font-bold text-white font-tech">{amcDaysLeft ?? '—'}</span>
-                    <span className="text-[10px] text-zinc-500 uppercase">{amcDaysLeft !== null ? 'Days Left' : 'No AMC'}</span>
+                    <span className="text-2xl font-bold font-tech text-foreground">{amcDaysLeft ?? '—'}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase">{amcDaysLeft !== null ? 'Days Left' : 'No AMC'}</span>
                   </div>
                 </div>
-                <Link href="/services" className="mt-4 text-xs text-blue-500 hover:underline">
+                <Link href="/services" className="mt-4 text-xs text-primary hover:underline font-medium">
                   {amcDaysLeft !== null ? 'Renew Plan' : 'Add Plan'}
                 </Link>
               </div>
             </div>
 
             <div>
-              <h3 className="font-bold text-white font-tech text-lg mb-4 flex items-center gap-2">
-                <Camera className="h-4 w-4 text-blue-500" /> Recent Orders
+              <h3 className="font-bold font-tech text-lg mb-4 flex items-center gap-2 tech-heading">
+                <Camera className="h-4 w-4 text-primary" /> Recent Orders
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {orders && orders.length > 0 ? orders.map((order) => {
@@ -309,70 +309,70 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                   const amount = order.total ?? order.total_amount ?? 0;
                   const created = order.created_at ? new Date(order.created_at).toLocaleDateString() : '—';
                   return (
-                    <div key={order.id} className={`glass-panel p-5 rounded-xl border-l-4 ${styles.border} group hover:bg-white/5 transition-colors`}>
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="text-slate-400 group-hover:text-white transition-colors">
-                          <Monitor className="h-5 w-5" />
+                    <div key={order.id} className={`bento-card p-5 border-l-4 ${styles.border} group transition-all`}>
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="text-muted-foreground group-hover:text-foreground transition-colors">
+                            <Monitor className="h-5 w-5" />
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${styles.badge}`}>
+                          {order.status || 'Pending'}
+                        </span>
                       </div>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${styles.badge}`}>
-                        {order.status || 'Pending'}
-                      </span>
+                      <h4 className="font-bold text-foreground">Order #{order.id?.slice(0, 8)}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{order.type || 'Delivery'} • Placed {created}</p>
+                      <p className="text-sm font-semibold mt-2 text-foreground">₹{amount.toFixed(2)}</p>
                     </div>
-                    <h4 className="text-white font-bold">Order #{order.id?.slice(0, 8)}</h4>
-                    <p className="text-xs text-slate-500 mt-1">{order.type || 'Delivery'} • Placed {created}</p>
-                    <p className="text-sm text-white font-semibold mt-2">₹{amount.toFixed(2)}</p>
-                  </div>
                   );
                 }) : (
-                  <div className="col-span-full text-sm text-slate-400">No orders found.</div>
+                  <div className="col-span-full text-sm text-muted-foreground">No orders found.</div>
                 )}
               </div>
             </div>
 
             <div>
-              <h3 className="font-bold text-white font-tech text-lg mb-4 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-500" /> Saved Quotes
+              <h3 className="font-bold font-tech text-lg mb-4 flex items-center gap-2 tech-heading">
+                <FileText className="h-4 w-4 text-primary" /> Saved Quotes
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {(quotes || []).length > 0 ? quotes.map((quote) => {
                   const created = new Date(quote.created_at).toLocaleDateString();
                   const expired = new Date(quote.expiry_at) < new Date();
                   return (
-                    <div key={quote.id} className={`glass-panel p-5 rounded-xl border-l-4 ${expired ? 'border-red-500' : 'border-blue-600'} group hover:bg-white/5 transition-colors`}>
+                    <div key={quote.id} className={`bento-card p-5 border-l-4 ${expired ? 'border-red-500' : 'border-primary'} group transition-all`}>
                       <div className="flex justify-between items-start mb-3">
-                        <div className="text-slate-400 group-hover:text-white transition-colors">
+                        <div className="text-muted-foreground group-hover:text-foreground transition-colors">
                             <FileText className="h-5 w-5" />
                         </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${expired ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${expired ? 'bg-red-500/25 text-red-600 dark:text-red-300 border-red-500/30' : 'bg-primary/10 text-primary border-primary/20'}`}>
                           {expired ? 'Expired' : 'Active'}
                         </span>
                       </div>
-                      <h4 className="text-white font-bold truncate" title={quote.summary}>{quote.summary || 'Custom Quote'}</h4>
-                      <p className="text-xs text-zinc-500 mt-1">Generated {created}</p>
-                      <Button variant="link" className="p-0 h-auto text-xs text-blue-500 mt-2 hover:text-blue-400" onClick={() => window.open('/?quote_id=' + quote.id, '_blank')}>
+                      <h4 className="font-bold truncate text-foreground" title={quote.summary}>{quote.summary || 'Custom Quote'}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">Generated {created}</p>
+                      <Button variant="link" className="p-0 h-auto text-xs text-primary mt-2 hover:text-primary/80 font-medium" onClick={() => window.open('/?quote_id=' + quote.id, '_blank')}>
                          Re-open (Future Impl)
                       </Button>
                     </div>
                   );
                 }) : (
-                  <div className="col-span-full text-sm text-slate-400">No saved quotes found.</div>
+                  <div className="col-span-full text-sm text-muted-foreground">No saved quotes found.</div>
                 )}
               </div>
             </div>
 
-            <div className="glass-panel rounded-2xl overflow-hidden border border-zinc-800">
-              <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
-                <h3 className="font-bold text-white font-tech text-lg">Service Log</h3>
+            <div className="bento-card overflow-hidden border border-border">
+              <div className="p-6 border-b border-border flex justify-between items-center bg-muted/10">
+                <h3 className="font-bold font-tech text-lg tech-heading">Service Log</h3>
                 <Link
                   href="/contact"
-                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500 transition-colors"
+                  className="text-xs bg-primary text-white px-3 py-1.5 rounded hover:bg-primary/90 transition-colors font-medium"
                 >
                   Raise Ticket
                 </Link>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-zinc-400">
-                  <thead className="bg-zinc-900/50 text-xs uppercase font-bold text-zinc-500">
+                <table className="w-full text-left text-sm text-foreground/80">
+                  <thead className="bg-muted/50 text-xs uppercase font-bold text-muted-foreground">
                     <tr>
                       <th className="px-6 py-4">Ticket ID</th>
                       <th className="px-6 py-4">Service Type</th>
@@ -380,19 +380,19 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                       <th className="px-6 py-4">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800">
+                  <tbody className="divide-y divide-border">
                     {serviceTickets && serviceTickets.length > 0 ? serviceTickets.map((log) => (
-                      <tr key={log.id} className="hover:bg-zinc-900/50 transition-colors">
-                        <td className="px-6 py-4 font-mono text-blue-500">#{log.id.slice(0, 8)}</td>
+                      <tr key={log.id} className="hover:bg-muted/20 transition-colors">
+                        <td className="px-6 py-4 font-mono text-primary">#{log.id.slice(0, 8)}</td>
                         <td className="px-6 py-4">{log.issue_description || 'Service request'}</td>
                         <td className="px-6 py-4">{log.created_at ? new Date(log.created_at).toLocaleDateString() : '—'}</td>
                         <td className="px-6 py-4">
-                          <span className="text-emerald-300 font-bold text-xs border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 rounded">{log.status || 'pending'}</span>
+                          <span className="text-emerald-600 dark:text-emerald-300 font-bold text-xs border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 rounded">{log.status || 'pending'}</span>
                         </td>
                       </tr>
                     )) : (
                       <tr>
-                        <td className="px-6 py-4 text-sm text-slate-400" colSpan={4}>No service tickets yet.</td>
+                        <td className="px-6 py-4 text-sm text-muted-foreground" colSpan={4}>No service tickets yet.</td>
                       </tr>
                     )}
                   </tbody>
@@ -401,55 +401,55 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="glass-panel p-6 rounded-2xl space-y-4">
+              <div className="bento-card p-6 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-blue-500/10">
-                    <Edit className="h-5 w-5 text-blue-500" />
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Edit className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white">Profile Settings</h3>
-                    <p className="text-sm text-zinc-400">Manage your account details and preferences.</p>
+                    <h3 className="text-lg font-semibold tech-heading">Profile Settings</h3>
+                    <p className="text-sm text-muted-foreground">Manage your account details and preferences.</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-zinc-500">Name</p>
-                    <p className="text-white font-semibold">{displayName}</p>
+                    <p className="text-muted-foreground/80">Name</p>
+                    <p className="font-semibold text-foreground">{displayName}</p>
                   </div>
                   <div>
-                    <p className="text-zinc-500">Email</p>
-                    <p className="text-white font-semibold">{user.email}</p>
+                    <p className="text-muted-foreground/80">Email</p>
+                    <p className="font-semibold text-foreground">{user.email}</p>
                   </div>
                   <div>
-                    <p className="text-zinc-500">Role</p>
-                    <p className="text-white font-semibold capitalize">{profile?.role || user.app_metadata?.role || 'customer'}</p>
+                    <p className="text-muted-foreground/80">Role</p>
+                    <p className="font-semibold capitalize text-foreground">{profile?.role || user.app_metadata?.role || 'customer'}</p>
                   </div>
                   <div>
-                    <p className="text-zinc-500">Mobile</p>
-                    <p className="text-white font-semibold">{profile?.mobile || 'Not provided'}</p>
+                    <p className="text-muted-foreground/80">Mobile</p>
+                    <p className="font-semibold text-foreground">{profile?.mobile || 'Not provided'}</p>
                   </div>
                 </div>
                 <EditProfileDialog onProfileUpdate={updateUser}>
-                  <Button variant="outline" className="border-zinc-800 bg-[#09090B] text-zinc-200 hover:bg-zinc-900">
+                  <Button variant="outline" className="border-border bg-background text-foreground hover:bg-muted/50">
                     <Edit className="mr-2 h-4 w-4" /> Edit Profile
                   </Button>
                 </EditProfileDialog>
               </div>
 
-              <div className="glass-panel p-6 rounded-2xl space-y-4">
+              <div className="bento-card p-6 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-blue-500/10">
-                    <CheckCircle className="h-5 w-5 text-blue-500" />
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <CheckCircle className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white">Security Settings</h3>
-                    <p className="text-sm text-zinc-400">Manage two-factor authentication and account security.</p>
+                    <h3 className="text-lg font-semibold tech-heading">Security Settings</h3>
+                    <p className="text-sm text-muted-foreground">Manage two-factor authentication and account security.</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between p-4 border border-zinc-800 rounded-lg bg-zinc-950/20">
+                <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/10">
                   <div>
-                    <h4 className="font-semibold text-white">Two-Factor Authentication</h4>
-                    <p className="text-sm text-slate-400">
+                    <h4 className="font-semibold text-foreground">Two-Factor Authentication</h4>
+                    <p className="text-sm text-muted-foreground">
                       {twoFactorStatus?.enabled
                         ? '2FA is enabled for your account'
                         : 'Add an extra layer of security to your account'
@@ -459,14 +459,14 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                   <div className="flex items-center gap-2">
                     {twoFactorStatus?.enabled ? (
                       <>
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-300">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-300">
                           <CheckCircle className="h-3 w-3" /> Enabled
                         </span>
                         <Button
                           onClick={handleDisable2FA}
                           variant="outline"
                           size="sm"
-                          className="border-zinc-800 bg-[#09090B] text-zinc-200 hover:bg-zinc-900"
+                          className="border-border bg-background text-foreground hover:bg-muted/50"
                         >
                           Disable
                         </Button>
@@ -475,7 +475,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                       <Button
                         onClick={() => setShowTwoFactorSetup(true)}
                         variant="outline"
-                        className="border-zinc-800 bg-[#09090B] text-zinc-200 hover:bg-zinc-900"
+                        className="border-border bg-background text-foreground hover:bg-muted/50"
                       >
                         Enable 2FA
                       </Button>
@@ -485,29 +485,29 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
               </div>
             </div>
 
-            <div className="glass-panel p-6 rounded-2xl">
+            <div className="bento-card p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-full bg-emerald-500/10">
-                  <Users className="h-5 w-5 text-emerald-300" />
+                  <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Sales Agent Program</h3>
-                  <p className="text-sm text-slate-400">Join our sales agent program to earn commissions on referrals.</p>
+                  <h3 className="text-lg font-semibold tech-heading">Sales Agent Program</h3>
+                  <p className="text-sm text-muted-foreground">Join our sales agent program to earn commissions on referrals.</p>
                 </div>
               </div>
 
               {!agentStatus ? (
                 <div className="space-y-4">
-                  <div className="p-4 border border-zinc-800 rounded-lg bg-zinc-950/40">
-                    <h4 className="font-semibold mb-2 text-white">Benefits of becoming a Sales Agent:</h4>
-                    <ul className="space-y-1 text-sm text-slate-400">
+                  <div className="p-4 border border-border rounded-lg bg-muted/10">
+                    <h4 className="font-semibold mb-2 text-foreground">Benefits of becoming a Sales Agent:</h4>
+                    <ul className="space-y-1 text-sm text-muted-foreground">
                       <li>• Earn points for every successful referral</li>
                       <li>• Convert points to real money (1 point = ₹1)</li>
                       <li>• Access to exclusive promotional materials</li>
                       <li>• Track your earnings and performance</li>
                     </ul>
                   </div>
-                  <Button onClick={handleApplyForAgent} disabled={isApplying} className="bg-blue-600 text-white hover:bg-blue-500 transition-colors">
+                  <Button onClick={handleApplyForAgent} disabled={isApplying} className="bg-primary text-white hover:bg-primary/90 transition-colors font-medium">
                     {isApplying ? 'Submitting Application...' : 'Apply to Become a Sales Agent'}
                   </Button>
                 </div>
@@ -515,8 +515,8 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-semibold text-white">Application Status</h4>
-                      <p className="text-sm text-slate-400">Your sales agent application is under review.</p>
+                      <h4 className="font-semibold text-foreground">Application Status</h4>
+                      <p className="text-sm text-muted-foreground">Your sales agent application is under review.</p>
                     </div>
                     {getStatusBadge(agentStatus.status)}
                   </div>
@@ -524,19 +524,19 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                   {agentStatus.status === 'approved' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-emerald-500/30 rounded-lg bg-emerald-500/10">
                       <div>
-                        <label className="text-sm font-medium text-slate-400">Your Referral Code</label>
-                        <p className="text-lg font-mono text-white">{agentStatus.referral_code}</p>
+                        <label className="text-sm font-medium text-muted-foreground">Your Referral Code</label>
+                        <p className="text-lg font-mono text-foreground font-bold">{agentStatus.referral_code}</p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-slate-400">Points Balance</label>
-                        <p className="text-lg text-white">₹{agentStatus.points_balance || 0}</p>
+                        <label className="text-sm font-medium text-muted-foreground">Points Balance</label>
+                        <p className="text-lg text-foreground font-bold">₹{agentStatus.points_balance || 0}</p>
                       </div>
                     </div>
                   )}
 
                   {agentStatus.status === 'rejected' && (
                     <div className="p-4 border border-red-500/30 rounded-lg bg-red-500/10">
-                      <p className="text-sm text-red-200">
+                      <p className="text-sm text-red-600 dark:text-red-200">
                         Your application was not approved. You may contact support for more information.
                       </p>
                     </div>

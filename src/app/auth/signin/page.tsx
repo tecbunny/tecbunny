@@ -267,28 +267,28 @@ function SignInForm() {
 
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-200 flex items-center justify-center px-4 py-16">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-16">
       
 
       <div className="absolute inset-0 bg-noise opacity-10" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-400/5 rounded-full blur-[100px] animate-pulse pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px] animate-pulse pointer-events-none" />
 
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-900/60 border border-white/10 mb-6 shadow-lg shadow-cyan-400/10">
-            <Lock className="h-8 w-8 text-cyan-300" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-muted border border-border mb-6 shadow-lg shadow-primary/10">
+            <Lock className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-wide">SECURE ACCESS</h1>
-          <p className="text-slate-400 text-sm mt-2">Identify yourself to proceed to the console.</p>
+          <h1 className="text-3xl font-bold tech-heading tracking-wide">SECURE ACCESS</h1>
+          <p className="tech-body text-sm mt-2">Identify yourself to proceed to the console.</p>
         </div>
 
-        <div className="login-card rounded-2xl p-8">
+        <div className="login-card rounded-2xl p-8 border border-border bg-card">
           {!showTwoFactor ? (
             <>
               {verified === 'true' && (
                 <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5 text-emerald-300" />
-                  <div className="text-sm text-emerald-200">
+                  <CheckCircle className="h-5 w-5 text-emerald-500" />
+                  <div className="text-sm text-foreground">
                     <strong>Account created successfully!</strong>
                     <br />
                     Your email has been verified. You can now sign in.
@@ -304,13 +304,13 @@ function SignInForm() {
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder="Mobile Number"
-                    className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
+                    className="peer w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground outline-none focus:border-primary transition-colors placeholder-transparent"
                     required
                   />
-                  <Label htmlFor="identifier" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">
+                  <Label htmlFor="identifier" className="absolute left-4 top-3 text-muted-foreground text-sm transition-all pointer-events-none">
                     Mobile Number
                   </Label>
-                  <Phone className="absolute right-4 top-3.5 h-4 w-4 text-slate-500" />
+                  <Phone className="absolute right-4 top-3.5 h-4 w-4 text-muted-foreground" />
                 </div>
 
                 <div className="floating-label relative">
@@ -320,16 +320,16 @@ function SignInForm() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
-                    className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent pr-12"
+                    className="peer w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground outline-none focus:border-primary transition-colors placeholder-transparent pr-12"
                     required
                   />
-                  <Label htmlFor="password" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">
+                  <Label htmlFor="password" className="absolute left-4 top-3 text-muted-foreground text-sm transition-all pointer-events-none">
                     Password
                   </Label>
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-3.5 text-slate-500 hover:text-cyan-300 transition-colors"
+                    className="absolute right-4 top-3.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -337,14 +337,14 @@ function SignInForm() {
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                  <label htmlFor="remember-me" className="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-white transition-colors">
-                    <input id="remember-me" type="checkbox" className="w-4 h-4 rounded border-slate-600 text-cyan-400 focus:ring-0 bg-transparent" />
+                  <label htmlFor="remember-me" className="flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
+                    <input id="remember-me" type="checkbox" className="w-4 h-4 rounded border-border text-primary focus:ring-0 bg-transparent animate-none cursor-pointer" />
                     Remember me
                   </label>
                   <a
                     href="/auth/forgot-password"
                     onClick={(e) => { e.preventDefault(); window.location.href = '/auth/forgot-password'; }}
-                    className="text-cyan-300 hover:text-white transition-colors"
+                    className="text-primary hover:underline transition-colors"
                   >
                     Lost Key?
                   </a>
@@ -352,14 +352,14 @@ function SignInForm() {
 
                 {error && (
                   <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center space-x-2">
-                    <AlertCircle className="h-4 w-4 text-red-300" />
+                    <AlertCircle className="h-4 w-4 text-red-500" />
                     <span className="text-sm text-red-200">{error}</span>
                   </div>
                 )}
 
                 {turnstileSiteKey && (
                   <div className="space-y-2 min-h-[85px]">
-                    <Label className="text-sm font-medium text-slate-300">Security Check</Label>
+                    <Label className="text-sm font-medium text-muted-foreground">Security Check</Label>
                     <Turnstile
                       sitekey={turnstileSiteKey}
                       action="signin"
@@ -381,7 +381,7 @@ function SignInForm() {
 
                 <button
                   type="submit"
-                  className="group relative w-full py-3 bg-cyan-400 hover:bg-white text-slate-900 font-bold tracking-wide rounded-lg transition-colors flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] overflow-hidden"
+                  className="group relative w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold tracking-wide rounded-lg transition-colors flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] overflow-hidden cursor-pointer"
                   disabled={isLoading || !identifier || !password || isLockedOut}
                 >
                   <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:translate-x-full transition-transform duration-700" />
@@ -399,17 +399,17 @@ function SignInForm() {
               </form>
 
               {failedAttempts > 0 && failedAttempts < 5 && (
-                <div className="mt-4 text-center text-sm text-amber-300">
+                <div className="mt-4 text-center text-sm text-amber-500">
                   {5 - failedAttempts} attempts remaining before account lockout
                 </div>
               )}
 
-              <p className="text-center mt-8 text-sm text-slate-500">
+              <p className="text-center mt-8 text-sm text-muted-foreground">
                 New to the network?{' '}
                 <button
                   type="button"
                   onClick={() => window.location.href = '/auth/signup'}
-                  className="text-cyan-300 font-semibold hover:underline"
+                  className="text-primary font-semibold hover:underline cursor-pointer"
                 >
                   Initialize Account
                 </button>
@@ -432,10 +432,10 @@ function SignInForm() {
 export default function SignInPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#030712] text-slate-200">
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-300 mx-auto"></div>
-          <p className="mt-4 text-slate-400">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>
     }>

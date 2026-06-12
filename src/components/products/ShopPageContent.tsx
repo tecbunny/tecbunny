@@ -604,7 +604,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                   className={cn(
                     'reveal-item rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 border whitespace-nowrap',
                     !categoryFilter
-                      ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                      ? 'bg-primary/10 text-primary border-primary/30'
                       : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-zinc-900/40',
                     revealDelayClass(0)
                   )}
@@ -619,7 +619,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                     className={cn(
                       'reveal-item rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 border whitespace-nowrap',
                       categoryFilter === category
-                        ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                        ? 'bg-primary/10 text-primary border-primary/30'
                         : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-zinc-900/40',
                       revealDelayClass(50 + idx * 20)
                     )}
@@ -721,7 +721,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                           />
                           {/* Discount Badge */}
                           {product.discount_percentage && product.discount_percentage > 0 ? (
-                            <div className="absolute left-3 top-3 rounded-full bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-0.5 text-[9px] font-mono font-bold text-cyan-400 tracking-wider uppercase shadow-sm animate-fade-in">
+                            <div className="absolute left-3 top-3 rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[9px] font-mono font-bold text-primary tracking-wider uppercase shadow-sm animate-fade-in">
                               -{product.discount_percentage}% OFF
                             </div>
                           ) : null}
@@ -770,7 +770,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                             event.stopPropagation();
                             addToCart(product);
                           }}
-                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-850 bg-zinc-900/40 text-zinc-300 transition-all duration-200 hover:border-cyan-500/30 hover:bg-cyan-500 hover:text-zinc-950 hover:scale-105"
+                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-850 bg-zinc-900/40 text-zinc-300 transition-all duration-200 hover:border-primary/30 hover:bg-primary hover:text-white hover:scale-105"
                           aria-label={`Add ${displayName} to cart`}
                         >
                           <span className="text-base font-light">+</span>

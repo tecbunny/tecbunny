@@ -246,22 +246,21 @@ export default function SignUpPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#030712] text-slate-200 flex items-center justify-center px-4 py-16">
-        
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-16">
         <div className="absolute inset-0 bg-noise opacity-10" />
-        <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] bg-purple-400/10 rounded-full blur-[100px] animate-pulse pointer-events-none" />
+        <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] bg-primary/10 rounded-full blur-[100px] animate-pulse pointer-events-none" />
 
-        <div className="relative w-full max-w-md signup-card rounded-2xl p-8 text-center">
-          <div className="mx-auto w-12 h-12 bg-emerald-400/10 rounded-full flex items-center justify-center mb-4">
-            <CheckCircle className="h-6 w-6 text-emerald-300" />
+        <div className="relative w-full max-w-md signup-card rounded-2xl p-8 text-center border border-border bg-card">
+          <div className="mx-auto w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="h-6 w-6 text-emerald-500" />
           </div>
-          <h2 className="text-2xl font-bold text-white">Account Created!</h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <h2 className="text-2xl font-bold tech-heading">Account Created!</h2>
+          <p className="mt-2 text-sm tech-body">
             {dispatchedChannel
               ? `Verification code sent via ${getChannelLabel(dispatchedChannel)}.`
               : "We're preparing your verification details."}
           </p>
-          <p className="mt-4 text-sm text-slate-500">
+          <p className="mt-4 text-sm text-muted-foreground">
             {`${getVerificationPrompt(dispatchedChannel ?? undefined)} Redirecting to verification page...`}
           </p>
         </div>
@@ -270,24 +269,20 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-200 flex items-center justify-center px-4 py-16">
-      
-
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-16">
       <div className="absolute inset-0 bg-noise opacity-10" />
-      <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-400/10 rounded-full blur-[100px] animate-pulse pointer-events-none" />
-
-
+      <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px] animate-pulse pointer-events-none" />
 
       <div className="relative w-full max-w-2xl">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-900/60 border border-white/10 mb-6 shadow-lg shadow-purple-400/10">
-            <User className="h-8 w-8 text-purple-300" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-muted border border-border mb-6 shadow-lg shadow-primary/10">
+            <User className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-wide">NEW NODE ENTRY</h1>
-          <p className="text-slate-400 text-sm mt-2">Initialize your identity to join the secured network.</p>
+          <h1 className="text-3xl font-bold tech-heading tracking-wide">NEW NODE ENTRY</h1>
+          <p className="tech-body text-sm mt-2">Initialize your identity to join the secured network.</p>
         </div>
 
-        <div className="signup-card rounded-2xl p-8">
+        <div className="signup-card rounded-2xl p-8 border border-border bg-card">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-5 md:grid-cols-2">
               <div className="floating-label relative">
@@ -298,11 +293,11 @@ export default function SignUpPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="Name"
-                  className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-purple-400 transition-colors placeholder-transparent"
+                  className="peer w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground outline-none focus:border-primary transition-colors placeholder-transparent"
                   required
                 />
-                <Label htmlFor="name" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Full Name</Label>
-                <User className="absolute right-4 top-3.5 h-4 w-4 text-slate-500" />
+                <Label htmlFor="name" className="absolute left-4 top-3 text-muted-foreground text-sm transition-all pointer-events-none">Full Name</Label>
+                <User className="absolute right-4 top-3.5 h-4 w-4 text-muted-foreground" />
               </div>
 
               <div className="floating-label relative">
@@ -313,10 +308,10 @@ export default function SignUpPage() {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="Email"
-                  className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-purple-400 transition-colors placeholder-transparent"
+                  className="peer w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground outline-none focus:border-primary transition-colors placeholder-transparent"
                 />
-                <Label htmlFor="email" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Email Address (Optional)</Label>
-                <Mail className="absolute right-4 top-3.5 h-4 w-4 text-slate-500" />
+                <Label htmlFor="email" className="absolute left-4 top-3 text-muted-foreground text-sm transition-all pointer-events-none">Email Address (Optional)</Label>
+                <Mail className="absolute right-4 top-3.5 h-4 w-4 text-muted-foreground" />
               </div>
 
               <div className="floating-label relative">
@@ -327,22 +322,22 @@ export default function SignUpPage() {
                   value={formData.mobile}
                   onChange={handleInputChange}
                   placeholder="Mobile"
-                  className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-purple-400 transition-colors placeholder-transparent"
+                  className="peer w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground outline-none focus:border-primary transition-colors placeholder-transparent"
                   required
                 />
-                <Label htmlFor="mobile" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Mobile Number (Required)</Label>
-                <Phone className="absolute right-4 top-3.5 h-4 w-4 text-slate-500" />
+                <Label htmlFor="mobile" className="absolute left-4 top-3 text-muted-foreground text-sm transition-all pointer-events-none">Mobile Number (Required)</Label>
+                <Phone className="absolute right-4 top-3.5 h-4 w-4 text-muted-foreground" />
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label className="text-sm text-slate-400">Verification Method</Label>
+                <Label className="text-sm text-muted-foreground">Verification Method</Label>
                 <div className="grid gap-3">
-                  <label className={cn('flex items-center justify-between rounded-lg border p-3 text-sm', preferredChannel === 'email' ? 'border-purple-400/60 bg-purple-400/10' : 'border-white/10 bg-white/5', !emailValid && 'opacity-60')}>
+                  <label className={cn('flex items-center justify-between rounded-lg border p-3 text-sm cursor-pointer', preferredChannel === 'email' ? 'border-primary/60 bg-primary/10' : 'border-border bg-muted', !emailValid && 'opacity-60')}>
                     <span className="flex items-center gap-3">
-                      <Mail className="h-4 w-4 text-blue-300" />
+                      <Mail className="h-4 w-4 text-primary" />
                       <span className="flex flex-col">
-                        <span className="font-medium text-white">Email</span>
-                        <span className="text-xs text-slate-500">Send code via Email</span>
+                        <span className="font-medium text-foreground">Email</span>
+                        <span className="text-xs text-muted-foreground">Send code via Email</span>
                       </span>
                     </span>
                     <input
@@ -351,18 +346,18 @@ export default function SignUpPage() {
                       value="email"
                       checked={preferredChannel === 'email'}
                       onChange={() => handleChannelChange('email')}
-                      className="h-4 w-4 accent-purple-400"
+                      className="h-4 w-4 accent-primary"
                       disabled={!emailValid}
                       aria-label="Verify via email"
                     />
                   </label>
 
-                  <label className={cn('flex items-center justify-between rounded-lg border p-3 text-sm', preferredChannel === 'whatsapp' ? 'border-purple-400/60 bg-purple-400/10' : 'border-white/10 bg-white/5', !mobileSupportsMessaging && 'opacity-60')}>
+                  <label className={cn('flex items-center justify-between rounded-lg border p-3 text-sm cursor-pointer', preferredChannel === 'whatsapp' ? 'border-primary/60 bg-primary/10' : 'border-border bg-muted', !mobileSupportsMessaging && 'opacity-60')}>
                     <span className="flex items-center gap-3">
-                      <MessageCircle className="h-4 w-4 text-emerald-300" />
+                      <MessageCircle className="h-4 w-4 text-primary" />
                       <span className="flex flex-col">
-                        <span className="font-medium text-white">WhatsApp</span>
-                        <span className="text-xs text-slate-500">Send code via WhatsApp</span>
+                        <span className="font-medium text-foreground">WhatsApp</span>
+                        <span className="text-xs text-muted-foreground">Send code via WhatsApp</span>
                       </span>
                     </span>
                     <input
@@ -371,14 +366,14 @@ export default function SignUpPage() {
                       value="whatsapp"
                       checked={preferredChannel === 'whatsapp'}
                       onChange={() => handleChannelChange('whatsapp')}
-                      className="h-4 w-4 accent-purple-400"
+                      className="h-4 w-4 accent-primary"
                       disabled={!mobileSupportsMessaging}
                       aria-label="Verify via WhatsApp"
                     />
                   </label>
                 </div>
                 {(!emailValid || !mobileSupportsMessaging) && (
-                  <p className="text-xs text-slate-500 pt-1">
+                  <p className="text-xs text-muted-foreground pt-1">
                     {!emailValid && !mobileSupportsMessaging 
                       ? "Provide a valid email or WhatsApp number to enable verification."
                       : !emailValid 
@@ -396,14 +391,14 @@ export default function SignUpPage() {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Password"
-                  className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-purple-400 transition-colors placeholder-transparent pr-12"
+                  className="peer w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground outline-none focus:border-primary transition-colors placeholder-transparent pr-12"
                   required
                 />
-                <Label htmlFor="password" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Create Password</Label>
+                <Label htmlFor="password" className="absolute left-4 top-3 text-muted-foreground text-sm transition-all pointer-events-none">Create Password</Label>
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-3.5 text-slate-500 hover:text-purple-300 transition-colors"
+                  className="absolute right-4 top-3.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -418,14 +413,14 @@ export default function SignUpPage() {
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   placeholder="Confirm"
-                  className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-purple-400 transition-colors placeholder-transparent pr-12"
+                  className="peer w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground outline-none focus:border-primary transition-colors placeholder-transparent pr-12"
                   required
                 />
-                <Label htmlFor="confirmPassword" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Confirm Password</Label>
+                <Label htmlFor="confirmPassword" className="absolute left-4 top-3 text-muted-foreground text-sm transition-all pointer-events-none">Confirm Password</Label>
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-3.5 text-slate-500 hover:text-purple-300 transition-colors"
+                  className="absolute right-4 top-3.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                   aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                 >
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -434,14 +429,14 @@ export default function SignUpPage() {
 
               {error && (
                 <div className="md:col-span-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center space-x-2">
-                  <AlertCircle className="h-4 w-4 text-red-300" />
+                  <AlertCircle className="h-4 w-4 text-red-500" />
                   <span className="text-sm text-red-200">{error}</span>
                 </div>
               )}
 
               {turnstileSiteKey && (
                 <div className="space-y-2 md:col-span-2">
-                  <Label className="text-sm text-slate-400">Security Check</Label>
+                  <Label className="text-sm text-muted-foreground">Security Check</Label>
                   <div className="mt-1">
                     <Turnstile
                       sitekey={turnstileSiteKey}
@@ -466,7 +461,7 @@ export default function SignUpPage() {
               <div className="md:col-span-2 flex flex-col gap-4">
                 <button
                   type="submit"
-                  className="group relative w-full py-3 bg-purple-400 hover:bg-white text-slate-900 font-bold tracking-wide rounded-lg transition-colors flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] overflow-hidden"
+                  className="group relative w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold tracking-wide rounded-lg transition-colors flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] overflow-hidden cursor-pointer"
                   disabled={isLoading}
                 >
                   <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:translate-x-full transition-transform duration-700" />
@@ -474,9 +469,9 @@ export default function SignUpPage() {
                 </button>
 
                 <div className="text-center">
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-muted-foreground">
                     Already have an account?{' '}
-                    <Link href="/auth/signin" className="font-medium text-cyan-300 hover:text-white">
+                    <Link href="/auth/signin" className="font-medium text-primary hover:underline">
                       Access Existing Node
                     </Link>
                   </p>

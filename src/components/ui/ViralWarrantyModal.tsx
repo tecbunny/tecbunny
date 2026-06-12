@@ -35,29 +35,29 @@ export function ViralWarrantyModal({ phone, serialNumber }: { phone: string; ser
 
   if (claimed) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm animate-in fade-in duration-500 p-4">
-        <div className="bg-slate-900 border border-green-500 p-8 rounded-xl text-center max-w-md w-full">
-          <h2 className="text-2xl font-black text-green-400 mb-2">₹500 CREDIT UNLOCKED</h2>
-          <p className="text-green-600 font-mono text-sm">Coupon Code: TB-VRL-{serialNumber.substring(0, 4)}</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm animate-in fade-in duration-500 p-4">
+        <div className="bg-card border border-border p-8 rounded-xl text-center max-w-md w-full shadow-2xl">
+          <h2 className="text-2xl font-black text-primary mb-2">₹500 CREDIT UNLOCKED</h2>
+          <p className="text-muted-foreground font-mono text-sm">Coupon Code: TB-VRL-{serialNumber.substring(0, 4)}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm animate-in zoom-in-95 duration-500 p-4">
-      <div className="bg-slate-900 border border-green-500 p-6 sm:p-8 rounded-xl max-w-md w-full shadow-[0_0_50px_rgba(34,197,94,0.2)]">
-        <div className="inline-block bg-green-500 text-black px-3 py-1 font-black text-xs tracking-widest rounded-full mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm animate-in zoom-in-95 duration-500 p-4">
+      <div className="bg-card border border-border p-6 sm:p-8 rounded-xl max-w-md w-full shadow-2xl">
+        <div className="inline-block bg-primary/10 text-primary px-3 py-1 font-black text-xs tracking-widest rounded-full mb-4">
           ACTION REQUIRED
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 leading-tight">
+        <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-4 leading-tight">
           Claim Your ₹500 System Upgrade Credit
         </h2>
-        <p className="text-slate-400 mb-6 text-sm">
+        <p className="text-muted-foreground mb-6 text-sm">
           Your hardware is secured. Share your verified setup status with your network to instantly unlock ₹500
           towards your next security grid addition.
         </p>
-        {error && <p className="mb-4 text-sm text-rose-400">{error}</p>}
+        {error && <p className="mb-4 text-sm text-rose-500">{error}</p>}
         <button
           onClick={handleViralShare}
           disabled={submitting}

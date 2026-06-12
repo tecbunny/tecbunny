@@ -20,7 +20,7 @@ export function LoadingSpinner({ size = 'md', className, text }: LoadingSpinnerP
   return (
     <div className={cn('flex flex-col items-center justify-center gap-2', className)}>
       <div className={cn(
-        'animate-spin rounded-full border-2 border-slate-600 border-t-cyan-400',
+        'animate-spin rounded-full border-2 border-muted border-t-primary',
         sizeClasses[size]
       )} />
       {text && (
@@ -41,13 +41,13 @@ export function PageLoader() {
 
 export function ButtonSpinner({ className }: { className?: string }) {
   return (
-    <div className={cn('animate-spin rounded-full border-2 border-white/30 border-t-white h-4 w-4', className)} />
+    <div className={cn('animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground h-4 w-4', className)} />
   );
 }
 
 export function FullPageLoader() {
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
       <LoadingSpinner size="lg" text="Loading..." />
     </div>
   );

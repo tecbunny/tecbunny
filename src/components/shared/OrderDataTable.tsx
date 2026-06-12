@@ -46,13 +46,13 @@ const STATUS_VARIANT: Record<OrderStatus, 'default' | 'destructive' | 'outline' 
 };
 
 const TYPE_BADGE_CLASS: Record<OrderType, string> = {
-  Delivery: 'bg-blue-100 text-blue-800',
-  Pickup: 'bg-amber-100 text-amber-800',
-  'Walk-in': 'bg-emerald-100 text-emerald-800',
-  Service: 'bg-cyan-100 text-cyan-800',
-  Repair: 'bg-fuchsia-100 text-fuchsia-800',
-  Installation: 'bg-indigo-100 text-indigo-800',
-  Setup: 'bg-teal-100 text-teal-800',
+  Delivery: 'bg-blue-500/10 text-blue-500 border border-blue-500/20',
+  Pickup: 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
+  'Walk-in': 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20',
+  Service: 'bg-primary/10 text-primary border border-primary/20',
+  Repair: 'bg-purple-500/10 text-purple-500 border border-purple-500/20',
+  Installation: 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20',
+  Setup: 'bg-sky-500/10 text-sky-500 border border-sky-500/20',
 };
 
 type TypeFilter = 'all' | OrderType;
@@ -245,22 +245,22 @@ export default function OrderDataTable({ role }: OrderDataTableProps) {
       </div>
 
       {role === 'ADMIN' ? (
-        <Card className="border-l-4 border-l-blue-500 bg-blue-50">
+        <Card className="border-l-2 border-l-primary bg-primary/5 border-border">
           <CardContent className="pt-6">
-            <p className="text-sm text-blue-800">
+            <p className="text-sm text-foreground">
               Admins can review, update, and cancel any order. Use the actions menu in each row to adjust order status,
               print invoices, or drill into a full order view.
             </p>
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-l-4 border-l-green-500 bg-green-50">
+        <Card className="border-l-2 border-l-emerald-500 bg-emerald-500/5 border-border">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="h-3 w-3 rounded-full bg-green-500"></div>
+              <div className="h-3 w-3 rounded-full bg-emerald-500"></div>
               <div>
-                <p className="font-medium text-green-800">Sales & Manager Access</p>
-                <p className="text-sm text-green-700">You can view and manage all pickup order statuses.</p>
+                <p className="font-medium text-foreground">Sales & Manager Access</p>
+                <p className="text-sm text-muted-foreground">You can view and manage all pickup order statuses.</p>
               </div>
             </div>
           </CardContent>

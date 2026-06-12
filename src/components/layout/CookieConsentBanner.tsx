@@ -59,16 +59,16 @@ export function CookieConsentBanner({ onConsentChange }: CookieConsentBannerProp
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[70] border-t border-white/10 bg-slate-950/95 px-4 py-4 text-slate-100 shadow-[0_-16px_48px_rgba(2,6,23,0.55)] backdrop-blur">
+    <div className="fixed inset-x-0 bottom-0 z-[70] border-t border-border bg-card/95 px-4 py-4 text-card-foreground shadow-2xl backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="max-w-3xl space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-300">Privacy Controls</p>
-          <p className="text-sm leading-6 text-slate-300 sm:text-[15px]">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Privacy Controls</p>
+          <p className="text-sm leading-6 text-muted-foreground sm:text-[15px]">
             TecBunny uses optional analytics and marketing cookies to understand site performance and measure campaign activity. Rejecting keeps the site fully usable and skips third-party tracking scripts.
           </p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             Review the details in{' '}
-            <Link href="/info/policies/privacy" className="text-cyan-300 underline decoration-cyan-500/60 underline-offset-4 transition hover:text-white">
+            <Link href="/info/policies/privacy" className="text-primary underline decoration-primary/60 underline-offset-4 transition hover:text-foreground">
               our privacy policy
             </Link>
             .
@@ -79,14 +79,14 @@ export function CookieConsentBanner({ onConsentChange }: CookieConsentBannerProp
           <button
             type="button"
             onClick={() => updateConsent('rejected')}
-            className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-medium text-slate-200 transition hover:border-white/30 hover:bg-white/5"
+            className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground transition hover:border-foreground/30 hover:bg-muted/40"
           >
             Reject optional cookies
           </button>
           <button
             type="button"
             onClick={() => updateConsent('accepted')}
-            className="rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+            className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90"
           >
             Accept optional cookies
           </button>

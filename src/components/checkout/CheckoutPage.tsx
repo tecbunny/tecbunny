@@ -556,8 +556,8 @@ export default function CheckoutPage() {
 
   if (authLoading || loadingQuote) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#09090B] text-slate-300">
-        <div className="text-slate-400">Loading checkout details...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+        <div className="text-muted-foreground">Loading checkout details...</div>
       </div>
     );
   }
@@ -565,14 +565,14 @@ export default function CheckoutPage() {
   // Show empty cart message if no items
   if (!quote && cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-[#09090B] py-16">
+      <div className="min-h-screen bg-background py-16 text-foreground">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="mx-auto w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-            <ShoppingCart className="h-8 w-8 text-slate-500" />
+          <div className="mx-auto w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4 border border-border">
+            <ShoppingCart className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Your Cart is Empty</h2>
-          <p className="text-slate-400 mb-6">Add some products to your cart before checkout.</p>
-          <Button onClick={() => window.location.href = '/products'} className="bg-primary text-white hover:bg-primary/90 font-semibold">
+          <h2 className="text-2xl font-bold tech-heading mb-2">Your Cart is Empty</h2>
+          <p className="text-muted-foreground mb-6">Add some products to your cart before checkout.</p>
+          <Button onClick={() => window.location.href = '/products'} className="bg-primary text-white hover:bg-primary/90 font-semibold font-medium">
             Continue Shopping
           </Button>
         </div>
@@ -581,32 +581,32 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 selection:bg-zinc-800 selection:text-white">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-foreground">
       <section className="pt-32 pb-24 relative">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.15] pointer-events-none"></div>
 
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-white font-sans">Checkout</h1>
-              <p className="text-sm text-zinc-400 mt-1">Review your details and complete your purchase.</p>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground font-sans tech-heading">Checkout</h1>
+              <p className="text-sm text-muted-foreground mt-1">Review your details and complete your purchase.</p>
             </div>
             <button
               type="button"
               onClick={() => window.location.href = '/cart'}
-              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white transition-colors self-start md:self-auto"
+              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors self-start md:self-auto"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Back to Cart
             </button>
           </div>
 
           <div className="hidden md:flex justify-center mb-16">
-            <div className="flex items-center gap-4 text-[10px] tracking-wider uppercase font-semibold text-zinc-500">
-              <span className="text-zinc-500">01 Cart</span>
-              <span className="text-zinc-800">/</span>
-              <span className="text-white border-b border-white pb-0.5 font-bold">02 Details</span>
-              <span className="text-zinc-800">/</span>
-              <span className="text-zinc-600">03 Done</span>
+            <div className="flex items-center gap-4 text-[10px] tracking-wider uppercase font-semibold text-muted-foreground">
+              <span className="text-muted-foreground">01 Cart</span>
+              <span className="text-border">/</span>
+              <span className="text-foreground border-b border-foreground pb-0.5 font-bold">02 Details</span>
+              <span className="text-border">/</span>
+              <span className="text-muted-foreground/50">03 Done</span>
             </div>
           </div>
 
@@ -618,14 +618,14 @@ export default function CheckoutPage() {
             }}
           >
             <div className="lg:col-span-2 space-y-8">
-              <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-8 space-y-6 backdrop-blur-md animate-fade-in">
-                <div className="flex items-center gap-3 pb-2 border-b border-zinc-800/50">
-                  <User className="h-4 w-4 text-zinc-400" />
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider font-sans">Contact & Billing</h2>
+              <div className="bento-card p-8 space-y-6">
+                <div className="flex items-center gap-3 pb-2 border-b border-border">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider font-sans tech-heading">Contact & Billing</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="name" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Full Name</label>
+                    <label htmlFor="name" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Full Name</label>
                     <input
                       type="text"
                       id="name"
@@ -633,7 +633,7 @@ export default function CheckoutPage() {
                       value={customerInfo.name}
                       onChange={(event) => handleInputChange('name', event.target.value)}
                       onBlur={(event) => handleInputBlur('name', event.target.value)}
-                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.name ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
+                      className={`w-full bg-muted/10 border rounded-lg px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50 ${fieldErrors.name ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-border focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                       placeholder="John Doe"
                     />
                     {fieldErrors.name && (
@@ -641,7 +641,7 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="phone" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Phone Number</label>
+                    <label htmlFor="phone" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Phone Number</label>
                     <input
                       type="tel"
                       id="phone"
@@ -649,7 +649,7 @@ export default function CheckoutPage() {
                       value={customerInfo.phone}
                       onChange={(event) => handleInputChange('phone', event.target.value)}
                       onBlur={(event) => handleInputBlur('phone', event.target.value)}
-                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.phone ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
+                      className={`w-full bg-muted/10 border rounded-lg px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50 ${fieldErrors.phone ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-border focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                       placeholder="e.g. 9876543210"
                     />
                     {fieldErrors.phone && (
@@ -657,7 +657,7 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="email" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Email Address</label>
+                    <label htmlFor="email" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Email Address</label>
                     <input
                       type="email"
                       id="email"
@@ -665,7 +665,7 @@ export default function CheckoutPage() {
                       value={customerInfo.email}
                       onChange={(event) => handleInputChange('email', event.target.value)}
                       onBlur={(event) => handleInputBlur('email', event.target.value)}
-                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.email ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
+                      className={`w-full bg-muted/10 border rounded-lg px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50 ${fieldErrors.email ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-border focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                       placeholder="john@example.com"
                     />
                     {fieldErrors.email && (
@@ -674,7 +674,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-2">
-                      <label htmlFor="gstin" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">GSTIN (Optional)</label>
+                      <label htmlFor="gstin" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">GSTIN (Optional)</label>
                       {isFetchingGst && <span className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>}
                     </div>
                     <input
@@ -683,7 +683,7 @@ export default function CheckoutPage() {
                       maxLength={15}
                       value={customerInfo.gstin}
                       onChange={(event) => handleInputChange('gstin', event.target.value.toUpperCase())}
-                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${gstError ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
+                      className={`w-full bg-muted/10 border rounded-lg px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50 ${gstError ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-border focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                       placeholder="15-character GSTIN"
                     />
                     {gstError && (
@@ -693,14 +693,14 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-8 space-y-6 backdrop-blur-md animate-fade-in">
-                <div className="flex items-center gap-3 pb-2 border-b border-zinc-800/50">
-                  <MapPin className="h-4 w-4 text-zinc-400" />
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider font-sans">{!!quote ? 'Delivery & Installation' : 'Delivery Address'}</h2>
+              <div className="bento-card p-8 space-y-6">
+                <div className="flex items-center gap-3 pb-2 border-b border-border">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider font-sans tech-heading">{!!quote ? 'Delivery & Installation' : 'Delivery Address'}</h2>
                 </div>
                 <div className="space-y-6">
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="address" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                    <label htmlFor="address" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       {!!quote ? 'Installation Address (Goa)' : 'Complete Delivery Address'}
                     </label>
                     <textarea
@@ -710,7 +710,7 @@ export default function CheckoutPage() {
                       value={customerInfo.address}
                       onChange={(event) => handleInputChange('address', event.target.value)}
                       onBlur={(event) => handleInputBlur('address', event.target.value)}
-                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.address ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
+                      className={`w-full bg-muted/10 border rounded-lg px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50 ${fieldErrors.address ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-border focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                       placeholder="Apartment, suite, unit, building, street address"
                     ></textarea>
                     {fieldErrors.address && (
@@ -721,30 +721,30 @@ export default function CheckoutPage() {
                   {!!quote && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-1.5">
-                        <label htmlFor="date" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Preferred Install Date</label>
+                        <label htmlFor="date" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Preferred Install Date</label>
                         <input
                            type="date"
                            id="date"
                            value={customerInfo.installDate}
                            onChange={(event) => handleInputChange('installDate', event.target.value)}
-                           className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-zinc-700"
+                           className="w-full bg-muted/10 border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/50"
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label htmlFor="readiness" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Site Status</label>
+                        <label htmlFor="readiness" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Site Status</label>
                         <div className="relative">
                           <select
                             id="readiness"
                             value={customerInfo.siteStatus}
                             onChange={(event) => handleInputChange('siteStatus', event.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none pr-10"
+                            className="w-full bg-muted/10 border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none pr-10"
                           >
-                            <option value="" className="bg-[#0f172a]">Select Status</option>
-                            <option value="ready" className="bg-[#0f172a]">Site Ready (Plaster/Paint Done)</option>
-                            <option value="construction" className="bg-[#0f172a]">Under Construction (Cabling Phase)</option>
-                            <option value="renovation" className="bg-[#0f172a]">Renovation (Retrofit)</option>
+                            <option value="" className="bg-card text-foreground">Select Status</option>
+                            <option value="ready" className="bg-card text-foreground">Site Ready (Plaster/Paint Done)</option>
+                            <option value="construction" className="bg-card text-foreground">Under Construction (Cabling Phase)</option>
+                            <option value="renovation" className="bg-card text-foreground">Renovation (Retrofit)</option>
                           </select>
-                          <ChevronDown className="absolute right-4 top-3.5 h-4 w-4 text-zinc-500 pointer-events-none" />
+                          <ChevronDown className="absolute right-4 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
                         </div>
                       </div>
                     </div>
@@ -752,7 +752,7 @@ export default function CheckoutPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="flex flex-col gap-1.5">
-                      <label htmlFor="city" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">City</label>
+                      <label htmlFor="city" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">City</label>
                       <input
                         type="text"
                         id="city"
@@ -760,7 +760,7 @@ export default function CheckoutPage() {
                         value={customerInfo.city}
                         onChange={(event) => handleInputChange('city', event.target.value)}
                         onBlur={(event) => handleInputBlur('city', event.target.value)}
-                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.city ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
+                        className={`w-full bg-muted/10 border rounded-lg px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50 ${fieldErrors.city ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-border focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                         placeholder="Panaji"
                       />
                       {fieldErrors.city && (
@@ -768,7 +768,7 @@ export default function CheckoutPage() {
                       )}
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label htmlFor="state" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">State</label>
+                      <label htmlFor="state" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">State</label>
                       <input
                         type="text"
                         id="state"
@@ -776,7 +776,7 @@ export default function CheckoutPage() {
                         value={customerInfo.state}
                         onChange={(event) => handleInputChange('state', event.target.value)}
                         onBlur={(event) => handleInputBlur('state', event.target.value)}
-                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.state ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
+                        className={`w-full bg-muted/10 border rounded-lg px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50 ${fieldErrors.state ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-border focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                         placeholder="Goa"
                       />
                       {fieldErrors.state && (
@@ -784,7 +784,7 @@ export default function CheckoutPage() {
                       )}
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label htmlFor="pincode" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Pincode</label>
+                      <label htmlFor="pincode" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pincode</label>
                       <input
                         type="text"
                         id="pincode"
@@ -792,7 +792,7 @@ export default function CheckoutPage() {
                         value={customerInfo.pincode}
                         onChange={(event) => handlePincodeChange(event.target.value)}
                         onBlur={(event) => handleInputBlur('pincode', event.target.value)}
-                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.pincode ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
+                        className={`w-full bg-muted/10 border rounded-lg px-4 py-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50 ${fieldErrors.pincode ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-border focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                         placeholder="6-digit PIN"
                       />
                       {fieldErrors.pincode && (
@@ -801,40 +801,40 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[11px] text-zinc-500 font-medium">
-                    <Shield className="h-3.5 w-3.5 text-zinc-500" />
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
+                    <Shield className="h-3.5 w-3.5 text-muted-foreground" />
                     All hardware orders are eligible for secure shipping.
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="notes" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Order Notes (Optional)</label>
+                    <label htmlFor="notes" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Order Notes (Optional)</label>
                     <textarea
                       id="notes"
                       rows={2}
                       value={customerInfo.notes}
                       onChange={(event) => handleInputChange('notes', event.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-zinc-700"
+                      className="w-full bg-muted/10 border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/50"
                       placeholder="Delivery instructions, landmarks, etc."
                     ></textarea>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-8 space-y-6 backdrop-blur-md animate-fade-in">
-                <div className="flex items-center gap-3 pb-2 border-b border-zinc-800/50">
-                  <Wallet className="h-4 w-4 text-zinc-400" />
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wider font-sans">Payment Method</h2>
+              <div className="bento-card p-8 space-y-6">
+                <div className="flex items-center gap-3 pb-2 border-b border-border">
+                  <Wallet className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider font-sans tech-heading">Payment Method</h2>
                 </div>
                 <div className="space-y-4">
                   {paymentLoading && (
                     <div className="space-y-4 min-h-[220px]">
                       {Array.from({ length: 3 }).map((_, index) => (
-                        <div key={index} className="h-16 w-full animate-pulse rounded-xl border border-zinc-800/30 bg-zinc-900/40"></div>
+                        <div key={index} className="h-16 w-full animate-pulse rounded-xl border border-border bg-muted/20"></div>
                       ))}
                     </div>
                   )}
                   {!paymentLoading && getEnabledPaymentMethods().length === 0 && (
-                    <div className="text-zinc-500 text-sm text-center py-6">No payment methods available. Please contact support.</div>
+                    <div className="text-muted-foreground text-sm text-center py-6">No payment methods available. Please contact support.</div>
                   )}
                   {!paymentLoading && getEnabledPaymentMethods().map((method) => {
                     const getPaymentIcon = (methodId: string) => {
@@ -863,20 +863,20 @@ export default function CheckoutPage() {
                         <div className={`border rounded-xl p-5 flex items-center gap-4 transition-all ${
                           selectedPaymentMethod === method.id
                             ? 'border-primary bg-primary/10 shadow-sm shadow-primary/5'
-                            : 'border-zinc-800 bg-zinc-950 hover:bg-zinc-900/30 hover:border-zinc-700'
+                            : 'border-border bg-muted/10 hover:bg-muted/30 hover:border-border/70'
                         }`}>
                           <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
                             selectedPaymentMethod === method.id
                               ? 'border-primary bg-primary'
-                              : 'border-zinc-700 bg-transparent group-hover:border-zinc-500'
+                              : 'border-muted-foreground/60 bg-transparent group-hover:border-foreground'
                           }`}>
                             {selectedPaymentMethod === method.id && (
-                              <div className="w-1.5 h-1.5 rounded-full bg-zinc-950" />
+                              <div className="w-1.5 h-1.5 rounded-full bg-white" />
                             )}
                           </div>
                           <div className="flex-1">
-                            <span className="block text-sm font-semibold text-white">{method.name}</span>
-                            <span className="text-xs text-zinc-400 mt-1 block">
+                            <span className="block text-sm font-semibold text-foreground">{method.name}</span>
+                            <span className="text-xs text-muted-foreground mt-1 block">
                               {method.type === 'online'
                                 ? 'Pay online securely'
                                 : method.id === 'cod'
@@ -886,7 +886,7 @@ export default function CheckoutPage() {
                                     : 'Offline payment'}
                             </span>
                           </div>
-                          <div className={`transition-colors ${selectedPaymentMethod === method.id ? 'text-primary' : 'text-zinc-500'}`}>
+                          <div className={`transition-colors ${selectedPaymentMethod === method.id ? 'text-primary' : 'text-muted-foreground'}`}>
                             {getPaymentIcon(method.id)}
                           </div>
                         </div>
@@ -896,22 +896,22 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Trust Badges & Compliance */}
-                <div className="mt-10 pt-8 border-t border-zinc-800/60 grid grid-cols-2 sm:grid-cols-4 gap-6">
+                <div className="mt-10 pt-8 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-6">
                   <div className="flex flex-col items-center text-center gap-2.5">
-                    <Shield className="h-5 w-5 text-zinc-400" />
-                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider leading-snug">BIS Certified Hardware</span>
+                    <Shield className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider leading-snug">BIS Certified Hardware</span>
                   </div>
                   <div className="flex flex-col items-center text-center gap-2.5">
-                    <CheckCircle className="h-5 w-5 text-zinc-400" />
-                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider leading-snug">Regional Tech Compliance</span>
+                    <CheckCircle className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider leading-snug">Regional Tech Compliance</span>
                   </div>
                   <div className="flex flex-col items-center text-center gap-2.5">
-                    <CreditCard className="h-5 w-5 text-zinc-400" />
-                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider leading-snug">Secure UPI / Cards</span>
+                    <CreditCard className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider leading-snug">Secure UPI / Cards</span>
                   </div>
                   <div className="flex flex-col items-center text-center gap-2.5">
-                    <User className="h-5 w-5 text-zinc-400" />
-                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider leading-snug">Verified Installer Network</span>
+                    <User className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider leading-snug">Verified Installer Network</span>
                   </div>
                 </div>
               </div>
@@ -919,45 +919,45 @@ export default function CheckoutPage() {
 
             <div className="lg:col-span-1">
               <div className="sticky top-28 space-y-6">
-                <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-8 space-y-6 backdrop-blur-md shadow-xl">
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider font-sans pb-2 border-b border-zinc-800/50">Summary</h3>
+                <div className="bento-card p-8 space-y-6">
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider font-sans pb-2 border-b border-border tech-heading">Summary</h3>
 
-                  <div className="space-y-4 my-2 max-h-60 overflow-y-auto pr-2 divide-y divide-zinc-800/40">
+                  <div className="space-y-4 my-2 max-h-60 overflow-y-auto pr-2 divide-y divide-border">
                     {displayItems.map((item: any) => (
                       <div key={item.id} className="flex justify-between text-xs py-3 first:pt-0">
-                        <span className="text-zinc-400 font-medium">{item.quantity} × {item.name}</span>
-                        <span className="text-zinc-100 font-semibold tabular-nums ml-4">₹{(item.price * item.quantity).toFixed(2)}</span>
+                        <span className="text-muted-foreground font-medium">{item.name} × {item.quantity}</span>
+                        <span className="text-foreground font-semibold tabular-nums ml-4">₹{(item.price * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="border-t border-zinc-800 pt-5 space-y-3">
+                  <div className="border-t border-border pt-5 space-y-3">
                     <div className="flex justify-between text-xs">
-                      <span className="text-zinc-400">Subtotal</span>
-                      <span className="text-zinc-200 tabular-nums">₹{displaySubtotal.toFixed(2)}</span>
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="text-foreground font-medium tabular-nums">₹{displaySubtotal.toFixed(2)}</span>
                     </div>
                     {totalDiscount > 0 && (
-                      <div className="flex justify-between text-xs text-emerald-400">
+                      <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400">
                         <span>Discount</span>
                         <span className="tabular-nums">-₹{totalDiscount.toFixed(2)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-xs">
-                      <span className="text-zinc-400">GST (Estimated)</span>
-                      <span className="text-zinc-200 tabular-nums">₹{displayGstAmount.toFixed(2)}</span>
+                      <span className="text-muted-foreground">GST (Estimated)</span>
+                      <span className="text-foreground font-medium tabular-nums">₹{displayGstAmount.toFixed(2)}</span>
                     </div>
                   </div>
 
-                  <div className="border-t border-zinc-800 pt-5">
+                  <div className="border-t border-border pt-5">
                     <div className="flex justify-between items-baseline mb-6">
-                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Total</span>
-                      <span className="text-2xl font-bold text-white tabular-nums">₹{displayTotal.toFixed(2)}</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total</span>
+                      <span className="text-2xl font-bold text-foreground tabular-nums tech-heading">₹{displayTotal.toFixed(2)}</span>
                     </div>
 
                     {/* Custom Part Payment Options */}
                     {!!quote && (
-                      <div className="mt-4 p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-3.5">
-                        <label className="flex items-center gap-2.5 text-xs text-zinc-300 cursor-pointer font-medium">
+                      <div className="mt-4 p-4 bg-muted/10 border border-border rounded-xl space-y-3.5">
+                        <label className="flex items-center gap-2.5 text-xs text-foreground cursor-pointer font-medium">
                           <input
                             type="checkbox"
                             checked={isPartPayment}
@@ -969,24 +969,24 @@ export default function CheckoutPage() {
                                 setPartPaymentAmount('');
                               }
                             }}
-                            className="h-3.5 w-3.5 rounded border-zinc-800 bg-zinc-900 text-white focus:ring-zinc-700"
+                            className="h-3.5 w-3.5 rounded border-border bg-background text-foreground focus:ring-primary/20"
                           />
                           Pay Custom Part Amount
                         </label>
                         {isPartPayment && (
                           <div className="space-y-1.5 animate-fade-in">
-                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Amount (₹)</label>
+                            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Amount (₹)</label>
                             <input
                               type="number"
                               min={1}
                               max={displayTotal}
                               required
                               placeholder="Enter amount"
-                              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-500"
+                              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/50"
                               value={partPaymentAmount}
                               onChange={(e) => setPartPaymentAmount(e.target.value)}
                             />
-                            <p className="text-[10px] text-zinc-505 leading-normal">
+                            <p className="text-[10px] text-muted-foreground leading-normal">
                               Remaining balance of ₹{Math.round(displayTotal - (Number(partPaymentAmount) || 0)).toLocaleString()} will be due later.
                             </p>
                           </div>
@@ -995,61 +995,61 @@ export default function CheckoutPage() {
                     )}
 
                     {!!quote && showAdvance && !isPartPayment && (
-                      <div className="mt-3 bg-zinc-950 border border-zinc-900 rounded-xl p-3 text-[10px] font-semibold text-zinc-400 text-center tracking-wide uppercase">
-                        Advance Payable (50%): <span className="text-white font-bold ml-1">₹{advanceAmount.toFixed(2)}</span>
+                      <div className="mt-3 bg-muted/10 border border-border rounded-xl p-3 text-[10px] font-semibold text-muted-foreground text-center tracking-wide uppercase">
+                        Advance Payable (50%): <span className="text-foreground font-bold ml-1">₹{advanceAmount.toFixed(2)}</span>
                       </div>
                     )}
                   </div>
 
                   {autoOffer && autoOfferDiscount > 0 && autoOffer.description && (
-                    <div className="rounded-xl border border-emerald-950 bg-emerald-950/20 p-4 text-xs text-emerald-300/90 leading-relaxed mb-4">
+                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-xs text-emerald-650 dark:text-emerald-300 leading-relaxed mb-4">
                       <div className="flex items-center justify-between font-semibold">
                         <span className="flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-emerald-400" /> {autoOffer.title}
+                          <Sparkles className="h-4 w-4 text-emerald-500" /> {autoOffer.title}
                         </span>
-                        <span className="text-emerald-400 font-bold">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                           -₹{autoOfferDiscount.toFixed(2)}
                         </span>
                       </div>
-                      <p className="mt-1.5 text-emerald-400/70 text-[11px]">{autoOffer.description}</p>
+                      <p className="mt-1.5 text-emerald-600/80 dark:text-emerald-400/70 text-[11px]">{autoOffer.description}</p>
                     </div>
                   )}
 
                   {appliedCoupon && couponDiscount > 0 && (
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-zinc-300 mb-4 flex items-center justify-between">
+                    <div className="rounded-xl border border-border bg-muted/10 p-4 text-xs text-foreground mb-4 flex items-center justify-between">
                       <span className="flex items-center gap-2 font-medium">
-                        <Tag className="h-3.5 w-3.5 text-zinc-400" /> {appliedCoupon.code}
+                        <Tag className="h-3.5 w-3.5 text-primary" /> {appliedCoupon.code}
                       </span>
-                      <button type="button" className="text-xs text-zinc-400 hover:text-white underline animate-fade-in" onClick={removeCoupon}>Remove</button>
+                      <button type="button" className="text-xs text-primary hover:text-primary/80 underline animate-fade-in" onClick={removeCoupon}>Remove</button>
                     </div>
                   )}
 
                   {orderError && (
-                    <div className="bg-red-950/20 border border-red-900/40 rounded-xl p-4 mb-4">
-                      <p className="text-red-400 text-xs font-semibold leading-normal">{orderError}</p>
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-4">
+                      <p className="text-red-650 dark:text-red-400 text-xs font-semibold leading-normal">{orderError}</p>
                     </div>
                   )}
 
-                  <div className="mb-6 flex items-start gap-3 rounded-xl border border-zinc-900 bg-zinc-950/50 p-4">
+                  <div className="mb-6 flex items-start gap-3 rounded-xl border border-border bg-muted/10 p-4">
                     <input
                       id="checkout-privacy-consent"
                       type="checkbox"
                       checked={privacyAccepted}
                       onChange={(event) => setPrivacyAccepted(event.target.checked)}
-                      className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-850 bg-zinc-900 text-white focus:ring-zinc-700"
+                      className="mt-0.5 h-3.5 w-3.5 rounded border-border bg-background text-foreground focus:ring-primary/20"
                     />
-                    <label htmlFor="checkout-privacy-consent" className="text-[11px] text-zinc-400 leading-normal">
+                    <label htmlFor="checkout-privacy-consent" className="text-[11px] text-muted-foreground leading-normal">
                       I have read and agree to the{' '}
-                      <Link href="/info/policies/privacy" className="text-zinc-200 hover:text-white underline">Privacy Policy</Link>
+                      <Link href="/info/policies/privacy" className="text-primary hover:underline">Privacy Policy</Link>
                       {' '}and{' '}
-                      <Link href="/info/policies/terms" className="text-zinc-200 hover:text-white underline">Terms of Service</Link>.
+                      <Link href="/info/policies/terms" className="text-primary hover:underline">Terms of Service</Link>.
                     </label>
                   </div>
 
                   <button
                     type="submit"
                     disabled={isProcessingOrder || !selectedPaymentMethod || paymentLoading || !privacyAccepted}
-                    className="w-full py-4 bg-primary hover:bg-primary/90 text-white font-bold text-sm tracking-wider uppercase rounded-xl transition-all shadow-md flex items-center justify-center gap-2 disabled:bg-zinc-900 disabled:text-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-full py-4 bg-primary hover:bg-primary/95 text-white font-bold text-sm tracking-wider uppercase rounded-xl transition-all shadow-md flex items-center justify-center gap-2 disabled:bg-muted/40 disabled:text-muted-foreground/50 disabled:opacity-40 disabled:cursor-not-allowed font-medium"
                   >
                     {isProcessingOrder ? (
                       <span className="flex items-center gap-2">
@@ -1063,7 +1063,7 @@ export default function CheckoutPage() {
                     )}
                   </button>
 
-                  <p className="mt-4 text-[10px] text-zinc-500 text-center leading-normal">
+                  <p className="mt-4 text-[10px] text-muted-foreground text-center leading-normal">
                     By placing this order, you agree to our Terms & Conditions.
                   </p>
                 </div>

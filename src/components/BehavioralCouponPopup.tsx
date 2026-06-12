@@ -58,40 +58,40 @@ export function BehavioralCouponPopup() {
 
   return (
     <div className="fixed bottom-8 right-8 z-50 max-w-sm animate-in fade-in slide-in-from-bottom-8 duration-500">
-      <div className="relative overflow-hidden rounded-2xl border border-cyan-500/30 bg-slate-900 p-6 shadow-2xl shadow-cyan-500/20 backdrop-blur-xl">
-        <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-cyan-500/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-2xl backdrop-blur-xl">
+        <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-primary/10 blur-3xl" />
         
         <button 
           onClick={handleDismiss}
-          className="absolute right-4 top-4 text-slate-500 hover:text-white transition-colors"
+          className="absolute right-4 top-4 text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="h-4 w-4" />
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-400">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Sparkles className="h-6 w-6" />
           </div>
           <div>
-            <h4 className="font-bold text-white leading-none">Exclusive Reward</h4>
-            <p className="text-[10px] text-cyan-400 uppercase tracking-widest mt-1">Wishlist Loyalty Bonus</p>
+            <h4 className="font-bold text-foreground leading-none">Exclusive Reward</h4>
+            <p className="text-[10px] text-primary uppercase tracking-widest mt-1">Wishlist Loyalty Bonus</p>
           </div>
         </div>
 
-        <p className="text-sm text-slate-400 mb-6">
+        <p className="text-sm text-muted-foreground mb-6">
           We noticed you've been eyeing some great tech! Complete your first order today with this special code.
         </p>
 
         <div className="group relative mb-6">
-          <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 opacity-20 blur group-hover:opacity-40 transition duration-500" />
-          <div className="relative flex items-center justify-between rounded-xl border border-white/10 bg-black/40 px-4 py-3">
+          <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary to-primary/80 opacity-20 blur group-hover:opacity-40 transition duration-500" />
+          <div className="relative flex items-center justify-between rounded-xl border border-border bg-muted/40 px-4 py-3">
             <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4 text-cyan-400" />
-              <span className="font-mono text-lg font-bold text-white tracking-tighter">{coupon.code}</span>
+              <Tag className="h-4 w-4 text-primary" />
+              <span className="font-mono text-lg font-bold text-foreground tracking-tighter">{coupon.code}</span>
             </div>
             <button 
               onClick={copyCode}
-              className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-white transition-colors"
+              className="text-[10px] font-bold uppercase tracking-wider text-primary hover:text-foreground transition-colors"
             >
               Copy Code
             </button>
@@ -99,7 +99,7 @@ export function BehavioralCouponPopup() {
         </div>
 
         <Button 
-          className="w-full h-12 bg-cyan-600 hover:bg-cyan-500 text-white gap-2 font-bold"
+          className="w-full h-12 bg-primary hover:bg-primary/90 text-white gap-2 font-bold"
           onClick={() => {
             window.location.href = '/products';
           }}

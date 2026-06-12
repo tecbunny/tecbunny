@@ -27,7 +27,7 @@ export function useLeadCaptureTrigger(delayMs: number = 45000) {
       action: (
         <button
           onClick={() => window.open('https://wa.me/919604136010?text=Hi!%20I%20need%20help%20with%20my%20customised%20setup.', '_blank')}
-          className="rounded bg-cyan-600 px-3 py-1 text-xs font-medium text-white hover:bg-cyan-500"
+          className="rounded bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90"
         >
           Chat on WhatsApp
         </button>

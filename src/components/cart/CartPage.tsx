@@ -135,7 +135,7 @@ export default function CartPage() {
   }, [cartItems]);
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-slate-200">
+    <div className="min-h-screen bg-background text-foreground">
       
 
       <section className="pt-28 pb-16 relative">
@@ -145,15 +145,15 @@ export default function CartPage() {
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-white font-tech">Quote Configuration</h1>
-                <p className="text-sm text-slate-400">
+                <h1 className="text-3xl md:text-4xl font-bold font-tech tech-heading">Quote Configuration</h1>
+                <p className="text-sm text-muted-foreground">
                   Review your selected hardware and request a formal quote in one step.
                 </p>
               </div>
               {hasItems && (
                 <Link
                   href="/products"
-                  className="magnetic-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-lg border border-white/15 bg-white/5 text-white hover:bg-white/10 hover:border-primary/40 transition-all text-sm font-bold"
+                  className="magnetic-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-lg border border-border bg-muted/20 text-foreground hover:bg-muted/40 hover:border-primary/40 transition-all text-sm font-bold"
                 >
                   Continue Shopping <ArrowRight className="h-3 w-3" />
                 </Link>
@@ -175,9 +175,9 @@ export default function CartPage() {
             {hasItems ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
-                  <div className="flex items-center gap-3 text-sm text-slate-400">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <ShoppingCart className="h-4 w-4 text-primary" />
-                    <span className="font-semibold text-white">Cart Items ({cartCount})</span>
+                    <span className="font-semibold text-foreground">Cart Items ({cartCount})</span>
                   </div>
                   {cartItems.map((item) => (
                     <CartItemCard key={item.id} item={item} />
@@ -185,40 +185,40 @@ export default function CartPage() {
                 </div>
 
                 <div className="lg:col-span-1">
-                  <div className="sticky top-24 glass-panel p-6 rounded-2xl">
-                    <h3 className="text-xl font-bold text-white font-tech mb-6 border-b border-white/10 pb-4">Order Summary</h3>
+                  <div className="sticky top-24 bento-card p-6">
+                    <h3 className="text-xl font-bold text-foreground font-tech mb-6 border-b border-border pb-4 tech-heading">Order Summary</h3>
 
                     {absoluteMrpDiscount > 0 && (
-                      <div className="rounded-lg border border-orange-400/30 bg-orange-500/10 p-4 text-xs text-orange-200 mb-6">
+                      <div className="rounded-lg border border-orange-400/30 bg-orange-500/15 p-4 text-xs text-orange-800 dark:text-orange-200 mb-6">
                         <div className="flex items-center justify-between text-sm font-semibold">
                           <span>Total product discount</span>
                           <span>
                             ₹{formatCurrency(absoluteMrpDiscount)} ({percentMrpDiscount.toFixed(1)}% OFF)
                           </span>
                         </div>
-                        <p className="mt-2 text-[11px] text-orange-200/80">
+                        <p className="mt-2 text-[11px] text-orange-850/80 dark:text-orange-200/80">
                           You are saving against an MRP of ₹{formatCurrency(totalMrp)}.
                         </p>
                       </div>
                     )}
 
-                    <div className="space-y-3 text-sm text-slate-400 mb-6">
+                    <div className="space-y-3 text-sm text-muted-foreground mb-6">
                       <div className="flex justify-between">
                         <span>Hardware Subtotal</span>
-                        <span className="text-white">₹{formatCurrency(hardwareSubtotal)}</span>
+                        <span className="text-foreground font-medium">₹{formatCurrency(hardwareSubtotal)}</span>
                       </div>
                       {serviceSubtotal > 0 && (
                         <div className="flex justify-between">
                           <span>Installation Charges</span>
-                          <span className="text-white">₹{formatCurrency(serviceSubtotal)}</span>
+                          <span className="text-foreground font-medium">₹{formatCurrency(serviceSubtotal)}</span>
                         </div>
                       )}
                       <div className="flex justify-between">
                         <span>GST (Estimated)</span>
-                        <span className="text-white">₹{formatCurrency(gstAmount)}</span>
+                        <span className="text-foreground font-medium">₹{formatCurrency(gstAmount)}</span>
                       </div>
                       {autoOffer && autoOfferDiscount > 0 && (
-                        <div className="flex items-center justify-between text-emerald-300 font-semibold">
+                        <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-300 font-semibold">
                           <span>{autoOffer.title}</span>
                           <span>-₹{formatCurrency(autoOfferDiscount)}</span>
                         </div>
@@ -231,12 +231,12 @@ export default function CartPage() {
                       )}
                     </div>
 
-                    <div className="border-t border-white/10 pt-4 mb-8">
+                    <div className="border-t border-border pt-4 mb-8">
                       <div className="flex justify-between items-end">
-                        <span className="text-slate-300 font-bold">Estimated Total</span>
+                        <span className="text-muted-foreground font-bold">Estimated Total</span>
                         <span className="text-3xl font-bold text-primary font-tech">₹{formatCurrency(finalTotal)}</span>
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-2 text-right">Final invoice generated after site confirmation.</p>
+                      <p className="text-[10px] text-muted-foreground mt-2 text-right">Final invoice generated after site confirmation.</p>
                     </div>
 
                     <div className="mb-6">
@@ -251,24 +251,24 @@ export default function CartPage() {
                             placeholder="Promo Code"
                             value={couponCode}
                             onChange={(event) => setCouponCode(event.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg pl-4 pr-20 py-2 text-sm text-white focus-visible:ring-0 focus-visible:border-primary/50"
+                            className="w-full bg-muted/10 border border-border rounded-lg pl-4 pr-20 py-2 text-sm text-foreground focus-visible:ring-0 focus-visible:border-primary/50"
                           />
                           <button
                             type="submit"
                             disabled={!couponCode || applyingCode}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-primary hover:text-white disabled:opacity-50"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-primary hover:text-primary/80 disabled:opacity-50"
                           >
                             {applyingCode ? "APPLYING" : "APPLY"}
                           </button>
                         </div>
                       </form>
                       {appliedCoupon && (
-                        <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
+                        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <Tag className="h-3 w-3 text-primary" />
                             <span>{appliedCoupon.code}</span>
                           </div>
-                          <Button size="sm" variant="ghost" onClick={removeCoupon} className="h-6 px-2 text-slate-300 hover:text-white">
+                          <Button size="sm" variant="ghost" onClick={removeCoupon} className="h-6 px-2 text-muted-foreground hover:text-foreground">
                             Remove
                           </Button>
                         </div>
@@ -276,19 +276,19 @@ export default function CartPage() {
                     </div>
 
                     {autoOffer && autoOfferDiscount > 0 && autoOffer.description && (
-                      <div className="rounded-md border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-200 mb-5">
+                      <div className="rounded-md border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-600 dark:text-emerald-200 mb-5">
                         <div className="flex items-center justify-between">
                           <span>{autoOffer.title}</span>
-                          <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-200">
+                          <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-200 border-none">
                             -₹{formatCurrency(autoOfferDiscount)}
                           </Badge>
                         </div>
-                        <p className="mt-2 leading-relaxed text-emerald-200/80">{autoOffer.description}</p>
+                        <p className="mt-2 leading-relaxed text-emerald-800/80 dark:text-emerald-250/80">{autoOffer.description}</p>
                       </div>
                     )}
 
                     {totalDiscount > 0 && (
-                      <div className="rounded-md bg-white/5 p-3 text-xs text-slate-400 mb-6">
+                      <div className="rounded-md bg-muted/30 p-3 text-xs text-muted-foreground mb-6 border border-border">
                         <p>
                           Total savings: ₹{formatCurrency(totalDiscount)}
                           {canCombineDiscounts ? " (offers + coupons combined)" : ""}
@@ -296,14 +296,14 @@ export default function CartPage() {
                       </div>
                     )}
 
-                    <Button className="w-full py-3 bg-primary hover:bg-white hover:text-slate-900 text-white font-bold font-tech rounded-lg transition-colors shadow-sm" asChild>
+                    <Button className="w-full py-3 bg-primary hover:bg-primary/95 text-white font-bold font-tech rounded-lg transition-colors shadow-sm font-medium" asChild>
                       <Link href="/checkout">REQUEST FORMAL QUOTE</Link>
                     </Button>
-                    <p className="text-xs text-center text-slate-500 mt-3">
+                    <p className="text-xs text-center text-muted-foreground mt-3">
                       <Lock className="inline-block h-3.5 w-3.5 mr-1" /> Secure checkout
                     </p>
                     <Button
-                      className="w-full mt-4 border border-white/15 bg-white/5 text-white hover:bg-white/10 hover:border-primary/40"
+                      className="w-full mt-4 border border-border bg-muted/20 text-foreground hover:bg-muted/40 hover:border-primary/45"
                       variant="ghost"
                       asChild
                     >
@@ -313,15 +313,15 @@ export default function CartPage() {
                 </div>
               </div>
             ) : (
-              <div className="glass-panel rounded-2xl py-16 px-6 text-center">
-                <div className="mx-auto w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                  <Gift className="h-8 w-8 text-slate-500" />
+              <div className="bento-card py-16 px-6 text-center">
+                <div className="mx-auto w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4 border border-border">
+                  <Gift className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h2 className="text-2xl font-semibold text-white">Your cart is empty</h2>
-                <p className="text-sm text-slate-400 mt-2">
+                <h2 className="text-2xl font-semibold text-foreground tech-heading">Your cart is empty</h2>
+                <p className="text-sm text-muted-foreground mt-2">
                   Browse our catalogue and add products to start the quote process.
                 </p>
-                <Button className="mt-6" asChild>
+                <Button className="mt-6 font-bold" asChild>
                   <Link href="/products">Explore Products</Link>
                 </Button>
               </div>

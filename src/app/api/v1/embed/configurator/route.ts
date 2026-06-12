@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       referralCode: agent.referral_code,
       ui: {
         theme: 'dark',
-        brandColor: '#22d3ee', // Cyan 400
+        brandColor: '#2563EB', // Tech Blue
         accentColor: '#8b5cf6', // Purple 500
       },
       fields: [

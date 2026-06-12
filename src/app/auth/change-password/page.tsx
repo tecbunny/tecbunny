@@ -88,16 +88,16 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 bg-slate-950">
-       <div className="absolute top-0 left-0 h-full w-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-900/10 via-slate-950 to-slate-950 -z-10"></div>
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 bg-background">
+       <div className="absolute top-0 left-0 h-full w-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/5 via-background to-background -z-10"></div>
        
-      <Card className="w-full max-w-md border-white/10 bg-slate-900/60 backdrop-blur-md text-slate-200">
+      <Card className="w-full max-w-md border-border bg-card text-foreground">
         <CardHeader>
-             <Link href="/profile" className="inline-flex items-center text-sm text-slate-400 hover:text-cyan-400 mb-2 transition-colors">
+             <Link href="/profile" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-2 transition-colors">
                 <ArrowLeft className="mr-1 h-4 w-4" />
                 Back to Profile
               </Link>
-          <CardTitle className="text-2xl text-white">Change Password</CardTitle>
+          <CardTitle className="text-2xl text-foreground">Change Password</CardTitle>
           <CardDescription>
             Enter your new password below.
           </CardDescription>
@@ -112,18 +112,18 @@ export default function ChangePasswordPage() {
                   <FormItem>
                     <FormLabel>New Password</FormLabel>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
+                      <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                       <FormControl>
                         <Input
                           type={showPassword ? 'text' : 'password'}
-                          className="pl-10 bg-slate-950/50 border-white/10 text-white placeholder:text-slate-500"
+                          className="pl-10 bg-muted/50 border-border text-foreground placeholder:text-muted-foreground"
                           placeholder="Enter new password"
                           {...field}
                         />
                       </FormControl>
                       <button
                         type="button"
-                        className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
+                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -141,18 +141,18 @@ export default function ChangePasswordPage() {
                   <FormItem>
                     <FormLabel>Confirm New Password</FormLabel>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
+                      <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                       <FormControl>
                         <Input
                           type={showConfirmPassword ? 'text' : 'password'}
-                          className="pl-10 bg-slate-950/50 border-white/10 text-white placeholder:text-slate-500"
+                          className="pl-10 bg-muted/50 border-border text-foreground placeholder:text-muted-foreground"
                           placeholder="Confirm new password"
                           {...field}
                         />
                       </FormControl>
                       <button
                         type="button"
-                        className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
+                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       >
                         {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -165,7 +165,7 @@ export default function ChangePasswordPage() {
 
               <Button 
                 type="submit" 
-                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white" 
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" 
                 disabled={isLoading}
               >
                 {isLoading ? 'Updating...' : 'Update Password'}

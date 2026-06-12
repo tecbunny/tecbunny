@@ -444,65 +444,68 @@ export default function WalkInOrderManagement() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Completed': return 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/30';
-      case 'Processing': return 'bg-blue-500/15 text-blue-200 border border-blue-500/30';
-      case 'Cancelled': return 'bg-red-500/15 text-red-200 border border-red-500/30';
-      case 'Payment Confirmed': return 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/30';
-      case 'Awaiting Payment': return 'bg-amber-500/15 text-amber-200 border border-amber-500/30';
-      case 'Payment Failed': return 'bg-red-500/15 text-red-200 border border-red-500/30';
-      default: return 'bg-slate-700/40 text-slate-200 border border-white/10';
+      case 'Completed': 
+      case 'Payment Confirmed': 
+        return 'bg-primary/10 text-primary border border-primary/20';
+      case 'Processing': 
+      case 'Awaiting Payment': 
+        return 'bg-zinc-800/80 text-zinc-300 border border-zinc-700';
+      case 'Cancelled': 
+      case 'Payment Failed': 
+        return 'bg-zinc-950 text-zinc-400 border border-zinc-800';
+      default: return 'bg-zinc-900 text-zinc-400 border border-zinc-800';
     }
   };
 
   const getPaymentStatusColor = (status: 'Paid' | 'Pending' | 'Failed') => {
     switch (status) {
-      case 'Paid': return 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/30';
-      case 'Pending': return 'bg-amber-500/15 text-amber-200 border border-amber-500/30';
-      case 'Failed': return 'bg-red-500/15 text-red-200 border border-red-500/30';
-      default: return 'bg-slate-700/40 text-slate-200 border border-white/10';
+      case 'Paid': return 'bg-primary/10 text-primary border border-primary/20';
+      case 'Pending': return 'bg-zinc-800/80 text-zinc-300 border border-zinc-700';
+      case 'Failed': return 'bg-zinc-950 text-zinc-400 border border-zinc-800';
+      default: return 'bg-zinc-900 text-zinc-400 border border-zinc-800';
     }
   };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white">Walk-in Order Management</h1>
-        <p className="text-slate-300">Manage in-store customer orders and transactions</p>
+        <h1 className="text-3xl font-bold tech-heading">Walk-in Order Management</h1>
+        <p className="tech-body">Manage in-store customer orders and transactions</p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex space-x-1 bg-white/5 border border-white/10 p-1 rounded-lg mb-6">
+      <div className="flex space-x-1 bg-muted border border-border p-1 rounded-lg mb-6">
         <button
           onClick={() => setActiveTab('create')}
-          className={`px-4 py-2 rounded-md font-medium transition-colors ${
+          className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center ${
             activeTab === 'create'
-              ? 'bg-white/10 text-cyan-200 shadow-sm'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-card text-primary shadow-sm border border-border'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <ShoppingCart className="inline-block w-4 h-4 mr-2" />
+          <ShoppingCart className="w-4 h-4 mr-2" />
           Create Order
         </button>
         <button
           onClick={() => setActiveTab('orders')}
-          className={`px-4 py-2 rounded-md font-medium transition-colors ${
+          className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center ${
             activeTab === 'orders'
-              ? 'bg-white/10 text-cyan-200 shadow-sm'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-card text-primary shadow-sm border border-border'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Package className="inline-block w-4 h-4 mr-2" />
+          <Package className="w-4 h-4 mr-2" />
           Today's Orders
         </button>
         <button
           onClick={() => setActiveTab('stats')}
-          className={`px-4 py-2 rounded-md font-medium transition-colors ${
+          className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center ${
             activeTab === 'stats'
-              ? 'bg-white/10 text-cyan-200 shadow-sm'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-card text-primary shadow-sm border border-border'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <IndianRupee className="inline-block w-4 h-4 mr-2" />
+          <IndianRupee className="w-4 h-4 mr-2" />
           Daily Stats
         </button>
       </div>
@@ -528,23 +531,24 @@ export default function WalkInOrderManagement() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
                   {filteredProducts.map((product) => (
-                    <div key={product.id} className="border rounded-lg p-4">
-                      <h4 className="font-medium">{product.name}</h4>
-                      <p className="text-sm text-gray-500 mb-2">{product.category} • {product.brand}</p>
+                    <div key={product.id} className="border border-zinc-800 bg-zinc-900/40 rounded-lg p-4">
+                      <h4 className="font-medium text-zinc-100">{product.name}</h4>
+                      <p className="text-sm text-zinc-400 mb-2">{product.category} • {product.brand}</p>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-lg font-bold text-green-600">
+                        <span className="text-lg font-bold text-primary">
                           ₹{(product.price * (1 - (product.discount_percentage || 0) / 100)).toFixed(2)}
                         </span>
                         {product.discount_percentage && (
-                          <Badge variant="destructive">{product.discount_percentage}% OFF</Badge>
+                          <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5">{product.discount_percentage}% OFF</Badge>
                         )}
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">Stock: {product.stock_quantity}</span>
+                        <span className="text-sm text-zinc-400">Stock: {product.stock_quantity}</span>
                         <Button
                           size="sm"
                           onClick={() => addToCart(product)}
                           disabled={product.stock_quantity === 0}
+                          className="bg-primary hover:bg-primary/90 text-white"
                         >
                           <Plus className="w-4 h-4 mr-1" />
                           Add
@@ -575,15 +579,15 @@ export default function WalkInOrderManagement() {
                     className="pl-10"
                   />
                   {searchedCustomers.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 bg-slate-900 border border-white/10 rounded-md shadow-lg z-10 mt-1">
+                    <div className="absolute top-full left-0 right-0 bg-card border border-border rounded-md shadow-lg z-10 mt-1">
                       {searchedCustomers.map((customer) => (
                         <div
                           key={customer.id}
-                          className="p-3 hover:bg-white/5 cursor-pointer border-b border-white/10 last:border-b-0 text-slate-200"
+                          className="p-3 hover:bg-muted cursor-pointer border-b border-border last:border-b-0 text-foreground"
                           onClick={() => selectCustomer(customer)}
                         >
                           <div className="font-medium">{customer.first_name} {customer.last_name}</div>
-                          <div className="text-sm text-slate-400">{customer.phone} • {customer.customer_category}</div>
+                          <div className="text-sm text-muted-foreground">{customer.phone} • {customer.customer_category}</div>
                         </div>
                       ))}
                     </div>
@@ -592,10 +596,10 @@ export default function WalkInOrderManagement() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {selectedCustomer && (
-                  <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+                  <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
-                      <User className="w-4 h-4 text-cyan-300" />
-                      <span className="font-medium text-slate-100">Selected Customer</span>
+                      <User className="w-4 h-4 text-primary" />
+                      <span className="font-medium text-foreground">Selected Customer</span>
                       <Badge variant="outline">{selectedCustomer.customer_category}</Badge>
                     </div>
                     <div className="text-sm space-y-1">
@@ -924,7 +928,7 @@ export default function WalkInOrderManagement() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-red-600 border-red-200 hover:text-red-700 hover:border-red-300"
+                                  className="text-zinc-400 border-zinc-800 hover:text-zinc-300 hover:bg-zinc-900"
                                   onClick={() => updateOrderStatus(order.id, 'Payment Failed')}
                                   title="Mark as Failed"
                                 >

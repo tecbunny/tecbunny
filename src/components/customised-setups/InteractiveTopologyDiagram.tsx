@@ -30,7 +30,7 @@ interface NetworkNode {
   x: number;
   y: number;
   status: string;
-  color: 'cyan' | 'indigo' | 'emerald' | 'violet' | 'slate';
+  color: 'blue' | 'indigo' | 'emerald' | 'violet' | 'slate';
   icon: React.ComponentType<any>;
 }
 
@@ -59,7 +59,7 @@ function TelemetrySparkline({ data, color }: { data: number[]; color: string }) 
     .join(' ');
 
   const strokeColor = 
-    color === 'cyan' ? '#22d3ee' :
+    color === 'blue' ? '#2563eb' :
     color === 'indigo' ? '#818cf8' :
     color === 'emerald' ? '#34d399' :
     color === 'violet' ? '#c084fc' :
@@ -218,7 +218,7 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
     x: 300,
     y: 220,
     status: 'ACTIVE',
-    color: 'cyan',
+    color: 'blue',
     icon: Network,
   };
 
@@ -277,7 +277,7 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
       x: cx,
       y: cy,
       status: 'ACTIVE',
-      color: 'cyan',
+      color: 'blue',
       icon: Video,
     });
   }
@@ -395,7 +395,7 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
   };
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-4 sm:p-6 backdrop-blur-xl relative overflow-hidden transition-all duration-300">
+    <div className="rounded-3xl border border-border bg-card/40 p-4 sm:p-6 backdrop-blur-xl relative overflow-hidden transition-all duration-300">
       {/* Glow Filter & Keyframe styling */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes topology-dash-flow {
@@ -417,32 +417,32 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
       ` }} />
 
       {/* Top Banner / System Console Info */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/5 pb-4 mb-6 gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border pb-4 mb-6 gap-3">
         <div>
-          <span className="text-[10px] font-bold text-cyan-400 font-mono tracking-widest uppercase flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <span className="text-[10px] font-bold text-primary font-mono tracking-widest uppercase flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             SEC-NET SYSTEM MONITOR v2.0.0
           </span>
-          <h2 className="text-white text-lg font-bold tracking-tight mt-1">
+          <h2 className="text-foreground text-lg font-bold tracking-tight mt-1">
             {config.premiseType || 'Premise'} Network Architecture Map
           </h2>
         </div>
-        <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
-          <Activity className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+        <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+          <Activity className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
           <span>Active Connections: {cameraCount + 3} Devices</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Left Side: Interactive Network Visualizer */}
-        <div className="lg:col-span-3 bg-slate-950/80 rounded-2xl border border-white/5 p-4 relative min-h-[360px] flex items-center justify-center overflow-hidden aspect-[4/3] max-w-full group">
+        <div className="lg:col-span-3 bg-muted/30 rounded-2xl border border-border p-4 relative min-h-[360px] flex items-center justify-center overflow-hidden aspect-[4/3] max-w-full group">
           {/* Futuristic Grid Background Pattern */}
-          <div className="absolute inset-0 pointer-events-none opacity-[0.05] bg-[radial-gradient(#22d3ee_1px,transparent_1px)] [background-size:16px_16px]" />
+          <div className="absolute inset-0 pointer-events-none opacity-[0.05] bg-[radial-gradient(#2563eb_1px,transparent_1px)] [background-size:16px_16px]" />
           
           {/* Subtle concentric grid lines in background */}
-          <div className="absolute h-[340px] w-[340px] rounded-full border border-cyan-400/5 pointer-events-none flex items-center justify-center">
-            <div className="h-[220px] w-[220px] rounded-full border border-cyan-400/5 flex items-center justify-center">
-              <div className="h-[100px] w-[100px] rounded-full border border-cyan-400/5" />
+          <div className="absolute h-[340px] w-[340px] rounded-full border border-primary/5 pointer-events-none flex items-center justify-center">
+            <div className="h-[220px] w-[220px] rounded-full border border-primary/5 flex items-center justify-center">
+              <div className="h-[100px] w-[100px] rounded-full border border-primary/5" />
             </div>
           </div>
 
@@ -468,14 +468,14 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
               y1={selectedNode.y}
               x2={width}
               y2={selectedNode.y}
-              className="stroke-cyan-500/10 stroke-[0.5] stroke-dasharray-[2_4] transition-all duration-300"
+              className="stroke-primary/10 stroke-[0.5] stroke-dasharray-[2_4] transition-all duration-300"
             />
             <line
               x1={selectedNode.x}
               y1="0"
               x2={selectedNode.x}
               y2={height}
-              className="stroke-cyan-500/10 stroke-[0.5] stroke-dasharray-[2_4] transition-all duration-300"
+              className="stroke-primary/10 stroke-[0.5] stroke-dasharray-[2_4] transition-all duration-300"
             />
 
             {/* Central Switch Concentric Scanning Ring */}
@@ -483,7 +483,7 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
               cx={centralNode.x}
               cy={centralNode.y}
               r="35"
-              className="stroke-cyan-400/10 fill-none stroke-[1.5] stroke-dasharray-[4_8] animate-radar-scan origin-center"
+              className="stroke-primary/10 fill-none stroke-[1.5] stroke-dasharray-[4_8] animate-radar-scan origin-center"
               style={{ transformOrigin: `${centralNode.x}px ${centralNode.y}px` }}
             />
 
@@ -495,7 +495,7 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
               const isSharedActive = activeNodeId === 'switch' || isSpecificActive;
 
               let strokeColor = 'rgba(71, 85, 105, 0.2)'; // slate-600/20
-              let activeStroke = 'rgba(34, 211, 238, 0.4)'; // cyan-400/40
+              let activeStroke = 'rgba(37, 99, 235, 0.4)'; // blue-400/40
               
               if (node.color === 'indigo') {
                 activeStroke = 'rgba(129, 140, 248, 0.5)';
@@ -515,7 +515,7 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
                       x2={centralNode.x}
                       y2={centralNode.y}
                       className="stroke-[3] opacity-40"
-                      stroke={node.color === 'cyan' ? '#22d3ee' : node.color === 'indigo' ? '#818cf8' : node.color === 'emerald' ? '#34d399' : node.color === 'violet' ? '#c084fc' : '#94a3b8'}
+                      stroke={node.color === 'blue' ? '#2563eb' : node.color === 'indigo' ? '#818cf8' : node.color === 'emerald' ? '#34d399' : node.color === 'violet' ? '#c084fc' : '#94a3b8'}
                       filter="url(#svg-glow)"
                     />
                   )}
@@ -529,7 +529,7 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
                       "transition-all duration-300",
                       isSpecificActive ? "stroke-[2]" : "stroke-[1]"
                     )}
-                    stroke={isSpecificActive ? (node.color === 'cyan' ? '#22d3ee' : node.color === 'indigo' ? '#818cf8' : node.color === 'emerald' ? '#34d399' : node.color === 'violet' ? '#c084fc' : '#94a3b8') : isSharedActive ? 'rgba(71, 85, 105, 0.4)' : 'rgba(51, 65, 85, 0.15)'}
+                    stroke={isSpecificActive ? (node.color === 'blue' ? '#2563eb' : node.color === 'indigo' ? '#818cf8' : node.color === 'emerald' ? '#34d399' : node.color === 'violet' ? '#c084fc' : '#94a3b8') : isSharedActive ? 'rgba(71, 85, 105, 0.4)' : 'rgba(51, 65, 85, 0.15)'}
                   />
                   {/* Moving Packets Overlay */}
                   <line
@@ -576,17 +576,17 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
                 {/* Node Box with Cyber HUD corner brackets */}
                 <div
                   className={cn(
-                    "h-12 w-12 rounded-xl flex items-center justify-center border transition-all duration-300 relative bg-slate-950/90",
+                    "h-12 w-12 rounded-xl flex items-center justify-center border transition-all duration-300 relative bg-card",
                     
                     // Selected glow state configurations
-                    isSelected && node.color === 'cyan' && "border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.25)] text-cyan-400",
+                    isSelected && node.color === 'blue' && "border-primary shadow-[0_0_15px_rgba(37,99,235,0.25)] text-primary",
                     isSelected && node.color === 'indigo' && "border-indigo-400 shadow-[0_0_15px_rgba(129,140,248,0.25)] text-indigo-400",
                     isSelected && node.color === 'emerald' && "border-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.25)] text-emerald-400",
                     isSelected && node.color === 'violet' && "border-violet-400 shadow-[0_0_15px_rgba(192,132,252,0.25)] text-violet-400",
                     isSelected && node.color === 'slate' && "border-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.25)] text-slate-300",
                     
                     // Default states
-                    !isSelected && "border-white/10 text-slate-400 hover:border-white/20 hover:text-white"
+                    !isSelected && "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
                   )}
                 >
                   <Icon className={cn(
@@ -598,28 +598,28 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
                   {(isSelected || hoverCheck) && (
                     <>
                       <div className={cn("absolute top-[-2px] left-[-2px] w-2 h-2 border-t-2 border-l-2 rounded-tl-[3px]",
-                        node.color === 'cyan' && "border-cyan-400",
+                        node.color === 'blue' && "border-primary",
                         node.color === 'indigo' && "border-indigo-400",
                         node.color === 'emerald' && "border-emerald-400",
                         node.color === 'violet' && "border-violet-400",
                         node.color === 'slate' && "border-slate-400"
                       )} />
                       <div className={cn("absolute top-[-2px] right-[-2px] w-2 h-2 border-t-2 border-r-2 rounded-tr-[3px]",
-                        node.color === 'cyan' && "border-cyan-400",
+                        node.color === 'blue' && "border-primary",
                         node.color === 'indigo' && "border-indigo-400",
                         node.color === 'emerald' && "border-emerald-400",
                         node.color === 'violet' && "border-violet-400",
                         node.color === 'slate' && "border-slate-400"
                       )} />
                       <div className={cn("absolute bottom-[-2px] left-[-2px] w-2 h-2 border-b-2 border-l-2 rounded-bl-[3px]",
-                        node.color === 'cyan' && "border-cyan-400",
+                        node.color === 'blue' && "border-primary",
                         node.color === 'indigo' && "border-indigo-400",
                         node.color === 'emerald' && "border-emerald-400",
                         node.color === 'violet' && "border-violet-400",
                         node.color === 'slate' && "border-slate-400"
                       )} />
                       <div className={cn("absolute bottom-[-2px] right-[-2px] w-2 h-2 border-b-2 border-r-2 rounded-br-[3px]",
-                        node.color === 'cyan' && "border-cyan-400",
+                        node.color === 'blue' && "border-primary",
                         node.color === 'indigo' && "border-indigo-400",
                         node.color === 'emerald' && "border-emerald-400",
                         node.color === 'violet' && "border-violet-400",
@@ -631,8 +631,8 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
                   {/* Pulsing indicator dot on selection */}
                   {isSelected && (
                     <span className={cn(
-                      "absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border border-slate-950 flex items-center justify-center",
-                      node.color === 'cyan' && "bg-cyan-400",
+                      "absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border border-background flex items-center justify-center",
+                      node.color === 'blue' && "bg-primary",
                       node.color === 'indigo' && "bg-indigo-400",
                       node.color === 'emerald' && "bg-emerald-400",
                       node.color === 'violet' && "bg-violet-400",
@@ -640,7 +640,7 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
                     )}>
                       <span className={cn(
                         "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-                        node.color === 'cyan' && "bg-cyan-400",
+                        node.color === 'blue' && "bg-primary",
                         node.color === 'indigo' && "bg-indigo-400",
                         node.color === 'emerald' && "bg-emerald-400",
                         node.color === 'violet' && "bg-violet-400",
@@ -654,15 +654,15 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
                 <span className={cn(
                   "mt-2 text-[9px] font-bold uppercase font-mono tracking-wider px-1.5 py-0.5 rounded border transition-all duration-300 pointer-events-none select-none",
                   isSelected
-                    ? "text-white bg-white/10 border-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
-                    : "text-slate-400 bg-black/40 border-transparent group-hover:text-white group-hover:bg-slate-900/60 group-hover:border-white/5"
+                    ? "text-foreground bg-muted border-border shadow-md"
+                    : "text-muted-foreground bg-muted/40 border-transparent group-hover:text-foreground group-hover:bg-muted/80 group-hover:border-border"
                 )}>
                   {node.id === 'switch' ? 'CORE SWITCH' : node.label.replace('Node ', '')}
                 </span>
 
                 {/* Coordinate marker displayed only on selected node */}
                 {isSelected && (
-                  <span className="absolute -bottom-8 text-[8px] font-mono text-cyan-400/70 tracking-widest bg-slate-950/80 px-1 border border-cyan-400/20 rounded-md">
+                  <span className="absolute -bottom-8 text-[8px] font-mono text-primary/70 tracking-widest bg-background/80 px-1 border border-primary/20 rounded-md">
                     X:{Math.round(node.x)} Y:{Math.round(node.y)}
                   </span>
                 )}
@@ -676,22 +676,22 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
           id="device-inspector-panel"
           role="tabpanel"
           aria-label="Component Telemetry Details"
-          className="lg:col-span-2 flex flex-col justify-between bg-slate-950 border border-white/5 rounded-2xl p-4 sm:p-5 font-mono text-xs text-slate-300 min-h-[380px] shadow-2xl relative"
+          className="lg:col-span-2 flex flex-col justify-between bg-card border border-border rounded-2xl p-4 sm:p-5 font-mono text-xs text-card-foreground min-h-[380px] shadow-2xl relative"
         >
           {/* Telemetry Header */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-white/5 pb-2">
-              <span className="font-bold text-cyan-400 flex items-center gap-1.5 uppercase">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <span className="font-bold text-primary flex items-center gap-1.5 uppercase">
                 <Terminal className="h-3.5 w-3.5" />
                 DEVICE INSPECTOR
               </span>
               <span className={cn(
                 "px-2 py-0.5 rounded-[4px] text-[10px] font-bold tracking-wider",
                 selectedNode.status === 'ACTIVE' || selectedNode.status === 'ONLINE' || selectedNode.status === 'CONNECTED'
-                  ? "bg-emerald-950 text-emerald-400 border border-emerald-900/30"
+                  ? "bg-emerald-900/10 text-emerald-500 border border-emerald-900/30"
                   : selectedNode.status === 'WRITING'
-                    ? "bg-cyan-950 text-cyan-400 border border-cyan-900/30 animate-pulse"
-                    : "bg-slate-800 text-slate-400"
+                    ? "bg-primary/10 text-primary border border-primary/30 animate-pulse"
+                    : "bg-muted text-muted-foreground"
               )}>
                 {selectedNode.status}
               </span>
@@ -699,18 +699,18 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
 
             {/* Selected Node Header */}
             <div>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Selected Component</p>
-              <h3 className="text-white text-sm font-bold tracking-tight mt-0.5">{selectedNode.label}</h3>
-              <p className="text-[9px] text-slate-600 font-mono mt-0.5">MAC_ID: 00:1A:2B:3C:{(selectedNode.id.charCodeAt(0) || 48).toString(16)}D:{ (selectedNode.id.charCodeAt(selectedNode.id.length - 1) || 57).toString(16) }</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Selected Component</p>
+              <h3 className="text-foreground text-sm font-bold tracking-tight mt-0.5">{selectedNode.label}</h3>
+              <p className="text-[9px] text-muted-foreground/85 font-mono mt-0.5">MAC_ID: 00:1A:2B:3C:{(selectedNode.id.charCodeAt(0) || 48).toString(16)}D:{ (selectedNode.id.charCodeAt(selectedNode.id.length - 1) || 57).toString(16) }</p>
             </div>
 
             {/* Key-Value Telemetry Listing */}
-            <div className="space-y-2.5 pt-2 border-t border-white/5">
+            <div className="space-y-2.5 pt-2 border-t border-border">
               {activeTelemetry.map((item) => (
                 <div key={item.key} className="flex flex-col gap-1.5 group">
                   <div className="flex justify-between items-center gap-4">
-                    <span className="text-slate-500 group-hover:text-slate-400 transition-colors">{item.key}</span>
-                    <span className="text-right font-semibold font-mono tracking-wide text-white">
+                    <span className="text-muted-foreground group-hover:text-muted-foreground/80 transition-colors">{item.key}</span>
+                    <span className="text-right font-semibold font-mono tracking-wide text-foreground">
                       {item.val}
                     </span>
                   </div>
@@ -730,9 +730,9 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
           </div>
 
           {/* Dynamic Console Scroll Feed */}
-          <div className="mt-6 pt-4 border-t border-white/5 flex flex-col justify-end gap-1.5">
+          <div className="mt-6 pt-4 border-t border-border flex flex-col justify-end gap-1.5">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Live Console Feed</p>
+              <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Live Console Feed</p>
               {/* Category tabs filters */}
               <div className="flex gap-1.5 text-[8px] font-bold">
                 {(['ALL', 'SYS', 'NET', 'SEC'] as const).map((tab) => (
@@ -742,8 +742,8 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
                     className={cn(
                       "px-1 py-0.5 rounded transition-all",
                       activeLogTab === tab 
-                        ? "bg-cyan-500/20 text-cyan-400 border border-cyan-400/20"
-                        : "text-slate-500 hover:text-slate-300"
+                        ? "bg-primary/20 text-primary border border-primary/20"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {tab}
@@ -752,27 +752,27 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
               </div>
             </div>
 
-            <div className="bg-slate-950 border border-white/5 p-2 rounded-lg max-h-[85px] overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+            <div className="bg-muted/30 border border-border p-2 rounded-lg max-h-[85px] overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
               {filteredLogs.length === 0 ? (
-                <div className="text-[9px] text-slate-600 italic">No logs found in {activeLogTab} filter...</div>
+                <div className="text-[9px] text-muted-foreground italic">No logs found in {activeLogTab} filter...</div>
               ) : (
                 filteredLogs.map((log, idx) => (
                   <div
                     key={idx}
                     className="text-[9px] font-mono leading-relaxed flex items-start gap-1.5"
                   >
-                    <span className="text-slate-600">[{log.timestamp}]</span>
+                    <span className="text-muted-foreground">[{log.timestamp}]</span>
                     <span className={cn(
                       "font-bold text-[8px] px-1 py-0.2 rounded-[3px]",
-                      log.type === 'SYS' && "bg-emerald-950/60 text-emerald-400 border border-emerald-950",
-                      log.type === 'NET' && "bg-cyan-950/60 text-cyan-400 border border-cyan-950",
-                      log.type === 'SEC' && "bg-purple-950/60 text-purple-400 border border-purple-950"
+                      log.type === 'SYS' && "bg-emerald-500/10 text-emerald-500 border border-emerald-900/30",
+                      log.type === 'NET' && "bg-primary/10 text-primary border border-primary/30",
+                      log.type === 'SEC' && "bg-violet-500/10 text-violet-500 border border-violet-900/30"
                     )}>
                       {log.type}
                     </span>
                     <span className={cn(
                       "flex-1",
-                      idx === filteredLogs.length - 1 ? "text-slate-200" : "text-slate-400"
+                      idx === filteredLogs.length - 1 ? "text-foreground" : "text-muted-foreground"
                     )}>
                       {log.text}
                     </span>
@@ -781,9 +781,9 @@ export function InteractiveTopologyDiagram({ config }: InteractiveTopologyDiagra
               )}
             </div>
 
-            <div className="text-[9px] text-cyan-400/60 font-mono animate-pulse mt-1 flex items-center gap-1.5">
+            <div className="text-[9px] text-primary/60 font-mono animate-pulse mt-1 flex items-center gap-1.5">
               <span>&gt; SOCKET MONITOR ONLINE</span>
-              <span className="h-1 w-1 bg-cyan-400 rounded-full animate-ping" />
+              <span className="h-1 w-1 bg-primary rounded-full animate-ping" />
             </div>
           </div>
         </div>

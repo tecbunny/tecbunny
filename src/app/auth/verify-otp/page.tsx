@@ -8,10 +8,10 @@ import { OTPVerificationContent } from './OTPVerificationContent';
 export default function VerifyOTPPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto"></div>
-          <p className="mt-4 text-slate-300">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>
     }>

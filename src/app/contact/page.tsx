@@ -54,7 +54,7 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(contactFaqJsonLd).replace(/</g, '\\u003c') }}
       />
-      <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+      <Suspense fallback={<div className="min-h-screen bg-background" />}>
         <ContactPage />
       </Suspense>
     </>

@@ -65,22 +65,22 @@ export default function EmailVerificationContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 text-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8 text-foreground">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <CheckCircle className="mx-auto h-12 w-12 text-emerald-300" />
-          <h2 className="mt-6 text-3xl font-extrabold text-white">
+          <CheckCircle className="mx-auto h-12 w-12 text-emerald-500" />
+          <h2 className="mt-6 text-3xl font-extrabold tech-heading">
             Check your email
           </h2>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-sm tech-body">
             We've sent a verification link to your email address
           </p>
         </div>
         
-        <Card className="border-white/10 bg-slate-900/60">
+        <Card className="border-border bg-card">
           <CardHeader className="text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-cyan-500/10">
-              <Mail className="h-6 w-6 text-cyan-300" />
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-primary/10">
+              <Mail className="h-6 w-6 text-primary" />
             </div>
             <CardTitle className="text-xl">Verify your email address</CardTitle>
             <CardDescription>
@@ -93,7 +93,7 @@ export default function EmailVerificationContent() {
           </CardHeader>
           
           <CardContent className="space-y-4">
-            <div className="text-sm text-slate-300 space-y-2">
+            <div className="text-sm tech-body space-y-2">
               <p>To complete your registration:</p>
               <ol className="list-decimal list-inside space-y-1 ml-4">
                 <li>Check your email inbox</li>
@@ -150,7 +150,7 @@ export default function EmailVerificationContent() {
           </CardContent>
         </Card>
         
-        <div className="text-center text-sm text-gray-600">
+        <div className="text-center text-sm text-muted-foreground">
           <p>Didn't receive the email? Check your spam folder or contact support.</p>
         </div>
       </div>

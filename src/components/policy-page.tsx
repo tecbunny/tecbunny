@@ -41,22 +41,22 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialCo
 
   if (loading) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-200">
+      <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
         <div className="pointer-events-none absolute inset-0 bg-noise opacity-10" />
         <div className="mx-auto max-w-5xl px-4 pb-16 pt-12 sm:px-6 lg:px-8">
           <Link 
             href="/" 
-            className="group inline-flex items-center text-sm font-medium text-slate-400 hover:text-cyan-300 transition-colors"
+            className="group inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
             Back to Home
           </Link>
-          <div className="mt-8 rounded-2xl border border-white/10 bg-slate-900/60 p-8 backdrop-blur-md">
-            <h1 className="text-3xl font-extrabold text-white">{defaultTitle}</h1>
+          <div className="mt-8 rounded-2xl border border-border bg-card p-8 backdrop-blur-md">
+            <h1 className="text-3xl font-extrabold text-foreground">{defaultTitle}</h1>
             <div className="mt-12 flex items-center justify-center">
               <div className="text-center">
-                <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-                <p className="text-sm text-slate-400">Loading {defaultTitle.toLowerCase()}...</p>
+                <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="text-sm text-muted-foreground">Loading {defaultTitle.toLowerCase()}...</p>
               </div>
             </div>
           </div>
@@ -67,24 +67,24 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialCo
 
   if (error || !content) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-200">
+      <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
         <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
         <div className="mx-auto max-w-5xl px-4 pb-20 pt-12 sm:px-6 lg:px-8">
           <Link 
             href="/" 
-            className="group inline-flex items-center text-sm font-medium text-slate-400 hover:text-cyan-300 transition-colors"
+            className="group inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
             Back to Home
           </Link>
-          <div className="mt-8 rounded-2xl border border-red-500/20 bg-slate-900/60 p-8 backdrop-blur-md text-center">
-            <h1 className="text-2xl font-bold text-white mb-4">Content Unavailable</h1>
-            <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
+          <div className="mt-8 rounded-2xl border border-border bg-card p-8 backdrop-blur-md text-center">
+            <h1 className="text-2xl font-bold text-foreground mb-4">Content Unavailable</h1>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
               {error ? `Error: ${error}` : 'The requested policy content is temporarily unavailable. Please try reloading the page.'}
             </p>
             <Link
               href="/"
-              className="inline-flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 px-5 py-2.5 text-sm font-bold text-white transition-colors"
+              className="inline-flex items-center justify-center rounded-lg bg-muted border border-border hover:bg-muted/80 px-5 py-2.5 text-sm font-bold text-foreground transition-colors"
             >
               Back to Home
             </Link>
@@ -95,15 +95,15 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialCo
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-200">
+    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
       <style dangerouslySetInnerHTML={{ __html: `
         .policy-content h2 {
           font-size: 1.5rem !important;
           font-weight: 700 !important;
           margin-top: 3rem !important;
           margin-bottom: 1.25rem !important;
-          color: #ffffff !important;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+          color: hsl(var(--foreground)) !important;
+          border-bottom: 1px solid hsl(var(--border)) !important;
           padding-bottom: 0.625rem !important;
         }
         .policy-content h3 {
@@ -111,12 +111,12 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialCo
           font-weight: 600 !important;
           margin-top: 2.25rem !important;
           margin-bottom: 1rem !important;
-          color: #a5f3fc !important;
+          color: hsl(var(--primary)) !important;
         }
         .policy-content p {
           margin-bottom: 1.5rem !important;
           line-height: 1.8 !important;
-          color: #cbd5e1 !important;
+          color: hsl(var(--muted-foreground)) !important;
         }
         .policy-content ul, .policy-content ol {
           margin-top: 1rem !important;
@@ -127,49 +127,49 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialCo
         .policy-content li {
           margin-bottom: 0.875rem !important;
           line-height: 1.7 !important;
-          color: #cbd5e1 !important;
+          color: hsl(var(--muted-foreground)) !important;
         }
         .policy-content strong, .policy-content b {
-          color: #22d3ee !important;
+          color: hsl(var(--foreground)) !important;
           font-weight: 600 !important;
         }
       ` }} />
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-10" />
       
       {/* Decorative Blur Orbs */}
-      <div className="absolute top-10 left-10 w-[400px] h-[400px] bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px] pointer-events-none" />
-
+      <div className="absolute top-10 left-10 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+ 
       <div className="mx-auto max-w-5xl px-4 pb-24 pt-12 sm:px-6 lg:px-8">
         <Link 
           href="/" 
-          className="group inline-flex items-center text-sm font-medium text-slate-400 hover:text-cyan-300 transition-colors"
+          className="group inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
         >
           <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Back to Home
         </Link>
-
+ 
         {/* Main Policy Card Container */}
-        <div className="mt-8 relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-900/40 p-6 backdrop-blur-xl sm:p-10 shadow-[0_0_50px_rgba(6,182,212,0.03)]">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-8 mb-8">
-            <h1 className="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-cyan-300 sm:text-3xl">
+        <div className="mt-8 relative overflow-hidden rounded-2xl border border-border bg-card p-6 backdrop-blur-xl sm:p-10 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-8 mb-8">
+            <h1 className="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-foreground via-foreground to-primary sm:text-3xl">
               {policyData.title || defaultTitle}
             </h1>
             {policyData.lastUpdated && (
-              <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-500/20">
+              <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-500 ring-1 ring-inset ring-emerald-500/20">
                 Last updated: {policyData.lastUpdated}
               </span>
             )}
           </div>
-
-          <div className="policy-content mt-8 space-y-6 text-sm text-slate-300">
+ 
+          <div className="policy-content mt-8 space-y-6 text-sm text-muted-foreground">
             {enhancedHtml && (
               <div
                 className="prose prose-invert max-w-none"
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(enhancedHtml) }}
               />
             )}
-
+ 
             {!enhancedHtml && policyData.introduction && (
               <div className="space-y-4">
                 {policyData.introduction.map((paragraph: string, index: number) => (
@@ -177,11 +177,11 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialCo
                 ))}
               </div>
             )}
-
+ 
             {!enhancedHtml && policyData.sections &&
               policyData.sections.map((section: any, index: number) => (
-                <div key={index} id={sectionIds[index]} className="space-y-4 border-t border-white/5 pt-8 mt-8 first:mt-0 first:border-0 first:pt-0">
-                  <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-200 sm:text-2xl">
+                <div key={index} id={sectionIds[index]} className="space-y-4 border-t border-border pt-8 mt-8 first:mt-0 first:border-0 first:pt-0">
+                  <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80 sm:text-2xl">
                     {section.title}
                   </h2>
                   {section.content &&
@@ -191,7 +191,7 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialCo
                   {section.list && (
                     <ul className="list-disc pl-6 space-y-2">
                       {section.list.map((item: string, lIndex: number) => (
-                        <li key={lIndex} className="leading-relaxed marker:text-cyan-400" dangerouslySetInnerHTML={{ __html: sanitizeHtml(item) }} />
+                        <li key={lIndex} className="leading-relaxed marker:text-primary" dangerouslySetInnerHTML={{ __html: sanitizeHtml(item) }} />
                       ))}
                     </ul>
                   )}

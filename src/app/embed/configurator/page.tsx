@@ -13,7 +13,7 @@ function ConfiguratorEmbedContent() {
   const referralCode = searchParams.get('ref') || '';
   
   return (
-    <div className="bg-slate-950 min-h-screen p-4 text-slate-200">
+    <div className="bg-background min-h-screen p-4 text-foreground">
       <ClientCustomSetupFlow 
         blueprint={null} 
         variant="tech" 
@@ -39,7 +39,7 @@ function ConfiguratorEmbedContent() {
 
 export default function ConfiguratorEmbedPage() {
   return (
-    <Suspense fallback={<div className="bg-slate-950 min-h-screen animate-pulse" />}>
+    <Suspense fallback={<div className="bg-background min-h-screen animate-pulse" />}>
       <ConfiguratorEmbedContent />
     </Suspense>
   );

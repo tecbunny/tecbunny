@@ -42,25 +42,25 @@ export function TwoFactorVerification({
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md border-white/10 bg-slate-900/70 text-slate-100 shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md border-border bg-card text-foreground shadow-lg">
         <CardHeader className="text-center">
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-cyan-500/10 mb-4">
-            <Shield className="h-8 w-8 text-cyan-300" />
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mb-4">
+            <Shield className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold text-white">
+          <CardTitle className="text-2xl font-bold tech-heading">
             Two-Factor Authentication
           </CardTitle>
-          <CardDescription className="text-slate-300">
+          <CardDescription className="tech-body">
             Enter the 6-digit code from your authenticator app
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          <div className="mb-6 p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+          <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
             <div className="flex items-center space-x-3">
-              <Key className="h-5 w-5 text-cyan-300" />
-              <div className="text-sm text-cyan-200">
+              <Key className="h-5 w-5 text-primary" />
+              <div className="text-sm text-foreground">
                 <strong>Verification Required</strong>
                 <br />
                 Enter the code from your authenticator app for <strong>{email}</strong>

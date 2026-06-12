@@ -97,62 +97,62 @@ export default function CommissionReportPage() {
   }, [user, supabase]);
 
   return (
-    <div className="space-y-8 bg-slate-950 min-h-screen text-slate-100 p-1">
+    <div className="space-y-8 bg-background min-h-screen text-foreground p-1">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-indigo-400">Commission Center</p>
-        <h1 className="text-3xl font-bold tracking-tight text-white">My Commission Report</h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Commission Center</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">My Commission Report</h1>
+        <p className="text-muted-foreground text-sm mt-1">
           Detailed metrics showing pending clearances and past payouts.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-slate-900 border-white/10 text-white">
+        <Card className="bg-card border-border text-foreground">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Cleared Earnings</CardTitle>
-            <DollarSign className="h-4 w-4 text-emerald-400" />
+            <DollarSign className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-7 w-28 bg-white/5" />
+              <Skeleton className="h-7 w-28 bg-muted" />
             ) : (
               <>
                 <div className="text-2xl font-bold font-tech">₹{stats.paid.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
-                <p className="text-xs text-slate-500">Transferred to registered bank</p>
+                <p className="text-xs text-muted-foreground">Transferred to registered bank</p>
               </>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-white/10 text-white">
+        <Card className="bg-card border-border text-foreground">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-            <Percent className="h-4 w-4 text-indigo-400" />
+            <Percent className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-7 w-28 bg-white/5" />
+              <Skeleton className="h-7 w-28 bg-muted" />
             ) : (
               <>
                 <div className="text-2xl font-bold font-tech">₹{stats.pending.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
-                <p className="text-xs text-slate-500">Awaiting cycle closure</p>
+                <p className="text-xs text-muted-foreground">Awaiting cycle closure</p>
               </>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-white/10 text-white">
+        <Card className="bg-card border-border text-foreground">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Cumulative Commissions</CardTitle>
-            <TrendingUp className="h-4 w-4 text-cyan-400" />
+            <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-7 w-28 bg-white/5" />
+              <Skeleton className="h-7 w-28 bg-muted" />
             ) : (
               <>
                 <div className="text-2xl font-bold font-tech">₹{stats.total.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
-                <p className="text-xs text-slate-500">All-time earnings history</p>
+                <p className="text-xs text-muted-foreground">All-time earnings history</p>
               </>
             )}
           </CardContent>
@@ -160,59 +160,59 @@ export default function CommissionReportPage() {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2">
-          <AlertCircle className="h-5 w-5 text-red-400" />
-          <p className="text-sm text-red-200">{error}</p>
+        <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg flex items-center gap-2">
+          <AlertCircle className="h-5 w-5 text-destructive" />
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
-      <Card className="bg-slate-900 border-white/10 text-white">
+      <Card className="bg-card border-border text-foreground">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-indigo-400" />
+            <Calendar className="h-5 w-5 text-primary" />
             Ledger Activity
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-muted-foreground">
             A comprehensive statement of commissions generated from remote client checkouts.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
-            <TableHeader className="border-white/10">
-              <TableRow className="border-white/10 hover:bg-transparent">
-                <TableHead className="text-slate-400">Date</TableHead>
-                <TableHead className="text-slate-400">Transaction ID</TableHead>
-                <TableHead className="text-slate-400">Customer</TableHead>
-                <TableHead className="text-slate-400">Order Value</TableHead>
-                <TableHead className="text-slate-400">Status</TableHead>
-                <TableHead className="text-slate-400 text-right">Commission Amt</TableHead>
+            <TableHeader className="border-border">
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Date</TableHead>
+                <TableHead className="text-muted-foreground">Transaction ID</TableHead>
+                <TableHead className="text-muted-foreground">Customer</TableHead>
+                <TableHead className="text-muted-foreground">Order Value</TableHead>
+                <TableHead className="text-muted-foreground">Status</TableHead>
+                <TableHead className="text-muted-foreground text-right">Commission Amt</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={i} className="border-white/5">
-                    <TableCell><Skeleton className="h-5 w-20 bg-white/5" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-24 bg-white/5" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-24 bg-white/5" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-16 bg-white/5" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-20 bg-white/5" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto bg-white/5" /></TableCell>
+                  <TableRow key={i} className="border-border">
+                    <TableCell><Skeleton className="h-5 w-20 bg-muted" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-24 bg-muted" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-24 bg-muted" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-16 bg-muted" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-20 bg-muted" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto bg-muted" /></TableCell>
                   </TableRow>
                 ))
               ) : commissions.length > 0 ? (
                 commissions.map((rec) => (
-                  <TableRow key={rec.id} className="border-white/5 hover:bg-white/5">
-                    <TableCell className="text-slate-400">
+                  <TableRow key={rec.id} className="border-border hover:bg-muted/30">
+                    <TableCell className="text-muted-foreground">
                       {new Date(rec.created_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-slate-300">
+                    <TableCell className="font-mono text-xs text-muted-foreground">
                       {rec.order_id.substring(0, 8)}...
                     </TableCell>
-                    <TableCell className="font-semibold text-white">
+                    <TableCell className="font-semibold text-foreground">
                       {rec.orders?.customer_name || 'Affiliate Checkout'}
                     </TableCell>
-                    <TableCell className="text-slate-300">
+                    <TableCell className="text-muted-foreground">
                       ₹{Number(rec.orders?.total || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell>
@@ -220,23 +220,23 @@ export default function CommissionReportPage() {
                         variant="secondary"
                         className={
                           rec.status === 'paid'
-                            ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30'
                             : rec.status === 'pending'
-                            ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
-                            : 'bg-red-500/10 text-red-300 border border-red-500/30'
+                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/30'
+                            : 'bg-destructive/10 text-destructive border border-destructive/30'
                         }
                       >
                         {rec.status.toUpperCase()}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right text-emerald-400 font-tech">
+                    <TableCell className="text-right text-emerald-500 font-tech font-semibold">
                       ₹{Number(rec.amount || 0).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-slate-500 py-6">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
                     No commission payouts listed for this account yet.
                   </TableCell>
                 </TableRow>

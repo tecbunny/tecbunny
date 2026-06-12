@@ -140,7 +140,7 @@ export default function OffersManagement({ initialTab = 'offers' }: OffersManage
     priority: '0',
     display_on_homepage: false,
     banner_text: '',
-    banner_color: '#dc2626',
+    banner_color: '#2563EB',
     terms_and_conditions: ''
   });
 
@@ -516,7 +516,7 @@ export default function OffersManagement({ initialTab = 'offers' }: OffersManage
       priority: '0',
       display_on_homepage: false,
       banner_text: '',
-      banner_color: '#dc2626',
+      banner_color: '#2563EB',
       terms_and_conditions: ''
     });
   };
@@ -688,11 +688,11 @@ export default function OffersManagement({ initialTab = 'offers' }: OffersManage
   };
 
   return (
-    <div className="min-h-screen bg-transparent p-6 text-slate-200">
+    <div className="min-h-screen bg-transparent p-6 text-foreground">
       <div className="max-w-7xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Offers & Discounts Hub</h1>
-          <p className="text-slate-400">Create, monitor, and optimise every promotion from one screen.</p>
+          <h1 className="text-3xl font-bold tech-heading">Offers & Discounts Hub</h1>
+          <p className="tech-body">Create, monitor, and optimise every promotion from one screen.</p>
         </div>
 
         <Tabs
@@ -708,8 +708,8 @@ export default function OffersManagement({ initialTab = 'offers' }: OffersManage
           <TabsContent value="offers" className="space-y-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-2xl font-semibold text-white">Promotional Offers</h2>
-                <p className="text-sm text-slate-400">Run banners, flash deals, and targeted incentives.</p>
+                <h2 className="text-2xl font-semibold tech-heading">Promotional Offers</h2>
+                <p className="text-sm tech-body">Run banners, flash deals, and targeted incentives.</p>
               </div>
               <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                 <DialogTrigger asChild>
@@ -974,10 +974,10 @@ export default function OffersManagement({ initialTab = 'offers' }: OffersManage
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <Gift className="h-8 w-8 text-cyan-300" />
+                    <Gift className="h-8 w-8 text-primary" />
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-slate-400">Total Offers</p>
-                      <p className="text-2xl font-bold text-white">{offers.length}</p>
+                      <p className="text-sm font-medium text-muted-foreground">Total Offers</p>
+                      <p className="text-2xl font-bold text-foreground">{offers.length}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -1151,8 +1151,8 @@ export default function OffersManagement({ initialTab = 'offers' }: OffersManage
           <TabsContent value="discounts" className="space-y-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-2xl font-semibold text-white">Auto Discounts & Coupons</h2>
-                <p className="text-sm text-slate-400">Cart rules, bulk savings, and coupon codes live together here.</p>
+                <h2 className="text-2xl font-semibold tech-heading">Auto Discounts & Coupons</h2>
+                <p className="text-sm tech-body">Cart rules, bulk savings, and coupon codes live together here.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={fetchDiscounts} disabled={discountLoading}>

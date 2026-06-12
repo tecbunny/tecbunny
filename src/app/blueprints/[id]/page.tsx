@@ -72,7 +72,7 @@ export default async function BlueprintPage({ params }: BlueprintPageProps) {
   if (!blueprint) notFound();
 
   return (
-    <main className="min-h-screen bg-slate-950 pt-20">
+    <main className="min-h-screen bg-background pt-20">
       <BlueprintShowcase blueprint={blueprint} />
     </main>
   );

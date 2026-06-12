@@ -85,79 +85,79 @@ export default function ManagerReportsPage() {
   const totalTeamSales = salespersons.reduce((acc, sp) => acc + sp.salesCount, 0) + selfStats.count;
 
   return (
-    <div className="space-y-8 bg-slate-950 min-h-screen text-slate-100 p-1">
+    <div className="space-y-8 bg-background min-h-screen text-foreground p-1">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-indigo-400">Reports Engine</p>
-        <h1 className="text-3xl font-bold tracking-tight text-white">Management Reports</h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Reports Engine</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Management Reports</h1>
+        <p className="text-muted-foreground text-sm mt-1">
           Detailed team performance indicators and sales volume metrics.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-slate-900 border-white/10 text-white">
+        <Card className="bg-card border-border text-foreground">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Team Sales Volume</CardTitle>
-            <DollarSign className="h-4 w-4 text-indigo-400" />
+            <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-7 w-28 bg-white/5" />
+              <Skeleton className="h-7 w-28 bg-muted" />
             ) : (
               <>
                 <div className="text-2xl font-bold font-tech">₹{totalTeamVolume.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
-                <p className="text-xs text-slate-500">Cumulative completed orders</p>
+                <p className="text-xs text-muted-foreground">Cumulative completed orders</p>
               </>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-white/10 text-white">
+        <Card className="bg-card border-border text-foreground">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Team Orders</CardTitle>
-            <TrendingUp className="h-4 w-4 text-emerald-400" />
+            <TrendingUp className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-7 w-16 bg-white/5" />
+              <Skeleton className="h-7 w-16 bg-muted" />
             ) : (
               <>
                 <div className="text-2xl font-bold font-tech">{totalTeamSales}</div>
-                <p className="text-xs text-slate-500">Completed order count</p>
+                <p className="text-xs text-muted-foreground">Completed order count</p>
               </>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-white/10 text-white">
+        <Card className="bg-card border-border text-foreground">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">My Own Volume</CardTitle>
-            <Award className="h-4 w-4 text-amber-400" />
+            <Award className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-7 w-28 bg-white/5" />
+              <Skeleton className="h-7 w-28 bg-muted" />
             ) : (
               <>
                 <div className="text-2xl font-bold font-tech">₹{selfStats.volume.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
-                <p className="text-xs text-slate-500">{selfStats.count} orders processed by me</p>
+                <p className="text-xs text-muted-foreground">{selfStats.count} orders processed by me</p>
               </>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-white/10 text-white">
+        <Card className="bg-card border-border text-foreground">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Salespersons</CardTitle>
-            <Users className="h-4 w-4 text-cyan-400" />
+            <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Skeleton className="h-7 w-12 bg-white/5" />
+              <Skeleton className="h-7 w-12 bg-muted" />
             ) : (
               <>
                 <div className="text-2xl font-bold font-tech">{salespersons.length}</div>
-                <p className="text-xs text-slate-500">Registered sales staff</p>
+                <p className="text-xs text-muted-foreground">Registered sales staff</p>
               </>
             )}
           </CardContent>
@@ -165,50 +165,50 @@ export default function ManagerReportsPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
-        <Card className="lg:col-span-2 bg-slate-900 border-white/10 text-white">
+        <Card className="lg:col-span-2 bg-card border-border text-foreground">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart className="h-5 w-5 text-indigo-400" />
+              <BarChart className="h-5 w-5 text-primary" />
               Salesperson League Table
             </CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-muted-foreground">
               Coordinated sales agents ranked by volume generated.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
-              <TableHeader className="border-white/10">
-                <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-slate-400">Name</TableHead>
-                  <TableHead className="text-slate-400">Email</TableHead>
-                  <TableHead className="text-slate-400 text-right">Orders</TableHead>
-                  <TableHead className="text-slate-400 text-right">Total Volume</TableHead>
+              <TableHeader className="border-border">
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground">Name</TableHead>
+                  <TableHead className="text-muted-foreground">Email</TableHead>
+                  <TableHead className="text-muted-foreground text-right">Orders</TableHead>
+                  <TableHead className="text-muted-foreground text-right">Total Volume</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
-                    <TableRow key={i} className="border-white/5">
-                      <TableCell><Skeleton className="h-5 w-24 bg-white/5" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-32 bg-white/5" /></TableCell>
-                      <TableCell className="text-right"><Skeleton className="h-5 w-10 ml-auto bg-white/5" /></TableCell>
-                      <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto bg-white/5" /></TableCell>
+                    <TableRow key={i} className="border-border">
+                      <TableCell><Skeleton className="h-5 w-24 bg-muted" /></TableCell>
+                      <TableCell><Skeleton className="h-5 w-32 bg-muted" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-5 w-10 ml-auto bg-muted" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-5 w-20 ml-auto bg-muted" /></TableCell>
                     </TableRow>
                   ))
                 ) : salespersons.length > 0 ? (
                   salespersons.map((sp) => (
-                    <TableRow key={sp.id} className="border-white/5 hover:bg-white/5">
-                      <TableCell className="font-semibold text-white">{sp.name}</TableCell>
-                      <TableCell className="text-slate-400">{sp.email}</TableCell>
-                      <TableCell className="text-right text-white font-mono">{sp.salesCount}</TableCell>
-                      <TableCell className="text-right text-emerald-400 font-tech">
+                    <TableRow key={sp.id} className="border-border hover:bg-muted/30">
+                      <TableCell className="font-semibold text-foreground">{sp.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{sp.email}</TableCell>
+                      <TableCell className="text-right text-foreground font-mono">{sp.salesCount}</TableCell>
+                      <TableCell className="text-right text-emerald-500 font-tech font-semibold">
                         ₹{sp.totalVolume.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-slate-500 py-6">
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
                       No sales representatives found.
                     </TableCell>
                   </TableRow>
@@ -218,20 +218,20 @@ export default function ManagerReportsPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900 border-white/10 text-white">
+        <Card className="bg-card border-border text-foreground">
           <CardHeader>
             <CardTitle>Performance Overview</CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-muted-foreground">
               Local coordination notes.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm text-slate-300">
-            <p className="leading-relaxed">
+          <CardContent className="space-y-4 text-sm text-muted-foreground">
+            <p className="leading-relaxed font-tech">
               This panel shows the sales figures for the staff currently coordinated under your direct oversight.
             </p>
-            <div className="rounded-xl border border-white/10 bg-slate-950 p-4 space-y-2">
-              <h4 className="font-bold text-white uppercase text-xs tracking-wider">Manager Protocols</h4>
-              <ul className="list-disc pl-4 space-y-1.5 text-xs text-slate-400">
+            <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-2">
+              <h4 className="font-bold text-foreground uppercase text-xs tracking-wider">Manager Protocols</h4>
+              <ul className="list-disc pl-4 space-y-1.5 text-xs text-muted-foreground">
                 <li>Verify walk-in billing records daily</li>
                 <li>Audit POS receipts matches on-site cash drawers</li>
                 <li>Monitor salespersons volume parameters</li>

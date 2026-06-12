@@ -469,10 +469,10 @@ export function OTPVerificationContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 text-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8 text-foreground">
       <div className="max-w-md w-full space-y-8">
         {verified && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 px-4 py-3 rounded-md flex items-center space-x-3">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-4 py-3 rounded-md flex items-center space-x-3">
             <span className="text-2xl">✅</span>
             <div>
               <div className="font-medium">Verification complete</div>
@@ -481,43 +481,43 @@ export function OTPVerificationContent() {
           </div>
         )}
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+          <h2 className="mt-6 text-center text-3xl font-extrabold tech-heading">
             Verify Your Account
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-300">
+          <p className="mt-2 text-center text-sm tech-body">
             {verificationPrompt()}
             {mobile && channel === 'whatsapp' && (
-              <span className="font-medium text-white block">+{mobile}</span>
+              <span className="font-medium text-foreground block">+{mobile}</span>
             )}
           </p>
           {fallbackAvailable && (
-            <p className="mt-1 text-center text-xs text-slate-400">
+            <p className="mt-1 text-center text-xs text-muted-foreground">
               Having trouble? Request a new WhatsApp code below.
             </p>
           )}
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleVerifyOTP}>
           <div className="space-y-2">
-            <span className="text-sm font-medium text-slate-300">Verification method</span>
+            <span className="text-sm font-medium text-muted-foreground">Verification method</span>
             <div className="grid gap-2">
               {channelOptions.map(option => (
                 <div
                   key={option.id}
                   onClick={() => !option.enabled ? undefined : handleChannelSelection(option.id)}
                   className={`flex w-full flex-col rounded-lg border p-3 text-left transition-all ${
-                    option.enabled ? 'cursor-pointer hover:bg-white/10' : 'cursor-not-allowed'
+                    option.enabled ? 'cursor-pointer hover:bg-muted/80' : 'cursor-not-allowed'
                   } ${
-                    channel === option.id ? 'border-cyan-400/60 bg-cyan-500/10 text-cyan-200' : 'border-white/10 bg-white/5 text-slate-200'
+                    channel === option.id ? 'border-primary/60 bg-primary/10 text-primary' : 'border-border bg-muted text-foreground'
                   } ${!option.enabled ? 'opacity-60' : ''}`}
                 >
                   <span className="text-sm font-medium">{option.label}</span>
-                  <span className="text-xs text-slate-400">{option.helper}</span>
+                  <span className="text-xs text-muted-foreground">{option.helper}</span>
                 </div>
               ))}
             </div>
           </div>
           <div>
-            <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="otp" className="block text-sm font-medium text-foreground mb-2">
               Verification Code
             </label>
             <input
@@ -528,7 +528,7 @@ export function OTPVerificationContent() {
               pattern="[0-9]*"
               maxLength={6}
               required
-              className="appearance-none relative block w-full px-3 py-2 border border-white/10 bg-white/5 placeholder:text-slate-500 text-slate-100 rounded-md focus:outline-none focus:ring-cyan-400 focus:border-cyan-400 focus:z-10 sm:text-sm text-center text-lg tracking-widest"
+              className="appearance-none relative block w-full px-3 py-2 border border-border bg-muted placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm text-center text-lg tracking-widest"
               placeholder="000000"
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -539,11 +539,11 @@ export function OTPVerificationContent() {
             <button
               type="submit"
               disabled={isLoading || otp.length !== 6 || verified}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isLoading ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -560,10 +560,10 @@ export function OTPVerificationContent() {
               type="button"
               onClick={handleResendOTP}
               disabled={isResending || resendCooldown > 0 || verified}
-              className={`text-sm transition-colors ${
+              className={`text-sm transition-colors cursor-pointer ${
                 isResending || resendCooldown > 0
-                  ? 'text-gray-400 cursor-not-allowed' 
-                  : 'text-blue-600 hover:text-blue-500'
+                  ? 'text-muted-foreground cursor-not-allowed' 
+                  : 'text-primary hover:underline'
               }`}
             >
               {isResending ? (
@@ -581,7 +581,7 @@ export function OTPVerificationContent() {
               )}
             </button>
             {resendCount > 0 && resendCooldown === 0 && (
-              <div className="text-xs text-slate-400 mt-1">
+              <div className="text-xs text-muted-foreground mt-1">
                 {resendCount}/3 resend attempts used
               </div>
             )}
@@ -590,7 +590,7 @@ export function OTPVerificationContent() {
             <button
               type="button"
               onClick={() => router.push('/')}
-              className="text-sm text-slate-300 hover:text-white"
+              className="text-sm text-muted-foreground hover:text-foreground cursor-pointer"
             >
               ← Back to Home
             </button>

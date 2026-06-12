@@ -168,13 +168,13 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
     return ['> 32CH NVR (Enterprise)', '> 2x 6TB HDD', `> ${cameraCount}x IP Cameras`];
   }, [cameraCount]);
 
-  const cardClassName = isTech ? 'border-white/10 bg-slate-900/60 text-slate-200' : undefined;
-  const cardHeaderClassName = isTech ? 'text-white' : undefined;
-  const cardDescriptionClassName = isTech ? 'text-slate-400' : undefined;
-  const inputClassName = isTech ? 'bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500' : undefined;
-  const selectTriggerClassName = isTech ? 'bg-white/5 border-white/10 text-slate-100' : undefined;
-  const selectContentClassName = isTech ? 'bg-slate-950 text-slate-100 border-white/10' : undefined;
-  const selectItemClassName = isTech ? 'text-slate-100 focus:bg-cyan-400/10 focus:text-cyan-100' : undefined;
+  const cardClassName = isTech ? 'border-border bg-card/60 text-card-foreground' : undefined;
+  const cardHeaderClassName = isTech ? 'text-foreground font-semibold' : undefined;
+  const cardDescriptionClassName = isTech ? 'text-muted-foreground' : undefined;
+  const inputClassName = isTech ? 'bg-muted/10 border-border text-foreground placeholder:text-muted-foreground' : undefined;
+  const selectTriggerClassName = isTech ? 'bg-muted/10 border-border text-foreground' : undefined;
+  const selectContentClassName = isTech ? 'bg-popover text-popover-foreground border-border' : undefined;
+  const selectItemClassName = isTech ? 'text-foreground focus:bg-primary/10 focus:text-primary' : undefined;
   const selectMutedClassName = isTech ? 'text-slate-400' : 'text-muted-foreground';
 
   // Handle camera count input changes
@@ -989,19 +989,19 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                 onValueChange={(value: '2.4mp' | '5mp') => setAnalogSelections((previous) => ({ ...previous, resolution: value }))}
                 className="grid gap-2"
               >
-                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', analogSelections.resolution === '2.4mp' && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
+                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-border bg-muted/40 text-foreground', analogSelections.resolution === '2.4mp' && (isTech ? 'border-primary bg-primary/10' : 'border-primary'))}
                   htmlFor="analog-res-24">
                   <div>
                     <span className="block font-medium">2.4 MP</span>
-                    <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Balanced clarity with lower bandwidth</span>
+                    <span className={cn('text-xs', isTech ? 'text-muted-foreground' : 'text-muted-foreground')}>Balanced clarity with lower bandwidth</span>
                   </div>
                   <RadioGroupItem value="2.4mp" id="analog-res-24" aria-label="Select 2.4 MP analog camera resolution" />
                 </Label>
-                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', analogSelections.resolution === '5mp' && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
+                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-border bg-muted/40 text-foreground', analogSelections.resolution === '5mp' && (isTech ? 'border-primary bg-primary/10' : 'border-primary'))}
                   htmlFor="analog-res-5">
                   <div>
                     <span className="block font-medium">5 MP</span>
-                    <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Higher detail for wider coverage</span>
+                    <span className={cn('text-xs', isTech ? 'text-muted-foreground' : 'text-muted-foreground')}>Higher detail for wider coverage</span>
                   </div>
                   <RadioGroupItem value="5mp" id="analog-res-5" aria-label="Select 5 MP analog camera resolution" />
                 </Label>
@@ -1014,19 +1014,19 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                 onValueChange={(value) => setAnalogSelections((previous) => ({ ...previous, dualLight: value === 'yes' }))}
                 className="grid gap-2"
               >
-                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', !analogSelections.dualLight && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
+                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-border bg-muted/40 text-foreground', !analogSelections.dualLight && (isTech ? 'border-primary bg-primary/10' : 'border-primary'))}
                   htmlFor="analog-dual-no">
                   <div>
                     <span className="block font-medium">Standard IR</span>
-                    <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Best for typical day/night surveillance</span>
+                    <span className={cn('text-xs', isTech ? 'text-muted-foreground' : 'text-muted-foreground')}>Best for typical day/night surveillance</span>
                   </div>
                   <RadioGroupItem value="no" id="analog-dual-no" aria-label="Use standard infrared analog cameras" />
                 </Label>
-                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', analogSelections.dualLight && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
+                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-border bg-muted/40 text-foreground', analogSelections.dualLight && (isTech ? 'border-primary bg-primary/10' : 'border-primary'))}
                   htmlFor="analog-dual-yes">
                   <div>
                     <span className="block font-medium">Dual-light</span>
-                    <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Switches between IR & warm light for colour video</span>
+                    <span className={cn('text-xs', isTech ? 'text-muted-foreground' : 'text-muted-foreground')}>Switches between IR & warm light for colour video</span>
                   </div>
                   <RadioGroupItem value="yes" id="analog-dual-yes" aria-label="Use dual-light analog cameras" />
                 </Label>
@@ -1148,19 +1148,19 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                 onValueChange={(value: '2mp' | '4mp') => setIpSelections((previous) => ({ ...previous, resolution: value }))}
                 className="grid gap-2"
               >
-                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', ipSelections.resolution === '2mp' && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
+                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-border bg-muted/40 text-foreground', ipSelections.resolution === '2mp' && (isTech ? 'border-primary bg-primary/10' : 'border-primary'))}
                   htmlFor="ip-res-2">
                   <div>
                     <span className="block font-medium">2 MP</span>
-                    <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Ideal for compact deployments</span>
+                    <span className={cn('text-xs', isTech ? 'text-muted-foreground' : 'text-muted-foreground')}>Ideal for compact deployments</span>
                   </div>
                   <RadioGroupItem value="2mp" id="ip-res-2" aria-label="Select 2 MP IP camera resolution" />
                 </Label>
-                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', ipSelections.resolution === '4mp' && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
+                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-border bg-muted/40 text-foreground', ipSelections.resolution === '4mp' && (isTech ? 'border-primary bg-primary/10' : 'border-primary'))}
                   htmlFor="ip-res-4">
                   <div>
                     <span className="block font-medium">4 MP</span>
-                    <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Sharper detail for analytics</span>
+                    <span className={cn('text-xs', isTech ? 'text-muted-foreground' : 'text-muted-foreground')}>Sharper detail for analytics</span>
                   </div>
                   <RadioGroupItem value="4mp" id="ip-res-4" aria-label="Select 4 MP IP camera resolution" />
                 </Label>
@@ -1173,19 +1173,19 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                 onValueChange={(value) => setIpSelections((previous) => ({ ...previous, dualLight: value === 'yes' }))}
                 className="grid gap-2"
               >
-                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', !ipSelections.dualLight && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
+                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-border bg-muted/40 text-foreground', !ipSelections.dualLight && (isTech ? 'border-primary bg-primary/10' : 'border-primary'))}
                   htmlFor="ip-dual-no">
                   <div>
                     <span className="block font-medium">Standard IR</span>
-                    <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Monochrome at night</span>
+                    <span className={cn('text-xs', isTech ? 'text-muted-foreground' : 'text-muted-foreground')}>Monochrome at night</span>
                   </div>
                   <RadioGroupItem value="no" id="ip-dual-no" aria-label="Use standard infrared IP cameras" />
                 </Label>
-                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-white/10 bg-white/5 text-slate-200', ipSelections.dualLight && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
+                <Label className={cn('flex cursor-pointer items-center justify-between rounded-md border p-3', isTech && 'border-border bg-muted/40 text-foreground', ipSelections.dualLight && (isTech ? 'border-primary bg-primary/10' : 'border-primary'))}
                   htmlFor="ip-dual-yes">
                   <div>
                     <span className="block font-medium">Dual-light</span>
-                    <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Colour capture at night</span>
+                    <span className={cn('text-xs', isTech ? 'text-muted-foreground' : 'text-muted-foreground')}>Colour capture at night</span>
                   </div>
                   <RadioGroupItem value="yes" id="ip-dual-yes" aria-label="Use dual-light IP cameras" />
                 </Label>
@@ -1233,19 +1233,19 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
           <div className="space-y-2">
             <Label>Choose recorder path</Label>
             <RadioGroup value={system} onValueChange={(value: SetupSystem) => setSystem(value)} className="grid gap-3 sm:grid-cols-2">
-              <Label className={cn('flex cursor-pointer items-center justify-between rounded-lg border p-4', isTech && 'border-white/10 bg-white/5 text-slate-200', system === 'analog' && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
+              <Label className={cn('flex cursor-pointer items-center justify-between rounded-lg border p-4', isTech && 'border-border bg-muted/40 text-foreground', system === 'analog' && (isTech ? 'border-primary bg-primary/10' : 'border-primary'))}
                 htmlFor="system-analog">
                 <div>
                   <span className="block text-lg font-semibold">Analog (DVR)</span>
-                  <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>Best for coaxial retrofits and budget installations</span>
+                  <span className={cn('text-xs', isTech ? 'text-muted-foreground' : 'text-muted-foreground')}>Best for coaxial retrofits and budget installations</span>
                 </div>
                 <RadioGroupItem value="analog" id="system-analog" aria-label="Choose analog DVR system" />
               </Label>
-              <Label className={cn('flex cursor-pointer items-center justify-between rounded-lg border p-4', isTech && 'border-white/10 bg-white/5 text-slate-200', system === 'ip' && (isTech ? 'border-cyan-400/60 bg-cyan-400/10' : 'border-primary'))}
+              <Label className={cn('flex cursor-pointer items-center justify-between rounded-lg border p-4', isTech && 'border-border bg-muted/40 text-foreground', system === 'ip' && (isTech ? 'border-primary bg-primary/10' : 'border-primary'))}
                 htmlFor="system-ip">
                 <div>
                   <span className="block text-lg font-semibold">IP (NVR)</span>
-                  <span className={cn('text-xs', isTech ? 'text-slate-400' : 'text-muted-foreground')}>PoE-based deployments with smart analytics</span>
+                  <span className={cn('text-xs', isTech ? 'text-muted-foreground' : 'text-muted-foreground')}>PoE-based deployments with smart analytics</span>
                 </div>
                 <RadioGroupItem value="ip" id="system-ip" aria-label="Choose IP NVR system" />
               </Label>
@@ -1452,7 +1452,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
         </CardContent>
       </Card>
 
-      <Card className={isTech ? 'border-cyan-400/30 bg-cyan-400/5' : 'border-primary/30 bg-primary/5'}>
+      <Card className="border-primary/30 bg-primary/5">
         <CardHeader className={cardHeaderClassName}>
           <CardTitle className={isTech ? 'text-white' : undefined}>Total investment preview</CardTitle>
           <CardDescription className={cardDescriptionClassName}>Final proposal will reconfirm inventory and site dependencies before order.</CardDescription>
@@ -1591,7 +1591,7 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                   size="sm"
                   variant="default"
                   onClick={handleBookNow}
-                  className={isTech ? 'bg-cyan-500 text-slate-900 hover:bg-cyan-400 font-bold' : ''}
+                  className={isTech ? 'bg-primary text-primary-foreground hover:bg-primary/90 font-bold' : ''}
                 >
                   Book Installation
                 </Button>
@@ -1741,19 +1741,19 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
                       event.currentTarget.style.setProperty('--mouse-y', `${event.clientY - rect.top}px`);
                     }}
                     className={cn(
-                      'selection-card border border-white/10 bg-slate-900/60 p-6 rounded-2xl text-center flex flex-col items-center justify-center',
+                      'selection-card border border-border bg-card/60 p-6 rounded-2xl text-center flex flex-col items-center justify-center',
                       premiseType === option.value && 'selected'
                     )}
                   >
-                    <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 text-cyan-300">
+                    <div className="h-12 w-12 rounded-xl bg-muted/30 border border-border flex items-center justify-center mb-4 text-primary">
                       <span className="text-xl">
                         {option.icon === 'home' && '🏠'}
                         {option.icon === 'building' && '🏢'}
                         {option.icon === 'factory' && '🏭'}
                       </span>
                     </div>
-                    <h3 className="font-semibold text-white">{option.label}</h3>
-                    <p className="text-xs text-slate-500 mt-2">{option.description}</p>
+                    <h3 className="font-semibold text-foreground">{option.label}</h3>
+                    <p className="text-xs text-muted-foreground mt-2">{option.description}</p>
                   </button>
                 ))}
               </div>
@@ -1767,41 +1767,41 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
 
         <div className="lg:col-span-1">
           <div className="sticky top-24">
-            <div className="relative bg-[#030712] border border-cyan-400/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(6,182,212,0.1)] overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50" style={{ animation: 'scanLine 2s linear infinite' }}></div>
+            <div className="relative bg-card border border-primary/30 rounded-2xl p-6 shadow-2xl overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" style={{ animation: 'scanLine 2s linear infinite' }}></div>
 
-              <h3 className="text-xl font-semibold text-white mb-4 border-b border-white/10 pb-2">System Blueprint</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-4 border-b border-border pb-2">System Blueprint</h3>
 
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Premise Type</span>
-                  <span className="text-white font-semibold text-right">{premiseType}</span>
+                  <span className="text-muted-foreground">Premise Type</span>
+                  <span className="text-foreground font-semibold text-right">{premiseType}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">CCTV Setup</span>
-                  <span className="text-cyan-300 font-semibold text-right">{cameraCountLabel}</span>
+                  <span className="text-muted-foreground">CCTV Setup</span>
+                  <span className="text-primary font-semibold text-right">{cameraCountLabel}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">IT Systems</span>
-                  <span className="text-purple-300 font-semibold text-right">{itSystemLabel}</span>
+                  <span className="text-muted-foreground">IT Systems</span>
+                  <span className="text-violet-500 font-semibold text-right">{itSystemLabel}</span>
                 </div>
                 {automationEnabled && (
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Automation</span>
-                    <span className="text-white font-semibold text-right">Included</span>
+                    <span className="text-muted-foreground">Automation</span>
+                    <span className="text-foreground font-semibold text-right">Included</span>
                   </div>
                 )}
                 {alarmEnabled && (
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Defense</span>
-                    <span className="text-amber-300 font-semibold text-right">Active</span>
+                    <span className="text-muted-foreground">Defense</span>
+                    <span className="text-amber-500 font-semibold text-right">Active</span>
                   </div>
                 )}
               </div>
 
-              <div className="mt-6 pt-6 border-t border-white/10">
-                <p className="text-xs text-slate-500 mb-2">Recommended Hardware Kit:</p>
-                <div className="bg-white/5 rounded-lg p-3 text-xs text-slate-300 font-mono">
+              <div className="mt-6 pt-6 border-t border-border">
+                <p className="text-xs text-muted-foreground mb-2">Recommended Hardware Kit:</p>
+                <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground font-mono">
                   {recommendationLines.map((line) => (
                     <div key={line}>{line}</div>
                   ))}
@@ -1809,26 +1809,26 @@ export function CustomSetupFlow({ blueprint, variant = 'default' }: CustomSetupF
               </div>
 
               <div className="mt-6 flex gap-2 items-center">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-xs text-emerald-400 font-bold">SYSTEM COMPATIBLE</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-xs text-emerald-500 font-bold">SYSTEM COMPATIBLE</span>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-white/10">
+              <div className="mt-6 pt-4 border-t border-border">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-slate-400 text-sm">Estimated Total</span>
-                  <span className="text-xl font-bold text-white">{formatCurrency(totals.overall.sale)}</span>
+                  <span className="text-muted-foreground text-sm">Estimated Total</span>
+                  <span className="text-xl font-bold text-foreground">{formatCurrency(totals.overall.sale)}</span>
                 </div>
                 <div className="flex flex-col gap-2">
                   <Button 
                     onClick={handleBookNow} 
-                    className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold uppercase tracking-wider"
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-wider"
                   >
                     Book Installation
                   </Button>
                   <Button 
                     onClick={() => setIsBidding(true)} 
                     variant="outline"
-                    className="w-full border-amber-500/30 text-amber-400 hover:bg-amber-500/10 font-bold uppercase tracking-wider"
+                    className="w-full border-amber-500/30 text-amber-500 hover:bg-amber-500/10 font-bold uppercase tracking-wider"
                   >
                     Negotiate Price
                   </Button>

@@ -91,11 +91,11 @@ export default function WarrantyActivationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-green-500 font-mono p-6 flex flex-col items-center justify-center">
-      <div className="w-full max-w-2xl border border-green-800 bg-black p-6 rounded-sm shadow-[0_0_20px_rgba(34,197,94,0.1)]">
-        <div className="flex items-center justify-between border-b border-green-900 pb-4 mb-6">
+    <div className="min-h-screen bg-background text-foreground font-mono p-6 flex flex-col items-center justify-center">
+      <div className="w-full max-w-2xl border border-border bg-card p-6 rounded-lg shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
           <span className="text-xs tracking-widest uppercase">TecBunny Secure Terminal</span>
-          <span className="text-xs text-green-700">SYS.AUTH.v9</span>
+          <span className="text-xs text-muted-foreground">SYS.AUTH.v9</span>
         </div>
 
         <div className="space-y-4">
@@ -105,31 +105,31 @@ export default function WarrantyActivationPage() {
             <p>{`> DEVICE MATCH: ${deviceDetails.model} [${deviceDetails.type}]`}</p>
           )}
 
-          {error && <p className="text-rose-400">{`> ERROR: ${error}`}</p>}
+          {error && <p className="text-rose-500">{`> ERROR: ${error}`}</p>}
 
           {step === "init" && (
             <button
               onClick={() => setStep("phone")}
-              className="mt-6 bg-green-900/30 border border-green-500 text-green-400 hover:bg-green-500 hover:text-black px-6 py-2 transition-all uppercase tracking-wider text-sm font-bold"
+              className="mt-6 bg-primary/10 border border-primary text-primary hover:bg-primary hover:text-primary-foreground px-6 py-2 transition-all uppercase tracking-wider text-sm font-bold rounded-md"
             >
               Authenticate & Unlock Warranty
             </button>
           )}
 
           {step === "phone" && (
-            <div className="mt-4 flex flex-wrap gap-3 animate-in fade-in zoom-in duration-300">
+            <div className="mt-4 flex flex-wrap gap-3 items-center animate-in fade-in zoom-in duration-300">
               <span className="py-2">{`> ENTER MOBILE:`}</span>
               <input
                 type="tel"
                 inputMode="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="bg-transparent border-b border-green-500 text-green-400 focus:outline-none focus:border-green-300 px-2 w-48 min-h-[44px]"
+                className="bg-transparent border-b border-primary text-foreground focus:outline-none focus:border-primary/80 px-2 w-48 min-h-[44px]"
               />
               <button
                 onClick={handleRequestOtp}
                 disabled={submitting}
-                className="bg-green-500 text-black px-4 py-2 hover:bg-green-400 font-bold min-h-[44px] disabled:opacity-60"
+                className="bg-primary text-primary-foreground px-4 py-2 hover:bg-primary/90 font-bold min-h-[44px] disabled:opacity-60 rounded-md"
               >
                 {submitting ? "SENDING..." : "TRANSMIT"}
               </button>
@@ -137,7 +137,7 @@ export default function WarrantyActivationPage() {
           )}
 
           {step === "otp" && (
-            <div className="mt-4 flex flex-wrap gap-3 animate-in fade-in zoom-in duration-300">
+            <div className="mt-4 flex flex-wrap gap-3 items-center animate-in fade-in zoom-in duration-300">
               <span className="py-2">{`> ENTER OTP:`}</span>
               <input
                 type="text"
@@ -145,12 +145,12 @@ export default function WarrantyActivationPage() {
                 value={otp}
                 maxLength={6}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                className="bg-transparent border-b border-green-500 text-green-400 focus:outline-none focus:border-green-300 px-2 w-32 tracking-widest min-h-[44px]"
+                className="bg-transparent border-b border-primary text-foreground focus:outline-none focus:border-primary/80 px-2 w-32 tracking-widest min-h-[44px]"
               />
               <button
                 onClick={handleVerifyAndActivate}
                 disabled={submitting}
-                className="bg-green-500 text-black px-4 py-2 hover:bg-green-400 font-bold min-h-[44px] disabled:opacity-60"
+                className="bg-primary text-primary-foreground px-4 py-2 hover:bg-primary/90 font-bold min-h-[44px] disabled:opacity-60 rounded-md"
               >
                 {submitting ? "VERIFYING..." : "VERIFY"}
               </button>
@@ -158,10 +158,10 @@ export default function WarrantyActivationPage() {
           )}
 
           {step === "activated" && (
-            <div className="mt-6 text-green-400">
+            <div className="mt-6 text-primary">
               <p>{`> AUTHENTICATION SUCCESSFUL`}</p>
               <p>{`> WARRANTY CERTIFICATE GENERATED`}</p>
-              <p className="animate-pulse mt-4 text-emerald-300">{`> INITIATING SECURE HANDSHAKE...`}</p>
+              <p className="animate-pulse mt-4 text-primary font-bold">{`> INITIATING SECURE HANDSHAKE...`}</p>
             </div>
           )}
         </div>

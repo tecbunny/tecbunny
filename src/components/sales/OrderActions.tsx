@@ -968,22 +968,22 @@ export function OrderActions({ order, onStatusUpdate, variant = 'dropdown' }: Or
             setInvoiceFile(null);
           }
         }}>
-          <DialogContent className="border-white/10 bg-slate-900/95 text-slate-100 backdrop-blur-md">
+          <DialogContent className="border-zinc-800 bg-zinc-900/95 text-zinc-100 backdrop-blur-md">
             <DialogHeader>
               <DialogTitle>Upload Final Invoice PDF</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogDescription className="text-zinc-400">
                 Upload the final invoice PDF for order {formatOrderNumber(order.id)}. An email with the invoice download link will be automatically sent to the customer.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleUploadInvoice} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="invoice-file" className="text-sm font-medium text-slate-300">Select Invoice PDF</Label>
+                <Label htmlFor="invoice-file" className="text-sm font-medium text-zinc-300">Select Invoice PDF</Label>
                 <Input
                   id="invoice-file"
                   type="file"
                   accept=".pdf"
                   required
-                  className="bg-white/5 border border-white/10 text-white cursor-pointer"
+                  className="bg-zinc-950 border border-zinc-800 text-zinc-100 cursor-pointer"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) setInvoiceFile(file);
@@ -1005,7 +1005,7 @@ export function OrderActions({ order, onStatusUpdate, variant = 'dropdown' }: Or
                 <Button 
                   type="submit"
                   disabled={uploadingInvoice || !invoiceFile}
-                  className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
                 >
                   {uploadingInvoice ? 'Uploading...' : 'Upload & Send Email'}
                 </Button>

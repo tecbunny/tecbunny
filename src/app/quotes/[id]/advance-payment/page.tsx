@@ -191,19 +191,19 @@ export default function AdvancePaymentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-950 to-slate-900">
-        <Loader2 className="animate-spin h-8 w-8 text-cyan-400" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
       </div>
     );
   }
 
   if (!advancePayment) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 p-4">
+      <div className="min-h-screen bg-background p-4">
         <div className="max-w-4xl mx-auto">
-          <Card className="border-white/10 bg-white/5">
+          <Card className="border-border bg-card">
             <CardContent className="py-12">
-              <p className="text-center text-slate-400">No advance payment request found for this quote.</p>
+              <p className="text-center text-muted-foreground">No advance payment request found for this quote.</p>
             </CardContent>
           </Card>
         </div>
@@ -214,59 +214,59 @@ export default function AdvancePaymentPage() {
   const isConfirmed = advancePayment.status === 'confirmed' || ['payment_initiated', 'paid', 'completed'].includes(advancePayment.status);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Advance Payment Required</h1>
-          <p className="text-slate-400">Please review and confirm the payment terms below</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Advance Payment Required</h1>
+          <p className="text-muted-foreground">Please review and confirm the payment terms below</p>
         </div>
 
-        <Separator className="bg-white/10" />
+        <Separator className="bg-border" />
 
         {/* Status Badge */}
         <div className="flex items-center gap-2">
           <Badge className={`${
-            advancePayment.status === 'paid' ? 'bg-green-600' :
-            advancePayment.status === 'payment_initiated' ? 'bg-blue-600' :
-            advancePayment.status === 'confirmed' ? 'bg-amber-600' :
-            'bg-slate-600'
+            advancePayment.status === 'paid' ? 'bg-emerald-600 text-white' :
+            advancePayment.status === 'payment_initiated' ? 'bg-primary text-primary-foreground' :
+            advancePayment.status === 'confirmed' ? 'bg-amber-600 text-white' :
+            'bg-muted text-muted-foreground'
           }`}>
             {advancePayment.status.charAt(0).toUpperCase() + advancePayment.status.slice(1)}
           </Badge>
         </div>
 
         {/* Payment Details */}
-        <Card className="border-cyan-500/50 bg-cyan-500/10">
+        <Card className="border-primary/40 bg-primary/5">
           <CardHeader>
-            <CardTitle className="text-cyan-200">Payment Details</CardTitle>
+            <CardTitle className="text-primary">Payment Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white/5 p-4 rounded-lg border border-white/10">
-                <p className="text-xs text-slate-500 mb-1">Advance Amount Due</p>
-                <p className="text-3xl font-bold text-cyan-300">₹{Math.round(advancePayment.advance_amount).toLocaleString('en-IN')}</p>
+              <div className="bg-muted/50 p-4 rounded-lg border border-border">
+                <p className="text-xs text-muted-foreground mb-1">Advance Amount Due</p>
+                <p className="text-3xl font-bold text-primary">₹{Math.round(advancePayment.advance_amount).toLocaleString('en-IN')}</p>
               </div>
-              <div className="bg-white/5 p-4 rounded-lg border border-white/10">
-                <p className="text-xs text-slate-500 mb-1">Total Quote Amount</p>
-                <p className="text-3xl font-bold text-slate-300">₹{Math.round(advancePayment.total_amount).toLocaleString('en-IN')}</p>
+              <div className="bg-muted/50 p-4 rounded-lg border border-border">
+                <p className="text-xs text-muted-foreground mb-1">Total Quote Amount</p>
+                <p className="text-3xl font-bold text-foreground">₹{Math.round(advancePayment.total_amount).toLocaleString('en-IN')}</p>
               </div>
             </div>
 
             <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-lg">
-              <p className="text-xs text-amber-400 mb-2 flex items-center gap-2">
+              <p className="text-xs text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-2">
                 <AlertCircle className="h-4 w-4" />
                 Payment Method
               </p>
-              <p className="text-sm font-semibold text-amber-100">
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-100">
                 {advancePayment.payment_method === 'payu' ? 'Online Payment (PayU)' : 'Wire Transfer'}
               </p>
             </div>
 
             {advancePayment.payment_terms && (
-              <div className="bg-white/5 p-4 rounded-lg border border-white/10">
-                <p className="text-sm font-semibold text-slate-300 mb-2">Payment Terms</p>
-                <p className="text-sm text-slate-400 whitespace-pre-wrap">{advancePayment.payment_terms}</p>
+              <div className="bg-muted/50 p-4 rounded-lg border border-border">
+                <p className="text-sm font-semibold text-foreground mb-2">Payment Terms</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{advancePayment.payment_terms}</p>
               </div>
             )}
           </CardContent>
@@ -274,20 +274,20 @@ export default function AdvancePaymentPage() {
 
         {/* Quote Terms */}
         {quote?.negotiation_clauses && (
-          <Card className="border-white/10 bg-white/5">
+          <Card className="border-border bg-card">
             <CardHeader>
-              <CardTitle className="text-slate-200">Agreed Terms & Conditions</CardTitle>
+              <CardTitle className="text-foreground">Agreed Terms & Conditions</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-400 whitespace-pre-wrap">{quote.negotiation_clauses}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{quote.negotiation_clauses}</p>
             </CardContent>
           </Card>
         )}
 
         {/* Final Quotation Upload */}
-        <Card className="border-white/10 bg-white/5">
+        <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle className="text-slate-200 flex items-center gap-2">
+            <CardTitle className="text-foreground flex items-center gap-2">
               <FileUp className="h-5 w-5" />
               Final Quotation (Optional)
             </CardTitle>
@@ -295,15 +295,15 @@ export default function AdvancePaymentPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {advancePayment.final_quotation_url && (
-              <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-lg flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-400" />
-                <span className="text-sm text-green-300">Quotation uploaded successfully</span>
+              <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-lg flex items-center gap-2">
+                <Check className="h-4 w-4 text-emerald-500" />
+                <span className="text-sm text-emerald-500">Quotation uploaded successfully</span>
               </div>
             )}
             
             {!advancePayment.final_quotation_url && (
               <div className="space-y-3">
-                <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-slate-500 transition">
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-muted-foreground transition">
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"
@@ -313,11 +313,11 @@ export default function AdvancePaymentPage() {
                     id="quotation-file"
                   />
                   <label htmlFor="quotation-file" className="cursor-pointer flex flex-col items-center gap-2">
-                    <Upload className="h-6 w-6 text-slate-400" />
-                    <span className="text-sm font-medium text-slate-300">
+                    <Upload className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
                       {quotationFile ? quotationFile.name : 'Click to select or drag file'}
                     </span>
-                    <span className="text-xs text-slate-500">PDF, JPEG, or PNG (Max 5MB)</span>
+                    <span className="text-xs text-muted-foreground">PDF, JPEG, or PNG (Max 5MB)</span>
                   </label>
                 </div>
               </div>
@@ -328,14 +328,14 @@ export default function AdvancePaymentPage() {
               onChange={(e) => setCustomerNotes(e.target.value)}
               disabled={isConfirmed}
               placeholder="Add any notes or questions about the quotation..."
-              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50 disabled:opacity-50"
+              className="w-full bg-muted/50 border border-border rounded-lg p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 disabled:opacity-50"
               rows={3}
             />
           </CardContent>
         </Card>
 
         {/* Terms Acceptance */}
-        <Card className="border-white/10 bg-white/5">
+        <Card className="border-border bg-card">
           <CardContent className="pt-6 space-y-4">
             <div className="flex items-start gap-3">
               <Checkbox
@@ -346,10 +346,10 @@ export default function AdvancePaymentPage() {
               />
               <label
                 htmlFor="agree-terms"
-                className="text-sm text-slate-300 cursor-pointer flex-1 leading-relaxed"
+                className="text-sm text-foreground cursor-pointer flex-1 leading-relaxed"
               >
                 I agree to the payment terms and conditions mentioned above. I understand that:
-                <ul className="mt-2 ml-4 space-y-1 text-xs text-slate-400 list-disc">
+                <ul className="mt-2 ml-4 space-y-1 text-xs text-muted-foreground list-disc">
                   <li>₹{Math.round(advancePayment.advance_amount).toLocaleString('en-IN')} is required as advance payment</li>
                   <li>Balance of ₹{Math.round(advancePayment.total_amount - advancePayment.advance_amount).toLocaleString('en-IN')} will be due upon completion</li>
                   <li>Payment is non-refundable once confirmed</li>
@@ -364,7 +364,7 @@ export default function AdvancePaymentPage() {
         <div className="flex gap-3 sticky bottom-4">
           <Button
             variant="outline"
-            className="flex-1 border-white/20 text-slate-300 hover:bg-white/5"
+            className="flex-1 border-border text-foreground hover:bg-muted"
             onClick={() => router.back()}
             disabled={submitting}
           >
@@ -373,7 +373,7 @@ export default function AdvancePaymentPage() {
           <Button
             onClick={handleSubmit}
             disabled={!agreeToTerms || submitting || uploadingFile || isConfirmed}
-            className="flex-1 bg-cyan-600 hover:bg-cyan-700 font-semibold"
+            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
           >
             {uploadingFile || submitting ? (
               <>

@@ -204,10 +204,10 @@ export function Header() {
   return (
     <nav
       id="navbar"
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ease-in-out border-b
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ease-in-out border-b tech-header
         ${isScrolled
-          ? 'bg-white/85 backdrop-blur-md border-zinc-200/50 py-2.5 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)]'
-          : 'bg-white/75 backdrop-blur-md border-zinc-100 py-4'}
+          ? 'py-2.5 shadow-md'
+          : 'py-4'}
       `}
     >
       <div className="absolute top-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
@@ -215,22 +215,22 @@ export function Header() {
       <div className="mx-auto max-w-6xl px-6 sm:px-8">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="relative z-20 flex min-w-0 flex-shrink items-center gap-2.5 group sm:w-[240px]">
-            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 p-1 transition-transform group-hover:scale-105 shadow-sm">
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 p-1 transition-transform group-hover:scale-105 shadow-sm">
               <Logo width={24} height={24} className="sm:hidden" />
               <Logo width={32} height={32} className="hidden sm:block" />
             </span>
             <div className="flex min-w-0 flex-col">
-              <span className="font-sans text-sm font-bold leading-none tracking-tight text-zinc-900 sm:text-base">
+              <span className="font-sans text-sm font-bold leading-none tracking-tight text-white sm:text-base">
                 TECBUNNY<span className="text-blue-600">.</span>
               </span>
-              <span className="mt-0.5 text-[8px] sm:text-[9px] font-medium uppercase tracking-[0.15em] text-zinc-400 transition-colors group-hover:text-zinc-600">
+              <span className="mt-0.5 text-[8px] sm:text-[9px] font-medium uppercase tracking-[0.15em] text-blue-300 transition-colors group-hover:text-blue-200">
                 Solutions Pvt Ltd
               </span>
             </div>
           </Link>
 
           <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
-            <nav className="flex items-center gap-1 overflow-hidden rounded-full border border-zinc-200/50 bg-zinc-50/50 p-1">
+            <nav className="flex items-center gap-1 overflow-hidden rounded-full border border-zinc-800 bg-zinc-900/50 p-1">
               {navLinks.map((item) => (
                 item.children ? (
                   <div
@@ -250,8 +250,8 @@ export function Header() {
                       href={item.href}
                       className={`relative rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1 xl:px-3
                         ${isActive(item.href)
-                          ? 'bg-blue-500/10 text-blue-700 border border-blue-500/20 shadow-sm'
-                          : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-150/50'
+                          ? 'bg-blue-500/20 text-white border border-blue-500/30 shadow-sm'
+                          : 'text-zinc-300 hover:text-white hover:bg-zinc-800/50'
                         }
                       `}
                     >
@@ -261,7 +261,7 @@ export function Header() {
                       )}
                     </Link>
                     <div
-                      className={`absolute left-1/2 top-full z-50 mt-2.5 w-48 -translate-x-1/2 rounded-xl border border-zinc-200/80 bg-white p-1.5 shadow-lg backdrop-blur-md transition-all duration-200 before:absolute before:-top-3 before:left-0 before:h-3 before:w-full ${desktopSubmenuOpen === item.name ? 'visible opacity-100 translate-y-0' : 'invisible opacity-0 -translate-y-1 pointer-events-none'}`}
+                      className={`absolute left-1/2 top-full z-50 mt-2.5 w-48 -translate-x-1/2 rounded-xl border border-zinc-800 bg-zinc-950 p-1.5 shadow-lg backdrop-blur-md transition-all duration-200 before:absolute before:-top-3 before:left-0 before:h-3 before:w-full ${desktopSubmenuOpen === item.name ? 'visible opacity-100 translate-y-0' : 'invisible opacity-0 -translate-y-1 pointer-events-none'}`}
                       aria-hidden={desktopSubmenuOpen === item.name ? 'false' : 'true'}
                     >
                       {item.children.map((child) => (
@@ -269,10 +269,10 @@ export function Header() {
                           key={child.name}
                           href={child.href}
                           tabIndex={desktopSubmenuOpen === item.name ? 0 : -1}
-                          className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-zinc-900"
+                          className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-white"
                         >
                           {child.name}
-                          <ChevronRight size={12} className="text-zinc-400" />
+                          <ChevronRight size={12} className="text-zinc-500" />
                         </Link>
                       ))}
                     </div>
@@ -283,8 +283,8 @@ export function Header() {
                     href={item.href}
                     className={`relative inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200 xl:px-3
                       ${isActive(item.href)
-                        ? 'bg-blue-500/10 text-blue-700 border border-blue-500/20 shadow-sm'
-                        : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-150/50'
+                        ? 'bg-blue-500/20 text-white border border-blue-500/30 shadow-sm'
+                        : 'text-zinc-300 hover:text-white hover:bg-zinc-800/50'
                       }
                     `}
                   >
@@ -308,13 +308,13 @@ export function Header() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/auth/signin"
-                  className="rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-zinc-700 transition-all duration-200 hover:border-zinc-300 hover:bg-zinc-50 shadow-sm"
+                  className="rounded-full border border-zinc-700 bg-zinc-900/60 px-3.5 py-1.5 text-xs font-semibold text-zinc-300 transition-all duration-200 hover:border-zinc-500 hover:bg-zinc-850 hover:text-white shadow-sm"
                 >
                   Login
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="rounded-full border border-blue-500/20 bg-blue-500/5 px-3.5 py-1.5 text-xs font-semibold text-blue-700 transition-all duration-200 hover:border-blue-500/40 hover:bg-blue-500/10"
+                  className="rounded-full border border-blue-500 bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:bg-blue-500 shadow-sm"
                 >
                   Signup
                 </Link>
@@ -325,7 +325,7 @@ export function Header() {
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-700 transition-all duration-200 hover:border-zinc-300 hover:text-zinc-900 shadow-sm"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/60 text-zinc-300 transition-all duration-200 hover:border-zinc-500 hover:text-white shadow-sm"
                       aria-label="Open profile menu"
                     >
                       <User size={16} />
@@ -364,12 +364,12 @@ export function Header() {
             <CartSheet>
               <button
                 type="button"
-                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-700 transition-all duration-200 hover:border-zinc-300 hover:text-zinc-900 shadow-sm"
+                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/60 text-zinc-300 transition-all duration-200 hover:border-zinc-500 hover:text-white shadow-sm"
                 aria-label="Open cart"
               >
                 <ShoppingCart size={16} />
                 {isHydrated && cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-zinc-900 px-1 text-[9px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold text-white">
                     {cartCount}
                   </span>
                 )}
@@ -380,7 +380,7 @@ export function Header() {
               href="/customised-setups"
               onMouseMove={applyMagneticEffect}
               onMouseLeave={resetMagneticEffect}
-              className="group relative rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-xs font-bold text-blue-700 transition-all duration-200 hover:bg-blue-500 hover:text-white hover:border-blue-500 shadow-sm"
+              className="group relative rounded-lg border border-blue-600/30 bg-blue-600/10 px-4 py-2 text-xs font-bold text-blue-400 transition-all duration-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 shadow-sm"
             >
               Get Quote
             </Link>
@@ -391,19 +391,19 @@ export function Header() {
             <CartSheet>
               <button
                 type="button"
-                className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-700 hover:text-zinc-900 transition-colors shadow-sm"
+                className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:text-white transition-colors shadow-sm"
                 aria-label="Open cart"
               >
                 <ShoppingCart size={15} />
                 {isHydrated && cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-zinc-900 px-0.5 text-[9px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-blue-600 px-0.5 text-[9px] font-bold text-white">
                     {cartCount}
                   </span>
                 )}
               </button>
             </CartSheet>
             <button
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 p-1.5 text-zinc-700 hover:text-zinc-900 hover:bg-zinc-50 transition-colors shadow-sm"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 p-1.5 text-zinc-300 hover:text-white hover:bg-zinc-900/60 transition-colors shadow-sm"
               onClick={() =>
                 setMobileMenuOpen((open) => {
                   const next = !open;

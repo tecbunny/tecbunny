@@ -226,18 +226,18 @@ export default function AiResearchPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-80px)] flex-col bg-slate-950 text-slate-200">
+    <div className="flex h-[calc(100vh-80px)] flex-col bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between border-b border-white/10 bg-slate-950/80 px-4 py-4 backdrop-blur-md sm:px-6 lg:px-8">
+      <header className="relative z-10 flex items-center justify-between border-b border-border bg-background/80 px-4 py-4 backdrop-blur-md sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-400">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Bot className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-white">AI Research Assistant</h1>
-            <p className="text-xs text-slate-400">Powered by Gemini 2.5 Flash Lite</p>
+            <h1 className="text-lg font-semibold text-foreground">AI Research Assistant</h1>
+            <p className="text-xs text-muted-foreground">Powered by Gemini 2.5 Flash Lite</p>
           </div>
         </div>
       </header>
@@ -261,7 +261,7 @@ export default function AiResearchPage() {
               className={`flex w-full gap-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {message.role === 'assistant' && (
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-400">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <Sparkles className="h-4 w-4" />
                 </div>
               )}
@@ -269,12 +269,12 @@ export default function AiResearchPage() {
               <div
                 className={`relative max-w-3xl rounded-2xl px-6 py-5 ${
                   message.role === 'user'
-                    ? 'bg-cyan-600 text-white rounded-tr-sm'
-                    : 'bg-slate-900 border border-white/10 text-slate-200 rounded-tl-sm'
+                    ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                    : 'bg-card border border-border text-foreground rounded-tl-sm'
                 }`}
               >
                 {message.isLoading ? (
-                  <div className="flex items-center gap-2 text-cyan-400">
+                  <div className="flex items-center gap-2 text-primary">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span className="text-xs font-medium">Analyzing...</span>
                   </div>
@@ -285,29 +285,29 @@ export default function AiResearchPage() {
                 ) : message.result ? (
                   <div className="space-y-6">
                     <div>
-                      <h3 className="mb-2 font-semibold text-white">Research Summary</h3>
+                      <h3 className="mb-2 font-semibold text-foreground">Research Summary</h3>
                       <MarkdownRenderer content={message.result.summary} />
                     </div>
 
                     {message.result.products && message.result.products.length > 0 && (
                       <div className="space-y-3">
-                        <h4 className="font-medium text-slate-200">Recommended Products</h4>
+                        <h4 className="font-medium text-foreground">Recommended Products</h4>
                         <div className="grid gap-3 sm:grid-cols-2">
                           {message.result.products.slice(0, 4).map((product) => (
-                            <div key={product.id} className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/20 p-3 transition hover:border-cyan-500/30 hover:bg-cyan-500/5">
+                            <div key={product.id} className="group relative overflow-hidden rounded-xl border border-border bg-muted/40 p-3 transition hover:border-primary/30 hover:bg-primary/5">
                               <div className="flex gap-3">
-                                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-slate-800">
+                                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
                                   {product.image ? (
                                     <img src={product.image} alt={product.title} className="h-full w-full object-cover" />
                                   ) : (
-                                    <div className="flex h-full w-full items-center justify-center text-slate-600">
+                                    <div className="flex h-full w-full items-center justify-center text-muted-foreground/60">
                                       <Bot className="h-6 w-6" />
                                     </div>
                                   )}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <h5 className="truncate text-sm font-medium text-white">{product.title}</h5>
-                                  <p className="mt-1 line-clamp-2 text-xs text-slate-400">{product.description}</p>
+                                  <h5 className="truncate text-sm font-medium text-foreground">{product.title}</h5>
+                                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{product.description}</p>
                                 </div>
                               </div>
                             </div>
@@ -320,7 +320,7 @@ export default function AiResearchPage() {
               </div>
 
                {message.role === 'user' && (
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-800 text-slate-400">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                   <User className="h-4 w-4" />
                 </div>
               )}
@@ -332,35 +332,35 @@ export default function AiResearchPage() {
 
       {/* Lead Gate Modal */}
       {showLeadGate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-xl p-4">
-          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-8 shadow-2xl">
-            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-xl p-4">
+          <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-2xl">
+            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <Lock className="h-7 w-7" />
             </div>
-            <h3 className="mb-2 text-2xl font-bold text-white">Unlock Telemetry Report</h3>
-            <p className="mb-8 text-sm text-slate-400 leading-relaxed">
+            <h3 className="mb-2 text-2xl font-bold text-foreground">Unlock Telemetry Report</h3>
+            <p className="mb-8 text-sm text-muted-foreground leading-relaxed">
               We require corporate verification to share comprehensive architectural telemetry reports. Please provide your business contact details.
             </p>
             
             <form onSubmit={handleLeadVerification} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Corporate Email</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Corporate Email</label>
                 <Input 
                   required 
                   type="email" 
                   placeholder="name@company.com" 
-                  className="bg-white/5 border-white/10 text-white h-12"
+                  className="bg-muted/50 border-border text-foreground h-12"
                   value={leadData.email}
                   onChange={(e) => setLeadData({ ...leadData, email: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Phone (for WhatsApp OTP)</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Phone (for WhatsApp OTP)</label>
                 <Input 
                   required 
                   type="tel" 
                   placeholder="+91 12345 67890" 
-                  className="bg-white/5 border-white/10 text-white h-12"
+                  className="bg-muted/50 border-border text-foreground h-12"
                   value={leadData.phone}
                   onChange={(e) => setLeadData({ ...leadData, phone: e.target.value })}
                 />
@@ -368,7 +368,7 @@ export default function AiResearchPage() {
               
               <Button 
                 type="submit" 
-                className="w-full h-14 bg-cyan-600 hover:bg-cyan-500 text-lg font-bold mt-4"
+                className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground text-lg font-bold mt-4"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -385,7 +385,7 @@ export default function AiResearchPage() {
               <button 
                 type="button" 
                 onClick={() => setShowLeadGate(false)}
-                className="w-full py-2 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+                className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 Cancel and return to chat
               </button>
@@ -395,7 +395,7 @@ export default function AiResearchPage() {
       )}
 
       {/* Input Area */}
-      <div className="relative z-10 border-t border-white/10 bg-slate-950/80 p-4 backdrop-blur-md sm:px-6 lg:px-8">
+      <div className="relative z-10 border-t border-border bg-background/80 p-4 backdrop-blur-md sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
           <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
             <input
@@ -403,20 +403,20 @@ export default function AiResearchPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about a product, e.g., 'Best CCTV camera for outdoor use'..."
-              className="flex-1 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
+              className="flex-1 rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:bg-card focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
               disabled={isLoading}
             />
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
               aria-label={isLoading ? 'Sending message' : 'Send message'}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-600 text-white transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-600"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
             >
               {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </button>
           </form>
           <div className="mt-2 text-center">
-             <p className="text-[10px] text-slate-500">AI can make mistakes. Please verify important information.</p>
+             <p className="text-[10px] text-muted-foreground">AI can make mistakes. Please verify important information.</p>
           </div>
         </div>
       </div>

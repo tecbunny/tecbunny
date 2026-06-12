@@ -34,15 +34,15 @@ export function QuotationStatusLookup() {
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 space-y-4 flex flex-col justify-between">
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 space-y-4 flex flex-col justify-between">
       <div>
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="text-sm text-cyan-200 font-semibold flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+            <p className="text-sm text-primary font-semibold flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
               Check Quotation Status
             </p>
-            <p className="text-xs text-slate-400">Track revisions, approval, or proceed with payment.</p>
+            <p className="text-xs text-muted-foreground">Track revisions, approval, or proceed with payment.</p>
           </div>
         </div>
         <form onSubmit={handleLookupSubmit} className="space-y-3 mt-4">
@@ -59,12 +59,12 @@ export function QuotationStatusLookup() {
                   setLookupError('');
                 }}
                 disabled={lookupLoading}
-                className="flex-1 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-slate-500"
+                className="flex-1 bg-muted/10 border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground"
               />
               <Button
                 type="submit"
                 disabled={lookupLoading || !quoteNumberInput.trim()}
-                className="bg-cyan-500 text-slate-950 font-semibold hover:bg-cyan-400 disabled:opacity-50 transition shrink-0"
+                className="bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-50 transition shrink-0"
               >
                 {lookupLoading ? 'Checking...' : 'Track'}
               </Button>

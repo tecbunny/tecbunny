@@ -341,7 +341,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
 
   if (loading) {
     return (
-      <div className="bg-[#030712] text-slate-200">
+      <div className="bg-background text-foreground">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="animate-pulse">
             <div className="h-6 w-40 rounded bg-white/10 mb-8"></div>
@@ -362,7 +362,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
 
   if (!product) {
     return (
-      <div className="bg-[#030712] text-slate-200">
+      <div className="bg-background text-foreground">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-white mb-4">Product Not Found</h2>
@@ -380,7 +380,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
   }
 
   return (
-    <div className="bg-[#030712] text-slate-200">
+    <div className="bg-background text-foreground">
       
 
       <div className="relative">
@@ -390,23 +390,23 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
             <button
               type="button"
               onClick={() => router.push('/products')}
-              className="inline-flex items-center gap-2 text-slate-400 hover:text-cyan-300 transition-colors"
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               Products
             </button>
             <span>/</span>
-            <span className="hover:text-cyan-300 transition-colors">{product.category}</span>
+            <span className="hover:text-primary transition-colors">{product.category}</span>
             <span>/</span>
-            <span className="text-white">{displayName}</span>
+            <span className="text-foreground">{displayName}</span>
           </nav>
 
           <section className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div className="space-y-4">
-              <div className="relative bg-slate-900/60 border border-white/10 rounded-2xl p-6 h-[500px] flex items-center justify-center overflow-hidden group">
+              <div className="relative bg-muted/40 border border-border rounded-2xl p-6 h-[500px] flex items-center justify-center overflow-hidden group">
                 <div className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="product-scan-line"></div>
-                  <div className="absolute inset-0 bg-cyan-400/5"></div>
+                  <div className="absolute inset-0 bg-primary/5"></div>
                 </div>
 
                 <img
@@ -436,7 +436,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                       BACKORDER
                     </span>
                   ) : (
-                    <span className="bg-cyan-400 text-slate-900 text-xs font-bold px-2 py-1 rounded shadow-lg shadow-cyan-400/40">
+                    <span className="bg-primary text-white text-xs font-bold px-2 py-1 rounded shadow-lg shadow-primary/40">
                       IN STOCK
                     </span>
                   )}
@@ -448,8 +448,8 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-white/5 border p-2 flex-shrink-0 transition-colors ${
-                      selectedImage === index ? 'border-cyan-400/70' : 'border-white/10 hover:border-cyan-400/40'
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-muted/30 border p-2 flex-shrink-0 transition-colors ${
+                      selectedImage === index ? 'border-primary' : 'border-border hover:border-primary/50'
                     }`}
                   >
                     <img
@@ -489,15 +489,15 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 )}
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-8 backdrop-blur-sm">
+              <div className="bg-muted/30 border border-border rounded-xl p-6 mb-8 backdrop-blur-sm">
                 {pricing && (
                   <div className="flex flex-wrap items-end gap-3 mb-2">
-                    <span className="text-4xl font-bold text-cyan-300">₹{pricing.salePrice.toLocaleString('en-IN')}</span>
+                    <span className="text-4xl font-bold text-primary">₹{pricing.salePrice.toLocaleString('en-IN')}</span>
                     {pricing.hasDiscount && (
                       <>
-                        <span className="text-lg text-slate-500 line-through">₹{pricing.mrp.toLocaleString('en-IN')}</span>
+                        <span className="text-lg text-muted-foreground line-through">₹{pricing.mrp.toLocaleString('en-IN')}</span>
                         {pricing.percentageOff > 0 && (
-                          <span className="text-xs font-bold text-emerald-300 bg-emerald-400/10 px-2 py-0.5 rounded">
+                          <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">
                             {pricing.percentageOff}% OFF
                           </span>
                         )}
@@ -514,9 +514,9 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                   <ul className="list-none pl-0 space-y-2 mt-4">
                     {highlightSpecs.map(([key, value]) => (
                       <li key={key} className="flex items-center gap-3">
-                        <span className="h-2 w-2 rounded-full bg-cyan-400"></span>
-                        <span className="text-slate-200">{key}:</span>
-                        <span className="text-slate-400">{value}</span>
+                        <span className="h-2 w-2 rounded-full bg-primary"></span>
+                        <span className="text-foreground">{key}:</span>
+                        <span className="text-muted-foreground">{value}</span>
                       </li>
                     ))}
                   </ul>
@@ -527,17 +527,17 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 <div className="flex flex-wrap gap-3">
                   <AddToCartButton
                     product={product}
-                    className="flex-1 min-w-[220px] h-12 text-base bg-cyan-400 hover:bg-white text-slate-900 font-semibold shadow-lg shadow-cyan-400/20"
+                    className="flex-1 min-w-[220px] h-12 text-base bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/20"
                     size="lg"
                   />
                   <WishlistButton
                     product={product}
-                    className="h-12 w-12 flex-shrink-0 border border-white/10 bg-white/5 hover:bg-white/10"
+                    className="h-12 w-12 flex-shrink-0 border border-border bg-muted/30 hover:bg-muted/50"
                   />
                   <Button
                     variant="outline"
                     size="lg"
-                    className="h-12 w-12 flex-shrink-0 border-white/10 bg-white/5 hover:bg-white/10"
+                    className="h-12 w-12 flex-shrink-0 border-border bg-muted/30 hover:bg-muted/50"
                     onClick={handleShare}
                     aria-label={`Share ${displayName}`}
                   >
@@ -548,7 +548,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 <div className="flex flex-wrap gap-3">
                   <Button
                     variant="outline"
-                    className="flex-1 border-white/10 bg-white/5 hover:bg-white/10"
+                    className="flex-1 border-border bg-muted/30 hover:bg-muted/50"
                     onClick={() => trackEvent('amc_inquiry', { productId: product.id, productName: displayName })}
                   >
                     <Shield className="mr-2 h-4 w-4" />
@@ -556,7 +556,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 border-white/10 bg-white/5 hover:bg-white/10"
+                    className="flex-1 border-border bg-muted/30 hover:bg-muted/50"
                     onClick={() => trackEvent('installation_inquiry', { productId: product.id, productName: displayName })}
                   >
                     <Truck className="mr-2 h-4 w-4" />
@@ -572,16 +572,16 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
             </div>
           </section>
 
-          <section className="mt-12 border-t border-white/5 bg-black/20 rounded-2xl">
+          <section className="mt-12 border-t border-border bg-muted/20 rounded-2xl">
             <div className="px-4 py-10 sm:px-6 lg:px-8">
-              <div className="flex gap-8 border-b border-white/10 mb-8 overflow-x-auto">
+              <div className="flex gap-8 border-b border-border mb-8 overflow-x-auto">
                 <button
                   type="button"
                   onClick={() => setActiveTab('specs')}
                   className={`px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-all ${
                     activeTab === 'specs'
-                      ? 'border-cyan-400 text-white'
-                      : 'border-transparent text-slate-400 hover:text-white'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Specifications
@@ -591,8 +591,8 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                   onClick={() => setActiveTab('description')}
                   className={`px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-all ${
                     activeTab === 'description'
-                      ? 'border-cyan-400 text-white'
-                      : 'border-transparent text-slate-400 hover:text-white'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Description
@@ -602,8 +602,8 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                   onClick={() => setActiveTab('warranty')}
                   className={`px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-all ${
                     activeTab === 'warranty'
-                      ? 'border-cyan-400 text-white'
-                      : 'border-transparent text-slate-400 hover:text-white'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Warranty Info
@@ -614,37 +614,37 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 text-sm">
                   {product.specifications && Object.keys(product.specifications).length > 0 ? (
                     Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key} className="flex justify-between py-3 border-b border-white/5">
-                        <span className="text-slate-500">{key}</span>
-                        <span className="text-white font-mono">{value}</span>
+                      <div key={key} className="flex justify-between py-3 border-b border-border">
+                        <span className="text-muted-foreground">{key}</span>
+                        <span className="text-foreground font-mono">{value}</span>
                       </div>
                     ))
                   ) : (
-                    <div className="text-slate-400">Specifications will be updated soon.</div>
+                    <div className="text-muted-foreground">Specifications will be updated soon.</div>
                   )}
                 </div>
               )}
 
               {activeTab === 'description' && (
-                <div className="prose prose-invert max-w-none text-slate-300">
+                <div className="prose prose-invert max-w-none text-foreground">
                   <div dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
                 </div>
               )}
 
               {activeTab === 'warranty' && (
-                <Card className="bg-white/5 border-white/10">
-                  <CardContent className="p-6 text-sm text-slate-300 space-y-3">
+                <Card className="bg-muted/10 border-border">
+                  <CardContent className="p-6 text-sm text-foreground space-y-3">
                     <p>
                       {product.warranty
                         ? `${product.warranty} coverage provided by manufacturer.`
                         : '2-Year Manufacturer Warranty included with purchase.'}
                     </p>
                     <div className="flex items-center gap-3">
-                      <RefreshCw className="h-4 w-4 text-cyan-300" />
+                      <RefreshCw className="h-4 w-4 text-primary" />
                       <span>Hassle-free replacement for eligible defects.</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Shield className="h-4 w-4 text-cyan-300" />
+                      <Shield className="h-4 w-4 text-primary" />
                       <span>Support available via Tecbunny help desk.</span>
                     </div>
                   </CardContent>

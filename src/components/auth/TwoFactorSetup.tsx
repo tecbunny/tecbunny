@@ -158,16 +158,16 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
 
   if (step === 'complete') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
-        <Card className="w-full max-w-md border-white/10 bg-slate-900/70 text-slate-100 shadow-lg">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md border-border bg-card text-foreground shadow-lg">
           <CardHeader className="text-center">
             <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-emerald-500/10 mb-4">
-              <CheckCircle className="h-8 w-8 text-emerald-300" />
+              <CheckCircle className="h-8 w-8 text-emerald-500" />
             </div>
-            <CardTitle className="text-2xl font-bold text-white">
+            <CardTitle className="text-2xl font-bold tech-heading">
               2FA Setup Complete!
             </CardTitle>
-            <CardDescription className="text-slate-300">
+            <CardDescription className="tech-body">
               Your account is now protected with two-factor authentication
             </CardDescription>
           </CardHeader>
@@ -194,13 +194,13 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
 
   if (step === 'verify') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
-        <Card className="w-full max-w-md border-white/10 bg-slate-900/70 text-slate-100 shadow-lg">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md border-border bg-card text-foreground shadow-lg">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-white">
+            <CardTitle className="text-2xl font-bold tech-heading">
               Verify Setup
             </CardTitle>
-            <CardDescription className="text-slate-300">
+            <CardDescription className="tech-body">
               Enter the 6-digit code from your authenticator app to complete setup
             </CardDescription>
           </CardHeader>
@@ -262,16 +262,16 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-2xl border-white/10 bg-slate-900/70 text-slate-100 shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-2xl border-border bg-card text-foreground shadow-lg">
         <CardHeader className="text-center">
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-cyan-500/10 mb-4">
-            <Shield className="h-8 w-8 text-cyan-300" />
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 mb-4">
+            <Shield className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold text-white">
+          <CardTitle className="text-2xl font-bold tech-heading">
             Setup Two-Factor Authentication
           </CardTitle>
-          <CardDescription className="text-slate-300">
+          <CardDescription className="tech-body">
             Add an extra layer of security to your account
           </CardDescription>
         </CardHeader>
@@ -279,8 +279,8 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
         <CardContent>
           {isLoading && !setupData ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-              <p className="text-slate-300">Setting up 2FA...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="tech-body">Setting up 2FA...</p>
             </div>
           ) : setupData ? (
             <div className="space-y-6">
@@ -293,7 +293,7 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
               </Alert>
 
               <div className="flex justify-center">
-                <div className="p-4 bg-white/5 border-2 border-white/10 rounded-lg">
+                <div className="p-4 bg-muted border border-border rounded-lg">
                   <img
                     src={setupData.qrCode}
                     alt="2FA QR Code"
@@ -303,10 +303,10 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
               </div>
 
               <div className="text-center">
-                <p className="text-sm text-slate-300 mb-2">
+                <p className="text-sm tech-body mb-2">
                   Or manually enter this code:
                 </p>
-                <code className="bg-white/5 px-3 py-1 rounded text-sm font-mono text-slate-200">
+                <code className="bg-muted px-3 py-1 rounded text-sm font-mono text-foreground">
                   {setupData.secret}
                 </code>
               </div>
@@ -335,7 +335,7 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
                   {setupData.backupCodes.map((code, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-2 bg-white/5 border border-white/10 rounded"
+                      className="flex items-center justify-between p-2 bg-muted border border-border rounded"
                     >
                       <code className="text-sm font-mono">{code}</code>
                       <Button

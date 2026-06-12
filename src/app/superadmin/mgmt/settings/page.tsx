@@ -347,21 +347,21 @@ export default function SuperadminSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-3 border-b border-white/10 pb-5">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-rose-300">
+      <header className="flex flex-col gap-3 border-b border-border pb-5">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
           <Settings className="h-4 w-4" />
           Root Settings
         </div>
         <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Superadmin Settings</h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-400">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Superadmin Settings</h1>
+            <p className="mt-2 max-w-3xl text-sm text-muted-foreground font-tech">
               Central control panel for user, product, payment, website, brand, policy, AI, social, offer, marketing, company, tax, report, and custom setup configuration.
             </p>
           </div>
           <Link
             href="/superadmin/mgmt/dashboard"
-            className="inline-flex h-10 items-center justify-center rounded-md border border-white/10 px-4 text-sm font-medium text-slate-200 transition hover:border-rose-400/40 hover:bg-white/5"
+            className="inline-flex h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium text-foreground transition hover:border-primary/40 hover:bg-muted"
           >
             Control Center
           </Link>
@@ -369,7 +369,7 @@ export default function SuperadminSettingsPage() {
       </header>
 
       <Tabs value={activeGroup} onValueChange={setActiveGroup} className="space-y-5">
-        <TabsList className="grid w-full max-w-xl grid-cols-3 bg-slate-950/80">
+        <TabsList className="grid w-full max-w-xl grid-cols-3 bg-muted">
           {sectionGroups.map((group) => (
             <TabsTrigger key={group.id} value={group.id}>
               {group.label}
@@ -382,21 +382,21 @@ export default function SuperadminSettingsPage() {
             {group.items.map((section) => {
               const Icon = section.icon;
               return (
-                <section key={section.id} id={`section-${section.id}`} className="rounded-lg border border-white/10 bg-slate-950/70 p-5 shadow-sm">
-                  <div className="mb-5 flex flex-col gap-4 border-b border-white/10 pb-4 md:flex-row md:items-start md:justify-between">
+                <section key={section.id} id={`section-${section.id}`} className="rounded-lg border border-border bg-card p-5 shadow-sm">
+                  <div className="mb-5 flex flex-col gap-4 border-b border-border pb-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-rose-500/20 bg-rose-500/10">
-                        <Icon className="h-5 w-5 text-rose-300" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-primary/10">
+                        <Icon className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <h2 className="text-lg font-semibold text-white">{section.title}</h2>
-                        <p className="mt-1 text-sm text-slate-400">{section.description}</p>
+                        <h2 className="text-lg font-semibold text-foreground">{section.title}</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>
                       </div>
                     </div>
                     {section.href && (
                       <Link
                         href={section.href}
-                        className="inline-flex h-9 items-center justify-center rounded-md border border-white/10 px-3 text-xs font-semibold uppercase tracking-wide text-slate-300 transition hover:border-cyan-400/40 hover:text-cyan-200"
+                        className="inline-flex h-9 items-center justify-center rounded-md border border-border px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition hover:border-primary/40 hover:text-primary"
                       >
                         Open Module
                       </Link>
@@ -405,12 +405,12 @@ export default function SuperadminSettingsPage() {
 
                   <div className="grid gap-4 lg:grid-cols-2">
                     {section.fields.map((field) => (
-                      <div key={field.key} className="rounded-md border border-white/10 bg-slate-900/50 p-4">
+                      <div key={field.key} className="rounded-md border border-border bg-muted/20 p-4">
                         <div className="mb-3 space-y-1">
-                          <Label htmlFor={field.key} className="text-sm font-semibold text-slate-100">
+                          <Label htmlFor={field.key} className="text-sm font-semibold text-foreground">
                             {field.label}
                           </Label>
-                          <p className="text-xs leading-relaxed text-slate-500">{field.description}</p>
+                          <p className="text-xs leading-relaxed text-muted-foreground">{field.description}</p>
                         </div>
                         {field.key === 'partnerBrands' ? (
                           <div className="mt-2">
@@ -431,7 +431,7 @@ export default function SuperadminSettingsPage() {
                             value={values[field.key] ?? ''}
                             onChange={(event) => updateValue(field.key, event.target.value)}
                             disabled={loading}
-                            className="min-h-24 border-white/10 bg-slate-950/80 text-slate-100"
+                            className="min-h-24 border-border bg-muted/50 text-foreground"
                           />
                         ) : (
                           <Input
@@ -440,7 +440,7 @@ export default function SuperadminSettingsPage() {
                             value={values[field.key] ?? ''}
                             onChange={(event) => updateValue(field.key, event.target.value)}
                             disabled={loading}
-                            className="border-white/10 bg-slate-950/80 text-slate-100"
+                            className="border-border bg-muted/50 text-foreground"
                           />
                         )}
                         <div className="mt-3 flex justify-end">
@@ -449,7 +449,7 @@ export default function SuperadminSettingsPage() {
                             size="sm"
                             onClick={() => saveField(field)}
                             disabled={loading || savingKey === field.key}
-                            className="gap-2 bg-rose-600 text-white hover:bg-rose-500"
+                            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
                           >
                             <Save className="h-4 w-4" />
                             {savingKey === field.key ? 'Saving' : 'Save'}
@@ -465,12 +465,12 @@ export default function SuperadminSettingsPage() {
         ))}
       </Tabs>
 
-      <section className="rounded-lg border border-cyan-400/20 bg-cyan-400/5 p-4">
+      <section className="rounded-lg border border-primary/20 bg-primary/5 p-4">
         <div className="flex gap-3">
-          <SlidersHorizontal className="mt-0.5 h-5 w-5 shrink-0 text-cyan-300" />
+          <SlidersHorizontal className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
-            <h2 className="text-sm font-semibold text-cyan-100">Operational Note</h2>
-            <p className="mt-1 text-sm text-cyan-100/70">
+            <h2 className="text-sm font-semibold text-foreground">Operational Note</h2>
+            <p className="mt-1 text-sm text-muted-foreground font-tech">
               These values are stored through the existing settings API. Dedicated modules remain available for deeper workflows such as products, offers, policies, payment gateways, AI prompts, and reports.
             </p>
           </div>

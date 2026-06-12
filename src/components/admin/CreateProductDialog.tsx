@@ -264,7 +264,7 @@ export function CreateProductDialog({ open, onOpenChange, onProductCreated }: Cr
                       {isGenerating ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
-                        <Sparkles className="mr-2 h-4 w-4 text-cyan-500" />
+                        <Sparkles className="mr-2 h-4 w-4 text-primary" />
                       )}
                       AI Generate
                     </Button>

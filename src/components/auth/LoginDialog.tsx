@@ -324,8 +324,6 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
             )}
           </form>
         </Form>
-
-        {/* Remove old Turnstile component */}
         
         {failedAttempts > 0 && failedAttempts < 5 && (
           <div className="mt-2 text-center text-sm text-orange-600">
@@ -338,14 +336,14 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
           <a
             href="/auth/forgot-password"
             onClick={(e) => { e.preventDefault(); window.location.href = '/auth/forgot-password'; }}
-            className="text-sm text-blue-600 hover:text-blue-500 block"
+            className="text-sm text-primary hover:underline block"
           >
             Forgot your password?
           </a>
           
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-muted-foreground">
             Don't have an account?{' '}
-            <Link href="/auth/signup" className="underline text-blue-600 hover:text-blue-500">
+            <Link href="/auth/signup" className="underline text-primary hover:underline">
               Create account
             </Link>
           </div>

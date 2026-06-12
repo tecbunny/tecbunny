@@ -278,7 +278,7 @@ function PayuPaymentContent() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{order.isPartPayment ? 'Payable Part Amount' : 'Amount'}</span>
-              <span className="font-semibold text-cyan-400">₹{formattedAmount}</span>
+              <span className="font-semibold text-primary">₹{formattedAmount}</span>
             </div>
             {order.isPartPayment && (
               <div className="flex justify-between text-xs text-muted-foreground mt-1">

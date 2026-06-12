@@ -189,33 +189,74 @@ export function Footer() {
   const activeSocialPlatforms = socialPlatforms.filter(({ key }) => Boolean(socialLinks[key]));
 
   return (
-    <footer className="footer-custom relative overflow-hidden bg-[#030712] border-t border-white/10 pt-8 pb-6 sm:pt-12 sm:pb-8 font-sans shadow-[0_-4px_20px_rgba(6,182,212,0.05)]">
-      <div className="absolute top-0 right-0 h-48 w-48 sm:h-64 sm:w-64 rounded-full bg-brand-purple/5 blur-[80px] pointer-events-none" />
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10 mb-12 pb-12 border-b border-white/5">
-          <div className="max-w-md">
-            <Link href="/" className="flex items-center gap-3 mb-4 group">
-              <Logo width={56} height={56} className="transition-transform group-hover:scale-105" />
-              <span className="font-tech font-bold text-3xl sm:text-4xl text-white tracking-wide">
-                TECBUNNY<span className="text-brand-cyan">.</span>
-              </span>
-            </Link>
-            <p className="text-slate-400 text-base leading-relaxed">
-              Transforming spaces into smart, secure sanctuaries. Goa&apos;s trusted partner for CCTV, IT infrastructure, and automation.
-            </p>
+    <footer className="relative bg-zinc-50 dark:bg-black text-zinc-500 dark:text-zinc-400 border-t border-zinc-200 dark:border-zinc-900 py-12 sm:py-16 font-sans">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+          {/* Column 1: Services */}
+          <div>
+            <h4 className="text-zinc-900 dark:text-zinc-300 text-xs font-mono font-semibold uppercase tracking-widest mb-4">Services</h4>
+            <ul className="space-y-2.5 text-xs">
+              <li>
+                <Link href="/services" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">
+                  CCTV Installation
+                </Link>
+              </li>
+              <li>
+                <Link href="/services" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">
+                  Biometric Access
+                </Link>
+              </li>
+              <li>
+                <Link href="/webdev" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">
+                  Web Development
+                </Link>
+              </li>
+              <li>
+                <Link href="/services" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">
+                  Intruder Alarms
+                </Link>
+              </li>
+              <li>
+                <Link href="/services" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">
+                  Video Door Phones
+                </Link>
+              </li>
+            </ul>
           </div>
 
-          <div className="w-full lg:w-auto">
-            <h4 className="font-tech text-white text-lg font-bold mb-2 flex items-center gap-2">
-              <span className="text-brand-purple">SYSTEM UPDATES</span>
-            </h4>
-            <p className="text-slate-400 text-sm mb-4 max-w-sm">
-              Subscribe to receive critical security advisories, local threat alerts, and seasonal tech maintenance checklists for your business or home.
-            </p>
-            <form className="flex flex-col sm:flex-row gap-3" onSubmit={handleSubscribe}>
+          {/* Column 2: Company */}
+          <div>
+            <h4 className="text-zinc-900 dark:text-zinc-300 text-xs font-mono font-semibold uppercase tracking-widest mb-4">Company</h4>
+            <ul className="space-y-2.5 text-xs">
+              <li><Link href="/about" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">About Us</Link></li>
+              <li><Link href="/products" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">Products</Link></li>
+              <li><Link href="/info/policies/privacy" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">Privacy Policy</Link></li>
+              <li><Link href="/info/policies/terms" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">Terms of Service</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 3: Contact Details */}
+          <div className="text-xs">
+            <h4 className="text-zinc-900 dark:text-zinc-300 text-xs font-mono font-semibold uppercase tracking-widest mb-4">Contact</h4>
+            <address className="leading-relaxed opacity-85 not-italic">{address}</address>
+            <div className="mt-3 space-y-1">
+              <p className="text-cyan-600 dark:text-cyan-400 hover:underline">
+                <a href={`tel:${supportPhone.replace(/\s+/g,'')}`}>{supportPhone}</a>
+              </p>
+              <p className="text-cyan-600 dark:text-cyan-400 hover:underline">
+                <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+              </p>
+            </div>
+          </div>
+
+          {/* Column 4: Updates Form */}
+          <div>
+            <h4 className="text-zinc-900 dark:text-zinc-300 text-xs font-mono font-semibold uppercase tracking-widest mb-4">Updates</h4>
+            <p className="text-xs opacity-80 mb-3 leading-relaxed">Subscribe to security advisories and tech updates.</p>
+            <form className="flex gap-2 max-w-sm" onSubmit={handleSubscribe}>
               <input
                 type="email"
-                placeholder="Enter secure email..."
+                placeholder="Secure email..."
                 value={subscribeEmail}
                 onChange={(event) => {
                   setSubscribeEmail(event.target.value);
@@ -224,125 +265,47 @@ export function Footer() {
                     setSubscribeMessage(null);
                   }
                 }}
-                className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-base text-white focus:outline-none focus:border-brand-cyan/50 w-full sm:w-72 placeholder-slate-600"
+                className="bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-700 w-full placeholder-zinc-400"
               />
               <button
                 type="submit"
                 disabled={subscribeStatus === 'loading'}
-                className="w-full sm:w-auto px-6 py-3 bg-white/5 border border-white/10 hover:bg-brand-cyan hover:text-brand-dark hover:border-brand-cyan text-white text-base font-bold font-tech rounded-lg transition-all duration-300"
+                className="px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-850 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold rounded-lg transition-colors"
               >
-                {subscribeStatus === 'loading' ? 'SUBSCRIBING...' : 'SUBSCRIBE'}
+                {subscribeStatus === 'loading' ? '...' : 'Subscribe'}
               </button>
             </form>
             {subscribeMessage && (
-              <p
-                className={`mt-3 text-xs ${subscribeStatus === 'success' ? 'text-emerald-300' : 'text-rose-300'}`}
-                role="status"
-                aria-live="polite"
-              >
+              <p className={`mt-2 text-[10px] ${subscribeStatus === 'success' ? 'text-emerald-500' : 'text-rose-500'}`} role="status">
                 {subscribeMessage}
               </p>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-          <div>
-            <h4 className="text-brand-cyan text-sm font-bold uppercase tracking-widest mb-6">Services</h4>
-            <ul className="space-y-3 text-base text-slate-300">
-              <li>
-                <Link href="/services" className="hover:text-white transition-colors flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-brand-purple" /> CCTV Installation
-                </Link>
-              </li>
-              <li>
-                <Link href="/services" className="hover:text-white transition-colors flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-brand-purple" /> Biometric Access
-                </Link>
-              </li>
-              <li>
-                <Link href="/webdev" className="hover:text-white transition-colors flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-brand-purple" /> Web Development
-                </Link>
-              </li>
-              <li>
-                <Link href="/services" className="hover:text-white transition-colors flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-brand-purple" /> Intruder Alarms
-                </Link>
-              </li>
-              <li>
-                <Link href="/services" className="hover:text-white transition-colors flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-brand-purple" /> Video Door Phones
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-brand-cyan text-sm font-bold uppercase tracking-widest mb-6">Company</h4>
-            <ul className="space-y-3 text-base text-slate-300">
-              <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link href="/products" className="hover:text-white transition-colors">Products</Link></li>
-              <li><Link href="/info/policies/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/info/policies/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
-            </ul>
-          </div>
-
-          <div className="col-span-2 md:col-span-2 bg-white/[0.02] border border-white/5 rounded-2xl p-6 md:p-7 relative overflow-hidden group hover:border-brand-cyan/30 transition-colors">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Globe className="h-16 w-16 text-brand-cyan" />
-            </div>
-
-            <h4 className="text-white font-bold font-tech text-xl mb-4">Reach Us</h4>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
-              <div>
-                <span className="block text-xs text-slate-500 uppercase mb-1">Location</span>
-                <address className="text-slate-300 not-italic leading-relaxed mb-1">{address}</address>
-                <a
-                  href="https://maps.app.goo.gl/HZDjt3zoB1Rcrjqp8"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-brand-cyan hover:underline"
-                >
-                  View on Google Maps
-                </a>
-              </div>
-              <div>
-                <span className="block text-xs text-slate-500 uppercase mb-1">Contact</span>
-                <p className="text-brand-cyan hover:text-white transition-colors">
-                  <a href={`tel:${supportPhone.replace(/\s+/g,'')}`}>{supportPhone}</a>
-                </p>
-                <p className="text-brand-cyan hover:text-white transition-colors">
-                  <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-white/5 text-sm text-slate-400">
-          <div className="flex flex-col items-center gap-1.5 md:flex-row md:items-center md:gap-6 text-center md:text-left">
-            <p>© 2025 TecBunny. All rights reserved. Built with ❤️ and innovation.</p>
-            <div className="flex flex-col items-center gap-1 sm:flex-row sm:gap-4">
-              <p className="font-mono text-xs sm:text-sm">CIN: U80200GA2025PTC017488</p>
-              <span className="hidden sm:inline text-white/10">|</span>
-              <p className="font-mono text-xs sm:text-sm">GSTIN: {companyInfo.gstin || '30AAMCT1608G1ZO'}</p>
+        {/* Footer Bottom (Copyright, CIN, GSTIN, and Socials) */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-zinc-200/50 dark:border-zinc-900/60 text-[10px] tracking-wide text-zinc-400 dark:text-zinc-500">
+          <div className="flex flex-col items-center gap-1.5 md:flex-row md:items-center md:gap-4 text-center md:text-left">
+            <p>© 2026 TecBunny solutions. All rights reserved.</p>
+            <div className="flex items-center gap-2 font-mono">
+              <span>CIN: U80200GA2025PTC017488</span>
+              <span>|</span>
+              <span>GSTIN: {companyInfo.gstin || '30AAMCT1608G1ZO'}</span>
             </div>
           </div>
 
           {activeSocialPlatforms.length > 0 && (
-            <div className="flex gap-6">
+            <div className="flex gap-4">
               {activeSocialPlatforms.map(({ key, icon: Icon, label }) => (
                 <a
                   key={key}
                   href={socialLinks[key]}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-brand-cyan transition-colors"
+                  className="hover:text-zinc-900 dark:hover:text-white transition-colors"
                   onClick={() => handleSocialClick(label)}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-4 w-4" />
                   <span className="sr-only">{label}</span>
                 </a>
               ))}

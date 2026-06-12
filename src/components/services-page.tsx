@@ -473,29 +473,29 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
   };
 
   return (
-    <div className="relative overflow-hidden bg-[#121212] text-slate-200">
+    <div className="relative overflow-hidden bg-[#09090B] text-zinc-200">
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
-      <div className="pointer-events-none absolute left-1/2 top-32 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-[140px]" />
+      <div className="pointer-events-none absolute left-1/2 top-32 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-blue-500/5 blur-[140px]" />
 
       <div className="relative mx-auto flex max-w-7xl flex-col gap-16 px-4 pb-20 pt-16 sm:px-6 lg:px-8 sm:pt-24">
         <section className="reveal-section text-center" data-reveal-id="services-hero">
-          <div className={cn('reveal-item inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300', revealDelayClass(0))}>
+          <div className={cn('reveal-item inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-blue-500', revealDelayClass(0))}>
             End-to-end Solutions
           </div>
           <h1 className={cn('reveal-item mt-6 text-4xl font-semibold text-white sm:text-5xl lg:text-6xl', revealDelayClass(70))}>
             Engineering{' '}
-            <span className="bg-gradient-to-r from-cyan-300 via-cyan-400 to-cyan-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-white via-zinc-200 to-blue-500 bg-clip-text text-transparent">
               Sanctuary
             </span>
           </h1>
-          <p className={cn('reveal-item mx-auto mt-4 max-w-2xl text-base text-slate-400 sm:text-lg', revealDelayClass(140))}>
+          <p className={cn('reveal-item mx-auto mt-4 max-w-2xl text-zinc-400 sm:text-lg', revealDelayClass(140))}>
             From secure perimeters to smart automation, we deliver professional installation, maintenance, and service care across Goa.
           </p>
           {canManageServices && (
             <div className={cn('reveal-item mt-6 flex justify-center', revealDelayClass(210))}>
               <Link
                 href="/mgmt/admin/services"
-                className="inline-flex items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-cyan-200 transition-colors hover:border-cyan-400/60"
+                className="inline-flex items-center justify-center rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-blue-400 transition-colors hover:border-blue-500/40 hover:bg-blue-600 hover:text-white"
               >
                 Manage Services
               </Link>
@@ -504,19 +504,19 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
         </section>
 
         <section className="reveal-section grid gap-4 md:grid-cols-2" data-reveal-id="services-quick-cta">
-          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(0))}>
+          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-[#09090B] p-6 shadow-md', revealDelayClass(0))}>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-cyan-500/10 text-cyan-300 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
                 <Wrench className="h-5 w-5" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">Custom Solutions</h3>
-                <p className="text-sm text-slate-400">Tailored technology solutions designed for your specific needs.</p>
+                <p className="text-sm text-zinc-400">Tailored technology solutions designed for your specific needs.</p>
               </div>
             </div>
             <Button
               variant="outline"
-              className="justify-center border-cyan-400/40 text-cyan-200 hover:border-cyan-400/70 hover:bg-cyan-500/10"
+              className="justify-center border-blue-500/20 text-blue-400 hover:border-blue-500 hover:bg-blue-500/10"
               onClick={() => {
                 void trackEvent('services_cta_click', { cta: 'custom_setup', destination: '/customised-setups' });
                 router.push('/customised-setups');
@@ -526,19 +526,19 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
             </Button>
           </div>
  
-          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-zinc-900/60 p-6 shadow-md', revealDelayClass(80))}>
+          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-[#09090B] p-6 shadow-md', revealDelayClass(80))}>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-cyan-500/10 text-cyan-300 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
                 <Shield className="h-5 w-5" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">Professional Support</h3>
-                <p className="text-sm text-slate-400">Reliable technology services and ongoing technical support.</p>
+                <p className="text-sm text-zinc-400">Reliable technology services and ongoing technical support.</p>
               </div>
             </div>
             <Button
               variant="outline"
-              className="justify-center border-cyan-400/40 text-cyan-200 hover:border-cyan-400/70 hover:bg-cyan-500/10"
+              className="justify-center border-blue-500/20 text-blue-400 hover:border-blue-500 hover:bg-blue-500/10"
               onClick={() => {
                 void trackEvent('services_cta_click', { cta: 'get_support', destination: '/contact' });
                 router.push('/contact');
@@ -552,14 +552,14 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
         <section>
           <div className="space-y-8">
             {!serviceSections.length && !hasServiceLoadError && (
-              <div className="reveal-section rounded-2xl border border-white/10 bg-slate-900/60 p-8 text-center is-revealed" data-reveal-id="services-empty">
+              <div className="reveal-section rounded-2xl border border-zinc-800 bg-[#09090B] p-8 text-center is-revealed" data-reveal-id="services-empty">
                 <h2 className="text-xl font-semibold text-white">Service catalog updating</h2>
-                <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-400">
+                <p className="mx-auto mt-3 max-w-2xl text-sm text-zinc-550">
                   Our listed services are being refreshed. Use the quote request flow and we will recommend the right installation, support, or automation plan.
                 </p>
                 <Link
                   href="/contact?subject=sales&intent=service_quote&message=I%20need%20a%20service%20quote.%20Please%20contact%20me%20about%20the%20right%20next%20step."
-                  className="mt-6 inline-flex items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 transition-colors hover:border-cyan-400/60"
+                  className="mt-6 inline-flex items-center justify-center rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-600 hover:text-white"
                 >
                   Request Service Quote
                 </Link>
@@ -569,10 +569,10 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
             {serviceSections.map((section) => (
               <div key={section.key} className="reveal-section space-y-6" data-reveal-id={`services-group-${slugify(section.key)}`}>
                 <div className={cn('reveal-item flex items-center gap-3', revealDelayClass(0))}>
-                  <div className="h-8 w-1 rounded-full bg-cyan-400" />
+                  <div className="h-8 w-1 rounded-full bg-blue-500" />
                   <div>
                     <h2 className="text-2xl font-semibold text-white">{section.key}</h2>
-                    <p className="text-sm text-slate-400">Explore curated services under {section.key.toLowerCase()}.</p>
+                    <p className="text-sm text-zinc-400">Explore curated services under {section.key.toLowerCase()}.</p>
                   </div>
                 </div>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -582,33 +582,33 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
                       <div
                         key={service.id}
                         className={cn(
-                          'reveal-item group flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/30',
+                          'reveal-item group flex h-full flex-col rounded-2xl border border-zinc-800 bg-[#09090B] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30',
                           revealDelayClass(80 + index * 80)
                         )}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300 transition-transform duration-300 group-hover:scale-110">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 transition-transform duration-300 group-hover:scale-110">
                             <Icon className="h-6 w-6" />
                           </div>
                           <div>
                             <h3 className="text-lg font-semibold text-white">{service.title}</h3>
                             {service.badge && (
-                              <p className="text-xs uppercase tracking-widest text-cyan-300">{service.badge}</p>
+                              <p className="text-xs uppercase tracking-widest text-blue-500">{service.badge}</p>
                             )}
                           </div>
                         </div>
-                        <p className="mt-4 text-sm text-slate-400">{service.description}</p>
-                        <ul className="mt-5 space-y-2 text-sm text-slate-500">
+                        <p className="mt-4 text-sm text-zinc-400">{service.description}</p>
+                        <ul className="mt-5 space-y-2 text-sm text-zinc-500">
                           {service.features.map((feature, idx) => (
                             <li key={idx} className="flex items-start gap-2">
-                              <span className="mt-1 h-1.5 w-1.5 rounded-full bg-cyan-300" />
+                              <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500" />
                               <span>{feature}</span>
                             </li>
                           ))}
                         </ul>
                         <button
                           type="button"
-                          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/10"
+                          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-blue-500/30 hover:bg-blue-500/10"
                           onClick={() => {
                             const href = getContactHref(service);
                             void trackEvent('service_card_quote_click', {
@@ -631,17 +631,17 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
           </div>
         </section>
 
-        <section className="reveal-section rounded-3xl border border-white/5 bg-black/20 p-6 sm:p-10" data-reveal-id="services-pricing">
+        <section className="reveal-section rounded-3xl border border-zinc-800 bg-[#09090B]/60 p-6 sm:p-10" data-reveal-id="services-pricing">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className={cn('reveal-item', revealDelayClass(0))}>
               <h2 className="text-3xl font-semibold text-white">Service Rates & AMC Plans</h2>
-              <p className="mt-2 max-w-2xl text-sm text-slate-400">
+              <p className="mt-2 max-w-2xl text-sm text-zinc-400">
                 Transparent pricing tiers across CCTV and computer services. Final quotations include on-site assessment, travel, and consumables.
               </p>
             </div>
             <Link
               href="/contact?subject=sales&intent=service_quote&message=I%20need%20a%20service%20quote.%20Please%20contact%20me%20about%20the%20right%20next%20step."
-              className={cn('reveal-item inline-flex items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 transition-colors hover:border-cyan-400/60', revealDelayClass(90))}
+              className={cn('reveal-item inline-flex items-center justify-center rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-400 transition-colors hover:border-blue-500/40 hover:bg-blue-600 hover:text-white', revealDelayClass(90))}
             >
               Request Service Quote
             </Link>
@@ -649,20 +649,20 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
             {servicePricing.map((category, categoryIndex) => (
-              <div key={category.category} className={cn('reveal-item rounded-2xl border border-white/5 bg-slate-900/60 p-6', revealDelayClass(120 + categoryIndex * 90))}>
+              <div key={category.category} className={cn('reveal-item rounded-2xl border border-zinc-800 bg-[#09090B] p-6', revealDelayClass(120 + categoryIndex * 90))}>
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-1 rounded-full bg-cyan-400" />
+                  <div className="h-8 w-1 rounded-full bg-blue-500" />
                   <div>
                     <h3 className="text-xl font-semibold text-white">{category.category}</h3>
-                    <p className="text-sm text-slate-400">{category.blurb}</p>
+                    <p className="text-sm text-zinc-400">{category.blurb}</p>
                   </div>
                 </div>
                 <div className="mt-6 space-y-4">
                   {category.plans.map((plan, planIndex) => (
-                    <div key={plan.name} className={cn('reveal-item rounded-xl border border-white/5 bg-black/30 p-4', revealDelayClass(160 + planIndex * 70))}>
+                    <div key={plan.name} className={cn('reveal-item rounded-xl border border-zinc-800 bg-zinc-950/40 p-4', revealDelayClass(160 + planIndex * 70))}>
                       <div className="flex flex-col gap-1">
                         <p className="text-sm font-semibold text-white">{plan.name}</p>
-                        <p className="text-xs text-slate-500">{plan.summary}</p>
+                        <p className="text-xs text-zinc-550">{plan.summary}</p>
                       </div>
                       <div className="mt-4 grid gap-3">
                         {plan.tiers.map((tier, tierIndex) => {
@@ -671,16 +671,16 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
                           return (
                             <div
                               key={tier.label}
-                               className={cn('reveal-item flex flex-col gap-2 rounded-lg border border-white/5 bg-zinc-950/60 p-4', revealDelayClass(200 + tierIndex * 60))}
+                               className={cn('reveal-item flex flex-col gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 p-4', revealDelayClass(200 + tierIndex * 60))}
                             >
                               <div className="flex items-center justify-between">
-                                <p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">{tier.label}</p>
-                                <p className="text-lg font-semibold text-cyan-200">{tier.price}</p>
+                                <p className="text-xs font-semibold uppercase tracking-widest text-blue-500">{tier.label}</p>
+                                <p className="text-lg font-semibold text-blue-400">{tier.price}</p>
                               </div>
-                              <p className="text-xs text-slate-500">{tier.detail}</p>
+                              <p className="text-xs text-zinc-550">{tier.detail}</p>
                               <button
                                 type="button"
-                                className="mt-2 inline-flex w-full items-center justify-center rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/10"
+                                className="mt-2 inline-flex w-full items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-blue-500/30 hover:bg-blue-500/10"
                                 disabled={!hasPrice || busyServiceId === tierId}
                                 onClick={() => handlePricingTierAdd(category.category, plan, tier)}
                               >
@@ -701,39 +701,39 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
           </p>
         </section>
 
-        <section className="reveal-section rounded-3xl border border-white/5 bg-slate-900/40 p-6 sm:p-10" data-reveal-id="services-amc">
+        <section className="reveal-section rounded-3xl border border-zinc-800 bg-[#09090B]/40 p-6 sm:p-10" data-reveal-id="services-amc">
           <div className={cn('reveal-item flex items-center gap-3', revealDelayClass(0))}>
-            <div className="h-8 w-1 rounded-full bg-cyan-400" />
+            <div className="h-8 w-1 rounded-full bg-blue-500" />
             <div>
               <h2 className="text-2xl font-semibold text-white">Annual Maintenance Contract (AMC) Terms</h2>
-              <p className="text-sm text-slate-400">General terms and conditions for CCTV and PC AMC plans.</p>
+              <p className="text-sm text-zinc-400">General terms and conditions for CCTV and PC AMC plans.</p>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 text-sm text-slate-300">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 text-sm text-zinc-350">
             <div className={cn('reveal-item', revealDelayClass(70))}>
-              <p className="text-xs uppercase tracking-widest text-slate-500">Company</p>
+              <p className="text-xs uppercase tracking-widest text-zinc-500">Company</p>
               <p className="font-semibold text-white">{companyInfo.name}</p>
             </div>
             <div className={cn('reveal-item', revealDelayClass(110))}>
-              <p className="text-xs uppercase tracking-widest text-slate-500">CIN</p>
+              <p className="text-xs uppercase tracking-widest text-zinc-500">CIN</p>
               <p>{companyInfo.cin}</p>
             </div>
             <div className={cn('reveal-item', revealDelayClass(150))}>
-              <p className="text-xs uppercase tracking-widest text-slate-500">Udyam</p>
+              <p className="text-xs uppercase tracking-widest text-zinc-500">Udyam</p>
               <p>{companyInfo.udyam}</p>
             </div>
             <div className={cn('reveal-item', revealDelayClass(190))}>
-              <p className="text-xs uppercase tracking-widest text-slate-500">GSTIN</p>
+              <p className="text-xs uppercase tracking-widest text-zinc-500">GSTIN</p>
               <p>{companyInfo.gstin}</p>
             </div>
             <div className={cn('reveal-item', revealDelayClass(230))}>
-              <p className="text-xs uppercase tracking-widest text-slate-500">CEO</p>
+              <p className="text-xs uppercase tracking-widest text-zinc-500">CEO</p>
               <p>{companyInfo.ceo}</p>
             </div>
             <div className={cn('reveal-item', revealDelayClass(270))}>
-              <p className="text-xs uppercase tracking-widest text-slate-500">Website</p>
-              <a href={companyInfo.website} target="_blank" rel="noopener noreferrer" className="text-cyan-300 hover:text-cyan-200">
+              <p className="text-xs uppercase tracking-widest text-zinc-500">Website</p>
+              <a href={companyInfo.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400">
                 {companyInfo.website.replace('https://', '')}
               </a>
             </div>
@@ -741,7 +741,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
           <div className="mt-8 grid gap-4">
             {amcTerms.map((term, index) => (
-              <div key={term.title} className={cn('reveal-item rounded-2xl border border-white/5 bg-zinc-950/60 p-5', revealDelayClass(120 + index * 70))}>
+              <div key={term.title} className={cn('reveal-item rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5', revealDelayClass(120 + index * 70))}>
                 <h3 className="text-lg font-semibold text-white">{term.title}</h3>
                 {term.description && <p className="mt-1 text-sm text-slate-400">{term.description}</p>}
                 {term.bullets && (
@@ -771,14 +771,14 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
           </div>
         </section>
 
-        <section className="reveal-section rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 p-8 text-center" data-reveal-id="services-closing-cta">
+        <section className="reveal-section rounded-3xl border border-zinc-800 bg-[#09090B] p-8 text-center" data-reveal-id="services-closing-cta">
           <h2 className={cn('reveal-item text-2xl font-semibold text-white', revealDelayClass(0))}>Need Custom Solutions?</h2>
-          <p className={cn('reveal-item mx-auto mt-3 max-w-md text-sm text-slate-400', revealDelayClass(70))}>
+          <p className={cn('reveal-item mx-auto mt-3 max-w-md text-sm text-zinc-400', revealDelayClass(70))}>
             Share your requirements and our team will craft a tailored setup for your space.
           </p>
           <Link
             href="/contact?subject=sales&intent=custom_solution&message=I%20need%20a%20custom%20solution%20quote.%20Please%20help%20me%20plan%20the%20right%20setup."
-            className={cn('reveal-item mt-6 inline-flex items-center justify-center rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-200 transition-colors hover:border-cyan-400/70', revealDelayClass(140))}
+            className={cn('reveal-item mt-6 inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 text-sm font-semibold transition-colors', revealDelayClass(140))}
           >
             Request Custom Solution Quote
           </Link>

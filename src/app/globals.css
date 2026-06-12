@@ -10,74 +10,74 @@
   }
   
   :root {
-    --background: 240 4.8% 98%;
-    --foreground: 240 5.9% 10%;
+    --background: 0 0% 100%; /* Pure White #FFFFFF */
+    --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
-    --card-foreground: 240 5.9% 10%;
+    --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 5.9% 10%;
-    --primary: 210 70% 45%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 221.2 83.2% 53.3%; /* Electric Tech-Blue #2563eb */
     --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 96%;
+    --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 96%;
-    --muted-foreground: 240 3.8% 46%;
-    --accent: 240 4.8% 96%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
     --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
+    --border: 240 5.9% 90%; /* border-zinc-200 */
     --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.75rem;
-    --chart-1: 210 70% 45%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem; /* Elite Apple/Linear compact corners */
+    --chart-1: 221.2 83.2% 53.3%;
     --chart-2: 210 70% 55%;
     --chart-3: 45 90% 55%;
     --chart-4: 280 70% 55%;
     --chart-5: 20 70% 55%;
     
-    /* Custom design tokens for blue header theme */
-    --gradient-primary: linear-gradient(135deg, hsl(210 70% 45%) 0%, hsl(210 65% 50%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(240 4.8% 96%) 0%, hsl(240 5.9% 90%) 100%);
-    --header-background: 240 4.8% 98%;
-    --header-foreground: 240 5.9% 10%;
-    --footer-background: 240 5.9% 10%;
-    --footer-foreground: 240 5.9% 90%;
-    --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 6px 12px -2px rgb(0 0 0 / 0.05), 0 4px 8px -4px rgb(0 0 0 / 0.05);
-    --shadow-lg: 0 12px 24px -6px rgb(0 0 0 / 0.08), 0 8px 16px -8px rgb(0 0 0 / 0.08);
-    --shadow-xl: 0 24px 48px -12px rgb(0 0 0 / 0.1), 0 16px 32px -16px rgb(0 0 0 / 0.1);
+    /* Custom design tokens for tech-blue theme */
+    --gradient-primary: linear-gradient(135deg, hsl(221.2 83.2% 53.3%) 0%, hsl(217.2 91.2% 59.8%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(240 4.8% 95.9%) 0%, hsl(240 5.9% 90%) 100%);
+    --header-background: 0 0% 100%;
+    --header-foreground: 240 10% 3.9%;
+    --footer-background: 0 0% 100%;
+    --footer-foreground: 240 10% 3.9%;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
   }
 
   .dark {
-    --background: 240 0% 7%; /* Obsidian #121212 */
-    --foreground: 240 5.9% 96%;
-    --card: 240 5.9% 9%; /* Charcoal */
-    --card-foreground: 240 5.9% 96%;
-    --popover: 240 5.9% 9%;
-    --popover-foreground: 240 5.9% 96%;
-    --primary: 210 76% 36%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 240 5.9% 12%;
-    --secondary-foreground: 240 5.9% 96%;
-    --muted: 240 5.9% 12%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 240 5.9% 12%;
-    --accent-foreground: 240 5.9% 96%;
+    --background: 240 5.9% 3.9%; /* Premium Dark Obsidian #09090B */
+    --foreground: 0 0% 98%;
+    --card: 240 5.9% 3.9%; /* Obsidian #09090B */
+    --card-foreground: 0 0% 98%;
+    --popover: 240 5.9% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 217.2 91.2% 59.8%; /* Electric Tech-Blue #3b82f6 */
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 15%; /* zinc-800 */
-    --input: 240 5.9% 15%;
-    --ring: 210 76% 36%;
-    --chart-1: 220 70% 50%;
+    --border: 240 3.7% 15.9%; /* border-zinc-800 */
+    --input: 240 3.7% 15.9%;
+    --ring: 217.2 91.2% 59.8%;
+    --chart-1: 217.2 91.2% 59.8%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
     
     /* Dark mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210 76% 36%) 0%, hsl(210 70% 45%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(240 5.9% 12%) 0%, hsl(240 5.9% 16%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(217.2 91.2% 59.8%) 0%, hsl(221.2 83.2% 53.3%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(240 3.7% 15.9%) 0%, hsl(240 3.7% 10%) 100%);
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
@@ -85,23 +85,23 @@
   }
 
   .admin-shell {
-    --background: 240 0% 7%;
-    --foreground: 240 5.9% 96%;
-    --card: 240 5.9% 9%;
-    --card-foreground: 240 5.9% 96%;
-    --popover: 240 5.9% 9%;
-    --popover-foreground: 240 5.9% 96%;
-    --primary: 188 86% 45%;
-    --primary-foreground: 240 0% 7%;
-    --secondary: 240 5.9% 12%;
-    --secondary-foreground: 240 5.9% 96%;
-    --muted: 240 5.9% 12%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 240 5.9% 12%;
-    --accent-foreground: 240 5.9% 96%;
-    --border: 240 5.9% 15%;
-    --input: 240 5.9% 15%;
-    --ring: 190 90% 50%;
+    --background: 240 5.9% 3.9%; /* Obsidian #09090B */
+    --foreground: 0 0% 98%;
+    --card: 240 5.9% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 5.9% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 217.2 91.2% 59.8%; /* Electric Tech-Blue #3b82f6 */
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%; /* border-zinc-800 */
+    --input: 240 3.7% 15.9%;
+    --ring: 217.2 91.2% 59.8%;
     color: hsl(var(--foreground));
     background-color: hsl(var(--background));
   }
@@ -140,12 +140,11 @@
   .dark {
     --sidebar-background: 222 47% 6%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 188 86% 45%;
-    --sidebar-primary-foreground: 222 47% 4%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
     --sidebar-accent: 222 25% 12%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 222 15% 20%;
-    --sidebar-ring: 190 90% 50%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   body {
@@ -849,32 +848,32 @@
   }
 
   .tech-shell--active {
-    --background: 240 0% 7%; /* Obsidian #121212 */
+    --background: 240 5.9% 3.9%; /* Obsidian #09090B */
     --foreground: 240 5.9% 96%;
-    --card: 240 5.9% 9%; /* Charcoal */
+    --card: 240 5.9% 3.9%; /* Obsidian #09090B */
     --card-foreground: 240 5.9% 96%;
-    --popover: 240 5.9% 9%;
+    --popover: 240 5.9% 3.9%;
     --popover-foreground: 240 5.9% 96%;
-    --primary: 189 94% 45%;
-    --primary-foreground: 240 0% 7%;
-    --secondary: 240 5.9% 12%;
+    --primary: 217.2 91.2% 59.8%; /* Tech-Blue */
+    --primary-foreground: 240 5.9% 3.9%;
+    --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 240 5.9% 96%;
-    --muted: 240 5.9% 12%;
+    --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 65%;
-    --accent: 240 5.9% 12%;
+    --accent: 240 3.7% 15.9%;
     --accent-foreground: 240 5.9% 96%;
-    --border: 240 5.9% 15%;
-    --input: 240 5.9% 15%;
-    --ring: 189 94% 45%;
-    --radius: 1rem;
+    --border: 240 3.7% 15.9%; /* border-zinc-800 */
+    --input: 240 3.7% 15.9%;
+    --ring: 217.2 91.2% 59.8%;
+    --radius: 0.5rem;
     --shadow-sm: 0 4px 12px rgb(0 0 0 / 0.15);
     --shadow-md: 0 8px 24px rgb(0 0 0 / 0.2);
     --shadow-lg: 0 18px 48px rgb(0 0 0 / 0.25);
-    background-color: #121212;
+    background-color: #09090b;
     background-image:
-      radial-gradient(1200px 600px at 10% -10%, rgba(34, 211, 238, 0.05), rgba(18, 18, 18, 0)),
-      radial-gradient(1000px 700px at 90% 10%, rgba(6, 182, 212, 0.05), rgba(18, 18, 18, 0)),
-      linear-gradient(180deg, rgba(18, 18, 18, 0.9) 0%, rgba(18, 18, 18, 1) 60%, rgba(18, 18, 18, 1) 100%);
+      radial-gradient(1200px 600px at 10% -10%, rgba(59, 130, 246, 0.05), rgba(9, 9, 11, 0)),
+      radial-gradient(1000px 700px at 90% 10%, rgba(59, 130, 246, 0.03), rgba(9, 9, 11, 0)),
+      linear-gradient(180deg, rgba(9, 9, 11, 0.9) 0%, rgba(9, 9, 11, 1) 60%, rgba(9, 9, 11, 1) 100%);
     color: #f1f5f9;
     isolation: isolate;
   }
@@ -884,7 +883,7 @@
     position: absolute;
     inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
-    opacity: 0.05;
+    opacity: 0.03;
     pointer-events: none;
     z-index: 0;
   }
@@ -894,8 +893,8 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(900px 600px at 0% 30%, rgba(34, 211, 238, 0.04), rgba(18, 18, 18, 0)),
-      radial-gradient(900px 600px at 100% 70%, rgba(6, 182, 212, 0.03), rgba(18, 18, 18, 0));
+      radial-gradient(900px 600px at 0% 30%, rgba(59, 130, 246, 0.04), rgba(9, 9, 11, 0)),
+      radial-gradient(900px 600px at 100% 70%, rgba(59, 130, 246, 0.03), rgba(9, 9, 11, 0));
     opacity: 0.5;
     pointer-events: none;
     z-index: 0;
@@ -1116,14 +1115,14 @@ html[data-promo-banner="expanded"] .site-shell {
           background: rgba(15, 23, 42, 0.6);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 0 40px rgba(6, 182, 212, 0.1);
+          box-shadow: 0 0 40px rgba(59, 130, 246, 0.1);
         }
         .floating-label input:focus ~ label,
         .floating-label input:not(:placeholder-shown) ~ label {
           top: -0.5rem;
           left: 0.75rem;
           font-size: 0.75rem;
-          color: #06b6d4;
+          color: #3b82f6;
           background-color: #0f172a;
           padding: 0 0.25rem;
         }
@@ -1133,7 +1132,7 @@ html[data-promo-banner="expanded"] .site-shell {
             background: rgba(15, 23, 42, 0.65);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 40px rgba(6, 182, 212, 0.15);
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
           }
         
 
@@ -1141,14 +1140,14 @@ html[data-promo-banner="expanded"] .site-shell {
           background: rgba(15, 23, 42, 0.65);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 0 40px rgba(6, 182, 212, 0.15);
+          box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
         }
         .floating-label input:focus ~ label,
         .floating-label input:not(:placeholder-shown) ~ label {
           top: -0.5rem;
           left: 0.75rem;
           font-size: 0.75rem;
-          color: #06b6d4;
+          color: #3b82f6;
           background-color: #0f172a;
           padding: 0 0.25rem;
         }
@@ -1157,7 +1156,7 @@ html[data-promo-banner="expanded"] .site-shell {
                 ::-webkit-scrollbar { width: 6px; height: 6px; }
                 ::-webkit-scrollbar-track { background: #030712; }
                 ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-                ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+                ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
             
 
         .crm-card {
@@ -1248,8 +1247,8 @@ html[data-promo-banner="expanded"] .site-shell {
           background-color: rgba(6, 182, 212, 0.08);
           box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
         }
-        .step-circle.active { background-color: #06b6d4; color: #030712; border-color: #06b6d4; }
-        .step-line.active { background-color: #06b6d4; }
+        .step-circle.active { background-color: #3b82f6; color: #ffffff; border-color: #3b82f6; }
+        .step-line.active { background-color: #3b82f6; }
         @keyframes scanLine { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
       
 
@@ -1264,8 +1263,8 @@ html[data-promo-banner="expanded"] .site-shell {
           left: 0;
           width: 100%;
           height: 2px;
-          background: #06b6d4;
-          box-shadow: 0 0 10px #06b6d4;
+          background: #3b82f6;
+          box-shadow: 0 0 10px #3b82f6;
           animation: scanVertical 3s linear infinite;
         }
       
@@ -1273,11 +1272,11 @@ html[data-promo-banner="expanded"] .site-shell {
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #030712; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+        ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
         .glass-panel {
           background: rgba(15, 23, 42, 0.35);
           border: 1px solid rgba(255, 255, 255, 0.06);
-          box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.08);
+          box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.08);
           backdrop-filter: blur(10px);
         }
         .nav-item {
@@ -1285,12 +1284,12 @@ html[data-promo-banner="expanded"] .site-shell {
         }
         .nav-item:hover {
           color: #fff;
-          background: linear-gradient(90deg, rgba(6, 182, 212, 0.15), transparent);
-          border-left-color: #06b6d4;
+          background: linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent);
+          border-left-color: #3b82f6;
         }
         .nav-item.active {
           color: #fff;
-          background: linear-gradient(90deg, rgba(6, 182, 212, 0.2), transparent);
-          border-left-color: #06b6d4;
+          background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), transparent);
+          border-left-color: #3b82f6;
         }
       

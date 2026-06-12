@@ -556,7 +556,7 @@ export default function CheckoutPage() {
 
   if (authLoading || loadingQuote) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#030712] text-slate-300">
+      <div className="flex min-h-screen items-center justify-center bg-[#09090B] text-slate-300">
         <div className="text-slate-400">Loading checkout details...</div>
       </div>
     );
@@ -565,14 +565,14 @@ export default function CheckoutPage() {
   // Show empty cart message if no items
   if (!quote && cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-[#030712] py-16">
+      <div className="min-h-screen bg-[#09090B] py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="mx-auto w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
             <ShoppingCart className="h-8 w-8 text-slate-500" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Your Cart is Empty</h2>
           <p className="text-slate-400 mb-6">Add some products to your cart before checkout.</p>
-          <Button onClick={() => window.location.href = '/products'} className="bg-cyan-400 hover:bg-white text-slate-900 font-semibold">
+          <Button onClick={() => window.location.href = '/products'} className="bg-primary text-white hover:bg-primary/90 font-semibold">
             Continue Shopping
           </Button>
         </div>
@@ -581,7 +581,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-zinc-800 selection:text-white">
+    <div className="min-h-screen bg-[#09090B] text-zinc-100 selection:bg-zinc-800 selection:text-white">
       <section className="pt-32 pb-24 relative">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.15] pointer-events-none"></div>
 
@@ -633,7 +633,7 @@ export default function CheckoutPage() {
                       value={customerInfo.name}
                       onChange={(event) => handleInputChange('name', event.target.value)}
                       onBlur={(event) => handleInputBlur('name', event.target.value)}
-                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.name ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.name ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                       placeholder="John Doe"
                     />
                     {fieldErrors.name && (
@@ -649,7 +649,7 @@ export default function CheckoutPage() {
                       value={customerInfo.phone}
                       onChange={(event) => handleInputChange('phone', event.target.value)}
                       onBlur={(event) => handleInputBlur('phone', event.target.value)}
-                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.phone ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.phone ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                       placeholder="e.g. 9876543210"
                     />
                     {fieldErrors.phone && (
@@ -665,7 +665,7 @@ export default function CheckoutPage() {
                       value={customerInfo.email}
                       onChange={(event) => handleInputChange('email', event.target.value)}
                       onBlur={(event) => handleInputBlur('email', event.target.value)}
-                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.email ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.email ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                       placeholder="john@example.com"
                     />
                     {fieldErrors.email && (
@@ -675,7 +675,7 @@ export default function CheckoutPage() {
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center gap-2">
                       <label htmlFor="gstin" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">GSTIN (Optional)</label>
-                      {isFetchingGst && <span className="h-3 w-3 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>}
+                      {isFetchingGst && <span className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>}
                     </div>
                     <input
                       type="text"
@@ -683,7 +683,7 @@ export default function CheckoutPage() {
                       maxLength={15}
                       value={customerInfo.gstin}
                       onChange={(event) => handleInputChange('gstin', event.target.value.toUpperCase())}
-                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${gstError ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${gstError ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                       placeholder="15-character GSTIN"
                     />
                     {gstError && (
@@ -710,7 +710,7 @@ export default function CheckoutPage() {
                       value={customerInfo.address}
                       onChange={(event) => handleInputChange('address', event.target.value)}
                       onBlur={(event) => handleInputBlur('address', event.target.value)}
-                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.address ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.address ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                       placeholder="Apartment, suite, unit, building, street address"
                     ></textarea>
                     {fieldErrors.address && (
@@ -723,11 +723,11 @@ export default function CheckoutPage() {
                       <div className="flex flex-col gap-1.5">
                         <label htmlFor="date" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Preferred Install Date</label>
                         <input
-                          type="date"
-                          id="date"
-                          value={customerInfo.installDate}
-                          onChange={(event) => handleInputChange('installDate', event.target.value)}
-                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400 transition-all placeholder:text-zinc-700"
+                           type="date"
+                           id="date"
+                           value={customerInfo.installDate}
+                           onChange={(event) => handleInputChange('installDate', event.target.value)}
+                           className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-zinc-700"
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
@@ -737,7 +737,7 @@ export default function CheckoutPage() {
                             id="readiness"
                             value={customerInfo.siteStatus}
                             onChange={(event) => handleInputChange('siteStatus', event.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400 transition-all appearance-none pr-10"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none pr-10"
                           >
                             <option value="" className="bg-[#0f172a]">Select Status</option>
                             <option value="ready" className="bg-[#0f172a]">Site Ready (Plaster/Paint Done)</option>
@@ -760,7 +760,7 @@ export default function CheckoutPage() {
                         value={customerInfo.city}
                         onChange={(event) => handleInputChange('city', event.target.value)}
                         onBlur={(event) => handleInputBlur('city', event.target.value)}
-                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.city ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.city ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                         placeholder="Panaji"
                       />
                       {fieldErrors.city && (
@@ -776,7 +776,7 @@ export default function CheckoutPage() {
                         value={customerInfo.state}
                         onChange={(event) => handleInputChange('state', event.target.value)}
                         onBlur={(event) => handleInputBlur('state', event.target.value)}
-                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.state ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.state ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                         placeholder="Goa"
                       />
                       {fieldErrors.state && (
@@ -792,7 +792,7 @@ export default function CheckoutPage() {
                         value={customerInfo.pincode}
                         onChange={(event) => handlePincodeChange(event.target.value)}
                         onBlur={(event) => handleInputBlur('pincode', event.target.value)}
-                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.pincode ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.pincode ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'}`}
                         placeholder="6-digit PIN"
                       />
                       {fieldErrors.pincode && (
@@ -813,7 +813,7 @@ export default function CheckoutPage() {
                       rows={2}
                       value={customerInfo.notes}
                       onChange={(event) => handleInputChange('notes', event.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400 transition-all placeholder:text-zinc-700"
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-zinc-700"
                       placeholder="Delivery instructions, landmarks, etc."
                     ></textarea>
                   </div>
@@ -850,7 +850,7 @@ export default function CheckoutPage() {
                       }
                     };
 
-                    return (
+                     return (
                       <label key={method.id} className="cursor-pointer block relative group">
                         <input
                           type="radio"
@@ -862,12 +862,12 @@ export default function CheckoutPage() {
                         />
                         <div className={`border rounded-xl p-5 flex items-center gap-4 transition-all ${
                           selectedPaymentMethod === method.id
-                            ? 'border-cyan-500 bg-cyan-950/10 shadow-md shadow-cyan-950/20'
+                            ? 'border-primary bg-primary/10 shadow-sm shadow-primary/5'
                             : 'border-zinc-800 bg-zinc-950 hover:bg-zinc-900/30 hover:border-zinc-700'
                         }`}>
                           <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
                             selectedPaymentMethod === method.id
-                              ? 'border-cyan-500 bg-cyan-500'
+                              ? 'border-primary bg-primary'
                               : 'border-zinc-700 bg-transparent group-hover:border-zinc-500'
                           }`}>
                             {selectedPaymentMethod === method.id && (
@@ -886,7 +886,7 @@ export default function CheckoutPage() {
                                     : 'Offline payment'}
                             </span>
                           </div>
-                          <div className={`transition-colors ${selectedPaymentMethod === method.id ? 'text-cyan-400' : 'text-zinc-500'}`}>
+                          <div className={`transition-colors ${selectedPaymentMethod === method.id ? 'text-primary' : 'text-zinc-500'}`}>
                             {getPaymentIcon(method.id)}
                           </div>
                         </div>
@@ -1049,11 +1049,11 @@ export default function CheckoutPage() {
                   <button
                     type="submit"
                     disabled={isProcessingOrder || !selectedPaymentMethod || paymentLoading || !privacyAccepted}
-                    className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-sm tracking-wider uppercase rounded-xl transition-all shadow-md shadow-cyan-500/10 flex items-center justify-center gap-2 disabled:bg-zinc-900 disabled:text-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-full py-4 bg-primary hover:bg-primary/90 text-white font-bold text-sm tracking-wider uppercase rounded-xl transition-all shadow-md flex items-center justify-center gap-2 disabled:bg-zinc-900 disabled:text-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {isProcessingOrder ? (
                       <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 rounded-full border-2 border-zinc-950 border-b-transparent animate-spin"></span>
+                        <span className="h-4 w-4 rounded-full border-2 border-white border-b-transparent animate-spin"></span>
                         Processing...
                       </span>
                     ) : (

@@ -163,27 +163,26 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
   const statusStyles: Record<string, { badge: string; border: string }> = {
     completed: { badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', border: 'border-emerald-500' },
     delivered: { badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', border: 'border-emerald-500' },
-    shipped: { badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30', border: 'border-cyan-500' },
+    shipped: { badge: 'bg-blue-500/20 text-blue-300 border-blue-500/30', border: 'border-blue-500' },
     processing: { badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30', border: 'border-amber-500' },
-    pending: { badge: 'bg-slate-800 text-slate-400 border-slate-700', border: 'border-slate-600' },
+    pending: { badge: 'bg-zinc-800 text-zinc-400 border-zinc-700', border: 'border-zinc-600' },
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#030712] text-slate-200">
+    <div className="flex h-screen overflow-hidden bg-[#09090B] text-zinc-200">
       
 
-      <aside className="hidden md:flex w-64 flex-col border-r border-white/5 bg-[#030712] shadow-xl shadow-cyan-500/5">
-        <div className="h-16 flex items-center px-6 border-b border-white/5 bg-[#030712]/95 backdrop-blur">
+      <aside className="hidden md:flex w-64 flex-col border-r border-zinc-800 bg-[#09090B] shadow-xl shadow-blue-500/5">
+        <div className="h-16 flex items-center px-6 border-b border-zinc-800 bg-[#09090B]/95 backdrop-blur">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 flex items-center justify-center bg-cyan-500/10 rounded-lg border border-cyan-400/20">
-              <User className="h-4 w-4 text-cyan-300" />
+            <div className="w-8 h-8 flex items-center justify-center bg-blue-500/10 rounded-lg border border-blue-500/20">
+              <User className="h-4 w-4 text-blue-500" />
             </div>
-            <span className="font-tech font-bold text-xl text-white tracking-wide">USER<span className="text-cyan-300">.</span></span>
+            <span className="font-tech font-bold text-xl text-white tracking-wide">USER<span className="text-blue-500">.</span></span>
           </div>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-6 space-y-1">
-          <div className="px-6 mb-2 text-xs font-bold text-slate-500 uppercase tracking-widest font-tech">Personal Hub</div>
           <button className="w-full text-left nav-item active flex items-center gap-3 px-6 py-3 text-sm text-slate-400 transition-all">
             <Shield className="h-4 w-4" /> My Overview
           </button>
@@ -209,16 +208,16 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
           </Link>
         </div>
 
-        <div className="p-6 border-t border-white/5 bg-white/[0.02]">
+        <div className="p-6 border-t border-zinc-800 bg-zinc-950/40">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
               {initials || 'TB'}
             </div>
             <div>
               <p className="text-sm font-bold text-white leading-none">{displayName}</p>
-              <p className="text-[10px] text-cyan-300 leading-none mt-1">Tier: {planLabel}</p>
+              <p className="text-[10px] text-blue-500 leading-none mt-1">Tier: {planLabel}</p>
             </div>
-            <button className="ml-auto text-slate-500 hover:text-white">
+            <button className="ml-auto text-zinc-500 hover:text-white">
               <XCircle className="h-4 w-4" />
             </button>
           </div>
@@ -226,23 +225,23 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
       </aside>
 
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="h-16 bg-[#030712]/80 backdrop-blur border-b border-white/5 flex items-center justify-between px-6">
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <header className="h-16 bg-[#09090B]/80 backdrop-blur border-b border-zinc-800 flex items-center justify-between px-6">
+          <div className="flex items-center gap-2 text-sm text-zinc-400">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
             System Status: <span className="text-white font-bold">SECURE</span>
           </div>
           <div className="flex items-center gap-4">
             <Button
               type="button"
               variant="outline"
-              className="hidden sm:flex items-center gap-2 border-cyan-400/30 bg-cyan-400/10 text-cyan-200 text-xs hover:bg-cyan-400 hover:text-white"
+              className="hidden sm:flex items-center gap-2 border-blue-500/20 bg-blue-500/10 text-blue-400 text-xs hover:bg-blue-600 hover:text-white"
               onClick={() => window.location.href = '/contact'}
             >
               <Plus className="h-4 w-4" /> New Request
             </Button>
-            <button className="relative p-2 text-slate-400 hover:text-white transition-colors">
+            <button className="relative p-2 text-zinc-400 hover:text-white transition-colors">
               <Bell className="h-4 w-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-[#030712]"></span>
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-[#09090B]"></span>
             </button>
           </div>
         </header>
@@ -263,20 +262,20 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                     <span className="block text-xs text-slate-500 uppercase">Primary Contact</span>
                     <span className="text-white font-bold">{user.email}</span>
                   </div>
-                  <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-lg">
-                    <span className="block text-xs text-slate-500 uppercase">Plan</span>
-                    <span className="text-cyan-300 font-bold">{planLabel}</span>
+                  <div className="bg-zinc-900/40 border border-zinc-800 px-4 py-2 rounded-lg">
+                    <span className="block text-xs text-zinc-500 uppercase">Plan</span>
+                    <span className="text-blue-500 font-bold">{planLabel}</span>
                   </div>
                 </div>
               </div>
 
               <div className="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center relative">
-                <h3 className="text-sm font-bold text-slate-300 absolute top-6 left-6">AMC Status</h3>
+                <h3 className="text-sm font-bold text-zinc-300 absolute top-6 left-6">AMC Status</h3>
                 <div className="relative w-32 h-32 mt-4">
                   <svg className="w-full h-full" viewBox="0 0 100 100">
-                    <circle className="text-slate-800 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent"></circle>
+                    <circle className="text-zinc-800 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent"></circle>
                     <circle
-                      className="text-cyan-400 stroke-current"
+                      className="text-blue-500 stroke-current"
                       strokeWidth="8"
                       strokeLinecap="round"
                       cx="50"
@@ -290,10 +289,10 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                   </svg>
                   <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center">
                     <span className="text-2xl font-bold text-white font-tech">{amcDaysLeft ?? '—'}</span>
-                    <span className="text-[10px] text-slate-500 uppercase">{amcDaysLeft !== null ? 'Days Left' : 'No AMC'}</span>
+                    <span className="text-[10px] text-zinc-500 uppercase">{amcDaysLeft !== null ? 'Days Left' : 'No AMC'}</span>
                   </div>
                 </div>
-                <Link href="/services" className="mt-4 text-xs text-cyan-300 hover:underline">
+                <Link href="/services" className="mt-4 text-xs text-blue-500 hover:underline">
                   {amcDaysLeft !== null ? 'Renew Plan' : 'Add Plan'}
                 </Link>
               </div>
@@ -301,7 +300,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
 
             <div>
               <h3 className="font-bold text-white font-tech text-lg mb-4 flex items-center gap-2">
-                <Camera className="h-4 w-4 text-cyan-300" /> Recent Orders
+                <Camera className="h-4 w-4 text-blue-500" /> Recent Orders
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {orders && orders.length > 0 ? orders.map((order) => {
@@ -332,25 +331,25 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
 
             <div>
               <h3 className="font-bold text-white font-tech text-lg mb-4 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-cyan-300" /> Saved Quotes
+                <FileText className="h-4 w-4 text-blue-500" /> Saved Quotes
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {(quotes || []).length > 0 ? quotes.map((quote) => {
                   const created = new Date(quote.created_at).toLocaleDateString();
                   const expired = new Date(quote.expiry_at) < new Date();
                   return (
-                    <div key={quote.id} className={`glass-panel p-5 rounded-xl border-l-4 ${expired ? 'border-red-500' : 'border-cyan-500'} group hover:bg-white/5 transition-colors`}>
+                    <div key={quote.id} className={`glass-panel p-5 rounded-xl border-l-4 ${expired ? 'border-red-500' : 'border-blue-600'} group hover:bg-white/5 transition-colors`}>
                       <div className="flex justify-between items-start mb-3">
                         <div className="text-slate-400 group-hover:text-white transition-colors">
                             <FileText className="h-5 w-5" />
                         </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${expired ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'}`}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${expired ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
                           {expired ? 'Expired' : 'Active'}
                         </span>
                       </div>
                       <h4 className="text-white font-bold truncate" title={quote.summary}>{quote.summary || 'Custom Quote'}</h4>
-                      <p className="text-xs text-slate-500 mt-1">Generated {created}</p>
-                      <Button variant="link" className="p-0 h-auto text-xs text-cyan-400 mt-2 hover:text-cyan-300" onClick={() => window.open('/?quote_id=' + quote.id, '_blank')}>
+                      <p className="text-xs text-zinc-500 mt-1">Generated {created}</p>
+                      <Button variant="link" className="p-0 h-auto text-xs text-blue-500 mt-2 hover:text-blue-400" onClick={() => window.open('/?quote_id=' + quote.id, '_blank')}>
                          Re-open (Future Impl)
                       </Button>
                     </div>
@@ -361,19 +360,19 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
               </div>
             </div>
 
-            <div className="glass-panel rounded-2xl overflow-hidden">
-              <div className="p-6 border-b border-white/5 flex justify-between items-center">
+            <div className="glass-panel rounded-2xl overflow-hidden border border-zinc-800">
+              <div className="p-6 border-b border-zinc-800 flex justify-between items-center">
                 <h3 className="font-bold text-white font-tech text-lg">Service Log</h3>
                 <Link
                   href="/contact"
-                  className="text-xs bg-cyan-500/10 text-cyan-300 px-3 py-1 rounded hover:bg-cyan-400 hover:text-slate-900 transition-colors"
+                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500 transition-colors"
                 >
                   Raise Ticket
                 </Link>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-400">
-                  <thead className="bg-white/5 text-xs uppercase font-bold text-slate-500">
+                <table className="w-full text-left text-sm text-zinc-400">
+                  <thead className="bg-zinc-900/50 text-xs uppercase font-bold text-zinc-500">
                     <tr>
                       <th className="px-6 py-4">Ticket ID</th>
                       <th className="px-6 py-4">Service Type</th>
@@ -381,10 +380,10 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                       <th className="px-6 py-4">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-zinc-800">
                     {serviceTickets && serviceTickets.length > 0 ? serviceTickets.map((log) => (
-                      <tr key={log.id} className="hover:bg-white/5 transition-colors">
-                        <td className="px-6 py-4 font-mono text-cyan-300">#{log.id.slice(0, 8)}</td>
+                      <tr key={log.id} className="hover:bg-zinc-900/50 transition-colors">
+                        <td className="px-6 py-4 font-mono text-blue-500">#{log.id.slice(0, 8)}</td>
                         <td className="px-6 py-4">{log.issue_description || 'Service request'}</td>
                         <td className="px-6 py-4">{log.created_at ? new Date(log.created_at).toLocaleDateString() : '—'}</td>
                         <td className="px-6 py-4">
@@ -404,34 +403,34 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="glass-panel p-6 rounded-2xl space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-cyan-500/10">
-                    <Edit className="h-5 w-5 text-cyan-300" />
+                  <div className="p-2 rounded-full bg-blue-500/10">
+                    <Edit className="h-5 w-5 text-blue-500" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">Profile Settings</h3>
-                    <p className="text-sm text-slate-400">Manage your account details and preferences.</p>
+                    <p className="text-sm text-zinc-400">Manage your account details and preferences.</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-slate-500">Name</p>
+                    <p className="text-zinc-500">Name</p>
                     <p className="text-white font-semibold">{displayName}</p>
                   </div>
                   <div>
-                    <p className="text-slate-500">Email</p>
+                    <p className="text-zinc-500">Email</p>
                     <p className="text-white font-semibold">{user.email}</p>
                   </div>
                   <div>
-                    <p className="text-slate-500">Role</p>
+                    <p className="text-zinc-500">Role</p>
                     <p className="text-white font-semibold capitalize">{profile?.role || user.app_metadata?.role || 'customer'}</p>
                   </div>
                   <div>
-                    <p className="text-slate-500">Mobile</p>
+                    <p className="text-zinc-500">Mobile</p>
                     <p className="text-white font-semibold">{profile?.mobile || 'Not provided'}</p>
                   </div>
                 </div>
                 <EditProfileDialog onProfileUpdate={updateUser}>
-                  <Button variant="outline" className="border-white/10 bg-white/5 text-slate-200 hover:bg-white/10">
+                  <Button variant="outline" className="border-zinc-800 bg-[#09090B] text-zinc-200 hover:bg-zinc-900">
                     <Edit className="mr-2 h-4 w-4" /> Edit Profile
                   </Button>
                 </EditProfileDialog>
@@ -439,15 +438,15 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
 
               <div className="glass-panel p-6 rounded-2xl space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-cyan-500/10">
-                    <CheckCircle className="h-5 w-5 text-cyan-300" />
+                  <div className="p-2 rounded-full bg-blue-500/10">
+                    <CheckCircle className="h-5 w-5 text-blue-500" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">Security Settings</h3>
-                    <p className="text-sm text-slate-400">Manage two-factor authentication and account security.</p>
+                    <p className="text-sm text-zinc-400">Manage two-factor authentication and account security.</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between p-4 border border-white/10 rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-zinc-800 rounded-lg bg-zinc-950/20">
                   <div>
                     <h4 className="font-semibold text-white">Two-Factor Authentication</h4>
                     <p className="text-sm text-slate-400">
@@ -467,7 +466,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                           onClick={handleDisable2FA}
                           variant="outline"
                           size="sm"
-                          className="border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                          className="border-zinc-800 bg-[#09090B] text-zinc-200 hover:bg-zinc-900"
                         >
                           Disable
                         </Button>
@@ -476,7 +475,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                       <Button
                         onClick={() => setShowTwoFactorSetup(true)}
                         variant="outline"
-                        className="border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                        className="border-zinc-800 bg-[#09090B] text-zinc-200 hover:bg-zinc-900"
                       >
                         Enable 2FA
                       </Button>
@@ -499,7 +498,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
 
               {!agentStatus ? (
                 <div className="space-y-4">
-                  <div className="p-4 border border-white/10 rounded-lg bg-white/5">
+                  <div className="p-4 border border-zinc-800 rounded-lg bg-zinc-950/40">
                     <h4 className="font-semibold mb-2 text-white">Benefits of becoming a Sales Agent:</h4>
                     <ul className="space-y-1 text-sm text-slate-400">
                       <li>• Earn points for every successful referral</li>
@@ -508,7 +507,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                       <li>• Track your earnings and performance</li>
                     </ul>
                   </div>
-                  <Button onClick={handleApplyForAgent} disabled={isApplying} className="bg-emerald-400 text-slate-900 hover:bg-white">
+                  <Button onClick={handleApplyForAgent} disabled={isApplying} className="bg-blue-600 text-white hover:bg-blue-500 transition-colors">
                     {isApplying ? 'Submitting Application...' : 'Apply to Become a Sales Agent'}
                   </Button>
                 </div>

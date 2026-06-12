@@ -61,7 +61,7 @@ export default function OrdersListPage() {
       case 'Pending': return 'bg-yellow-500/15 text-yellow-200 border border-yellow-500/30';
       case 'Awaiting Payment': return 'bg-amber-500/15 text-amber-200 border border-amber-500/30';
       case 'Payment Failed': return 'bg-red-500/15 text-red-200 border border-red-500/30';
-      case 'Payment Confirmed': return 'bg-cyan-500/15 text-cyan-200 border border-cyan-500/30';
+      case 'Payment Confirmed': return 'bg-primary/15 text-primary border border-primary/30';
       case 'Confirmed': return 'bg-blue-500/15 text-blue-200 border border-blue-500/30';
       case 'Processing': return 'bg-purple-500/15 text-purple-200 border border-purple-500/30';
       case 'Ready to Ship': return 'bg-indigo-500/15 text-indigo-200 border border-indigo-500/30';
@@ -77,7 +77,7 @@ export default function OrdersListPage() {
       case 'Visit Completed': return 'bg-teal-500/15 text-teal-200 border border-teal-500/30';
       case 'Diagnosis Done': return 'bg-blue-500/15 text-blue-200 border border-blue-500/30';
       case 'Quote Sent':
-      case 'Awaiting Customer Approval': return 'bg-cyan-500/15 text-cyan-200 border border-cyan-500/30';
+      case 'Awaiting Customer Approval': return 'bg-primary/15 text-primary border border-primary/30';
       case 'Approved': return 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/30';
       case 'Parts Ordered': return 'bg-indigo-500/15 text-indigo-200 border border-indigo-500/30';
       case 'Work In Progress': return 'bg-purple-500/15 text-purple-200 border border-purple-500/30';
@@ -107,10 +107,10 @@ export default function OrdersListPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 py-8">
+      <div className="min-h-screen bg-[#09090B] py-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-slate-300">Loading your orders...</p>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function OrdersListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 py-8">
+    <div className="min-h-screen bg-[#09090B] py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
@@ -176,7 +176,7 @@ export default function OrdersListPage() {
               {orders.length === 0 && (
                 <Button 
                   onClick={() => window.location.href = '/products'}
-                  className="bg-cyan-500 hover:bg-cyan-400 text-slate-900"
+                  className="bg-primary hover:opacity-90 text-white"
                 >
                   Start Shopping
                 </Button>
@@ -274,13 +274,13 @@ export default function OrdersListPage() {
 
                   {/* 4. REAL-TIME TECHNICAL DISPATCH COMPLEMENTARY ACCESSORIES ASSIGNER */}
                   {(order.status === 'Visit Scheduled' || order.status === 'Processing') && (
-                    <div className="mt-6 overflow-hidden rounded-xl border border-cyan-500/20 bg-cyan-500/5">
-                      <div className="flex items-center justify-between bg-cyan-500/10 px-4 py-2 border-b border-cyan-500/20">
+                    <div className="mt-6 overflow-hidden rounded-xl border border-primary/20 bg-primary/5">
+                      <div className="flex items-center justify-between bg-primary/10 px-4 py-2 border-b border-primary/20">
                         <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Technician Dispatch Optimization</span>
+                          <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Technician Dispatch Optimization</span>
                         </div>
-                        <span className="text-[10px] font-medium text-cyan-400/70">Arriving Soon</span>
+                        <span className="text-[10px] font-medium text-primary/70">Arriving Soon</span>
                       </div>
                       <div className="p-4 flex flex-col sm:flex-row items-center gap-4">
                         <div className="flex-1">
@@ -289,15 +289,15 @@ export default function OrdersListPage() {
                         </div>
                         <div className="flex items-center gap-3 w-full sm:w-auto">
                           <div className="flex items-center gap-2 rounded-lg bg-white/5 p-2 border border-white/10">
-                            <div className="h-8 w-8 rounded bg-slate-800 flex items-center justify-center text-[10px] font-bold text-cyan-400">64GB</div>
+                            <div className="h-8 w-8 rounded bg-slate-800 flex items-center justify-center text-[10px] font-bold text-primary">64GB</div>
                             <div>
                               <p className="text-[10px] font-bold text-white">Surveillance SD</p>
-                              <p className="text-[9px] text-cyan-300">₹899.00</p>
+                              <p className="text-[9px] text-primary">₹899.00</p>
                             </div>
                           </div>
                           <Button 
                             size="sm" 
-                            className="bg-cyan-400 hover:bg-white text-slate-900 text-[10px] font-bold h-8 px-3"
+                            className="bg-primary hover:bg-white hover:text-zinc-950 text-white text-[10px] font-bold h-8 px-3"
                             onClick={() => {
                               // Logic to add to order/dispatch would go here
                               alert('Accessory added to technician dispatch!');
@@ -324,7 +324,7 @@ export default function OrdersListPage() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold text-cyan-300">{orders.length}</p>
+                  <p className="text-2xl font-bold text-primary">{orders.length}</p>
                   <p className="text-sm text-slate-300">Total Orders</p>
                 </div>
                 <div>

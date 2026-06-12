@@ -210,7 +210,7 @@ export function Header() {
           : 'bg-white/75 backdrop-blur-md border-zinc-100 py-4'}
       `}
     >
-      <div className="absolute top-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"></div>
+      <div className="absolute top-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
 
       <div className="mx-auto max-w-6xl px-6 sm:px-8">
         <div className="flex items-center justify-between gap-4">
@@ -221,7 +221,7 @@ export function Header() {
             </span>
             <div className="flex min-w-0 flex-col">
               <span className="font-sans text-sm font-bold leading-none tracking-tight text-zinc-900 sm:text-base">
-                TECBUNNY<span className="text-cyan-500">.</span>
+                TECBUNNY<span className="text-blue-600">.</span>
               </span>
               <span className="mt-0.5 text-[8px] sm:text-[9px] font-medium uppercase tracking-[0.15em] text-zinc-400 transition-colors group-hover:text-zinc-600">
                 Solutions Pvt Ltd
@@ -250,14 +250,14 @@ export function Header() {
                       href={item.href}
                       className={`relative rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-all duration-200 inline-flex items-center gap-1 xl:px-3
                         ${isActive(item.href)
-                          ? 'bg-cyan-500/10 text-cyan-700 border border-cyan-500/20 shadow-sm'
+                          ? 'bg-blue-500/10 text-blue-700 border border-blue-500/20 shadow-sm'
                           : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-150/50'
                         }
                       `}
                     >
                       {item.name}
                       {isActive(item.href) && (
-                        <span className="h-1 w-1 rounded-full bg-cyan-400" />
+                        <span className="h-1 w-1 rounded-full bg-blue-500" />
                       )}
                     </Link>
                     <div
@@ -283,14 +283,14 @@ export function Header() {
                     href={item.href}
                     className={`relative inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200 xl:px-3
                       ${isActive(item.href)
-                        ? 'bg-cyan-500/10 text-cyan-700 border border-cyan-500/20 shadow-sm'
+                        ? 'bg-blue-500/10 text-blue-700 border border-blue-500/20 shadow-sm'
                         : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-150/50'
                       }
                     `}
                   >
                     {item.name}
                     {isActive(item.href) && (
-                      <span className="h-1 w-1 rounded-full bg-cyan-400" />
+                      <span className="h-1 w-1 rounded-full bg-blue-500" />
                     )}
                   </Link>
                 )
@@ -314,7 +314,7 @@ export function Header() {
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3.5 py-1.5 text-xs font-semibold text-cyan-700 transition-all duration-200 hover:border-cyan-500/40 hover:bg-cyan-500/10"
+                  className="rounded-full border border-blue-500/20 bg-blue-500/5 px-3.5 py-1.5 text-xs font-semibold text-blue-700 transition-all duration-200 hover:border-blue-500/40 hover:bg-blue-500/10"
                 >
                   Signup
                 </Link>
@@ -380,7 +380,7 @@ export function Header() {
               href="/customised-setups"
               onMouseMove={applyMagneticEffect}
               onMouseLeave={resetMagneticEffect}
-              className="group relative rounded-lg border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-xs font-bold text-cyan-700 transition-all duration-200 hover:bg-cyan-500 hover:text-zinc-950 hover:border-cyan-500 shadow-sm"
+              className="group relative rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-xs font-bold text-blue-700 transition-all duration-200 hover:bg-blue-500 hover:text-white hover:border-blue-500 shadow-sm"
             >
               Get Quote
             </Link>
@@ -529,10 +529,10 @@ export function Header() {
               <Link
                 href="/auth/signup"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex min-h-[36px] items-center justify-between rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 text-xs text-cyan-700 hover:bg-cyan-500/10 transition-colors"
+                className="flex min-h-[36px] items-center justify-between rounded-lg border border-blue-500/20 bg-blue-500/5 px-3 py-1.5 text-xs text-blue-700 hover:bg-blue-500/10 transition-colors"
               >
                 Signup
-                <ChevronRight size={14} className="text-cyan-600" />
+                <ChevronRight size={14} className="text-blue-600" />
               </Link>
             </div>
           ) : (
@@ -580,7 +580,7 @@ export function Header() {
             <Link
               href="/customised-setups"
               onClick={() => setMobileMenuOpen(false)}
-              className="block w-full rounded-lg bg-cyan-500 py-2.5 text-center text-xs font-bold text-zinc-950 shadow-sm hover:bg-cyan-400 transition-colors"
+              className="block w-full rounded-lg bg-blue-600 py-2.5 text-center text-xs font-bold text-white shadow-sm hover:bg-blue-500 transition-colors"
             >
               Get Instant Quote
             </Link>

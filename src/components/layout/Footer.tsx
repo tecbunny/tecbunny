@@ -189,7 +189,7 @@ export function Footer() {
   const activeSocialPlatforms = socialPlatforms.filter(({ key }) => Boolean(socialLinks[key]));
 
   return (
-    <footer className="relative bg-zinc-50 dark:bg-black text-zinc-500 dark:text-zinc-400 border-t border-zinc-200 dark:border-zinc-900 py-12 sm:py-16 font-sans">
+    <footer className="relative bg-white dark:bg-[#09090B] text-zinc-500 dark:text-zinc-400 border-t border-zinc-200 dark:border-zinc-800 py-12 sm:py-16 font-sans">
       <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           {/* Column 1: Services */}
@@ -240,10 +240,10 @@ export function Footer() {
             <h4 className="text-zinc-900 dark:text-zinc-300 text-xs font-mono font-semibold uppercase tracking-widest mb-4">Contact</h4>
             <address className="leading-relaxed opacity-85 not-italic">{address}</address>
             <div className="mt-3 space-y-1">
-              <p className="text-cyan-600 dark:text-cyan-400 hover:underline">
+              <p className="text-blue-600 dark:text-blue-500 hover:underline font-tech">
                 <a href={`tel:${supportPhone.replace(/\s+/g,'')}`}>{supportPhone}</a>
               </p>
-              <p className="text-cyan-600 dark:text-cyan-400 hover:underline">
+              <p className="text-blue-600 dark:text-blue-500 hover:underline font-tech">
                 <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
               </p>
             </div>
@@ -265,12 +265,12 @@ export function Footer() {
                     setSubscribeMessage(null);
                   }
                 }}
-                className="bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/30 focus:border-cyan-500 w-full placeholder-zinc-400 transition-all"
+                className="bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500 w-full placeholder-zinc-400 transition-all"
               />
               <button
                 type="submit"
                 disabled={subscribeStatus === 'loading'}
-                className="px-3.5 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-40"
               >
                 {subscribeStatus === 'loading' ? '...' : 'Subscribe'}
               </button>

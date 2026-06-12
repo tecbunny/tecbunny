@@ -135,7 +135,7 @@ export default function CartPage() {
   }, [cartItems]);
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-200">
+    <div className="min-h-screen bg-[#09090B] text-slate-200">
       
 
       <section className="pt-28 pb-16 relative">
@@ -153,7 +153,7 @@ export default function CartPage() {
               {hasItems && (
                 <Link
                   href="/products"
-                  className="magnetic-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-lg border border-white/15 bg-white/5 text-white hover:bg-white/10 hover:border-cyan-300/40 transition-all text-sm font-bold"
+                  className="magnetic-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-lg border border-white/15 bg-white/5 text-white hover:bg-white/10 hover:border-primary/40 transition-all text-sm font-bold"
                 >
                   Continue Shopping <ArrowRight className="h-3 w-3" />
                 </Link>
@@ -176,7 +176,7 @@ export default function CartPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
                   <div className="flex items-center gap-3 text-sm text-slate-400">
-                    <ShoppingCart className="h-4 w-4 text-cyan-300" />
+                    <ShoppingCart className="h-4 w-4 text-primary" />
                     <span className="font-semibold text-white">Cart Items ({cartCount})</span>
                   </div>
                   {cartItems.map((item) => (
@@ -224,7 +224,7 @@ export default function CartPage() {
                         </div>
                       )}
                       {appliedCoupon && couponDiscount > 0 && (
-                        <div className="flex items-center justify-between text-cyan-300 font-semibold">
+                        <div className="flex items-center justify-between text-primary font-semibold">
                           <span>Coupon ({appliedCoupon.code})</span>
                           <span>-₹{formatCurrency(couponDiscount)}</span>
                         </div>
@@ -234,7 +234,7 @@ export default function CartPage() {
                     <div className="border-t border-white/10 pt-4 mb-8">
                       <div className="flex justify-between items-end">
                         <span className="text-slate-300 font-bold">Estimated Total</span>
-                        <span className="text-3xl font-bold text-cyan-300 font-tech">₹{formatCurrency(finalTotal)}</span>
+                        <span className="text-3xl font-bold text-primary font-tech">₹{formatCurrency(finalTotal)}</span>
                       </div>
                       <p className="text-[10px] text-slate-500 mt-2 text-right">Final invoice generated after site confirmation.</p>
                     </div>
@@ -251,12 +251,12 @@ export default function CartPage() {
                             placeholder="Promo Code"
                             value={couponCode}
                             onChange={(event) => setCouponCode(event.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg pl-4 pr-20 py-2 text-sm text-white focus-visible:ring-0 focus-visible:border-cyan-400/50"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg pl-4 pr-20 py-2 text-sm text-white focus-visible:ring-0 focus-visible:border-primary/50"
                           />
                           <button
                             type="submit"
                             disabled={!couponCode || applyingCode}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-cyan-300 hover:text-white disabled:opacity-50"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-primary hover:text-white disabled:opacity-50"
                           >
                             {applyingCode ? "APPLYING" : "APPLY"}
                           </button>
@@ -265,7 +265,7 @@ export default function CartPage() {
                       {appliedCoupon && (
                         <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
                           <div className="flex items-center gap-2">
-                            <Tag className="h-3 w-3 text-cyan-300" />
+                            <Tag className="h-3 w-3 text-primary" />
                             <span>{appliedCoupon.code}</span>
                           </div>
                           <Button size="sm" variant="ghost" onClick={removeCoupon} className="h-6 px-2 text-slate-300 hover:text-white">
@@ -296,14 +296,14 @@ export default function CartPage() {
                       </div>
                     )}
 
-                    <Button className="w-full py-3 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-white hover:text-slate-900 text-white font-bold font-tech rounded-lg transition-colors shadow-lg shadow-cyan-400/20" asChild>
+                    <Button className="w-full py-3 bg-primary hover:bg-white hover:text-slate-900 text-white font-bold font-tech rounded-lg transition-colors shadow-sm" asChild>
                       <Link href="/checkout">REQUEST FORMAL QUOTE</Link>
                     </Button>
                     <p className="text-xs text-center text-slate-500 mt-3">
                       <Lock className="inline-block h-3.5 w-3.5 mr-1" /> Secure checkout
                     </p>
                     <Button
-                      className="w-full mt-4 border border-white/15 bg-white/5 text-white hover:bg-white/10 hover:border-cyan-300/40"
+                      className="w-full mt-4 border border-white/15 bg-white/5 text-white hover:bg-white/10 hover:border-primary/40"
                       variant="ghost"
                       asChild
                     >

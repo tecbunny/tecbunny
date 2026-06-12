@@ -89,14 +89,14 @@ export default function LocalServiceLandingPage({
   );
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#121212] text-slate-200">
+    <main className="relative min-h-screen overflow-hidden bg-[#09090B] text-slate-200">
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
-      <div className="pointer-events-none absolute left-1/2 top-24 h-[32rem] w-[48rem] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-[140px]" />
+      <div className="pointer-events-none absolute left-1/2 top-24 h-[32rem] w-[48rem] -translate-x-1/2 rounded-full bg-primary/10 blur-[140px]" />
 
       <section className="relative border-b border-white/5 px-4 pb-16 pt-28 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-primary">
               <HeroIcon className="h-4 w-4" />
               {badge}
             </div>
@@ -105,10 +105,10 @@ export default function LocalServiceLandingPage({
 
             {/* REAL-TIME TECHNICAL COVERAGE GRID */}
             <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:border-cyan-400/30">
-                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-cyan-500/5 blur-2xl transition-all group-hover:bg-cyan-500/10" />
+              <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:border-primary/30">
+                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-primary/5 blur-2xl transition-all group-hover:bg-primary/10" />
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <ShieldCheck className="h-6 w-6" />
                   </div>
                   <div>
@@ -118,16 +118,16 @@ export default function LocalServiceLandingPage({
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-cyan-400/80">
-                  <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400" />
+                <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-primary/80">
+                  <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
                   Active corporate surveillance systems maintained under 4-hour SLA constraints in this zone.
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:border-cyan-400/30">
-                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-cyan-500/5 blur-2xl transition-all group-hover:bg-cyan-500/10" />
+              <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:border-primary/30">
+                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-primary/5 blur-2xl transition-all group-hover:bg-primary/10" />
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Clock3 className="h-6 w-6" />
                   </div>
                   <div>
@@ -135,15 +135,15 @@ export default function LocalServiceLandingPage({
                     <p className="text-2xl font-bold text-white">99.98% Local</p>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-cyan-400/80">
-                  <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-primary/80">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                   Certified network availability for {locationLabel} service nodes.
                 </div>
               </div>
             </div>
 
             <div className="mt-10 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+              <Button asChild size="lg" className="bg-primary text-white hover:bg-primary/90">
                 <Link
                   href={primaryCtaHref}
                   onClick={() => trackEvent(`${eventPrefix}_primary_cta_click`, { cta: primaryCtaLabel })}
@@ -164,16 +164,16 @@ export default function LocalServiceLandingPage({
             <div className="mt-8 flex flex-wrap gap-3 text-sm text-slate-300">
               {heroHighlights.map((highlight) => (
                 <span key={highlight} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2">
-                  <CheckCircle2 className="h-4 w-4 text-cyan-300" />
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                   {highlight}
                 </span>
               ))}
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-cyan-500/10">
+          <div className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl shadow-primary/5">
             <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div>
@@ -186,7 +186,7 @@ export default function LocalServiceLandingPage({
                 const StatIcon = stat.icon;
                 return (
                   <div key={stat.label} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <StatIcon className="h-4 w-4 text-cyan-300" />
+                    <StatIcon className="h-4 w-4 text-primary" />
                     <p className="mt-3 text-xs uppercase tracking-[0.25em] text-slate-500">{stat.label}</p>
                     <p className="mt-2 text-sm font-medium text-white">{stat.value}</p>
                   </div>
@@ -197,15 +197,15 @@ export default function LocalServiceLandingPage({
               <p className="text-sm font-semibold text-white">What happens next</p>
               <ul className="mt-4 space-y-3 text-sm text-slate-400">
                 <li className="flex items-start gap-3">
-                  <ArrowRight className="mt-0.5 h-4 w-4 text-cyan-300" />
+                  <ArrowRight className="mt-0.5 h-4 w-4 text-primary" />
                   We confirm your requirement and recommend the right scope.
                 </li>
                 <li className="flex items-start gap-3">
-                  <ArrowRight className="mt-0.5 h-4 w-4 text-cyan-300" />
+                  <ArrowRight className="mt-0.5 h-4 w-4 text-primary" />
                   A TecBunny specialist shares survey, quote, or demo details.
                 </li>
                 <li className="flex items-start gap-3">
-                  <ArrowRight className="mt-0.5 h-4 w-4 text-cyan-300" />
+                  <ArrowRight className="mt-0.5 h-4 w-4 text-primary" />
                   Deployment follows only after scope approval.
                 </li>
               </ul>
@@ -232,7 +232,7 @@ export default function LocalServiceLandingPage({
             <ul className="mt-6 space-y-3 text-sm text-slate-300">
               {deliverables.map((item) => (
                 <li key={item} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-cyan-300" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -247,7 +247,7 @@ export default function LocalServiceLandingPage({
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {process.map((step, index) => (
               <div key={step} className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">Step {index + 1}</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-primary">Step {index + 1}</p>
                 <p className="mt-3 text-sm text-slate-300">{step}</p>
               </div>
             ))}
@@ -270,13 +270,13 @@ export default function LocalServiceLandingPage({
       </section>
 
       <section className="px-4 pb-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 p-8 text-center">
+        <div className="mx-auto max-w-7xl rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-8 text-center">
           <h2 className="text-3xl font-semibold text-white">Need a fast local response?</h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-300">
             Use the quote form for scope details or reach TecBunny directly on WhatsApp for urgent coordination.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg" className="bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+            <Button asChild size="lg" className="bg-primary text-white hover:bg-primary/90">
               <Link
                 href={primaryCtaHref}
                 onClick={() => trackEvent(`${eventPrefix}_footer_primary_cta_click`, { cta: primaryCtaLabel })}

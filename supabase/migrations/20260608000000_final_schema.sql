@@ -1939,4 +1939,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Create database view to safely expose product columns to PostgREST
+CREATE OR REPLACE VIEW public.products_columns_view AS
+SELECT column_name::text
+FROM information_schema.columns
+WHERE table_name = 'products' AND table_schema = 'public';
+
+GRANT SELECT ON public.products_columns_view TO anon, authenticated, service_role;
+
 COMMIT;

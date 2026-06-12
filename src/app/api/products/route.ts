@@ -292,24 +292,51 @@ function taxErrorResponse(error: unknown, correlationId?: string) {
 async function ensureProductColumns(supabase: any): Promise<Set<string> | null> {
   try {
     const adminClient = isSupabaseServiceConfigured ? createServiceClient() : supabase;
+
+    // 1. Try querying the public view products_columns_view
+    const { data: viewData, error: viewError } = await adminClient
+      .from('products_columns_view')
+      .select('column_name');
+
+    if (!viewError && viewData && viewData.length > 0) {
+      const columns = new Set<string>(viewData.map((c: any) => String(c.column_name)));
+      logger.debug('product_columns_fetched_from_view', { columns: Array.from(columns) });
+      return columns;
+    }
+
+    // 2. Try querying a single row directly to extract columns from keys
+    const { data: rowData, error: rowError } = await adminClient
+      .from('products')
+      .select('*')
+      .limit(1);
+
+    if (!rowError && rowData && rowData.length > 0) {
+      const columns = new Set<string>(Object.keys(rowData[0]));
+      logger.debug('product_columns_fetched_from_row', { columns: Array.from(columns) });
+      return columns;
+    }
+
+    // 3. Fallback to direct information_schema query
     const { data, error } = await adminClient
       .from('information_schema.columns' as any)
       .select('column_name,table_schema')
       .eq('table_name', 'products')
       .eq('table_schema', 'public');
-    if (error) {
-      logger.warn('product_columns_fetch_failed', { error: error.message });
-      return null;
+
+    if (!error && data && data.length > 0) {
+      const columns = new Set<string>(data.map((c: any) => String(c.column_name)));
+      logger.debug('product_columns_fetched_from_schema', { columns: Array.from(columns) });
+      return columns;
     }
-    if (!data) {
-      return null;
-    }
-  const rawColumns = (data ?? []).map((c: any) => String(c.column_name));
-  const columns = new Set<string>(rawColumns);
-    logger.debug('product_columns_fetched', { columns: Array.from(columns) });
-    return columns;
+
+    logger.warn('product_columns_fetch_all_failed', {
+      viewError: viewError?.message,
+      rowError: rowError?.message,
+      schemaError: error?.message,
+    });
+    return null;
   } catch (e) {
-    logger.warn('product_columns_fetch_failed', { error: (e as Error).message });
+    logger.warn('product_columns_fetch_exception', { error: (e as Error).message });
     return null;
   }
 }
@@ -341,17 +368,17 @@ export async function GET(request: NextRequest) {
           .select(publicProductSelect)
           .limit(1);
 
-        if (productColumns?.has('handle')) {
+        if (!productColumns || productColumns.has('handle')) {
           query = query.eq('handle', handle);
-        } else if (productColumns?.has('slug')) {
+        } else if (productColumns.has('slug')) {
           query = query.eq('slug', handle);
-        } else if (productColumns?.has('permalink')) {
+        } else if (productColumns.has('permalink')) {
           query = query.eq('permalink', handle);
-        } else if (productColumns?.has('title')) {
+        } else if (productColumns.has('title')) {
           query = query.ilike('title', `%${handle}%`);
-        } else if (productColumns?.has('name')) {
+        } else if (productColumns.has('name')) {
           query = query.ilike('name', `%${handle}%`);
-        } else {
+        } else if (productColumns.has('description')) {
           query = query.ilike('description', `%${handle}%`);
         }
 
@@ -442,19 +469,18 @@ export async function GET(request: NextRequest) {
       if (productColumns && productColumns.has('prioritized')) {
         query = query.order('prioritized', { ascending: false, nullsFirst: false });
       }
-      
+
       // Then sort prioritized products by prioritized_at (most recently prioritized first)
       if (productColumns && productColumns.has('prioritized_at')) {
         query = query.order('prioritized_at', { ascending: false, nullsFirst: false });
       }
-      
+
       // Finally apply the requested sort for non-prioritized products and as tertiary sort
-      if (sortBy === 'title' || sortBy === 'name') {
+      if ((sortBy === 'title' || sortBy === 'name') && (!productColumns || productColumns.has(sortBy))) {
         query = query.order(sortBy, { ascending: sortOrder === 'asc' });
-      } else if (sortBy === 'price') {
+      } else if (sortBy === 'price' && (!productColumns || productColumns.has('price'))) {
         query = query.order('price', { ascending: sortOrder === 'asc' });
-      } else if (sortBy === 'display_order') {
-        // Keep display_order as option but fallback to created_at
+      } else if (sortBy === 'display_order' && productColumns && productColumns.has('display_order')) {
         query = query.order('display_order', { ascending: sortOrder === 'asc', nullsFirst: false })
                      .order('created_at', { ascending: false });
       } else {
@@ -481,19 +507,18 @@ export async function GET(request: NextRequest) {
       }
 
       const vendor = searchParams.get('vendor');
-      if (vendor) {
+      if (vendor && (!productColumns || productColumns.has('vendor'))) {
         query = query.eq('vendor', vendor);
       }
 
       const search = cleanSearchText(searchParams.get('search'));
       if (search) {
         // Check which columns exist and use appropriate search
-        if (productColumns?.has('title')) {
+        if (!productColumns || productColumns.has('title')) {
           query = query.ilike('title', `%${search}%`);
-        } else if (productColumns?.has('name')) {
+        } else if (productColumns.has('name')) {
           query = query.ilike('name', `%${search}%`);
-        } else {
-          // Fallback to description only if neither title nor name exist
+        } else if (productColumns.has('description')) {
           query = query.ilike('description', `%${search}%`);
         }
       }

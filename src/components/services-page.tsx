@@ -27,7 +27,6 @@ import { useAnalytics } from '../hooks/use-analytics';
 import { usePermissions } from '../hooks/use-permissions';
 import { useRevealSections } from '../hooks/use-reveal-sections';
 import type { Product, Service } from '@/lib/types';
-import HeroCarousel from './HeroCarousel';
 import { BRAND_LOGO_URL } from '@/components/ui/logo';
 
 
@@ -478,9 +477,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="pointer-events-none absolute left-1/2 top-32 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-blue-500/10 blur-[140px]" />
 
-      <HeroCarousel pageKey="services" />
-
-      <div className="relative mx-auto flex max-w-7xl flex-col gap-16 px-4 pb-20 pt-0 sm:px-6 lg:px-8 sm:pt-0">
+      <div className="relative mx-auto flex max-w-7xl flex-col gap-16 px-4 pb-20 pt-16 sm:px-6 lg:px-8 sm:pt-24">
         <section className="reveal-section text-center" data-reveal-id="services-hero">
           <div className={cn('reveal-item inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-violet-300', revealDelayClass(0))}>
             End-to-end Solutions

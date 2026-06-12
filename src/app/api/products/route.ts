@@ -464,7 +464,9 @@ export async function GET(request: NextRequest) {
 
       // Apply visibility filters at the database level for non-privileged requests
       if (!isPrivilegedRequest) {
-        query = query.eq('status', 'active');
+        if (!productColumns || productColumns.has('status')) {
+          query = query.eq('status', 'active');
+        }
         if (!productColumns || productColumns.has('is_active')) {
           query = query.eq('is_active', true);
         }

@@ -18,7 +18,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/lib/hooks';
 import { useRevealSections } from '../../hooks/use-reveal-sections';
-import HeroCarousel from '../HeroCarousel';
 
 const DEFAULT_CUSTOMER_CATEGORY = 'Normal';
 
@@ -531,64 +530,62 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="pointer-events-none absolute right-0 top-0 h-[500px] w-[500px] rounded-full bg-cyan-500/10 blur-[120px]" />
 
-      <HeroCarousel pageKey="products" />
-
-      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-0 sm:px-6 lg:px-8 sm:pt-0">
-        <div className="flex flex-col gap-10">
-          <div className="reveal-section flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between" data-reveal-id="products-hero">
-            <div className={cn('reveal-item', revealDelayClass(0))}>
+      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 lg:px-8 sm:pt-24">
+        <div className="flex flex-col gap-12">
+          <div className="reveal-section flex flex-col items-center text-center gap-8" data-reveal-id="products-hero">
+            <div className={cn('reveal-item flex flex-col items-center', revealDelayClass(0))}>
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">
                 Catalog
               </div>
-              <h1 className="mt-4 text-4xl font-semibold text-white sm:text-5xl">
+              <h1 className="mt-6 text-4xl font-semibold text-white sm:text-5xl lg:text-6xl">
                 Hardware <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-transparent">Inventory</span>
               </h1>
-              <p className="mt-3 max-w-xl text-sm text-slate-400 sm:text-base">
+              <p className="mt-4 max-w-xl text-sm text-slate-400 sm:text-base">
                 {searchQuery ? `Results for "${searchQuery}"` : 'Explore verified equipment across every deployment size.'}
               </p>
             </div>
 
-            <form onSubmit={handleSearch} className={cn('reveal-item w-full max-w-md', revealDelayClass(90))}>
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <form onSubmit={handleSearch} className={cn('reveal-item w-full max-w-lg', revealDelayClass(90))}>
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500 transition-colors group-focus-within:text-cyan-400" />
                 <Input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search products by name, brand, or category..."
                   value={localSearchQuery}
                   onChange={(e) => setLocalSearchQuery(e.target.value)}
-                  className="h-12 w-full rounded-xl border border-white/10 bg-white/5 pl-11 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400/50 focus:bg-white/10"
+                  className="h-14 w-full rounded-2xl border border-white/10 bg-slate-900/60 pl-12 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400/50 focus:bg-slate-900/80 focus:ring-2 focus:ring-cyan-500/20 transition-all duration-300 shadow-lg"
                 />
               </div>
-              <p className="mt-2 text-xs text-slate-500">{resolvedResultsLabel}</p>
+              <p className="mt-3 text-xs text-slate-500 font-medium">{resolvedResultsLabel}</p>
             </form>
           </div>
 
           {categories.length > 0 && (
-            <div className="reveal-section flex flex-wrap gap-2" data-reveal-id="products-filters">
+            <div className="reveal-section flex flex-wrap justify-center gap-2 border-t border-b border-white/5 py-6" data-reveal-id="products-filters">
               <button
                 type="button"
                 onClick={() => updateUrlParams({ category: '' })}
                 className={cn(
-                  'reveal-item rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors',
+                  'reveal-item rounded-xl border px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300',
                   hasActiveCategory
-                    ? 'border-white/10 text-slate-400 hover:border-cyan-400/40 hover:text-white'
-                    : 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300',
+                    ? 'border-white/10 bg-white/5 text-slate-400 hover:border-cyan-400/40 hover:bg-cyan-500/5 hover:text-white'
+                    : 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]',
                   revealDelayClass(0)
                 )}
               >
                 All Items
               </button>
-              {categories.map((category) => (
+              {categories.map((category, idx) => (
                 <button
                   key={category}
                   type="button"
                   onClick={() => updateUrlParams({ category })}
                   className={cn(
-                    'reveal-item rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors',
+                    'reveal-item rounded-xl border px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300',
                     categoryFilter === category
-                      ? 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300'
-                      : 'border-white/10 text-slate-400 hover:border-cyan-400/40 hover:text-white',
-                    revealDelayClass(70)
+                      ? 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]'
+                      : 'border-white/10 bg-white/5 text-slate-400 hover:border-cyan-400/40 hover:bg-cyan-500/5 hover:text-white',
+                    revealDelayClass(70 + idx * 30)
                   )}
                 >
                   {category}
@@ -598,7 +595,10 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className={cn('reveal-item rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400 transition-colors hover:border-cyan-400/40 hover:text-white', revealDelayClass(140))}
+                  className={cn(
+                    'reveal-item rounded-xl border border-red-500/20 bg-red-500/5 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-red-400 transition-all duration-300 hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-300',
+                    revealDelayClass(140)
+                  )}
                 >
                   Clear Filters
                 </button>

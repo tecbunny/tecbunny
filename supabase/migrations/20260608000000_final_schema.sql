@@ -117,6 +117,7 @@ $$;
 -- ============================================================================
 
 -- Profiles Table
+DROP TABLE IF EXISTS public.profiles CASCADE;
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT,
@@ -138,6 +139,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 -- Products Table
+DROP TABLE IF EXISTS public.products CASCADE;
 CREATE TABLE IF NOT EXISTS public.products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   handle TEXT UNIQUE,
@@ -202,6 +204,7 @@ CREATE TABLE IF NOT EXISTS public.products (
 );
 
 -- Product Archive Log Table
+DROP TABLE IF EXISTS public.product_archive_log CASCADE;
 CREATE TABLE IF NOT EXISTS public.product_archive_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
@@ -213,6 +216,7 @@ CREATE TABLE IF NOT EXISTS public.product_archive_log (
 );
 
 -- Orders Table
+DROP TABLE IF EXISTS public.orders CASCADE;
 CREATE TABLE IF NOT EXISTS public.orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_number TEXT UNIQUE,
@@ -261,6 +265,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
 );
 
 -- Order Items Table
+DROP TABLE IF EXISTS public.order_items CASCADE;
 CREATE TABLE IF NOT EXISTS public.order_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
@@ -276,6 +281,7 @@ CREATE TABLE IF NOT EXISTS public.order_items (
 );
 
 -- Payment Transactions Table
+DROP TABLE IF EXISTS public.payment_transactions CASCADE;
 CREATE TABLE IF NOT EXISTS public.payment_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
@@ -289,6 +295,7 @@ CREATE TABLE IF NOT EXISTS public.payment_transactions (
 );
 
 -- Quotes Table
+DROP TABLE IF EXISTS public.quotes CASCADE;
 CREATE TABLE IF NOT EXISTS public.quotes (
   id           UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
   quote_number TEXT         UNIQUE,
@@ -311,6 +318,7 @@ CREATE TABLE IF NOT EXISTS public.quotes (
 );
 
 -- Services Table
+DROP TABLE IF EXISTS public.services CASCADE;
 CREATE TABLE IF NOT EXISTS public.services (
   id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
   title         TEXT,
@@ -343,6 +351,7 @@ CREATE TABLE IF NOT EXISTS public.services (
 );
 
 -- FAQ Table
+DROP TABLE IF EXISTS public.faqs CASCADE;
 CREATE TABLE IF NOT EXISTS public.faqs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     category TEXT NOT NULL DEFAULT 'General',
@@ -355,6 +364,7 @@ CREATE TABLE IF NOT EXISTS public.faqs (
 );
 
 -- Stock Movements Ledger
+DROP TABLE IF EXISTS public.stock_movements CASCADE;
 CREATE TABLE IF NOT EXISTS public.stock_movements (
   id               UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id       UUID          NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
@@ -370,6 +380,7 @@ CREATE TABLE IF NOT EXISTS public.stock_movements (
 );
 
 -- Serialized Inventory
+DROP TABLE IF EXISTS public.inventory CASCADE;
 CREATE TABLE IF NOT EXISTS public.inventory (
   id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id      UUID          NOT NULL UNIQUE REFERENCES public.products(id) ON DELETE CASCADE,
@@ -380,6 +391,7 @@ CREATE TABLE IF NOT EXISTS public.inventory (
 );
 
 -- Tax and Policy Tables
+DROP TABLE IF EXISTS public.tax_rates CASCADE;
 CREATE TABLE IF NOT EXISTS public.tax_rates (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) UNIQUE NOT NULL,
@@ -390,6 +402,7 @@ CREATE TABLE IF NOT EXISTS public.tax_rates (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+DROP TABLE IF EXISTS public.hsn_codes CASCADE;
 CREATE TABLE IF NOT EXISTS public.hsn_codes (
   code VARCHAR(20) PRIMARY KEY,
   tax_rate_id INTEGER REFERENCES public.tax_rates(id) ON DELETE SET NULL,
@@ -399,6 +412,7 @@ CREATE TABLE IF NOT EXISTS public.hsn_codes (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+DROP TABLE IF EXISTS public.policies CASCADE;
 CREATE TABLE IF NOT EXISTS public.policies (
   key VARCHAR(50) PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
@@ -409,6 +423,7 @@ CREATE TABLE IF NOT EXISTS public.policies (
 );
 
 -- Token Blocklist
+DROP TABLE IF EXISTS public.superadmin_token_blocklist CASCADE;
 CREATE TABLE IF NOT EXISTS public.superadmin_token_blocklist (
   jti         UUID         PRIMARY KEY,
   expires_at  TIMESTAMPTZ  NOT NULL,
@@ -416,6 +431,7 @@ CREATE TABLE IF NOT EXISTS public.superadmin_token_blocklist (
 );
 
 -- Innovation Content
+DROP TABLE IF EXISTS public.innovation_modes CASCADE;
 CREATE TABLE IF NOT EXISTS public.innovation_modes (
   id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   key           TEXT        UNIQUE,
@@ -432,6 +448,7 @@ CREATE TABLE IF NOT EXISTS public.innovation_modes (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+DROP TABLE IF EXISTS public.innovation_devices CASCADE;
 CREATE TABLE IF NOT EXISTS public.innovation_devices (
   id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   title         TEXT,
@@ -446,6 +463,7 @@ CREATE TABLE IF NOT EXISTS public.innovation_devices (
 );
 
 -- Operational Tables (Settings, Logs, etc.)
+DROP TABLE IF EXISTS public.settings CASCADE;
 CREATE TABLE IF NOT EXISTS public.settings (
   key TEXT PRIMARY KEY,
   value JSONB,
@@ -457,6 +475,7 @@ CREATE TABLE IF NOT EXISTS public.settings (
   id UUID DEFAULT gen_random_uuid()
 );
 
+DROP TABLE IF EXISTS public.security_audit_log CASCADE;
 CREATE TABLE IF NOT EXISTS public.security_audit_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -471,6 +490,7 @@ CREATE TABLE IF NOT EXISTS public.security_audit_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+DROP TABLE IF EXISTS public.security_settings CASCADE;
 CREATE TABLE IF NOT EXISTS public.security_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   key TEXT UNIQUE,
@@ -484,6 +504,7 @@ CREATE TABLE IF NOT EXISTS public.security_settings (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+DROP TABLE IF EXISTS public.whatsapp_messages CASCADE;
 CREATE TABLE IF NOT EXISTS public.whatsapp_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID,
@@ -497,6 +518,7 @@ CREATE TABLE IF NOT EXISTS public.whatsapp_messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+DROP TABLE IF EXISTS public.order_otp_verifications CASCADE;
 CREATE TABLE IF NOT EXISTS public.order_otp_verifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
@@ -512,6 +534,7 @@ CREATE TABLE IF NOT EXISTS public.order_otp_verifications (
 );
 
 -- Wishlist Items Table
+DROP TABLE IF EXISTS public.wishlist_items CASCADE;
 CREATE TABLE IF NOT EXISTS public.wishlist_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     profile_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -522,6 +545,7 @@ CREATE TABLE IF NOT EXISTS public.wishlist_items (
 );
 
 -- Recovery Queue for Payment Failures
+DROP TABLE IF EXISTS public.payment_recovery_queue CASCADE;
 CREATE TABLE IF NOT EXISTS public.payment_recovery_queue (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id TEXT NOT NULL,
@@ -535,6 +559,7 @@ CREATE TABLE IF NOT EXISTS public.payment_recovery_queue (
 );
 
 -- Advance Payment Requests Table
+DROP TABLE IF EXISTS public.advance_payment_requests CASCADE;
 CREATE TABLE IF NOT EXISTS public.advance_payment_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   quote_id UUID NOT NULL, -- references quotes defined below via alter table to prevent cyclic reference errors
@@ -559,6 +584,7 @@ CREATE TABLE IF NOT EXISTS public.advance_payment_requests (
 
 -- Alter table to establish relationship between advance_payment_requests and quotes
 ALTER TABLE public.advance_payment_requests
+DROP CONSTRAINT IF EXISTS fk_advance_payment_quote,
 ADD CONSTRAINT fk_advance_payment_quote FOREIGN KEY (quote_id) REFERENCES public.quotes(id) ON DELETE CASCADE;
 
 -- Add advance_payment_id to quotes table
@@ -566,6 +592,7 @@ ALTER TABLE public.quotes
 ADD COLUMN IF NOT EXISTS advance_payment_id UUID REFERENCES public.advance_payment_requests(id) ON DELETE SET NULL;
 
 -- Coupons Table
+DROP TABLE IF EXISTS public.coupons CASCADE;
 CREATE TABLE IF NOT EXISTS public.coupons (
   code TEXT PRIMARY KEY,
   status TEXT NOT NULL DEFAULT 'active',
@@ -577,6 +604,7 @@ CREATE TABLE IF NOT EXISTS public.coupons (
 );
 
 -- Marketing Broadcast Logs Table
+DROP TABLE IF EXISTS public.marketing_broadcast_logs CASCADE;
 CREATE TABLE IF NOT EXISTS public.marketing_broadcast_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     campaign_name TEXT NOT NULL,
@@ -592,6 +620,7 @@ CREATE TABLE IF NOT EXISTS public.marketing_broadcast_logs (
 );
 
 -- Free Installation Slots Table
+DROP TABLE IF EXISTS public.free_installation_slots CASCADE;
 CREATE TABLE IF NOT EXISTS public.free_installation_slots (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   month DATE NOT NULL,
@@ -624,6 +653,7 @@ ALTER TABLE public.whatsapp_messages ADD COLUMN IF NOT EXISTS status TEXT;
 
 
 -- Sales Agents Table
+DROP TABLE IF EXISTS public.sales_agents CASCADE;
 CREATE TABLE IF NOT EXISTS public.sales_agents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -636,6 +666,7 @@ CREATE TABLE IF NOT EXISTS public.sales_agents (
 );
 
 -- Sales Agent Commissions Table
+DROP TABLE IF EXISTS public.sales_agent_commissions CASCADE;
 CREATE TABLE IF NOT EXISTS public.sales_agent_commissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id UUID NOT NULL REFERENCES public.sales_agents(id) ON DELETE CASCADE,
@@ -654,6 +685,7 @@ CREATE TABLE IF NOT EXISTS public.sales_agent_commissions (
 );
 
 -- Agent Commission Rules Table
+DROP TABLE IF EXISTS public.agent_commission_rules CASCADE;
 CREATE TABLE IF NOT EXISTS public.agent_commission_rules (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id UUID NOT NULL REFERENCES public.sales_agents(id) ON DELETE CASCADE,
@@ -669,6 +701,7 @@ CREATE TABLE IF NOT EXISTS public.agent_commission_rules (
 );
 
 -- Agent Redemption Requests Table
+DROP TABLE IF EXISTS public.agent_redemption_requests CASCADE;
 CREATE TABLE IF NOT EXISTS public.agent_redemption_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id UUID NOT NULL REFERENCES public.sales_agents(id) ON DELETE CASCADE,
@@ -683,6 +716,7 @@ CREATE TABLE IF NOT EXISTS public.agent_redemption_requests (
 );
 
 -- Service Engineers Table
+DROP TABLE IF EXISTS public.service_engineers CASCADE;
 CREATE TABLE IF NOT EXISTS public.service_engineers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -700,6 +734,7 @@ CREATE TABLE IF NOT EXISTS public.service_engineers (
 );
 
 -- Service Tickets Table
+DROP TABLE IF EXISTS public.service_tickets CASCADE;
 CREATE TABLE IF NOT EXISTS public.service_tickets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   service_id UUID REFERENCES public.services(id) ON DELETE SET NULL,
@@ -730,6 +765,7 @@ CREATE TABLE IF NOT EXISTS public.service_tickets (
 );
 
 -- Service Parts Table
+DROP TABLE IF EXISTS public.service_parts CASCADE;
 CREATE TABLE IF NOT EXISTS public.service_parts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   ticket_id UUID NOT NULL REFERENCES public.service_tickets(id) ON DELETE CASCADE,
@@ -751,10 +787,19 @@ CREATE INDEX IF NOT EXISTS quotes_expiry_idx ON public.quotes(expiry_at);
 CREATE INDEX IF NOT EXISTS idx_stock_movements_product ON public.stock_movements (product_id, created_at DESC);
 
 -- Triggers for updated_at
+DROP TRIGGER IF EXISTS trg_sales_agents_updated_at ON public.sales_agents;
 CREATE TRIGGER trg_sales_agents_updated_at BEFORE UPDATE ON public.sales_agents FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+DROP TRIGGER IF EXISTS trg_agent_commission_rules_updated_at ON public.agent_commission_rules;
 CREATE TRIGGER trg_agent_commission_rules_updated_at BEFORE UPDATE ON public.agent_commission_rules FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+DROP TRIGGER IF EXISTS trg_agent_redemption_requests_updated_at ON public.agent_redemption_requests;
 CREATE TRIGGER trg_agent_redemption_requests_updated_at BEFORE UPDATE ON public.agent_redemption_requests FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+DROP TRIGGER IF EXISTS trg_service_engineers_updated_at ON public.service_engineers;
 CREATE TRIGGER trg_service_engineers_updated_at BEFORE UPDATE ON public.service_engineers FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+DROP TRIGGER IF EXISTS trg_service_tickets_updated_at ON public.service_tickets;
 CREATE TRIGGER trg_service_tickets_updated_at BEFORE UPDATE ON public.service_tickets FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Optimization indexes for new tables
@@ -1806,6 +1851,7 @@ REVOKE ALL ON FUNCTION public.match_wishlist_coupons() FROM PUBLIC, anon, authen
 REVOKE ALL ON FUNCTION public.track_advance_payment_status_change() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.get_or_create_monthly_slot() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.decrement_free_installation_slot(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.assign_serial_number(uuid) FROM PUBLIC, anon, authenticated;
 
 -- Explicitly grant execute to authorized roles
 GRANT EXECUTE ON FUNCTION public.is_superadmin_user() TO authenticated;
@@ -1814,6 +1860,7 @@ GRANT EXECUTE ON FUNCTION public.is_manager_or_admin() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_staff_member() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.verify_order_otp_atomic(UUID, TEXT, TEXT, INTEGER) TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION public.allocate_order_inventory_atomic(TEXT, UUID, TEXT, TEXT, TEXT, TEXT, TEXT, NUMERIC, NUMERIC, NUMERIC, NUMERIC, NUMERIC, TEXT, TEXT, JSONB, UUID) TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION public.assign_serial_number(UUID) TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION public.update_order_status_v1(uuid, text, text, jsonb, text, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.complete_service_ticket_v1(uuid, text, numeric, integer, text[], jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.match_wishlist_coupons() TO authenticated;
@@ -1904,6 +1951,7 @@ ON public.profiles (role, is_active);
 -- 11. Inventory Serials and Locking
 -- ============================================================================
 -- 1. Create the inventory_serials table to manage individual serial numbers
+DROP TABLE IF EXISTS public.inventory_serials CASCADE;
 CREATE TABLE IF NOT EXISTS public.inventory_serials (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
@@ -1917,27 +1965,34 @@ CREATE TABLE IF NOT EXISTS public.inventory_serials (
 -- Ensure the status column exists just in case the table existed without it
 ALTER TABLE public.inventory_serials ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'available';
 
+-- Enable Row Level Security and add policies
+ALTER TABLE public.inventory_serials ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS inventory_serials_staff_all ON public.inventory_serials;
+CREATE POLICY inventory_serials_staff_all ON public.inventory_serials FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
+
 -- 2. Create an atomic function in your Supabase SQL editor
-CREATE OR REPLACE FUNCTION assign_serial_number(target_product_id UUID)
+CREATE OR REPLACE FUNCTION public.assign_serial_number(target_product_id UUID)
 RETURNS TEXT AS $$
 DECLARE
   assigned_serial TEXT;
 BEGIN
   SELECT serial_number INTO assigned_serial
-  FROM inventory_serials
+  FROM public.inventory_serials
   WHERE product_id = target_product_id AND status = 'available'
   LIMIT 1
   FOR UPDATE SKIP LOCKED; -- Locks the row, ignores already-locked rows
 
   IF assigned_serial IS NOT NULL THEN
-    UPDATE inventory_serials 
+    UPDATE public.inventory_serials 
     SET status = 'sold' 
     WHERE serial_number = assigned_serial;
   END IF;
 
   RETURN assigned_serial;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp;
 
 -- Create database view to safely expose product columns to PostgREST
 CREATE OR REPLACE VIEW public.products_columns_view AS

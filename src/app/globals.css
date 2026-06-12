@@ -12,7 +12,7 @@
   :root {
     --background: 0 0% 100%; /* Pure White #FFFFFF */
     --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
+    --card: 240 4.8% 95.9%; /* bg-zinc-50 (#FAFAFA) */
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
@@ -52,7 +52,7 @@
   .dark {
     --background: 240 5.9% 3.9%; /* Premium Dark Obsidian #09090B */
     --foreground: 0 0% 98%;
-    --card: 240 5.9% 3.9%; /* Obsidian #09090B */
+    --card: 240 3.7% 9.9%; /* bg-zinc-900 (#18181B) */
     --card-foreground: 0 0% 98%;
     --popover: 240 5.9% 3.9%;
     --popover-foreground: 0 0% 98%;
@@ -87,7 +87,7 @@
   .admin-shell {
     --background: 240 5.9% 3.9%; /* Obsidian #09090B */
     --foreground: 0 0% 98%;
-    --card: 240 5.9% 3.9%;
+    --card: 240 3.7% 9.9%; /* bg-zinc-900 (#18181B) */
     --card-foreground: 0 0% 98%;
     --popover: 240 5.9% 3.9%;
     --popover-foreground: 0 0% 98%;
@@ -107,9 +107,14 @@
   }
 
   /* Global Micro-Scrollbar Setup */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: hsla(0, 0%, 50%, 0.15) transparent;
+  }
+
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
 
   ::-webkit-scrollbar-track {
@@ -316,6 +321,37 @@
   .dark .glass {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Bento Grid responsive auto-fit grid */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* Bento Card premium glassmorphism & translate transitions */
+  .bento-card {
+    border-radius: 1rem;
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--card) / 0.5);
+    backdrop-filter: blur(12px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .bento-card:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Tech Heading & Body Typography Primitives */
+  .tech-heading {
+    letter-spacing: -0.025em;
+    color: hsl(var(--foreground));
+  }
+
+  .tech-body {
+    line-height: 1.625;
+    color: hsl(var(--muted-foreground));
   }
   
   /* Gradient backgrounds */

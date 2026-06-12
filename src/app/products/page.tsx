@@ -55,33 +55,37 @@ async function fetchJsonArray(pathname: string, dataKey = 'data') {
 
 function ProductsPageSkeleton() {
   return (
-    <div className="relative overflow-hidden bg-slate-950 text-slate-200 min-h-screen">
-      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
-      <section className="py-10 sm:py-14">
-        <div className="container mx-auto px-4">
-          <div className="h-[340px] sm:h-[420px] w-full animate-pulse rounded-3xl bg-slate-900/60 border border-white/5" />
-        </div>
-      </section>
-      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-0 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-10">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="h-6 w-24 bg-cyan-500/20 rounded-full mb-4 animate-pulse" />
-              <div className="h-12 w-64 bg-slate-800 rounded-lg animate-pulse" />
+    <div className="relative min-h-screen bg-black text-zinc-100 font-sans">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f0f11_1px,transparent_1px),linear-gradient(to_bottom,#0f0f11_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[350px] w-[600px] -translate-x-1/2 bg-zinc-500/5 blur-[120px]" />
+      <section className="py-24 sm:py-32">
+        <div className="relative mx-auto max-w-7xl px-6 sm:px-8">
+          <div className="flex flex-col items-center text-center gap-6">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-6 w-28 bg-zinc-900 border border-zinc-800 rounded-full animate-pulse" />
+              <div className="h-14 w-80 bg-zinc-900/60 rounded-xl animate-pulse" />
+              <div className="h-4 w-72 bg-zinc-900/60 rounded-lg animate-pulse animate-pulse" />
             </div>
-            <div className="w-full max-w-md h-12 bg-slate-800 rounded-xl animate-pulse" />
+            <div className="w-full max-w-lg h-11 bg-zinc-900/40 border border-zinc-800 rounded-xl animate-pulse" />
+          </div>
+          <div className="mt-16 grid gap-6 grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="flex h-full flex-col rounded-2xl border border-zinc-900 bg-zinc-950/40 p-6 animate-pulse">
+                <div className="aspect-square w-full rounded-xl bg-zinc-900/60 mb-6" />
+                <div className="space-y-2">
+                  <div className="h-3 w-1/4 bg-zinc-900/60 rounded" />
+                  <div className="h-5 w-3/4 bg-zinc-900/60 rounded" />
+                  <div className="h-4 w-5/6 bg-zinc-900/60 rounded" />
+                </div>
+                <div className="mt-8 flex items-center justify-between pt-4 border-t border-zinc-900">
+                  <div className="h-6 w-20 bg-zinc-900/60 rounded" />
+                  <div className="h-9 w-9 bg-zinc-900/60 rounded-lg" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="space-y-3 rounded-2xl border border-white/5 bg-white/5 p-4 animate-pulse">
-              <div className="h-48 w-full rounded-xl bg-slate-800" />
-              <div className="h-4 w-3/4 bg-slate-800" />
-              <div className="h-4 w-1/2 bg-slate-800" />
-            </div>
-          ))}
-        </div>
-      </div>
+      </section>
     </div>
   );
 }

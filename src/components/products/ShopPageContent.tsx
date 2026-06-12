@@ -169,6 +169,24 @@ function applyAutoOffersToProducts(products: Product[], offers: AutoOffer[]): Pr
   });
 }
 
+function getSimplifiedDescription(desc: string | undefined | null): string {
+  if (!desc) return 'Premium hardware optimized for reliable performance.';
+  const clean = desc
+    .replace(/[#*`_\[\]()]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  const firstSentence = clean.split(/[.!?]/)[0];
+  if (firstSentence && firstSentence.length > 15 && firstSentence.length < 100) {
+    return firstSentence + '.';
+  }
+  
+  if (clean.length > 85) {
+    return clean.slice(0, 82) + '...';
+  }
+  return clean || 'Premium hardware optimized for reliable performance.';
+}
+
 function ProductGridImage({
   src,
   alt,
@@ -183,24 +201,24 @@ function ProductGridImage({
 
   if (!src || hasImageError) {
     return (
-      <div className="flex h-full w-full items-center justify-center rounded-[18px] border border-dashed border-white/10 bg-slate-950/60 text-center text-slate-500">
+      <div className="flex h-full w-full items-center justify-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/50 text-center text-zinc-600 transition-colors duration-300 group-hover:border-zinc-700">
         <div className="px-4">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/5 text-lg font-semibold text-slate-300">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-500">
             {initial}
           </div>
-          <p className="text-sm font-medium text-slate-300">Image unavailable</p>
+          <p className="text-[10px] uppercase tracking-wider font-medium text-zinc-500">No Image</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full w-full items-center justify-center rounded-[18px] border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_rgba(15,23,42,0.92)_62%)] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-white p-3">
+    <div className="flex h-full w-full items-center justify-center rounded-xl border border-zinc-900 bg-zinc-950/40 p-1.5 transition-all duration-300 group-hover:border-zinc-800">
+      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-white p-3 shadow-inner">
         <img
           src={src}
           alt={alt}
-          className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+          className="h-full w-full object-contain transition-all duration-500 ease-out group-hover:scale-[1.04]"
           loading="lazy"
           decoding="async"
           onError={() => setHasImageError(true)}
@@ -227,7 +245,7 @@ class ProductTileErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex min-h-[320px] flex-col justify-center rounded-2xl border border-dashed border-white/10 bg-slate-900/60 p-4 text-center text-sm text-slate-400">
+        <div className="flex min-h-[320px] flex-col justify-center rounded-3xl border border-dashed border-white/[0.08] bg-neutral-900/40 p-5 text-center text-xs text-neutral-400">
           Product unavailable
         </div>
       );
@@ -526,101 +544,140 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
   const resolvedResultsLabel = loading ? 'Loading...' : `${filteredProducts.length} items`;
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 text-slate-200">
-      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
-      <div className="pointer-events-none absolute right-0 top-0 h-[500px] w-[500px] rounded-full bg-cyan-500/10 blur-[120px]" />
+    <section className="relative min-h-screen bg-black text-zinc-100 font-sans antialiased selection:bg-zinc-800 selection:text-white">
+      {/* Subtle Grid Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f0f11_1px,transparent_1px),linear-gradient(to_bottom,#0f0f11_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+      
+      {/* Subtle Glows */}
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[350px] w-[600px] -translate-x-1/2 bg-zinc-500/5 blur-[120px]" />
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 lg:px-8 sm:pt-24">
+      <div className="relative mx-auto max-w-7xl px-6 pb-24 pt-24 sm:px-8 sm:pt-32">
         <div className="flex flex-col gap-12">
-          <div className="reveal-section flex flex-col items-center text-center gap-8" data-reveal-id="products-hero">
-            <div className={cn('reveal-item flex flex-col items-center', revealDelayClass(0))}>
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">
-                Catalog
+          {/* Hero Header */}
+          <div className="reveal-section flex flex-col items-center text-center gap-6" data-reveal-id="products-hero">
+            <div className={cn('reveal-item flex flex-col items-center gap-4', revealDelayClass(0))}>
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950 px-3.5 py-1 text-[10px] font-mono uppercase tracking-widest text-zinc-400">
+                Product Catalog
               </div>
-              <h1 className="mt-6 text-4xl font-semibold text-white sm:text-5xl lg:text-6xl">
-                Hardware <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-transparent">Inventory</span>
+              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl leading-[1.1] text-balance">
+                Professional Hardware. <br className="hidden sm:inline" />
+                <span className="text-zinc-500">Built to endure.</span>
               </h1>
-              <p className="mt-4 max-w-xl text-sm text-slate-400 sm:text-base">
-                {searchQuery ? `Results for "${searchQuery}"` : 'Explore verified equipment across every deployment size.'}
+              <p className="max-w-md text-sm text-zinc-400/90 leading-relaxed font-light">
+                {searchQuery 
+                  ? `Showing results for "${searchQuery}"` 
+                  : 'Enterprise-grade equipment and components curated for professional installations and IT infrastructure.'
+                }
               </p>
             </div>
 
-            <form onSubmit={handleSearch} className={cn('reveal-item w-full max-w-lg', revealDelayClass(90))}>
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500 transition-colors group-focus-within:text-cyan-400" />
-                <Input
+            {/* Command-bar style search */}
+            <form onSubmit={handleSearch} className={cn('reveal-item w-full max-w-lg mt-4', revealDelayClass(90))}>
+              <div className="relative group shadow-2xl rounded-xl">
+                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-zinc-300" />
+                <input
                   type="text"
-                  placeholder="Search products by name, brand, or category..."
+                  placeholder="Search catalog... (e.g. CCTV, RAM, Router)"
                   value={localSearchQuery}
                   onChange={(e) => setLocalSearchQuery(e.target.value)}
-                  className="h-14 w-full rounded-2xl border border-white/10 bg-slate-900/60 pl-12 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400/50 focus:bg-slate-900/80 focus:ring-2 focus:ring-cyan-500/20 transition-all duration-300 shadow-lg"
+                  className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-950/80 pl-10 pr-16 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700 focus:bg-zinc-950 transition-all duration-300 font-mono"
                 />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-900/50 text-[9px] font-mono text-zinc-500 pointer-events-none">
+                  <span>⏎</span>
+                </div>
               </div>
-              <p className="mt-3 text-xs text-slate-500 font-medium">{resolvedResultsLabel}</p>
+              <p className="mt-2.5 text-[10px] font-mono text-zinc-500 tracking-wider uppercase">{resolvedResultsLabel}</p>
             </form>
           </div>
 
+          {/* Control Bar (Category Filter + Sort Options) */}
           {categories.length > 0 && (
-            <div className="reveal-section flex flex-wrap justify-center gap-2 border-t border-b border-white/5 py-6" data-reveal-id="products-filters">
-              <button
-                type="button"
-                onClick={() => updateUrlParams({ category: '' })}
-                className={cn(
-                  'reveal-item rounded-xl border px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300',
-                  hasActiveCategory
-                    ? 'border-white/10 bg-white/5 text-slate-400 hover:border-cyan-400/40 hover:bg-cyan-500/5 hover:text-white'
-                    : 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]',
-                  revealDelayClass(0)
+            <div 
+              className="reveal-section sticky top-[64px] z-20 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-b border-zinc-900 bg-black/80 backdrop-blur-md py-4 px-2"
+              data-reveal-id="products-filters"
+            >
+              {/* Categories scrollable list */}
+              <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto overflow-x-auto no-scrollbar py-1">
+                <button
+                  type="button"
+                  onClick={() => updateUrlParams({ category: '' })}
+                  className={cn(
+                    'reveal-item rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 border whitespace-nowrap',
+                    !categoryFilter
+                      ? 'bg-zinc-100 text-black border-zinc-100'
+                      : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-zinc-900/40',
+                    revealDelayClass(0)
+                  )}
+                >
+                  All Products
+                </button>
+                {categories.map((category, idx) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => updateUrlParams({ category })}
+                    className={cn(
+                      'reveal-item rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 border whitespace-nowrap',
+                      categoryFilter === category
+                        ? 'bg-zinc-100 text-black border-zinc-100'
+                        : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-zinc-900/40',
+                      revealDelayClass(50 + idx * 20)
+                    )}
+                  >
+                    {category}
+                  </button>
+                ))}
+                {categoryFilter && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className={cn(
+                      'reveal-item rounded-lg border border-red-950 bg-red-950/20 px-3 py-1.5 text-xs font-medium text-red-400 transition-all duration-200 hover:bg-red-950/40 hover:text-red-300',
+                      revealDelayClass(120)
+                    )}
+                  >
+                    Reset
+                  </button>
                 )}
-              >
-                All Items
-              </button>
-              {categories.map((category, idx) => (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => updateUrlParams({ category })}
-                  className={cn(
-                    'reveal-item rounded-xl border px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300',
-                    categoryFilter === category
-                      ? 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]'
-                      : 'border-white/10 bg-white/5 text-slate-400 hover:border-cyan-400/40 hover:bg-cyan-500/5 hover:text-white',
-                    revealDelayClass(70 + idx * 30)
-                  )}
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Sort by</span>
+                <select
+                  value={sortOption}
+                  onChange={(e) => updateUrlParams({ sort: e.target.value })}
+                  className="bg-zinc-950 text-xs text-zinc-300 border border-zinc-800 rounded-lg px-3 py-1.5 focus:outline-none focus:border-zinc-700 hover:bg-zinc-900 transition-colors font-mono cursor-pointer"
                 >
-                  {category}
-                </button>
-              ))}
-              {categoryFilter && (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className={cn(
-                    'reveal-item rounded-xl border border-red-500/20 bg-red-500/5 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-red-400 transition-all duration-300 hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-300',
-                    revealDelayClass(140)
-                  )}
-                >
-                  Clear Filters
-                </button>
-              )}
+                  <option value="popularity">Popularity</option>
+                  <option value="newest">New Arrivals</option>
+                  <option value="price_asc">Price: Low to High</option>
+                  <option value="price_desc">Price: High to Low</option>
+                  <option value="rating">Highest Rated</option>
+                  <option value="name_asc">Name: A to Z</option>
+                </select>
+              </div>
             </div>
           )}
         </div>
 
-        <div className="reveal-section is-revealed mt-12" data-reveal-id="products-grid">
+        {/* Product Grid Area */}
+        <div className="reveal-section is-revealed mt-16" data-reveal-id="products-grid">
           {loading ? (
             <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(250px,1fr))] min-h-[400px]">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-4">
-                  <Skeleton className="mb-4 h-48 w-full rounded-xl" />
-                  <Skeleton className="h-5 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2 mb-4" />
-                  <div className="mt-auto flex items-center justify-between pt-4">
-                    <div className="flex flex-col gap-1">
-                      <Skeleton className="h-6 w-20" />
-                      <Skeleton className="h-4 w-12" />
+                <div key={i} className="flex h-full flex-col rounded-2xl border border-zinc-900 bg-zinc-950/40 p-6">
+                  <Skeleton className="mb-6 aspect-square w-full rounded-xl bg-zinc-900/60 animate-pulse" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-1/4 bg-zinc-900/60 rounded animate-pulse" />
+                    <Skeleton className="h-5 w-3/4 bg-zinc-900/60 rounded animate-pulse" />
+                    <Skeleton className="h-4 w-5/6 bg-zinc-900/60 rounded animate-pulse" />
+                  </div>
+                  <div className="mt-8 flex items-center justify-between pt-4 border-t border-zinc-900">
+                    <div className="flex flex-col gap-1 w-20">
+                      <Skeleton className="h-6 w-full bg-zinc-900/60 rounded animate-pulse" />
                     </div>
-                    <Skeleton className="h-9 w-9 rounded-lg" />
+                    <Skeleton className="h-9 w-9 rounded-lg bg-zinc-900/60 rounded animate-pulse" />
                   </div>
                 </div>
               ))}
@@ -647,57 +704,85 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                   offerPrice = activeTierPrice;
                 }
 
+                const simpleDesc = getSimplifiedDescription(product.description);
+
                 return (
                   <ProductTileErrorBoundary key={product.id || index} productId={product.id}>
                     <div
-                    className={cn(
-                      'group flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/60 p-4 opacity-100 transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-400/30'
-                    )}
-                  >
-                    <Link href={`/products/${product.id}`} className="block">
-                      <div className="relative mb-4 h-48 overflow-hidden rounded-xl">
-                        <ProductGridImage
-                          src={imageUrl}
-                          alt={displayName}
-                          fallbackText={displayName}
-                        />
-                      </div>
-                      <div className="flex items-start justify-between gap-3">
-                        <h3 className="text-base font-semibold text-white">{displayName}</h3>
-                      </div>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {product.brand ? `${product.brand} • ` : ''}
-                        {product.category || 'General'}
-                      </p>
-                    </Link>
+                      className="group relative flex h-full flex-col justify-between rounded-2xl border border-zinc-900 bg-zinc-950/40 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-zinc-800 hover:bg-zinc-950/60 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]"
+                    >
+                      <Link href={`/products/${product.id}`} className="block flex-grow">
+                        {/* Image Frame */}
+                        <div className="relative mb-6 aspect-square overflow-hidden rounded-xl bg-zinc-950 border border-zinc-900/50">
+                          <ProductGridImage
+                            src={imageUrl}
+                            alt={displayName}
+                            fallbackText={displayName}
+                          />
+                          {/* Discount Badge */}
+                          {product.discount_percentage && product.discount_percentage > 0 ? (
+                            <div className="absolute left-3 top-3 rounded-full bg-zinc-100 px-2 py-0.5 text-[9px] font-mono font-semibold text-black tracking-wider uppercase shadow-sm">
+                              -{product.discount_percentage}% OFF
+                            </div>
+                          ) : null}
+                        </div>
 
-                    <div className="mt-auto flex items-center justify-between pt-4">
-                      <div className="flex flex-col">
-                        <span className="text-lg font-semibold text-cyan-300">₹{(offerPrice ?? basePrice).toLocaleString()}</span>
-                        {offerPrice && (
-                          <span className="text-xs text-slate-500 line-through">₹{basePrice.toLocaleString()}</span>
-                        )}
+                        {/* Text Content */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-500">
+                              {product.brand || product.category || 'Hardware'}
+                            </span>
+                            {product.rating > 0 && (
+                              <div className="flex items-center gap-0.5 text-[10px] font-mono text-zinc-400">
+                                <span>★</span>
+                                <span>{product.rating.toFixed(1)}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <h3 className="text-base font-semibold tracking-tight text-white transition-colors group-hover:text-zinc-200">
+                            {displayName}
+                          </h3>
+                          
+                          <p className="text-xs font-light text-zinc-400 line-clamp-2 leading-relaxed">
+                            {simpleDesc}
+                          </p>
+                        </div>
+                      </Link>
+
+                      {/* Footer Actions */}
+                      <div className="mt-6 flex items-center justify-between pt-4 border-t border-zinc-900">
+                        <div className="flex flex-col">
+                          <span className="text-lg font-bold tracking-tight text-white">
+                            ₹{(offerPrice ?? basePrice).toLocaleString('en-IN')}
+                          </span>
+                          {offerPrice && (
+                            <span className="text-xs text-zinc-600 line-through font-light">
+                              ₹{basePrice.toLocaleString('en-IN')}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            addToCart(product);
+                          }}
+                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/50 text-zinc-200 transition-all duration-200 hover:border-zinc-700 hover:bg-zinc-100 hover:text-black hover:scale-105"
+                          aria-label={`Add ${displayName} to cart`}
+                        >
+                          <span className="text-base font-light">+</span>
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          addToCart(product);
-                        }}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-200 transition-colors hover:border-cyan-400/40 hover:bg-cyan-500/10"
-                        aria-label={`Add ${displayName} to cart`}
-                      >
-                        +
-                      </button>
-                    </div>
                     </div>
                   </ProductTileErrorBoundary>
                 );
               })}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-10 text-center text-slate-400">
+            <div className="rounded-2xl border border-dashed border-zinc-850 bg-zinc-950/20 p-12 text-center text-zinc-500 font-light text-sm">
               {fetchWarning || 'No products matched your search.'}
             </div>
           )}

@@ -89,7 +89,7 @@ export default function LocalServiceLandingPage({
   );
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-200">
+    <main className="relative min-h-screen overflow-hidden bg-[#121212] text-slate-200">
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="pointer-events-none absolute left-1/2 top-24 h-[32rem] w-[48rem] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-[140px]" />
 
@@ -124,10 +124,10 @@ export default function LocalServiceLandingPage({
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:border-purple-400/30">
-                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-purple-500/5 blur-2xl transition-all group-hover:bg-purple-500/10" />
+              <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:border-cyan-400/30">
+                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-cyan-500/5 blur-2xl transition-all group-hover:bg-cyan-500/10" />
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400">
                     <Clock3 className="h-6 w-6" />
                   </div>
                   <div>
@@ -135,8 +135,8 @@ export default function LocalServiceLandingPage({
                     <p className="text-2xl font-bold text-white">99.98% Local</p>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-purple-400/80">
-                  <div className="h-1.5 w-1.5 rounded-full bg-purple-400" />
+                <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-cyan-400/80">
+                  <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
                   Certified network availability for {locationLabel} service nodes.
                 </div>
               </div>
@@ -270,7 +270,7 @@ export default function LocalServiceLandingPage({
       </section>
 
       <section className="px-4 pb-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-3xl border border-cyan-400/20 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-violet-500/10 p-8 text-center">
+        <div className="mx-auto max-w-7xl rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 p-8 text-center">
           <h2 className="text-3xl font-semibold text-white">Need a fast local response?</h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-slate-300">
             Use the quote form for scope details or reach TecBunny directly on WhatsApp for urgent coordination.

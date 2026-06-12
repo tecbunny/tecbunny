@@ -509,7 +509,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(800px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(139, 92, 246, 0.15), transparent 40%);
+    background: radial-gradient(800px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(6, 182, 212, 0.15), transparent 40%);
     opacity: 0;
     transition: opacity 0.5s ease;
     pointer-events: none;
@@ -521,12 +521,12 @@
   }
 
   .spotlight-card--cyan::before {
-    background: radial-gradient(600px circle at 50% 50%, rgba(56, 189, 248, 0.18), transparent 42%);
+    background: radial-gradient(600px circle at 50% 50%, rgba(6, 182, 212, 0.18), transparent 42%);
   }
 
   .config-tab.active {
-    background: rgba(139, 92, 246, 0.12);
-    border-color: rgba(139, 92, 246, 0.6);
+    background: rgba(6, 182, 212, 0.12);
+    border-color: rgba(6, 182, 212, 0.6);
     color: #ffffff;
   }
 
@@ -711,7 +711,7 @@
 
   .glitch-text::after {
     left: -2px;
-    text-shadow: -1px 0 #8b5cf6;
+    text-shadow: -1px 0 #0891b2;
     animation: glitch-anim 2.5s infinite linear alternate-reverse;
   }
 
@@ -873,7 +873,7 @@
     background-color: #121212;
     background-image:
       radial-gradient(1200px 600px at 10% -10%, rgba(34, 211, 238, 0.05), rgba(18, 18, 18, 0)),
-      radial-gradient(1000px 700px at 90% 10%, rgba(139, 92, 246, 0.05), rgba(18, 18, 18, 0)),
+      radial-gradient(1000px 700px at 90% 10%, rgba(6, 182, 212, 0.05), rgba(18, 18, 18, 0)),
       linear-gradient(180deg, rgba(18, 18, 18, 0.9) 0%, rgba(18, 18, 18, 1) 60%, rgba(18, 18, 18, 1) 100%);
     color: #f1f5f9;
     isolation: isolate;
@@ -895,7 +895,7 @@
     inset: 0;
     background:
       radial-gradient(900px 600px at 0% 30%, rgba(34, 211, 238, 0.04), rgba(18, 18, 18, 0)),
-      radial-gradient(900px 600px at 100% 70%, rgba(59, 130, 246, 0.03), rgba(18, 18, 18, 0));
+      radial-gradient(900px 600px at 100% 70%, rgba(6, 182, 212, 0.03), rgba(18, 18, 18, 0));
     opacity: 0.5;
     pointer-events: none;
     z-index: 0;
@@ -1133,7 +1133,7 @@ html[data-promo-banner="expanded"] .site-shell {
             background: rgba(15, 23, 42, 0.65);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 40px rgba(139, 92, 246, 0.15);
+            box-shadow: 0 0 40px rgba(6, 182, 212, 0.15);
           }
         
 
@@ -1141,14 +1141,14 @@ html[data-promo-banner="expanded"] .site-shell {
           background: rgba(15, 23, 42, 0.65);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 0 0 40px rgba(139, 92, 246, 0.15);
+          box-shadow: 0 0 40px rgba(6, 182, 212, 0.15);
         }
         .floating-label input:focus ~ label,
         .floating-label input:not(:placeholder-shown) ~ label {
           top: -0.5rem;
           left: 0.75rem;
           font-size: 0.75rem;
-          color: #8b5cf6;
+          color: #06b6d4;
           background-color: #0f172a;
           padding: 0 0.25rem;
         }
@@ -1163,8 +1163,8 @@ html[data-promo-banner="expanded"] .site-shell {
         .crm-card {
           background: rgba(15, 23, 42, 0.7);
           backdrop-filter: blur(24px);
-          border: 1px solid rgba(99, 102, 241, 0.2);
-          box-shadow: 0 0 50px rgba(99, 102, 241, 0.08);
+          border: 1px solid rgba(6, 182, 212, 0.2);
+          box-shadow: 0 0 50px rgba(6, 182, 212, 0.08);
         }
       
 
@@ -1273,11 +1273,11 @@ html[data-promo-banner="expanded"] .site-shell {
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #030712; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #8b5cf6; }
+        ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
         .glass-panel {
           background: rgba(15, 23, 42, 0.35);
           border: 1px solid rgba(255, 255, 255, 0.06);
-          box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.08);
+          box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.08);
           backdrop-filter: blur(10px);
         }
         .nav-item {
@@ -1285,12 +1285,12 @@ html[data-promo-banner="expanded"] .site-shell {
         }
         .nav-item:hover {
           color: #fff;
-          background: linear-gradient(90deg, rgba(139, 92, 246, 0.15), transparent);
-          border-left-color: #8b5cf6;
+          background: linear-gradient(90deg, rgba(6, 182, 212, 0.15), transparent);
+          border-left-color: #06b6d4;
         }
         .nav-item.active {
           color: #fff;
-          background: linear-gradient(90deg, rgba(139, 92, 246, 0.2), transparent);
-          border-left-color: #8b5cf6;
+          background: linear-gradient(90deg, rgba(6, 182, 212, 0.2), transparent);
+          border-left-color: #06b6d4;
         }
       

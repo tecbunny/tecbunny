@@ -63,7 +63,7 @@ export function CartItemCard({ item }: CartItemCardProps) {
     <div
       className={`p-2.5 rounded-md flex flex-col sm:flex-row items-center gap-3 group transition-colors border border-white/10 bg-white/5 ${
         isServiceItem
-          ? 'border-l-2 border-purple-400 bg-purple-500/10'
+          ? 'border-l-2 border-cyan-400 bg-cyan-500/10'
           : 'hover:border-cyan-400/30'
       }`}
     >
@@ -93,7 +93,7 @@ export function CartItemCard({ item }: CartItemCardProps) {
           <span className="block text-cyan-300 font-semibold text-sm">{formatCurrency(unitPrice)}</span>
         )}
         {isServiceItem && (
-          <span className="mt-0.5 inline-flex text-[9px] uppercase font-bold text-slate-200 bg-purple-500/15 px-1.5 py-[3px] rounded">
+          <span className="mt-0.5 inline-flex text-[9px] uppercase font-bold text-slate-200 bg-cyan-500/15 px-1.5 py-[3px] rounded">
             Service Item
           </span>
         )}

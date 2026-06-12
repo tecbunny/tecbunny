@@ -473,18 +473,18 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
   };
 
   return (
-    <div className="relative overflow-hidden bg-slate-950 text-slate-200">
+    <div className="relative overflow-hidden bg-[#121212] text-slate-200">
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
-      <div className="pointer-events-none absolute left-1/2 top-32 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-blue-500/10 blur-[140px]" />
+      <div className="pointer-events-none absolute left-1/2 top-32 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-[140px]" />
 
       <div className="relative mx-auto flex max-w-7xl flex-col gap-16 px-4 pb-20 pt-16 sm:px-6 lg:px-8 sm:pt-24">
         <section className="reveal-section text-center" data-reveal-id="services-hero">
-          <div className={cn('reveal-item inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-violet-300', revealDelayClass(0))}>
+          <div className={cn('reveal-item inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300', revealDelayClass(0))}>
             End-to-end Solutions
           </div>
           <h1 className={cn('reveal-item mt-6 text-4xl font-semibold text-white sm:text-5xl lg:text-6xl', revealDelayClass(70))}>
             Engineering{' '}
-            <span className="bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-cyan-300 via-cyan-400 to-cyan-500 bg-clip-text text-transparent">
               Sanctuary
             </span>
           </h1>
@@ -526,9 +526,9 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
             </Button>
           </div>
  
-          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-slate-900/60 p-6 shadow-md', revealDelayClass(80))}>
+          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-white/5 bg-zinc-900/60 p-6 shadow-md', revealDelayClass(80))}>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-300 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-xl bg-cyan-500/10 text-cyan-300 flex items-center justify-center">
                 <Shield className="h-5 w-5" />
               </div>
               <div>
@@ -538,7 +538,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
             </div>
             <Button
               variant="outline"
-              className="justify-center border-blue-400/40 text-blue-200 hover:border-blue-400/70 hover:bg-blue-500/10"
+              className="justify-center border-cyan-400/40 text-cyan-200 hover:border-cyan-400/70 hover:bg-cyan-500/10"
               onClick={() => {
                 void trackEvent('services_cta_click', { cta: 'get_support', destination: '/contact' });
                 router.push('/contact');
@@ -671,7 +671,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
                           return (
                             <div
                               key={tier.label}
-                              className={cn('reveal-item flex flex-col gap-2 rounded-lg border border-white/5 bg-slate-950/60 p-4', revealDelayClass(200 + tierIndex * 60))}
+                               className={cn('reveal-item flex flex-col gap-2 rounded-lg border border-white/5 bg-zinc-950/60 p-4', revealDelayClass(200 + tierIndex * 60))}
                             >
                               <div className="flex items-center justify-between">
                                 <p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">{tier.label}</p>
@@ -703,7 +703,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
         <section className="reveal-section rounded-3xl border border-white/5 bg-slate-900/40 p-6 sm:p-10" data-reveal-id="services-amc">
           <div className={cn('reveal-item flex items-center gap-3', revealDelayClass(0))}>
-            <div className="h-8 w-1 rounded-full bg-violet-400" />
+            <div className="h-8 w-1 rounded-full bg-cyan-400" />
             <div>
               <h2 className="text-2xl font-semibold text-white">Annual Maintenance Contract (AMC) Terms</h2>
               <p className="text-sm text-slate-400">General terms and conditions for CCTV and PC AMC plans.</p>
@@ -741,7 +741,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
           <div className="mt-8 grid gap-4">
             {amcTerms.map((term, index) => (
-              <div key={term.title} className={cn('reveal-item rounded-2xl border border-white/5 bg-slate-950/60 p-5', revealDelayClass(120 + index * 70))}>
+              <div key={term.title} className={cn('reveal-item rounded-2xl border border-white/5 bg-zinc-950/60 p-5', revealDelayClass(120 + index * 70))}>
                 <h3 className="text-lg font-semibold text-white">{term.title}</h3>
                 {term.description && <p className="mt-1 text-sm text-slate-400">{term.description}</p>}
                 {term.bullets && (
@@ -771,7 +771,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
           </div>
         </section>
 
-        <section className="reveal-section rounded-2xl border border-white/10 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-violet-500/10 p-8 text-center" data-reveal-id="services-closing-cta">
+        <section className="reveal-section rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 p-8 text-center" data-reveal-id="services-closing-cta">
           <h2 className={cn('reveal-item text-2xl font-semibold text-white', revealDelayClass(0))}>Need Custom Solutions?</h2>
           <p className={cn('reveal-item mx-auto mt-3 max-w-md text-sm text-slate-400', revealDelayClass(70))}>
             Share your requirements and our team will craft a tailored setup for your space.

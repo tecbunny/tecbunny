@@ -172,13 +172,13 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
     <div className="flex h-screen overflow-hidden bg-[#030712] text-slate-200">
       
 
-      <aside className="hidden md:flex w-64 flex-col border-r border-white/5 bg-[#030712] shadow-xl shadow-purple-500/5">
+      <aside className="hidden md:flex w-64 flex-col border-r border-white/5 bg-[#030712] shadow-xl shadow-cyan-500/5">
         <div className="h-16 flex items-center px-6 border-b border-white/5 bg-[#030712]/95 backdrop-blur">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 flex items-center justify-center bg-purple-500/10 rounded-lg border border-purple-400/20">
-              <User className="h-4 w-4 text-purple-300" />
+            <div className="w-8 h-8 flex items-center justify-center bg-cyan-500/10 rounded-lg border border-cyan-400/20">
+              <User className="h-4 w-4 text-cyan-300" />
             </div>
-            <span className="font-tech font-bold text-xl text-white tracking-wide">USER<span className="text-purple-300">.</span></span>
+            <span className="font-tech font-bold text-xl text-white tracking-wide">USER<span className="text-cyan-300">.</span></span>
           </div>
         </div>
 
@@ -211,12 +211,12 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
 
         <div className="p-6 border-t border-white/5 bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white text-xs font-bold">
               {initials || 'TB'}
             </div>
             <div>
               <p className="text-sm font-bold text-white leading-none">{displayName}</p>
-              <p className="text-[10px] text-purple-300 leading-none mt-1">Tier: {planLabel}</p>
+              <p className="text-[10px] text-cyan-300 leading-none mt-1">Tier: {planLabel}</p>
             </div>
             <button className="ml-auto text-slate-500 hover:text-white">
               <XCircle className="h-4 w-4" />
@@ -235,7 +235,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
             <Button
               type="button"
               variant="outline"
-              className="hidden sm:flex items-center gap-2 border-purple-400/30 bg-purple-400/10 text-purple-200 text-xs hover:bg-purple-400 hover:text-white"
+              className="hidden sm:flex items-center gap-2 border-cyan-400/30 bg-cyan-400/10 text-cyan-200 text-xs hover:bg-cyan-400 hover:text-white"
               onClick={() => window.location.href = '/contact'}
             >
               <Plus className="h-4 w-4" /> New Request
@@ -265,7 +265,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                   </div>
                   <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-lg">
                     <span className="block text-xs text-slate-500 uppercase">Plan</span>
-                    <span className="text-purple-300 font-bold">{planLabel}</span>
+                    <span className="text-cyan-300 font-bold">{planLabel}</span>
                   </div>
                 </div>
               </div>
@@ -276,7 +276,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                   <svg className="w-full h-full" viewBox="0 0 100 100">
                     <circle className="text-slate-800 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent"></circle>
                     <circle
-                      className="text-purple-400 stroke-current"
+                      className="text-cyan-400 stroke-current"
                       strokeWidth="8"
                       strokeLinecap="round"
                       cx="50"
@@ -384,7 +384,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
                   <tbody className="divide-y divide-white/5">
                     {serviceTickets && serviceTickets.length > 0 ? serviceTickets.map((log) => (
                       <tr key={log.id} className="hover:bg-white/5 transition-colors">
-                        <td className="px-6 py-4 font-mono text-purple-300">#{log.id.slice(0, 8)}</td>
+                        <td className="px-6 py-4 font-mono text-cyan-300">#{log.id.slice(0, 8)}</td>
                         <td className="px-6 py-4">{log.issue_description || 'Service request'}</td>
                         <td className="px-6 py-4">{log.created_at ? new Date(log.created_at).toLocaleDateString() : '—'}</td>
                         <td className="px-6 py-4">
@@ -404,8 +404,8 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="glass-panel p-6 rounded-2xl space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-purple-500/10">
-                    <Edit className="h-5 w-5 text-purple-300" />
+                  <div className="p-2 rounded-full bg-cyan-500/10">
+                    <Edit className="h-5 w-5 text-cyan-300" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">Profile Settings</h3>

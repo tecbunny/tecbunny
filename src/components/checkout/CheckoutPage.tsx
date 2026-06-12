@@ -581,60 +581,51 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-200 checkout-dark">
-      
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-zinc-800 selection:text-white">
+      <section className="pt-32 pb-24 relative">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.15] pointer-events-none"></div>
 
-      <section className="pt-28 pb-16 relative">
-        <div className="fixed inset-0 bg-noise opacity-5 pointer-events-none"></div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex items-center justify-between mb-8">
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white font-tech">Confirm Your Order</h1>
-              <p className="text-sm text-slate-400">Securely verify details and confirm your order.</p>
+              <h1 className="text-3xl font-bold tracking-tight text-white font-sans">Checkout</h1>
+              <p className="text-sm text-zinc-400 mt-1">Review your details and complete your purchase.</p>
             </div>
             <button
               type="button"
               onClick={() => window.location.href = '/cart'}
-              className="magnetic-btn hidden md:flex items-center gap-2 px-6 py-2.5 rounded-lg border border-white/10 hover:bg-white/5 transition-all text-sm font-bold text-slate-400 hover:text-white"
+              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white transition-colors self-start md:self-auto"
             >
-              <ArrowLeft className="h-3 w-3" /> Back
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to Cart
             </button>
           </div>
 
-          <div className="hidden md:flex justify-center mb-10">
-            <div className="flex items-center gap-1 p-1.5 rounded-full bg-white/5 border border-white/5 backdrop-blur-md shadow-lg">
-              <div className="flex items-center gap-2 px-4 py-2">
-                <span className="w-6 h-6 rounded-full bg-cyan-400 text-slate-900 flex items-center justify-center text-xs font-bold">1</span>
-                <span className="text-xs text-cyan-300 font-bold">Cart</span>
-              </div>
-              <div className="w-8 h-px bg-white/10"></div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-cyan-400/30">
-                <span className="w-6 h-6 rounded-full bg-cyan-400 text-slate-900 flex items-center justify-center text-xs font-bold">2</span>
-                <span className="text-xs text-white font-bold">Details</span>
-              </div>
-              <div className="w-8 h-px bg-white/10"></div>
-              <div className="flex items-center gap-2 px-4 py-2 opacity-50">
-                <span className="w-6 h-6 rounded-full border border-white/20 flex items-center justify-center text-xs font-bold">3</span>
-                <span className="text-xs text-slate-400">Done</span>
-              </div>
+          <div className="hidden md:flex justify-center mb-16">
+            <div className="flex items-center gap-4 text-[10px] tracking-wider uppercase font-semibold text-zinc-500">
+              <span className="text-zinc-500">01 Cart</span>
+              <span className="text-zinc-800">/</span>
+              <span className="text-white border-b border-white pb-0.5 font-bold">02 Details</span>
+              <span className="text-zinc-800">/</span>
+              <span className="text-zinc-600">03 Done</span>
             </div>
           </div>
 
           <form
-            className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start"
             onSubmit={(event) => {
               event.preventDefault();
               void handlePlaceOrder();
             }}
           >
             <div className="lg:col-span-2 space-y-8">
-              <div className="glass-panel p-6 rounded-2xl">
-                <h3 className="text-xl font-bold text-white font-tech mb-6 flex items-center gap-2">
-                  <User className="h-5 w-5 text-purple-300" /> Contact & Billing
-                </h3>
+              <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-8 space-y-6 backdrop-blur-md animate-fade-in">
+                <div className="flex items-center gap-3 pb-2 border-b border-zinc-800/50">
+                  <User className="h-4 w-4 text-zinc-400" />
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider font-sans">Contact & Billing</h2>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="input-group relative">
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="name" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Full Name</label>
                     <input
                       type="text"
                       id="name"
@@ -642,15 +633,15 @@ export default function CheckoutPage() {
                       value={customerInfo.name}
                       onChange={(event) => handleInputChange('name', event.target.value)}
                       onBlur={(event) => handleInputBlur('name', event.target.value)}
-                      className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.name ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
-                      placeholder=" "
+                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.name ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                      placeholder="John Doe"
                     />
-                    <label htmlFor="name" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Full Name</label>
                     {fieldErrors.name && (
                       <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.name}</span>
                     )}
                   </div>
-                  <div className="input-group relative">
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="phone" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Phone Number</label>
                     <input
                       type="tel"
                       id="phone"
@@ -658,15 +649,15 @@ export default function CheckoutPage() {
                       value={customerInfo.phone}
                       onChange={(event) => handleInputChange('phone', event.target.value)}
                       onBlur={(event) => handleInputBlur('phone', event.target.value)}
-                      className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.phone ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
-                      placeholder=" "
+                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.phone ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                      placeholder="e.g. 9876543210"
                     />
-                    <label htmlFor="phone" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Phone Number</label>
                     {fieldErrors.phone && (
                       <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.phone}</span>
                     )}
                   </div>
-                  <div className="input-group relative">
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="email" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Email Address</label>
                     <input
                       type="email"
                       id="email"
@@ -674,28 +665,27 @@ export default function CheckoutPage() {
                       value={customerInfo.email}
                       onChange={(event) => handleInputChange('email', event.target.value)}
                       onBlur={(event) => handleInputBlur('email', event.target.value)}
-                      className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.email ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
-                      placeholder=" "
+                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.email ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                      placeholder="john@example.com"
                     />
-                    <label htmlFor="email" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Email Address</label>
                     {fieldErrors.email && (
                       <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.email}</span>
                     )}
                   </div>
-                  <div className="input-group relative">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="gstin" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">GSTIN (Optional)</label>
+                      {isFetchingGst && <span className="h-3 w-3 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>}
+                    </div>
                     <input
                       type="text"
                       id="gstin"
                       maxLength={15}
                       value={customerInfo.gstin}
                       onChange={(event) => handleInputChange('gstin', event.target.value.toUpperCase())}
-                      className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${gstError ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
-                      placeholder=" "
+                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${gstError ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                      placeholder="15-character GSTIN"
                     />
-                    <label htmlFor="gstin" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none flex items-center gap-2">
-                      GSTIN (Optional - B2B)
-                      {isFetchingGst && <span className="h-3 w-3 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>}
-                    </label>
                     {gstError && (
                       <span className="text-[10px] text-red-400 mt-1 block pl-1">{gstError}</span>
                     )}
@@ -703,12 +693,16 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="glass-panel p-6 rounded-2xl">
-                <h3 className="text-xl font-bold text-white font-tech mb-6 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-cyan-300" /> {!!quote ? 'Delivery & Installation' : 'Delivery Address'}
-                </h3>
+              <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-8 space-y-6 backdrop-blur-md animate-fade-in">
+                <div className="flex items-center gap-3 pb-2 border-b border-zinc-800/50">
+                  <MapPin className="h-4 w-4 text-zinc-400" />
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider font-sans">{!!quote ? 'Delivery & Installation' : 'Delivery Address'}</h2>
+                </div>
                 <div className="space-y-6">
-                  <div className="input-group relative">
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="address" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                      {!!quote ? 'Installation Address (Goa)' : 'Complete Delivery Address'}
+                    </label>
                     <textarea
                       id="address"
                       rows={3}
@@ -716,12 +710,9 @@ export default function CheckoutPage() {
                       value={customerInfo.address}
                       onChange={(event) => handleInputChange('address', event.target.value)}
                       onBlur={(event) => handleInputBlur('address', event.target.value)}
-                      className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.address ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
-                      placeholder=" "
+                      className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.address ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                      placeholder="Apartment, suite, unit, building, street address"
                     ></textarea>
-                    <label htmlFor="address" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">
-                      {!!quote ? 'Installation Address (Goa)' : 'Complete Delivery Address'}
-                    </label>
                     {fieldErrors.address && (
                       <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.address}</span>
                     )}
@@ -729,37 +720,39 @@ export default function CheckoutPage() {
 
                   {!!quote && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="input-group relative">
+                      <div className="flex flex-col gap-1.5">
+                        <label htmlFor="date" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Preferred Install Date</label>
                         <input
                           type="date"
                           id="date"
                           value={customerInfo.installDate}
                           onChange={(event) => handleInputChange('installDate', event.target.value)}
-                          className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
-                          placeholder=" "
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400 transition-all placeholder:text-zinc-700"
                         />
-                        <label htmlFor="date" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Preferred Install Date</label>
                       </div>
-                      <div className="input-group relative">
-                        <select
-                          id="readiness"
-                          value={customerInfo.siteStatus}
-                          onChange={(event) => handleInputChange('siteStatus', event.target.value)}
-                          className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors appearance-none"
-                        >
-                          <option value="" className="bg-[#0f172a]">Select Status</option>
-                          <option value="ready" className="bg-[#0f172a]">Site Ready (Plaster/Paint Done)</option>
-                          <option value="construction" className="bg-[#0f172a]">Under Construction (Cabling Phase)</option>
-                          <option value="renovation" className="bg-[#0f172a]">Renovation (Retrofit)</option>
-                        </select>
-                        <label htmlFor="readiness" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Site Status</label>
-                        <ChevronDown className="absolute right-4 top-3.5 h-4 w-4 text-slate-500 pointer-events-none" />
+                      <div className="flex flex-col gap-1.5">
+                        <label htmlFor="readiness" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Site Status</label>
+                        <div className="relative">
+                          <select
+                            id="readiness"
+                            value={customerInfo.siteStatus}
+                            onChange={(event) => handleInputChange('siteStatus', event.target.value)}
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400 transition-all appearance-none pr-10"
+                          >
+                            <option value="" className="bg-[#0f172a]">Select Status</option>
+                            <option value="ready" className="bg-[#0f172a]">Site Ready (Plaster/Paint Done)</option>
+                            <option value="construction" className="bg-[#0f172a]">Under Construction (Cabling Phase)</option>
+                            <option value="renovation" className="bg-[#0f172a]">Renovation (Retrofit)</option>
+                          </select>
+                          <ChevronDown className="absolute right-4 top-3.5 h-4 w-4 text-zinc-500 pointer-events-none" />
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="input-group relative">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="city" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">City</label>
                       <input
                         type="text"
                         id="city"
@@ -767,15 +760,15 @@ export default function CheckoutPage() {
                         value={customerInfo.city}
                         onChange={(event) => handleInputChange('city', event.target.value)}
                         onBlur={(event) => handleInputBlur('city', event.target.value)}
-                        className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.city ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
-                        placeholder=" "
+                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.city ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                        placeholder="Panaji"
                       />
-                      <label htmlFor="city" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">City</label>
                       {fieldErrors.city && (
                         <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.city}</span>
                       )}
                     </div>
-                    <div className="input-group relative">
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="state" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">State</label>
                       <input
                         type="text"
                         id="state"
@@ -783,15 +776,15 @@ export default function CheckoutPage() {
                         value={customerInfo.state}
                         onChange={(event) => handleInputChange('state', event.target.value)}
                         onBlur={(event) => handleInputBlur('state', event.target.value)}
-                        className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.state ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
-                        placeholder=" "
+                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.state ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                        placeholder="Goa"
                       />
-                      <label htmlFor="state" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">State</label>
                       {fieldErrors.state && (
                         <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.state}</span>
                       )}
                     </div>
-                    <div className="input-group relative">
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="pincode" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Pincode</label>
                       <input
                         type="text"
                         id="pincode"
@@ -799,66 +792,66 @@ export default function CheckoutPage() {
                         value={customerInfo.pincode}
                         onChange={(event) => handlePincodeChange(event.target.value)}
                         onBlur={(event) => handleInputBlur('pincode', event.target.value)}
-                        className={`peer w-full bg-white/5 border rounded-lg px-4 py-3 text-white outline-none transition-colors placeholder-transparent ${fieldErrors.pincode ? 'border-red-500/80 focus:border-red-500' : 'border-white/10 focus:border-cyan-400'}`}
-                        placeholder=" "
+                        className={`w-full bg-zinc-950 border rounded-lg px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-zinc-700 ${fieldErrors.pincode ? 'border-red-500/80 focus:ring-2 focus:ring-red-500/20 focus:border-red-500' : 'border-zinc-800 focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400'}`}
+                        placeholder="6-digit PIN"
                       />
-                      <label htmlFor="pincode" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Pincode</label>
                       {fieldErrors.pincode && (
                         <span className="text-[10px] text-red-400 mt-1 block pl-1">{fieldErrors.pincode}</span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs text-slate-500">
-                    <Shield className="h-4 w-4 text-cyan-300" />
+                  <div className="flex items-center gap-2 text-[11px] text-zinc-500 font-medium">
+                    <Shield className="h-3.5 w-3.5 text-zinc-500" />
                     All hardware orders are eligible for secure shipping.
                   </div>
 
-                  <div className="input-group relative">
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="notes" className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Order Notes (Optional)</label>
                     <textarea
                       id="notes"
                       rows={2}
                       value={customerInfo.notes}
                       onChange={(event) => handleInputChange('notes', event.target.value)}
-                      className="peer w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white outline-none focus:border-cyan-400 transition-colors placeholder-transparent"
-                      placeholder=" "
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400 transition-all placeholder:text-zinc-700"
+                      placeholder="Delivery instructions, landmarks, etc."
                     ></textarea>
-                    <label htmlFor="notes" className="absolute left-4 top-3 text-slate-500 text-sm transition-all pointer-events-none">Order Notes (Optional)</label>
                   </div>
                 </div>
               </div>
 
-              <div className="glass-panel p-6 rounded-2xl">
-                <h3 className="text-xl font-bold text-white font-tech mb-6 flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-emerald-300" /> Payment Method
-                </h3>
+              <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-8 space-y-6 backdrop-blur-md animate-fade-in">
+                <div className="flex items-center gap-3 pb-2 border-b border-zinc-800/50">
+                  <Wallet className="h-4 w-4 text-zinc-400" />
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wider font-sans">Payment Method</h2>
+                </div>
                 <div className="space-y-4">
                   {paymentLoading && (
                     <div className="space-y-4 min-h-[220px]">
                       {Array.from({ length: 3 }).map((_, index) => (
-                        <div key={index} className="h-16 w-full animate-pulse rounded-xl border border-white/5 bg-white/5"></div>
+                        <div key={index} className="h-16 w-full animate-pulse rounded-xl border border-zinc-800/30 bg-zinc-900/40"></div>
                       ))}
                     </div>
                   )}
                   {!paymentLoading && getEnabledPaymentMethods().length === 0 && (
-                    <div className="text-slate-400">No payment methods available. Please contact support.</div>
+                    <div className="text-zinc-500 text-sm text-center py-6">No payment methods available. Please contact support.</div>
                   )}
                   {!paymentLoading && getEnabledPaymentMethods().map((method) => {
                     const getPaymentIcon = (methodId: string) => {
                       switch (methodId) {
                         case 'cod':
-                          return <Banknote className="h-5 w-5 text-emerald-300" />;
+                          return <Banknote className="h-5 w-5" />;
                         case 'upi':
-                          return <QrCode className="h-5 w-5 text-purple-300" />;
+                          return <QrCode className="h-5 w-5" />;
                         case 'payu':
-                          return <CreditCard className="h-5 w-5 text-blue-300" />;
+                          return <CreditCard className="h-5 w-5" />;
                         default:
-                          return <Wallet className="h-5 w-5 text-slate-500" />;
+                          return <Wallet className="h-5 w-5" />;
                       }
                     };
 
                     return (
-                      <label key={method.id} className="radio-card cursor-pointer block relative">
+                      <label key={method.id} className="cursor-pointer block relative group">
                         <input
                           type="radio"
                           name="payment"
@@ -867,11 +860,23 @@ export default function CheckoutPage() {
                           onChange={() => setSelectedPaymentMethod(method.id)}
                           className="hidden"
                         />
-                        <div className="border border-white/10 rounded-xl p-4 flex items-center gap-4 transition-all hover:bg-white/5">
-                          <div className="radio-circle w-5 h-5 rounded-full border-2 border-slate-600 transition-colors"></div>
+                        <div className={`border rounded-xl p-5 flex items-center gap-4 transition-all ${
+                          selectedPaymentMethod === method.id
+                            ? 'border-cyan-500 bg-cyan-950/10 shadow-md shadow-cyan-950/20'
+                            : 'border-zinc-800 bg-zinc-950 hover:bg-zinc-900/30 hover:border-zinc-700'
+                        }`}>
+                          <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                            selectedPaymentMethod === method.id
+                              ? 'border-cyan-500 bg-cyan-500'
+                              : 'border-zinc-700 bg-transparent group-hover:border-zinc-500'
+                          }`}>
+                            {selectedPaymentMethod === method.id && (
+                              <div className="w-1.5 h-1.5 rounded-full bg-zinc-950" />
+                            )}
+                          </div>
                           <div className="flex-1">
-                            <span className="block text-white font-bold">{method.name}</span>
-                            <span className="text-xs text-slate-400">
+                            <span className="block text-sm font-semibold text-white">{method.name}</span>
+                            <span className="text-xs text-zinc-400 mt-1 block">
                               {method.type === 'online'
                                 ? 'Pay online securely'
                                 : method.id === 'cod'
@@ -881,78 +886,78 @@ export default function CheckoutPage() {
                                     : 'Offline payment'}
                             </span>
                           </div>
-                          {getPaymentIcon(method.id)}
+                          <div className={`transition-colors ${selectedPaymentMethod === method.id ? 'text-cyan-400' : 'text-zinc-500'}`}>
+                            {getPaymentIcon(method.id)}
+                          </div>
                         </div>
                       </label>
                     );
                   })}
                 </div>
-                
+
                 {/* Trust Badges & Compliance */}
-                <div className="mt-8 pt-6 border-t border-white/5 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="flex flex-col items-center text-center gap-2">
-                    <Shield className="h-6 w-6 text-emerald-400" />
-                    <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">BIS Certified Hardware</span>
+                <div className="mt-10 pt-8 border-t border-zinc-800/60 grid grid-cols-2 sm:grid-cols-4 gap-6">
+                  <div className="flex flex-col items-center text-center gap-2.5">
+                    <Shield className="h-5 w-5 text-zinc-400" />
+                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider leading-snug">BIS Certified Hardware</span>
                   </div>
-                  <div className="flex flex-col items-center text-center gap-2">
-                    <CheckCircle className="h-6 w-6 text-cyan-400" />
-                    <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Regional Tech Compliance</span>
+                  <div className="flex flex-col items-center text-center gap-2.5">
+                    <CheckCircle className="h-5 w-5 text-zinc-400" />
+                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider leading-snug">Regional Tech Compliance</span>
                   </div>
-                  <div className="flex flex-col items-center text-center gap-2">
-                    <CreditCard className="h-6 w-6 text-blue-400" />
-                    <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Secure UPI/Netbanking</span>
+                  <div className="flex flex-col items-center text-center gap-2.5">
+                    <CreditCard className="h-5 w-5 text-zinc-400" />
+                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider leading-snug">Secure UPI / Cards</span>
                   </div>
-                  <div className="flex flex-col items-center text-center gap-2">
-                    <User className="h-6 w-6 text-purple-400" />
-                    <span className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Verified Installer Network</span>
+                  <div className="flex flex-col items-center text-center gap-2.5">
+                    <User className="h-5 w-5 text-zinc-400" />
+                    <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider leading-snug">Verified Installer Network</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="lg:col-span-1">
-              <div className="sticky top-24 space-y-6">
-                <div className="glass-panel p-6 rounded-2xl border-t-4 border-cyan-400">
-                  <h3 className="text-xl font-bold text-white font-tech mb-6">Invoice Preview</h3>
+              <div className="sticky top-28 space-y-6">
+                <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-8 space-y-6 backdrop-blur-md shadow-xl">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider font-sans pb-2 border-b border-zinc-800/50">Summary</h3>
 
-                  <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-2">
+                  <div className="space-y-4 my-2 max-h-60 overflow-y-auto pr-2 divide-y divide-zinc-800/40">
                     {displayItems.map((item: any) => (
-                      <div key={item.id} className={`flex justify-between text-sm ${item.id.startsWith('service-') ? 'text-purple-300' : ''}`}>
-                        <span className="text-slate-400">{item.quantity}x {item.name}</span>
-                        <span className="text-white">₹{(item.price * item.quantity).toFixed(2)}</span>
+                      <div key={item.id} className="flex justify-between text-xs py-3 first:pt-0">
+                        <span className="text-zinc-400 font-medium">{item.quantity} × {item.name}</span>
+                        <span className="text-zinc-100 font-semibold tabular-nums ml-4">₹{(item.price * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="border-t border-white/10 pt-4 mb-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Subtotal</span>
-                      <span className="text-white">₹{displaySubtotal.toFixed(2)}</span>
+                  <div className="border-t border-zinc-800 pt-5 space-y-3">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-zinc-400">Subtotal</span>
+                      <span className="text-zinc-200 tabular-nums">₹{displaySubtotal.toFixed(2)}</span>
                     </div>
                     {totalDiscount > 0 && (
-                      <div className="flex justify-between text-sm text-emerald-300">
+                      <div className="flex justify-between text-xs text-emerald-400">
                         <span>Discount</span>
-                        <span>-₹{totalDiscount.toFixed(2)}</span>
+                        <span className="tabular-nums">-₹{totalDiscount.toFixed(2)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">GST (Estimated)</span>
-                      <span className="text-white">₹{displayGstAmount.toFixed(2)}</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-zinc-400">GST (Estimated)</span>
+                      <span className="text-zinc-200 tabular-nums">₹{displayGstAmount.toFixed(2)}</span>
                     </div>
                   </div>
 
-                  <div className="border-t border-white/10 pt-4 mb-8">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <span className="block text-xs text-slate-500 uppercase font-bold">Total Payable</span>
-                        <span className="text-3xl font-bold text-cyan-300 font-tech">₹{displayTotal.toFixed(2)}</span>
-                      </div>
+                  <div className="border-t border-zinc-800 pt-5">
+                    <div className="flex justify-between items-baseline mb-6">
+                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Total</span>
+                      <span className="text-2xl font-bold text-white tabular-nums">₹{displayTotal.toFixed(2)}</span>
                     </div>
 
                     {/* Custom Part Payment Options */}
                     {!!quote && (
-                      <div className="mt-4 p-3 bg-white/5 border border-white/10 rounded-lg space-y-3">
-                        <label className="flex items-center gap-2 text-sm text-slate-200 cursor-pointer">
+                      <div className="mt-4 p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-3.5">
+                        <label className="flex items-center gap-2.5 text-xs text-zinc-300 cursor-pointer font-medium">
                           <input
                             type="checkbox"
                             checked={isPartPayment}
@@ -964,24 +969,24 @@ export default function CheckoutPage() {
                                 setPartPaymentAmount('');
                               }
                             }}
-                            className="h-4 w-4 rounded border-slate-400 bg-slate-900 text-cyan-400 focus:ring-cyan-400"
+                            className="h-3.5 w-3.5 rounded border-zinc-800 bg-zinc-900 text-white focus:ring-zinc-700"
                           />
                           Pay Custom Part Amount
                         </label>
                         {isPartPayment && (
-                          <div className="space-y-1">
-                            <label className="text-[11px] text-slate-400">Enter Part Payment Amount (₹)</label>
+                          <div className="space-y-1.5 animate-fade-in">
+                            <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Amount (₹)</label>
                             <input
                               type="number"
                               min={1}
                               max={displayTotal}
                               required
                               placeholder="Enter amount"
-                              className="w-full bg-slate-950 border border-white/10 rounded px-2.5 py-1.5 text-white text-sm focus:outline-none focus:border-cyan-400"
+                              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-500"
                               value={partPaymentAmount}
                               onChange={(e) => setPartPaymentAmount(e.target.value)}
                             />
-                            <p className="text-[10px] text-slate-500">
+                            <p className="text-[10px] text-zinc-505 leading-normal">
                               Remaining balance of ₹{Math.round(displayTotal - (Number(partPaymentAmount) || 0)).toLocaleString()} will be due later.
                             </p>
                           </div>
@@ -990,78 +995,75 @@ export default function CheckoutPage() {
                     )}
 
                     {!!quote && showAdvance && !isPartPayment && (
-                      <div className="mt-2 bg-cyan-400/10 border border-cyan-400/20 rounded p-2 text-[10px] text-cyan-300 text-center">
-                        Advance Payable (50%): ₹{advanceAmount.toFixed(2)}
+                      <div className="mt-3 bg-zinc-950 border border-zinc-900 rounded-xl p-3 text-[10px] font-semibold text-zinc-400 text-center tracking-wide uppercase">
+                        Advance Payable (50%): <span className="text-white font-bold ml-1">₹{advanceAmount.toFixed(2)}</span>
                       </div>
                     )}
                   </div>
 
                   {autoOffer && autoOfferDiscount > 0 && autoOffer.description && (
-                    <div className="rounded-md border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-200 mb-4">
-                      <div className="flex items-center justify-between">
+                    <div className="rounded-xl border border-emerald-950 bg-emerald-950/20 p-4 text-xs text-emerald-300/90 leading-relaxed mb-4">
+                      <div className="flex items-center justify-between font-semibold">
                         <span className="flex items-center gap-2">
-                          <Sparkles className="h-4 w-4" /> {autoOffer.title}
+                          <Sparkles className="h-4 w-4 text-emerald-400" /> {autoOffer.title}
                         </span>
-                        <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-200">
+                        <span className="text-emerald-400 font-bold">
                           -₹{autoOfferDiscount.toFixed(2)}
-                        </Badge>
+                        </span>
                       </div>
-                      <p className="mt-2 text-emerald-200/80">{autoOffer.description}</p>
+                      <p className="mt-1.5 text-emerald-400/70 text-[11px]">{autoOffer.description}</p>
                     </div>
                   )}
 
                   {appliedCoupon && couponDiscount > 0 && (
-                    <div className="rounded-md border border-cyan-400/20 bg-cyan-400/10 p-3 text-xs text-cyan-200 mb-4">
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <Tag className="h-4 w-4" /> {appliedCoupon.code}
-                        </span>
-                        <button type="button" className="text-xs text-cyan-200 hover:text-white" onClick={removeCoupon}>Remove</button>
-                      </div>
-                      <p className="mt-2 text-cyan-200/80">Coupon savings: ₹{couponDiscount.toFixed(2)}</p>
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 text-xs text-zinc-300 mb-4 flex items-center justify-between">
+                      <span className="flex items-center gap-2 font-medium">
+                        <Tag className="h-3.5 w-3.5 text-zinc-400" /> {appliedCoupon.code}
+                      </span>
+                      <button type="button" className="text-xs text-zinc-400 hover:text-white underline animate-fade-in" onClick={removeCoupon}>Remove</button>
                     </div>
                   )}
 
                   {orderError && (
-                    <div className="bg-red-500/10 border border-red-500/30 rounded-md p-3 mb-4">
-                      <p className="text-red-200 text-sm font-medium">{orderError}</p>
+                    <div className="bg-red-950/20 border border-red-900/40 rounded-xl p-4 mb-4">
+                      <p className="text-red-400 text-xs font-semibold leading-normal">{orderError}</p>
                     </div>
                   )}
 
-                  <div className="mb-4 flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 p-3">
+                  <div className="mb-6 flex items-start gap-3 rounded-xl border border-zinc-900 bg-zinc-950/50 p-4">
                     <input
                       id="checkout-privacy-consent"
                       type="checkbox"
                       checked={privacyAccepted}
                       onChange={(event) => setPrivacyAccepted(event.target.checked)}
-                      className="mt-1 h-4 w-4 rounded border-slate-400 bg-slate-900 text-cyan-400 focus:ring-cyan-400"
+                      className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-850 bg-zinc-900 text-white focus:ring-zinc-700"
                     />
-                    <label htmlFor="checkout-privacy-consent" className="text-xs text-slate-300 leading-relaxed">
+                    <label htmlFor="checkout-privacy-consent" className="text-[11px] text-zinc-400 leading-normal">
                       I have read and agree to the{' '}
-                      <Link href="/info/policies/privacy" className="text-cyan-300 hover:text-white underline">Privacy Policy</Link>
+                      <Link href="/info/policies/privacy" className="text-zinc-200 hover:text-white underline">Privacy Policy</Link>
                       {' '}and{' '}
-                      <Link href="/info/policies/terms" className="text-cyan-300 hover:text-white underline">Terms of Service</Link>.
+                      <Link href="/info/policies/terms" className="text-zinc-200 hover:text-white underline">Terms of Service</Link>.
                     </label>
                   </div>
 
                   <button
                     type="submit"
                     disabled={isProcessingOrder || !selectedPaymentMethod || paymentLoading || !privacyAccepted}
-                    className="magnetic-btn w-full py-4 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-white hover:to-white hover:text-slate-900 text-white font-bold font-tech text-lg rounded-xl transition-all shadow-lg shadow-cyan-400/20 flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-sm tracking-wider uppercase rounded-xl transition-all shadow-md shadow-cyan-500/10 flex items-center justify-center gap-2 disabled:bg-zinc-900 disabled:text-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {isProcessingOrder ? (
                       <span className="flex items-center gap-2">
-                        <span className="h-4 w-4 rounded-full border-2 border-white border-b-transparent animate-spin"></span>
-                        Processing Order...
+                        <span className="h-4 w-4 rounded-full border-2 border-zinc-950 border-b-transparent animate-spin"></span>
+                        Processing...
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        Confirm Order <CheckCircle className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                        Confirm Purchase <CheckCircle className="h-4 w-4" />
                       </span>
                     )}
                   </button>
 
-                  <p className="mt-4 text-xs text-slate-500 text-center">
+                  <p className="mt-4 text-[10px] text-zinc-500 text-center leading-normal">
                     By placing this order, you agree to our Terms & Conditions.
                   </p>
                 </div>

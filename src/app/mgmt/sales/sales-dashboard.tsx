@@ -126,7 +126,7 @@ export default function SalesDashboard() {
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         {user?.name || user?.email}
                     </span>
-                    <span className="rounded-md bg-zinc-900 dark:bg-zinc-100 px-2 py-0.5 text-[9px] font-mono font-medium uppercase tracking-wider text-zinc-100 dark:text-zinc-900">
+                    <span className="rounded-md bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider text-cyan-400">
                         {user?.role}
                     </span>
                 </div>

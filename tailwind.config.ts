@@ -13,8 +13,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        tech: ['Rajdhani', 'sans-serif'],
+        sans: ['var(--font-body)', 'Inter', 'sans-serif'],
+        tech: ['var(--font-body)', 'sans-serif'],
         body: ['var(--font-body)', 'sans-serif'],
         headline: ['var(--font-body)', 'sans-serif'],
         code: ['monospace'],

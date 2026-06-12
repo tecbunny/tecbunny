@@ -265,12 +265,12 @@ export function Footer() {
                     setSubscribeMessage(null);
                   }
                 }}
-                className="bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-700 w-full placeholder-zinc-400"
+                className="bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/30 focus:border-cyan-500 w-full placeholder-zinc-400 transition-all"
               />
               <button
                 type="submit"
                 disabled={subscribeStatus === 'loading'}
-                className="px-3 py-1.5 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-850 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold rounded-lg transition-colors"
+                className="px-3.5 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-bold rounded-lg transition-colors disabled:opacity-40"
               >
                 {subscribeStatus === 'loading' ? '...' : 'Subscribe'}
               </button>

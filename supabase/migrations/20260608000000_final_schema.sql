@@ -89,25 +89,25 @@ $$;
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'quote_status') THEN
-    INSERT INTO pg_catalog.pg_enum (enumtypid, enumlabel, enumsortorder)
-    SELECT 'public.quote_status'::regtype, 'bidded', (SELECT COALESCE(MAX(enumsortorder), 0) + 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype)
-    WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'bidded');
-
-    INSERT INTO pg_catalog.pg_enum (enumtypid, enumlabel, enumsortorder)
-    SELECT 'public.quote_status'::regtype, 'accepted', (SELECT COALESCE(MAX(enumsortorder), 0) + 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype)
-    WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'accepted');
-
-    INSERT INTO pg_catalog.pg_enum (enumtypid, enumlabel, enumsortorder)
-    SELECT 'public.quote_status'::regtype, 'countered', (SELECT COALESCE(MAX(enumsortorder), 0) + 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype)
-    WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'countered');
-
-    INSERT INTO pg_catalog.pg_enum (enumtypid, enumlabel, enumsortorder)
-    SELECT 'public.quote_status'::regtype, 'rejected', (SELECT COALESCE(MAX(enumsortorder), 0) + 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype)
-    WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'rejected');
-
-    INSERT INTO pg_catalog.pg_enum (enumtypid, enumlabel, enumsortorder)
-    SELECT 'public.quote_status'::regtype, 'declined', (SELECT COALESCE(MAX(enumsortorder), 0) + 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype)
-    WHERE NOT EXISTS (SELECT 1 FROM pg_catalog.pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'declined');
+    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'bidded') THEN
+      EXECUTE 'ALTER TYPE public.quote_status ADD VALUE ''bidded''';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'accepted') THEN
+      EXECUTE 'ALTER TYPE public.quote_status ADD VALUE ''accepted''';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'countered') THEN
+      EXECUTE 'ALTER TYPE public.quote_status ADD VALUE ''countered''';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'rejected') THEN
+      EXECUTE 'ALTER TYPE public.quote_status ADD VALUE ''rejected''';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'declined') THEN
+      EXECUTE 'ALTER TYPE public.quote_status ADD VALUE ''declined''';
+    END IF;
   END IF;
 END;
 $$;
@@ -602,6 +602,26 @@ CREATE TABLE IF NOT EXISTS public.free_installation_slots (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(month)
 );
+
+-- Ensure newly added status columns exist if the tables were created in a previous schema version
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'Pending';
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'Awaiting Payment';
+
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS status product_lifecycle_status NOT NULL DEFAULT 'draft';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS prioritized BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS status quote_status NOT NULL DEFAULT 'created';
+ALTER TABLE public.services ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+ALTER TABLE public.coupons ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
+ALTER TABLE public.advance_payment_requests ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE public.sales_agents ADD COLUMN IF NOT EXISTS status public.sales_agent_status NOT NULL DEFAULT 'pending';
+ALTER TABLE public.sales_agent_commissions ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+ALTER TABLE public.agent_redemption_requests ADD COLUMN IF NOT EXISTS status public.redemption_status NOT NULL DEFAULT 'pending';
+ALTER TABLE public.service_tickets ADD COLUMN IF NOT EXISTS status public.service_ticket_status NOT NULL DEFAULT 'created';
+ALTER TABLE public.payment_transactions ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE public.whatsapp_messages ADD COLUMN IF NOT EXISTS status TEXT;
+
 
 -- Sales Agents Table
 CREATE TABLE IF NOT EXISTS public.sales_agents (
@@ -1864,5 +1884,59 @@ BEGIN
         RAISE NOTICE 'Auto-enabled RLS on table: public.%', r.tablename;
     END LOOP;
 END $$;
+
+-- ============================================================================
+-- 10. Composite Indexes
+-- ============================================================================
+-- Create composite index on orders (status, payment_status)
+CREATE INDEX IF NOT EXISTS idx_orders_status_payment 
+ON public.orders (status, payment_status);
+
+-- Create composite index on products (is_deleted, status, category)
+CREATE INDEX IF NOT EXISTS idx_products_active_status
+ON public.products (is_deleted, status, category);
+
+-- Composite index on auth profiles for staff filtering
+CREATE INDEX IF NOT EXISTS idx_profiles_role_active
+ON public.profiles (role, is_active);
+
+-- ============================================================================
+-- 11. Inventory Serials and Locking
+-- ============================================================================
+-- 1. Create the inventory_serials table to manage individual serial numbers
+CREATE TABLE IF NOT EXISTS public.inventory_serials (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  serial_number TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'available', -- 'available', 'sold', 'reserved'
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(serial_number)
+);
+
+-- Ensure the status column exists just in case the table existed without it
+ALTER TABLE public.inventory_serials ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'available';
+
+-- 2. Create an atomic function in your Supabase SQL editor
+CREATE OR REPLACE FUNCTION assign_serial_number(target_product_id UUID)
+RETURNS TEXT AS $$
+DECLARE
+  assigned_serial TEXT;
+BEGIN
+  SELECT serial_number INTO assigned_serial
+  FROM inventory_serials
+  WHERE product_id = target_product_id AND status = 'available'
+  LIMIT 1
+  FOR UPDATE SKIP LOCKED; -- Locks the row, ignores already-locked rows
+
+  IF assigned_serial IS NOT NULL THEN
+    UPDATE inventory_serials 
+    SET status = 'sold' 
+    WHERE serial_number = assigned_serial;
+  END IF;
+
+  RETURN assigned_serial;
+END;
+$$ LANGUAGE plpgsql;
 
 COMMIT;

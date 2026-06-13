@@ -285,10 +285,10 @@ export function Footer() {
         </div>
 
         {/* Footer Bottom (Copyright, CIN, GSTIN, and Socials) */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-10 border-t border-slate-800 text-xs sm:text-sm tracking-wide text-slate-500 font-medium">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-10 border-t border-slate-800 text-sm tracking-wide text-slate-400 font-medium">
           <div className="flex flex-col items-center gap-2 md:flex-row md:items-center md:gap-6 text-center md:text-left">
-            <p>© 2026 TecBunny solutions. All rights reserved.</p>
-            <div className="flex items-center gap-3 font-mono opacity-80">
+            <p>© 2026 TecBunny Solutions. All rights reserved.</p>
+            <div className="flex items-center gap-3 font-mono">
               <span>CIN: U80200GA2025PTC017488</span>
               <span className="hidden md:inline">|</span>
               <span>GSTIN: {companyInfo.gstin || '30AAMCT1608G1ZO'}</span>

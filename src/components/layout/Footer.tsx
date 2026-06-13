@@ -189,13 +189,13 @@ export function Footer() {
   const activeSocialPlatforms = socialPlatforms.filter(({ key }) => Boolean(socialLinks[key]));
 
   return (
-    <footer className="relative bg-background text-muted-foreground border-t border-border py-16 sm:py-24 font-sans tech-main-content">
+    <footer className="relative bg-[#0F172A] text-slate-400 border-t border-slate-800 py-16 sm:py-24 font-sans">
       <div className="absolute top-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
       <div className="relative z-10 max-w-screen-2xl mx-auto px-6 sm:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           {/* Column 1: Services */}
           <div>
-            <h4 className="text-foreground text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Services</h4>
+            <h4 className="text-white text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Services</h4>
             <ul className="space-y-3.5 text-sm font-medium">
               <li>
                 <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">
@@ -227,7 +227,7 @@ export function Footer() {
 
           {/* Column 2: Company */}
           <div>
-            <h4 className="text-foreground text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Company</h4>
+            <h4 className="text-white text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Company</h4>
             <ul className="space-y-3.5 text-sm font-medium">
               <li><Link href="/about" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">About Us</Link></li>
               <li><Link href="/products" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">Products</Link></li>
@@ -238,7 +238,7 @@ export function Footer() {
 
           {/* Column 3: Contact Details */}
           <div className="text-sm font-medium">
-            <h4 className="text-foreground text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Contact</h4>
+            <h4 className="text-white text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Contact</h4>
             <address className="leading-relaxed opacity-85 not-italic">{address}</address>
             <div className="mt-4 space-y-2">
               <p className="text-blue-500 hover:text-blue-400 transition-colors font-tech font-bold">
@@ -252,7 +252,7 @@ export function Footer() {
 
           {/* Column 4: Updates Form */}
           <div>
-            <h4 className="text-foreground text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Updates</h4>
+            <h4 className="text-white text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Updates</h4>
             <p className="text-sm opacity-80 mb-4 leading-relaxed font-medium">Subscribe to security advisories and tech updates.</p>
             <form className="flex gap-2 max-w-sm" onSubmit={handleSubscribe}>
               <input
@@ -266,12 +266,12 @@ export function Footer() {
                     setSubscribeMessage(null);
                   }
                 }}
-                className="bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary w-full placeholder-muted-foreground transition-all shadow-inner"
+                className="bg-[#1E293B] border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 w-full placeholder-slate-500 transition-all shadow-inner"
               />
               <button
                 type="submit"
                 disabled={subscribeStatus === 'loading'}
-                className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold rounded-xl transition-all hover:scale-105 hover:shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:opacity-40"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-all hover:scale-105 hover:shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:opacity-40"
               >
                 {subscribeStatus === 'loading' ? '...' : 'Subscribe'}
               </button>
@@ -285,7 +285,7 @@ export function Footer() {
         </div>
 
         {/* Footer Bottom (Copyright, CIN, GSTIN, and Socials) */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-10 border-t border-border/50 text-xs sm:text-sm tracking-wide text-muted-foreground font-medium">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-10 border-t border-slate-800 text-xs sm:text-sm tracking-wide text-slate-500 font-medium">
           <div className="flex flex-col items-center gap-2 md:flex-row md:items-center md:gap-6 text-center md:text-left">
             <p>© 2026 TecBunny solutions. All rights reserved.</p>
             <div className="flex items-center gap-3 font-mono opacity-80">
@@ -303,7 +303,7 @@ export function Footer() {
                   href={socialLinks[key]}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 rounded-lg bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:scale-110 transition-all shadow-sm hover:shadow-[0_0_15px_rgba(37,99,235,0.4)]"
+                  className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white hover:scale-110 transition-all shadow-sm hover:shadow-[0_0_15px_rgba(37,99,235,0.4)]"
                   onClick={() => handleSocialClick(label)}
                 >
                   <Icon className="h-5 w-5" />

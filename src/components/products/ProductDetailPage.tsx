@@ -362,7 +362,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
 
   if (!product) {
     return (
-      <div className="tech-main-content bg-background text-foreground">
+      <div className="relative overflow-hidden bg-[#09090B] text-zinc-200 selection:bg-blue-500/20 selection:text-white min-h-screen font-sans antialiased">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-white mb-4">Product Not Found</h2>
@@ -380,33 +380,42 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
   }
 
   return (
-    <div className="tech-main-content bg-background text-foreground">
+    <div className="relative overflow-hidden bg-[#09090B] text-zinc-200 selection:bg-blue-500/20 selection:text-white min-h-screen font-sans antialiased">
+      {/* Background Noise and Grid (homepage style) */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30" />
+        <div className="absolute -left-40 top-0 h-[42rem] w-[42rem] rounded-full bg-blue-500/5 blur-[160px]" />
+        <div className="absolute -right-40 top-1/3 h-[46rem] w-[46rem] rounded-full bg-zinc-800/5 blur-[180px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(9,9,11,0.6),_rgba(9,9,11,0.95))]" />
+      </div>
       
+      {/* Ambient Blobs */}
+      <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-blue-500/10 blur-[120px] animate-pulse" aria-hidden="true" />
+      <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-blue-600/10 blur-[120px]" aria-hidden="true" />
 
       <div className="relative">
-        <div className="absolute inset-0 bg-noise opacity-5 pointer-events-none"></div>
         <div className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8 relative z-10">
-          <nav className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <nav className="flex flex-wrap items-center gap-2 text-xs font-mono uppercase tracking-wider text-zinc-500">
             <button
               type="button"
               onClick={() => router.push('/products')}
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+              className="inline-flex items-center gap-2 text-zinc-400 hover:text-blue-400 transition-colors cursor-pointer"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-3.5 w-3.5" />
               Products
             </button>
             <span>/</span>
-            <span className="hover:text-primary transition-colors">{product.category}</span>
+            <span className="hover:text-blue-400 transition-colors">{product.category}</span>
             <span>/</span>
-            <span className="text-foreground">{displayName}</span>
+            <span className="text-white font-semibold">{displayName}</span>
           </nav>
 
           <section className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div className="space-y-4">
-              <div className="relative bg-muted/40 border border-border rounded-2xl p-6 h-[500px] flex items-center justify-center overflow-hidden group">
+            <div className="space-y-6">
+              <div className="relative bg-[#0F172A]/20 border border-zinc-800 rounded-3xl p-8 h-[550px] flex items-center justify-center overflow-hidden group backdrop-blur-sm shadow-2xl">
                 <div className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <div className="product-scan-line"></div>
-                  <div className="absolute inset-0 bg-primary/5"></div>
+                  <div className="product-scan-line bg-gradient-to-b from-transparent via-blue-500/30 to-transparent"></div>
+                  <div className="absolute inset-0 bg-blue-500/5"></div>
                 </div>
 
                 <img
@@ -424,32 +433,34 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
 
                 <div className="absolute top-4 left-4 z-20">
                   {product.stock_status === 'out_of_stock' ? (
-                    <span className="bg-card text-muted-foreground border border-border text-xs font-bold px-2.5 py-1 rounded shadow-lg">
+                    <span className="bg-zinc-950 text-zinc-400 border border-zinc-800 text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg">
                       OUT OF STOCK
                     </span>
                   ) : product.stock_status === 'low_stock' ? (
-                    <span className="bg-muted text-muted-foreground border border-border text-xs font-bold px-2.5 py-1 rounded shadow-lg">
+                    <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg">
                       LOW STOCK
                     </span>
                   ) : product.stock_status === 'backorder' ? (
-                    <span className="bg-muted text-muted-foreground border border-border text-xs font-bold px-2.5 py-1 rounded shadow-lg">
+                    <span className="bg-zinc-900 text-zinc-400 border border-zinc-800 text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg">
                       BACKORDER
                     </span>
                   ) : (
-                    <span className="bg-primary text-white text-xs font-bold px-2.5 py-1 rounded shadow-lg shadow-primary/20">
+                    <span className="bg-blue-600/15 text-blue-400 border border-blue-500/30 text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg shadow-blue-500/5">
                       IN STOCK
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="flex gap-3 overflow-x-auto pb-2">
+              <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                 {productImages.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-muted/30 border p-2 flex-shrink-0 transition-colors ${
-                      selectedImage === index ? 'border-primary' : 'border-border hover:border-primary/50'
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-zinc-900/30 border p-2 flex-shrink-0 transition-all duration-300 ${
+                      selectedImage === index 
+                        ? 'border-blue-500 bg-blue-500/5 shadow-[0_0_15px_rgba(59,130,246,0.2)] scale-105' 
+                         : 'border-zinc-800 hover:border-zinc-700 hover:scale-102'
                     }`}
                   >
                     <img
@@ -457,7 +468,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                       alt={`${displayName} view ${index + 1}`}
                       width={160}
                       height={160}
-                      className="w-full h-full object-cover rounded opacity-80 hover:opacity-100 transition-opacity"
+                      className="w-full h-full object-cover rounded-lg opacity-80 hover:opacity-100 transition-opacity"
                       loading="lazy"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -470,34 +481,35 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
             </div>
 
             <div className="flex flex-col">
-              <h1 className="text-3xl md:text-4xl font-semibold text-white mb-2">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white font-tech leading-none mb-3">
                 {displayName}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-4 mb-6 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-6 mb-6 text-xs font-mono uppercase tracking-wider text-zinc-500">
                 {product.model_number && (
-                  <span>Model: <span className="text-foreground">{product.model_number}</span></span>
+                  <span>Model: <span className="text-zinc-350">{product.model_number}</span></span>
                 )}
                 {skuValue && (
-                  <span>SKU: <span className="text-foreground">{skuValue}</span></span>
+                  <span>SKU: <span className="text-zinc-350">{skuValue}</span></span>
                 )}
                 {Number(product.reviewCount) > 0 && Number(product.rating) > 0 && (
                   <div className="flex items-center gap-2">
                     <StarRating rating={product.rating} size="sm" />
-                    <span className="text-xs">({product.reviewCount} {Number(product.reviewCount) === 1 ? 'review' : 'reviews'})</span>
+                    <span className="text-[10px]">({product.reviewCount} {Number(product.reviewCount) === 1 ? 'review' : 'reviews'})</span>
                   </div>
                 )}
               </div>
 
-              <div className="bg-muted/30 border border-border rounded-xl p-6 mb-8 backdrop-blur-sm">
+              <div className="bg-[#0F172A]/40 border border-zinc-800/80 rounded-2xl p-8 mb-8 backdrop-blur-md shadow-2xl relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                 {pricing && (
-                  <div className="flex flex-wrap items-end gap-3 mb-2">
-                    <span className="text-4xl font-bold text-primary">₹{pricing.salePrice.toLocaleString('en-IN')}</span>
+                  <div className="flex flex-wrap items-baseline gap-4 mb-3 relative z-10">
+                    <span className="text-5xl font-black text-white font-tech tracking-tight">₹{pricing.salePrice.toLocaleString('en-IN')}</span>
                     {pricing.hasDiscount && (
                       <>
-                        <span className="text-lg text-muted-foreground line-through">₹{pricing.mrp.toLocaleString('en-IN')}</span>
+                        <span className="text-xl text-zinc-500 line-through font-light">₹{pricing.mrp.toLocaleString('en-IN')}</span>
                         {pricing.percentageOff > 0 && (
-                          <span className="text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">
+                          <span className="text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full uppercase tracking-wider">
                             {pricing.percentageOff}% OFF
                           </span>
                         )}
@@ -505,18 +517,18 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                     )}
                   </div>
                 )}
-                <p className="text-sm text-muted-foreground">Price inclusive of all taxes. Installation charges separate.</p>
+                <p className="text-xs text-zinc-500 font-mono relative z-10">PRICE INCLUSIVE OF GST. INSTALLATION & CABLING CHARGED ON ACTUALS.</p>
               </div>
 
-              <div className="prose prose-invert prose-sm mb-8 text-muted-foreground">
-                <div dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+              <div className="prose prose-invert prose-sm mb-8 text-zinc-400">
+                <div dangerouslySetInnerHTML={{ __html: descriptionHtml }} className="leading-relaxed" />
                 {highlightSpecs.length > 0 && (
-                  <ul className="list-none pl-0 space-y-2 mt-4">
+                  <ul className="list-none pl-0 space-y-2 mt-6">
                     {highlightSpecs.map(([key, value]) => (
-                      <li key={key} className="flex items-center gap-3">
-                        <span className="h-2 w-2 rounded-full bg-primary"></span>
-                        <span className="text-foreground">{key}:</span>
-                        <span className="text-muted-foreground">{value}</span>
+                      <li key={key} className="flex items-center gap-3 text-sm">
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                        <span className="text-zinc-400 font-mono uppercase text-xs">{key}:</span>
+                        <span className="text-zinc-200 font-medium">{value}</span>
                       </li>
                     ))}
                   </ul>
@@ -524,20 +536,20 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
               </div>
 
               <div className="mt-auto space-y-4">
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-4">
                   <AddToCartButton
                     product={product}
-                    className="flex-1 min-w-[220px] h-12 text-base bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/20"
+                    className="flex-1 min-w-[220px] h-14 text-base bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-wide uppercase rounded-xl transition-all duration-300 hover:scale-[1.02] shadow-[0_0_30px_-5px_rgba(59,130,246,0.45)] border border-blue-500/20 cursor-pointer"
                     size="lg"
                   />
                   <WishlistButton
                     product={product}
-                    className="h-12 w-12 flex-shrink-0 border border-border bg-muted/30 hover:bg-muted/50"
+                    className="h-14 w-14 flex-shrink-0 border border-zinc-800 bg-zinc-900/30 hover:bg-zinc-800/60 hover:border-zinc-700 text-white rounded-xl transition-all duration-300 cursor-pointer"
                   />
                   <Button
                     variant="outline"
                     size="lg"
-                    className="h-12 w-12 flex-shrink-0 border-border bg-muted/30 hover:bg-muted/50"
+                    className="h-14 w-14 flex-shrink-0 border border-zinc-800 bg-zinc-900/30 hover:bg-zinc-800/60 hover:border-zinc-700 text-white rounded-xl transition-all duration-300 cursor-pointer"
                     onClick={handleShare}
                     aria-label={`Share ${displayName}`}
                   >
@@ -545,43 +557,43 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                   </Button>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-4">
                   <Button
                     variant="outline"
-                    className="flex-1 border-border bg-muted/30 hover:bg-muted/50"
+                    className="flex-1 h-12 border border-zinc-800 bg-zinc-900/20 hover:bg-zinc-800/40 hover:border-zinc-700 text-zinc-350 hover:text-white rounded-xl transition-all duration-300 cursor-pointer"
                     onClick={() => trackEvent('amc_inquiry', { productId: product.id, productName: displayName })}
                   >
-                    <Shield className="mr-2 h-4 w-4" />
+                    <Shield className="mr-2 h-4 w-4 text-blue-500" />
                     Request AMC Quote
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 border-border bg-muted/30 hover:bg-muted/50"
+                    className="flex-1 h-12 border border-zinc-800 bg-zinc-900/20 hover:bg-zinc-800/40 hover:border-zinc-700 text-zinc-350 hover:text-white rounded-xl transition-all duration-300 cursor-pointer"
                     onClick={() => trackEvent('installation_inquiry', { productId: product.id, productName: displayName })}
                   >
-                    <Truck className="mr-2 h-4 w-4" />
+                    <Truck className="mr-2 h-4 w-4 text-blue-500" />
                     Installation Inquiry
                   </Button>
                 </div>
 
-                <p className="text-xs text-center text-muted-foreground">
-                  <Shield className="inline-block h-3.5 w-3.5 mr-1" />
+                <p className="text-xs text-center text-zinc-500">
+                  <Shield className="inline-block h-3.5 w-3.5 mr-1 text-blue-500" />
                   {product.warranty ? `${product.warranty} included.` : '2-Year Manufacturer Warranty included.'}
                 </p>
               </div>
             </div>
           </section>
 
-          <section className="mt-12 border-t border-border bg-muted/20 rounded-2xl">
-            <div className="px-4 py-10 sm:px-6 lg:px-8">
-              <div className="flex gap-8 border-b border-border mb-8 overflow-x-auto">
+          <section className="mt-16 border border-zinc-850/80 bg-[#0F172A]/10 rounded-3xl backdrop-blur-sm">
+            <div className="px-6 py-10 sm:px-8">
+              <div className="flex gap-8 border-b border-zinc-800/80 mb-8 overflow-x-auto no-scrollbar">
                 <button
                   type="button"
                   onClick={() => setActiveTab('specs')}
-                  className={`px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-all ${
+                  className={`px-4 py-3 text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all duration-300 cursor-pointer ${
                     activeTab === 'specs'
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                      ? 'border-blue-500 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]'
+                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
                   }`}
                 >
                   Specifications
@@ -589,10 +601,10 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 <button
                   type="button"
                   onClick={() => setActiveTab('description')}
-                  className={`px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-all ${
+                  className={`px-4 py-3 text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all duration-300 cursor-pointer ${
                     activeTab === 'description'
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                      ? 'border-blue-500 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]'
+                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
                   }`}
                 >
                   Description
@@ -600,10 +612,10 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 <button
                   type="button"
                   onClick={() => setActiveTab('warranty')}
-                  className={`px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-all ${
+                  className={`px-4 py-3 text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all duration-300 cursor-pointer ${
                     activeTab === 'warranty'
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                      ? 'border-blue-500 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]'
+                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
                   }`}
                 >
                   Warranty Info
@@ -611,44 +623,42 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
               </div>
 
               {activeTab === 'specs' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-4 text-sm font-mono">
                   {product.specifications && Object.keys(product.specifications).length > 0 ? (
                     Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key} className="flex justify-between py-3 border-b border-border">
-                        <span className="text-muted-foreground">{key}</span>
-                        <span className="text-foreground font-mono">{value}</span>
+                      <div key={key} className="flex justify-between py-4 border-b border-zinc-850">
+                        <span className="text-zinc-500 uppercase text-xs">{key}</span>
+                        <span className="text-zinc-200 text-right font-medium">{value}</span>
                       </div>
                     ))
                   ) : (
-                    <div className="text-muted-foreground">Specifications will be updated soon.</div>
+                    <div className="text-zinc-500 italic">Specifications will be updated soon.</div>
                   )}
                 </div>
               )}
 
               {activeTab === 'description' && (
-                <div className="prose prose-invert max-w-none text-foreground">
+                <div className="prose prose-invert max-w-none text-zinc-300 leading-relaxed">
                   <div dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
                 </div>
               )}
 
               {activeTab === 'warranty' && (
-                <Card className="bg-muted/10 border-border">
-                  <CardContent className="p-6 text-sm text-foreground space-y-3">
-                    <p>
-                      {product.warranty
-                        ? `${product.warranty} coverage provided by manufacturer.`
-                        : '2-Year Manufacturer Warranty included with purchase.'}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <RefreshCw className="h-4 w-4 text-primary" />
-                      <span>Hassle-free replacement for eligible defects.</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Shield className="h-4 w-4 text-primary" />
-                      <span>Support available via Tecbunny help desk.</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="rounded-2xl border border-zinc-850 bg-zinc-900/10 p-6 text-sm text-zinc-300 space-y-4 max-w-2xl backdrop-blur-sm">
+                  <p className="leading-relaxed">
+                    {product.warranty
+                      ? `${product.warranty} coverage provided by manufacturer.`
+                      : '2-Year Manufacturer Warranty included with standard purchase.'}
+                  </p>
+                  <div className="flex items-center gap-3 text-zinc-400">
+                    <RefreshCw className="h-4 w-4 text-blue-500 animate-spin-slow" />
+                    <span>Hassle-free replacement for eligible defects.</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-zinc-400">
+                    <Shield className="h-4 w-4 text-blue-500" />
+                    <span>Support available via Tecbunny SLA desk.</span>
+                  </div>
+                </div>
               )}
             </div>
           </section>

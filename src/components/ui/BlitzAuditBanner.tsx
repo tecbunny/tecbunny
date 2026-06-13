@@ -182,30 +182,30 @@ export function BlitzAuditBanner() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-800 bg-zinc-950/95 text-zinc-100 backdrop-blur-md shadow-[0_-10px_40px_rgba(37,99,235,0.12)] animate-slide-up pb-[env(safe-area-inset-bottom,0px)] font-sans"
+      className="fixed inset-x-0 bottom-0 z-50 border-t-2 border-primary/50 bg-card/95 text-foreground backdrop-blur-xl shadow-[0_0_60px_-15px_rgba(37,99,235,0.4)] animate-slide-up pb-[env(safe-area-inset-bottom,0px)] font-sans transition-all duration-500"
       role="region"
       aria-label="Free installation offer"
     >
       <div className={`px-3 py-2.5 lg:hidden ${expanded ? "hidden" : "block"}`}>
         <div className="mx-auto flex max-w-7xl items-center gap-2">
-          <p className="min-w-0 flex-1 text-xs font-bold leading-snug sm:text-sm">
-            <span className="mr-1 text-primary">⚡</span>
+          <p className="min-w-0 flex-1 text-sm font-black leading-snug sm:text-base font-tech tracking-wide">
+            <span className="mr-1 text-primary animate-pulse">⚡</span>
             Free Installation —{" "}
             <span className="whitespace-nowrap">
-              <span className="rounded bg-primary/10 border border-primary/20 px-1.5 py-0.5 font-black text-primary">{slotsDisplay}</span> slots left
+              <span className="rounded-md bg-primary/20 border border-primary/40 px-2 py-0.5 font-black text-primary">{slotsDisplay}</span> slots left
             </span>
           </p>
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className="shrink-0 rounded-md bg-primary hover:bg-primary/95 text-white px-3 py-2 text-xs font-extrabold sm:text-sm transition-colors"
+            className="shrink-0 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2.5 text-xs font-black tracking-wider sm:text-sm transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(37,99,235,0.5)]"
           >
             Claim
           </button>
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
             aria-label="Expand offer details"
           >
             <ChevronUp className="h-4 w-4" />
@@ -213,7 +213,7 @@ export function BlitzAuditBanner() {
           <button
             type="button"
             onClick={handleDismiss}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
             aria-label="Dismiss offer"
           >
             <X className="h-4 w-4" />
@@ -225,12 +225,12 @@ export function BlitzAuditBanner() {
         <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start justify-between gap-3 lg:block">
             <div className="min-w-0">
-              <h3 className="text-base font-extrabold sm:text-xl flex items-center gap-1.5">
-                <span className="text-primary">⚡</span> MONTHLY FREE INSTALLATION OFFER
+              <h3 className="text-lg font-black sm:text-2xl flex items-center gap-2 font-tech tracking-wider text-foreground">
+                <span className="text-primary animate-pulse drop-shadow-[0_0_8px_rgba(37,99,235,0.8)]">⚡</span> MONTHLY FREE INSTALLATION OFFER
               </h3>
-              <p className="mt-1 text-xs font-medium sm:text-sm text-zinc-400">
+              <p className="mt-1 text-sm font-semibold sm:text-base text-muted-foreground tracking-wide">
                 First 10 confirmed orders get 100% Free Installation. Only{" "}
-                <span className="rounded bg-primary/10 border border-primary/20 px-2 py-0.5 font-black text-lg text-primary">{slotsDisplay}</span> slots
+                <span className="rounded-lg bg-primary/20 border border-primary/40 px-2.5 py-1 font-black text-xl text-primary drop-shadow-[0_0_10px_rgba(37,99,235,0.5)]">{slotsDisplay}</span> slots
                 remaining this month!
               </p>
             </div>
@@ -238,7 +238,7 @@ export function BlitzAuditBanner() {
               <button
                 type="button"
                 onClick={() => setExpanded(false)}
-                className="flex h-11 w-11 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
                 aria-label="Collapse offer"
               >
                 <ChevronDown className="h-4 w-4" />
@@ -246,7 +246,7 @@ export function BlitzAuditBanner() {
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="flex h-11 w-11 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
                 aria-label="Dismiss offer"
               >
                 <X className="h-4 w-4" />
@@ -257,12 +257,12 @@ export function BlitzAuditBanner() {
           <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto lg:items-center">
             {step === "phone" ? (
               <>
-                <input
+                  <input
                   type="tel"
                   inputMode="tel"
                   autoComplete="tel"
                   placeholder="Enter Mobile for OTP"
-                  className="w-full rounded-md bg-zinc-900 border border-zinc-800 px-4 py-3 font-bold text-zinc-100 placeholder-zinc-500 outline-none focus:border-primary transition-all sm:py-2 lg:w-64"
+                  className="w-full rounded-xl bg-background border border-border px-5 py-4 font-bold text-foreground placeholder-muted-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all sm:py-3 lg:w-72 shadow-inner"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
@@ -270,18 +270,18 @@ export function BlitzAuditBanner() {
                   type="button"
                   onClick={handleRequestOtp}
                   disabled={submitting}
-                  className="whitespace-nowrap rounded-md bg-primary hover:bg-primary/95 text-white px-6 py-3 font-extrabold shadow-lg transition-colors disabled:opacity-60 sm:py-2"
+                  className="whitespace-nowrap rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 font-black tracking-widest shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] disabled:opacity-60 sm:py-3"
                 >
                   {submitting ? "SENDING..." : "CLAIM SLOT NOW"}
                 </button>
               </>
             ) : (
               <>
-                <input
+                  <input
                   type="text"
                   inputMode="numeric"
                   placeholder="Enter OTP"
-                  className="w-full rounded-md bg-zinc-900 border border-zinc-800 px-4 py-3 text-center font-bold tracking-widest text-zinc-100 placeholder-zinc-500 outline-none focus:border-primary transition-all sm:py-2 lg:w-48"
+                  className="w-full rounded-xl bg-background border border-border px-5 py-4 text-center font-black tracking-[0.5em] text-foreground placeholder-muted-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all sm:py-3 lg:w-64 shadow-inner"
                   value={otp}
                   maxLength={6}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
@@ -290,7 +290,7 @@ export function BlitzAuditBanner() {
                   type="button"
                   onClick={handleVerifyAndClaim}
                   disabled={submitting}
-                  className="whitespace-nowrap rounded-md bg-primary hover:bg-primary/95 text-white px-6 py-3 font-extrabold shadow-lg transition-colors disabled:opacity-60 sm:py-2"
+                  className="whitespace-nowrap rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 font-black tracking-widest shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] disabled:opacity-60 sm:py-3"
                 >
                   {submitting ? "VERIFYING..." : "VERIFY & DISPATCH"}
                 </button>
@@ -299,10 +299,10 @@ export function BlitzAuditBanner() {
             <button
               type="button"
               onClick={handleDismiss}
-              className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 lg:flex"
+              className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors lg:flex ml-4"
               aria-label="Dismiss offer"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>

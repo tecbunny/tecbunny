@@ -459,48 +459,48 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(9,9,11,0.6),_rgba(9,9,11,0.95))]" />
       </div>
 
-      <section className="relative flex items-center overflow-hidden py-20 sm:py-24">
+      <section className="relative flex items-center overflow-hidden py-28 sm:py-36 min-h-[90vh]">
         {enableAmbientEffects ? (
           <canvas ref={canvasRef} className={`pointer-events-none absolute inset-0 h-full w-full opacity-30 ${prefersReducedMotion ? 'hidden' : ''}`} aria-hidden="true" />
         ) : null}
         <div className="pointer-events-none absolute inset-0 bg-noise opacity-20 brightness-100 contrast-150" />
-        <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-blue-500/5 blur-[100px]" aria-hidden="true" />
-        <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-zinc-800/10 blur-[100px]" aria-hidden="true" />
+        <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-blue-500/10 blur-[120px] animate-pulse" aria-hidden="true" />
+        <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-blue-600/10 blur-[120px]" aria-hidden="true" />
 
         <div className="relative z-10 w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8 mx-auto">
           <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2">
-            <div className="reveal-section space-y-8 is-revealed" data-reveal-id="hero-copy">
-              <h1 className="text-4xl font-bold leading-[1.12] text-white sm:text-5xl md:text-6xl xl:text-7xl font-tech" aria-label="Technology Solutions and Services">
-                <span className="glitch-text pb-2" data-text="Technology">Technology</span>
-                <span className="block bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text pt-1 text-transparent">
+            <div className="reveal-section space-y-10 is-revealed animate-scale-in" data-reveal-id="hero-copy" style={{ animationDuration: '0.8s' }}>
+              <h1 className="text-5xl font-extrabold leading-[1.05] text-white sm:text-6xl md:text-7xl xl:text-8xl font-tech tracking-tight" aria-label="Technology Solutions and Services">
+                <span className="glitch-text block pb-3" data-text="Technology">Technology</span>
+                <span className="block bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent">
                   Solutions & Services
                 </span>
               </h1>
 
-              <div className="hero-rotator text-sm font-semibold uppercase tracking-[0.35em] text-blue-500" aria-hidden="true">
+              <div className="hero-rotator text-base font-black uppercase tracking-[0.4em] text-blue-500" aria-hidden="true">
                 {heroWords.map((word, index) => (
                   <span
                     key={word}
-                    className={index === heroWordIndex ? 'hero-rotator__word hero-rotator__word--active' : 'hero-rotator__word'}
+                    className={index === heroWordIndex ? 'hero-rotator__word hero-rotator__word--active drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]' : 'hero-rotator__word'}
                   >
                     {word}
                   </span>
                 ))}
               </div>
 
-              <p className="max-w-lg text-lg leading-relaxed text-slate-400">
-                TecBunny Solutions provides professional technology services and custom solutions tailored to your business needs.
+              <p className="max-w-xl text-xl leading-relaxed text-zinc-400 font-light">
+                TecBunny Solutions provides professional technology services and custom solutions tailored to your business needs. We build the future.
               </p>
 
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-5">
                 <Link
                   href="/contact"
                   onMouseMove={handleMagneticMove}
                   onMouseLeave={handleMagneticLeave}
-                  className="magnetic-btn relative inline-flex h-12 overflow-hidden rounded-lg p-[1px] focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 focus:ring-offset-zinc-900"
+                  className="magnetic-btn relative inline-flex h-14 overflow-hidden rounded-xl p-[1px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#09090B] hover:scale-105 transition-transform duration-300 shadow-[0_0_30px_-5px_rgba(59,130,246,0.4)]"
                 >
                   <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#09090b_50%,#3b82f6_100%)]"></span>
-                  <span className="inline-flex h-full w-full items-center justify-center rounded-lg bg-[#09090B] px-6 py-3 text-sm font-medium text-white backdrop-blur-3xl transition-colors hover:bg-zinc-900">
+                  <span className="inline-flex h-full w-full items-center justify-center rounded-xl bg-[#09090B] px-8 py-3 text-base font-bold tracking-wide text-white backdrop-blur-3xl transition-colors hover:bg-zinc-900/90">
                     Start Project
                   </span>
                 </Link>
@@ -508,52 +508,59 @@ export default function HomePage() {
                   href="/services"
                   onMouseMove={handleMagneticMove}
                   onMouseLeave={handleMagneticLeave}
-                  className="magnetic-btn rounded-lg border border-zinc-800 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-white/5"
+                  className="magnetic-btn rounded-xl border border-zinc-700 bg-zinc-900/30 px-8 py-3 text-base font-bold tracking-wide text-white transition-all hover:bg-white/10 hover:border-zinc-500 flex items-center justify-center backdrop-blur-sm"
                 >
                   View Services
                 </Link>
               </div>
 
-              <div className="flex gap-8 border-t border-white/5 pt-8">
-                <div>
-                  <p className="text-2xl font-bold text-white font-tech">100+</p>
-                  <p className="text-xs uppercase tracking-wider text-slate-400">Installations</p>
+              <div className="flex gap-10 border-t border-zinc-800/80 pt-10">
+                <div className="group">
+                  <p className="text-3xl font-black text-white font-tech group-hover:text-blue-400 transition-colors">100+</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mt-1">Installations</p>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-white font-tech">SLA</p>
-                  <p className="text-xs uppercase tracking-wider text-slate-400">Direct Support</p>
+                <div className="group">
+                  <p className="text-3xl font-black text-white font-tech group-hover:text-blue-400 transition-colors">SLA</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mt-1">Direct Support</p>
                 </div>
               </div>
             </div>
 
-            <div className="reveal-section is-revealed relative hidden lg:block" data-reveal-id="hero-visual" id="hero-visual" onMouseMove={handleTiltMove} onMouseLeave={handleTiltLeave}>
-              <div ref={tiltRef} className="hero-status-panel tilt-card relative z-10 rounded-2xl border border-zinc-800 bg-[#09090B] p-6 shadow-2xl backdrop-blur-2xl">
-                <div className="mb-4 flex items-center gap-2 border-b border-zinc-800 pb-4">
-                  <div className="h-2 w-2 rounded-full bg-zinc-700"></div>
-                  <div className="h-2 w-2 rounded-full bg-zinc-700"></div>
-                  <div className="h-2 w-2 rounded-full bg-zinc-700"></div>
-                  <div className="ml-auto text-[10px] font-mono text-zinc-500">system_status.log</div>
+            <div className="reveal-section is-revealed relative hidden lg:block animate-scale-in" data-reveal-id="hero-visual" id="hero-visual" onMouseMove={handleTiltMove} onMouseLeave={handleTiltLeave} style={{ animationDuration: '1s', animationDelay: '0.2s', animationFillMode: 'backwards' }}>
+              <div ref={tiltRef} className="hero-status-panel tilt-card relative z-10 rounded-2xl border border-zinc-800 bg-[#0F172A]/80 p-8 shadow-[0_0_50px_-12px_rgba(59,130,246,0.25)] backdrop-blur-3xl overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                <div className="mb-6 flex items-center gap-2 border-b border-zinc-800/80 pb-5 relative z-10">
+                  <div className="h-3 w-3 rounded-full bg-rose-500/80"></div>
+                  <div className="h-3 w-3 rounded-full bg-amber-500/80"></div>
+                  <div className="h-3 w-3 rounded-full bg-emerald-500/80"></div>
+                  <div className="ml-auto text-xs font-mono font-bold tracking-widest text-blue-400 flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    system_status.log
+                  </div>
                 </div>
-                <div className="space-y-3 font-mono text-sm">
-                  {LOG_LINES.map((log) => (
-                    <div key={log.left} className={`flex justify-between ${log.tone}`}>
-                      <span>{log.left}</span>
-                      <span>{log.right}</span>
+                <div className="space-y-4 font-mono text-sm relative z-10">
+                  {LOG_LINES.map((log, i) => (
+                    <div key={log.left} className={`flex justify-between items-center ${log.tone} animate-fade-in`} style={{ animationDelay: `${0.5 + i * 0.1}s`, animationFillMode: 'backwards' }}>
+                      <span className="font-semibold text-zinc-300">{log.left}</span>
+                      <span className="bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800 text-xs text-zinc-100">{log.right}</span>
                     </div>
                   ))}
                 </div>
-                <div className="my-4 h-px bg-zinc-800"></div>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-500/10 border border-blue-500/20">
-                    <ShieldCheck size={18} className="text-blue-500" />
+                <div className="my-6 h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent relative z-10"></div>
+                <div className="flex items-center gap-4 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50 relative z-10 transition-transform duration-300 group-hover:scale-[1.02]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/20 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                    <ShieldCheck size={24} className="text-blue-400" />
                   </div>
                   <div>
-                    <p className="font-bold text-white">SLA Active</p>
-                    <p className="text-xs text-zinc-500">Response Guarantee Backed</p>
+                    <p className="font-black text-white text-base tracking-wide">SLA Active</p>
+                    <p className="text-xs font-medium text-zinc-400 mt-0.5">Response Guarantee Backed</p>
                   </div>
                 </div>
               </div>
-              <div className="absolute -inset-4 -z-10 rounded-2xl bg-blue-500/5 blur-xl"></div>
+              <div className="absolute -inset-6 -z-10 rounded-3xl bg-blue-500/10 blur-2xl animate-pulse" style={{ animationDuration: '4s' }}></div>
             </div>
           </div>
         </div>

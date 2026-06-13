@@ -195,30 +195,30 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           {/* Column 1: Services */}
           <div>
-            <h4 className="text-white text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Services</h4>
-            <ul className="space-y-3.5 text-sm font-medium">
+            <h4 className="text-white text-base font-tech font-black uppercase tracking-[0.2em] mb-6">Services</h4>
+            <ul className="space-y-3.5 text-base font-medium">
               <li>
-                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">
+                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block text-slate-300">
                   CCTV Installation
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">
+                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block text-slate-300">
                   Biometric Access
                 </Link>
               </li>
               <li>
-                <Link href="/webdev" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">
+                <Link href="/webdev" className="hover:text-primary transition-all hover:translate-x-1 inline-block text-slate-300">
                   Web Development
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">
+                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block text-slate-300">
                   Intruder Alarms
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">
+                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block text-slate-300">
                   Video Door Phones
                 </Link>
               </li>
@@ -227,24 +227,24 @@ export function Footer() {
 
           {/* Column 2: Company */}
           <div>
-            <h4 className="text-white text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Company</h4>
-            <ul className="space-y-3.5 text-sm font-medium">
-              <li><Link href="/about" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">About Us</Link></li>
-              <li><Link href="/products" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">Products</Link></li>
-              <li><Link href="/info/policies/privacy" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">Privacy Policy</Link></li>
-              <li><Link href="/info/policies/terms" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">Terms of Service</Link></li>
+            <h4 className="text-white text-base font-tech font-black uppercase tracking-[0.2em] mb-6">Company</h4>
+            <ul className="space-y-3.5 text-base font-medium">
+              <li><Link href="/about" className="hover:text-primary transition-all hover:translate-x-1 inline-block text-slate-300">About Us</Link></li>
+              <li><Link href="/products" className="hover:text-primary transition-all hover:translate-x-1 inline-block text-slate-300">Products</Link></li>
+              <li><Link href="/info/policies/privacy" className="hover:text-primary transition-all hover:translate-x-1 inline-block text-slate-300">Privacy Policy</Link></li>
+              <li><Link href="/info/policies/terms" className="hover:text-primary transition-all hover:translate-x-1 inline-block text-slate-300">Terms of Service</Link></li>
             </ul>
           </div>
 
           {/* Column 3: Contact Details */}
-          <div className="text-sm font-medium">
-            <h4 className="text-white text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Contact</h4>
-            <address className="leading-relaxed opacity-85 not-italic">{address}</address>
+          <div className="text-base font-medium">
+            <h4 className="text-white text-base font-tech font-black uppercase tracking-[0.2em] mb-6">Contact</h4>
+            <address className="leading-relaxed text-slate-300 not-italic">{address}</address>
             <div className="mt-4 space-y-2">
-              <p className="text-blue-500 hover:text-blue-400 transition-colors font-tech font-bold">
+              <p className="text-blue-500 hover:text-blue-400 transition-colors font-tech font-bold text-base">
                 <a href={`tel:${supportPhone.replace(/\s+/g,'')}`}>{supportPhone}</a>
               </p>
-              <p className="text-blue-500 hover:text-blue-400 transition-colors font-tech font-bold">
+              <p className="text-blue-500 hover:text-blue-400 transition-colors font-tech font-bold text-base">
                 <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
               </p>
             </div>
@@ -252,8 +252,8 @@ export function Footer() {
 
           {/* Column 4: Updates Form */}
           <div>
-            <h4 className="text-white text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Updates</h4>
-            <p className="text-sm opacity-80 mb-4 leading-relaxed font-medium">Subscribe to security advisories and tech updates.</p>
+            <h4 className="text-white text-base font-tech font-black uppercase tracking-[0.2em] mb-6">Updates</h4>
+            <p className="text-base text-slate-300 mb-4 leading-relaxed font-medium">Subscribe to security advisories and tech updates.</p>
             <form className="flex gap-2 max-w-sm" onSubmit={handleSubscribe}>
               <input
                 type="email"

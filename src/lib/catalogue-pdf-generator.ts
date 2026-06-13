@@ -12,6 +12,38 @@ export interface CatalogueItem {
   brand?: string;
 }
 
+function cleanHtmlToText(html: string): string {
+  if (!html) return 'Premium hardware built for reliable performance.';
+  
+  let text = html;
+  
+  // Replace <br> and <br/> with newlines
+  text = text.replace(/<br\s*\/?>/gi, '\n');
+  
+  // Replace </p> and </div> with newlines
+  text = text.replace(/<\/p>/gi, '\n').replace(/<\/div>/gi, '\n');
+  
+  // Replace <li> with a bullet point
+  text = text.replace(/<li>/gi, '\n• ');
+  
+  // Strip all remaining HTML tags
+  text = text.replace(/<[^>]*>/g, '');
+  
+  // Decode HTML entities
+  text = text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+  
+  // Clean up duplicate spaces and newlines
+  text = text.replace(/\n\s*\n/g, '\n').trim();
+  
+  return text;
+}
+
 export async function generateCataloguePdf(options: {
   products: CatalogueItem[];
   services: CatalogueItem[];
@@ -136,12 +168,14 @@ export async function generateCataloguePdf(options: {
         groupedItems[categoryName].forEach((item) => {
           const itemTitle = item.title || item.name || 'Unnamed Item';
           const brandText = item.brand ? `[${item.brand}] ` : '';
-          const desc = item.description || 'Premium hardware built for reliable performance.';
+          const desc = cleanHtmlToText(item.description || '');
           
-          // Estimate required height for the item card
-          let cardHeight = 70;
-          if (desc.length > 120) cardHeight += 15;
-          if (includePricing) cardHeight += 15;
+          // Measure description height dynamically
+          doc.font('Helvetica').fontSize(8.5);
+          const descHeight = doc.heightOfString(desc, { width: doc.page.width - 140 });
+
+          // Calculate exact height needed for card
+          const cardHeight = 35 + descHeight + (includePricing ? 25 : 15);
 
           // Check for Page Overflow
           if (currentY + cardHeight > doc.page.height - 80) {

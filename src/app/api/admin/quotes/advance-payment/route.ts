@@ -3,10 +3,15 @@ import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { sendWhatsAppNotification } from '@/lib/whatsapp-service';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let supabaseInstance: any = null;
+function getSupabase(): any {
+  if (!supabaseInstance) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key';
+    supabaseInstance = createClient(url, key);
+  }
+  return supabaseInstance;
+}
 
 interface AdvancePaymentPayload {
   quote_id: string;
@@ -29,7 +34,7 @@ export async function POST(req: Request) {
 
     // Verify admin role - extract from JWT or validate against auth
     const token = authHeader.slice(7);
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(token);
     
     if (authError || !user) {
       return NextResponse.json(
@@ -39,7 +44,7 @@ export async function POST(req: Request) {
     }
 
     // Check if user is admin/superadmin/manager
-    const { data: userData } = await supabase
+    const { data: userData } = await getSupabase()
       .from('profiles')
       .select('role')
       .eq('id', user.id)
@@ -64,7 +69,7 @@ export async function POST(req: Request) {
     }
 
     // Fetch the quote
-    const { data: quote, error: quoteError } = await supabase
+    const { data: quote, error: quoteError } = await getSupabase()
       .from('quotes')
       .select('*')
       .eq('id', quote_id)
@@ -78,7 +83,7 @@ export async function POST(req: Request) {
     }
 
     // Check if advance payment request already exists
-    const { data: existingRequest } = await supabase
+    const { data: existingRequest } = await getSupabase()
       .from('advance_payment_requests')
       .select('id, status')
       .eq('quote_id', quote_id)
@@ -93,7 +98,7 @@ export async function POST(req: Request) {
     }
 
     // Create advance payment request
-    const { data: advancePayment, error: insertError } = await supabase
+    const { data: advancePayment, error: insertError } = await getSupabase()
       .from('advance_payment_requests')
       .insert({
         quote_id,
@@ -116,7 +121,7 @@ export async function POST(req: Request) {
     }
 
     // Update quote with advance_payment_id
-    await supabase
+    await getSupabase()
       .from('quotes')
       .update({ advance_payment_id: advancePayment.id })
       .eq('id', quote_id);
@@ -174,11 +179,11 @@ export async function GET(req: Request) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(quoteId);
     let realQuoteId = quoteId;
     if (!isUuid) {
-      const { data: q } = await supabase.from('quotes').select('id').eq('quote_number', quoteId).single();
+      const { data: q } = await getSupabase().from('quotes').select('id').eq('quote_number', quoteId).single();
       if (q) realQuoteId = q.id;
     }
 
-    const { data: advancePayment, error } = await supabase
+    const { data: advancePayment, error } = await getSupabase()
       .from('advance_payment_requests')
       .select('*')
       .eq('quote_id', realQuoteId)

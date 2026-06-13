@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   BadgeIndianRupee,
   Bot,
@@ -241,6 +241,7 @@ type SettingsMap = Record<string, string>;
 
 export default function SuperadminSettingsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [values, setValues] = React.useState<SettingsMap>({});
   const [loading, setLoading] = React.useState(true);
   const [savingKey, setSavingKey] = React.useState<string | null>(null);
@@ -250,7 +251,6 @@ export default function SuperadminSettingsPage() {
   const allFields = React.useMemo(() => sections.flatMap((section) => section.fields), []);
 
   React.useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
     const requestedTab = searchParams.get('tab');
     const requestedSection = searchParams.get('section') || (requestedTab ? legacyTabSections[requestedTab] : null);
 
@@ -274,9 +274,9 @@ export default function SuperadminSettingsPage() {
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      }, 150);
+      }, 350);
     }
-  }, [router]);
+  }, [router, searchParams]);
 
   React.useEffect(() => {
     const loadSettings = async () => {

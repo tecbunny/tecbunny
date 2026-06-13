@@ -380,42 +380,42 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
   }
 
   return (
-    <div className="relative overflow-hidden bg-[#09090B] text-zinc-200 selection:bg-blue-500/20 selection:text-white min-h-screen font-sans antialiased">
+    <div className="relative overflow-hidden bg-background text-foreground selection:bg-primary/20 selection:text-white min-h-screen font-sans antialiased">
       {/* Background Noise and Grid (homepage style) */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30" />
-        <div className="absolute -left-40 top-0 h-[42rem] w-[42rem] rounded-full bg-blue-500/5 blur-[160px]" />
-        <div className="absolute -right-40 top-1/3 h-[46rem] w-[46rem] rounded-full bg-zinc-800/5 blur-[180px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(9,9,11,0.6),_rgba(9,9,11,0.95))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20" />
+        <div className="absolute -left-40 top-0 h-[42rem] w-[42rem] rounded-full bg-primary/5 blur-[160px]" />
+        <div className="absolute -right-40 top-1/3 h-[46rem] w-[46rem] rounded-full bg-muted/5 blur-[180px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(var(--background),0.6),_rgba(var(--background),0.95))]" />
       </div>
       
       {/* Ambient Blobs */}
-      <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-blue-500/10 blur-[120px] animate-pulse" aria-hidden="true" />
-      <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-blue-600/10 blur-[120px]" aria-hidden="true" />
+      <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-primary/10 blur-[120px] animate-pulse" aria-hidden="true" />
+      <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-primary/10 blur-[120px]" aria-hidden="true" />
 
       <div className="relative">
         <div className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8 relative z-10">
-          <nav className="flex flex-wrap items-center gap-2 text-xs font-mono uppercase tracking-wider text-zinc-500">
+          <nav className="flex flex-wrap items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground/80">
             <button
               type="button"
               onClick={() => router.push('/products')}
-              className="inline-flex items-center gap-2 text-zinc-400 hover:text-blue-400 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Products
             </button>
             <span>/</span>
-            <span className="hover:text-blue-400 transition-colors">{product.category}</span>
+            <span className="hover:text-primary transition-colors">{product.category}</span>
             <span>/</span>
-            <span className="text-white font-semibold">{displayName}</span>
+            <span className="text-foreground font-semibold">{displayName}</span>
           </nav>
 
           <section className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div className="space-y-6">
-              <div className="relative bg-[#0F172A]/20 border border-zinc-800 rounded-3xl p-8 h-[550px] flex items-center justify-center overflow-hidden group backdrop-blur-sm shadow-2xl">
+              <div className="relative bg-muted/20 border border-border rounded-3xl p-8 h-[550px] flex items-center justify-center overflow-hidden group backdrop-blur-sm shadow-2xl">
                 <div className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <div className="product-scan-line bg-gradient-to-b from-transparent via-blue-500/30 to-transparent"></div>
-                  <div className="absolute inset-0 bg-blue-500/5"></div>
+                  <div className="product-scan-line bg-gradient-to-b from-transparent via-primary/30 to-transparent"></div>
+                  <div className="absolute inset-0 bg-primary/5"></div>
                 </div>
 
                 <img
@@ -433,19 +433,19 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
 
                 <div className="absolute top-4 left-4 z-20">
                   {product.stock_status === 'out_of_stock' ? (
-                    <span className="bg-zinc-950 text-zinc-400 border border-zinc-800 text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg">
+                    <span className="bg-background text-muted-foreground border border-border text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg">
                       OUT OF STOCK
                     </span>
                   ) : product.stock_status === 'low_stock' ? (
-                    <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg">
+                    <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg">
                       LOW STOCK
                     </span>
                   ) : product.stock_status === 'backorder' ? (
-                    <span className="bg-zinc-900 text-zinc-400 border border-zinc-800 text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg">
+                    <span className="bg-muted text-muted-foreground border border-border text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg">
                       BACKORDER
                     </span>
                   ) : (
-                    <span className="bg-blue-600/15 text-blue-400 border border-blue-500/30 text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg shadow-blue-500/5">
+                    <span className="bg-primary/15 text-primary border border-primary/30 text-[10px] font-semibold tracking-wider px-3 py-1.5 rounded-full shadow-lg shadow-primary/5">
                       IN STOCK
                     </span>
                   )}
@@ -457,10 +457,10 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-zinc-900/30 border p-2 flex-shrink-0 transition-all duration-300 ${
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-muted/30 border p-2 flex-shrink-0 transition-all duration-300 ${
                       selectedImage === index 
-                        ? 'border-blue-500 bg-blue-500/5 shadow-[0_0_15px_rgba(59,130,246,0.2)] scale-105' 
-                         : 'border-zinc-800 hover:border-zinc-700 hover:scale-102'
+                        ? 'border-primary bg-primary/5 shadow-[0_0_15px_rgba(59,130,246,0.2)] scale-105' 
+                         : 'border-border hover:border-border/80 hover:scale-102'
                     }`}
                   >
                     <img
@@ -481,16 +481,16 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
             </div>
 
             <div className="flex flex-col">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white font-tech leading-none mb-3">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-foreground font-tech leading-none mb-3">
                 {displayName}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-6 mb-6 text-xs font-mono uppercase tracking-wider text-zinc-500">
+              <div className="flex flex-wrap items-center gap-6 mb-6 text-xs font-mono uppercase tracking-wider text-muted-foreground">
                 {product.model_number && (
-                  <span>Model: <span className="text-zinc-350">{product.model_number}</span></span>
+                  <span>Model: <span className="text-foreground/90">{product.model_number}</span></span>
                 )}
                 {skuValue && (
-                  <span>SKU: <span className="text-zinc-350">{skuValue}</span></span>
+                  <span>SKU: <span className="text-foreground/90">{skuValue}</span></span>
                 )}
                 {Number(product.reviewCount) > 0 && Number(product.rating) > 0 && (
                   <div className="flex items-center gap-2">
@@ -500,16 +500,16 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 )}
               </div>
 
-              <div className="bg-[#0F172A]/40 border border-zinc-800/80 rounded-2xl p-8 mb-8 backdrop-blur-md shadow-2xl relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+              <div className="bg-card/45 border border-border/80 rounded-2xl p-8 mb-8 backdrop-blur-md shadow-2xl relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                 {pricing && (
                   <div className="flex flex-wrap items-baseline gap-4 mb-3 relative z-10">
-                    <span className="text-5xl font-black text-white font-tech tracking-tight">₹{pricing.salePrice.toLocaleString('en-IN')}</span>
+                    <span className="text-5xl font-black text-foreground font-tech tracking-tight">₹{pricing.salePrice.toLocaleString('en-IN')}</span>
                     {pricing.hasDiscount && (
                       <>
-                        <span className="text-xl text-zinc-500 line-through font-light">₹{pricing.mrp.toLocaleString('en-IN')}</span>
+                        <span className="text-xl text-muted-foreground line-through font-light">₹{pricing.mrp.toLocaleString('en-IN')}</span>
                         {pricing.percentageOff > 0 && (
-                          <span className="text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full uppercase tracking-wider">
+                          <span className="text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full uppercase tracking-wider">
                             {pricing.percentageOff}% OFF
                           </span>
                         )}
@@ -517,18 +517,18 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                     )}
                   </div>
                 )}
-                <p className="text-xs text-zinc-500 font-mono relative z-10">PRICE INCLUSIVE OF GST. INSTALLATION & CABLING CHARGED ON ACTUALS.</p>
+                <p className="text-xs text-muted-foreground/60 font-mono relative z-10">PRICE INCLUSIVE OF GST. INSTALLATION & CABLING CHARGED ON ACTUALS.</p>
               </div>
 
-              <div className="prose prose-invert prose-sm mb-8 text-zinc-400">
+              <div className="prose prose-invert prose-sm mb-8 text-muted-foreground">
                 <div dangerouslySetInnerHTML={{ __html: descriptionHtml }} className="leading-relaxed" />
                 {highlightSpecs.length > 0 && (
                   <ul className="list-none pl-0 space-y-2 mt-6">
                     {highlightSpecs.map(([key, value]) => (
                       <li key={key} className="flex items-center gap-3 text-sm">
-                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                        <span className="text-zinc-400 font-mono uppercase text-xs">{key}:</span>
-                        <span className="text-zinc-200 font-medium">{value}</span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+                        <span className="text-muted-foreground/80 font-mono uppercase text-xs">{key}:</span>
+                        <span className="text-foreground/90 font-medium">{value}</span>
                       </li>
                     ))}
                   </ul>
@@ -539,17 +539,17 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 <div className="flex flex-wrap gap-4">
                   <AddToCartButton
                     product={product}
-                    className="flex-1 min-w-[220px] h-14 text-base bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-wide uppercase rounded-xl transition-all duration-300 hover:scale-[1.02] shadow-[0_0_30px_-5px_rgba(59,130,246,0.45)] border border-blue-500/20 cursor-pointer"
+                    className="flex-1 min-w-[220px] h-14 text-base bg-primary hover:bg-primary/90 text-primary-foreground font-bold tracking-wide uppercase rounded-xl transition-all duration-300 hover:scale-[1.02] shadow-[0_0_30px_-5px_rgba(var(--primary),0.45)] border border-primary/20 cursor-pointer"
                     size="lg"
                   />
                   <WishlistButton
                     product={product}
-                    className="h-14 w-14 flex-shrink-0 border border-zinc-800 bg-zinc-900/30 hover:bg-zinc-800/60 hover:border-zinc-700 text-white rounded-xl transition-all duration-300 cursor-pointer"
+                    className="h-14 w-14 flex-shrink-0 border border-border bg-muted/30 hover:bg-muted/60 hover:border-border/80 text-foreground rounded-xl transition-all duration-300 cursor-pointer"
                   />
                   <Button
                     variant="outline"
                     size="lg"
-                    className="h-14 w-14 flex-shrink-0 border border-zinc-800 bg-zinc-900/30 hover:bg-zinc-800/60 hover:border-zinc-700 text-white rounded-xl transition-all duration-300 cursor-pointer"
+                    className="h-14 w-14 flex-shrink-0 border border-border bg-muted/30 hover:bg-muted/60 hover:border-border/80 text-foreground rounded-xl transition-all duration-300 cursor-pointer"
                     onClick={handleShare}
                     aria-label={`Share ${displayName}`}
                   >
@@ -560,40 +560,40 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 <div className="flex flex-wrap gap-4">
                   <Button
                     variant="outline"
-                    className="flex-1 h-12 border border-zinc-800 bg-zinc-900/20 hover:bg-zinc-800/40 hover:border-zinc-700 text-zinc-350 hover:text-white rounded-xl transition-all duration-300 cursor-pointer"
+                    className="flex-1 h-12 border border-border bg-muted/20 hover:bg-muted/40 hover:border-border/80 text-muted-foreground hover:text-foreground rounded-xl transition-all duration-300 cursor-pointer"
                     onClick={() => trackEvent('amc_inquiry', { productId: product.id, productName: displayName })}
                   >
-                    <Shield className="mr-2 h-4 w-4 text-blue-500" />
+                    <Shield className="mr-2 h-4 w-4 text-primary" />
                     Request AMC Quote
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 h-12 border border-zinc-800 bg-zinc-900/20 hover:bg-zinc-800/40 hover:border-zinc-700 text-zinc-350 hover:text-white rounded-xl transition-all duration-300 cursor-pointer"
+                    className="flex-1 h-12 border border-border bg-muted/20 hover:bg-muted/40 hover:border-border/80 text-muted-foreground hover:text-foreground rounded-xl transition-all duration-300 cursor-pointer"
                     onClick={() => trackEvent('installation_inquiry', { productId: product.id, productName: displayName })}
                   >
-                    <Truck className="mr-2 h-4 w-4 text-blue-500" />
+                    <Truck className="mr-2 h-4 w-4 text-primary" />
                     Installation Inquiry
                   </Button>
                 </div>
 
-                <p className="text-xs text-center text-zinc-500">
-                  <Shield className="inline-block h-3.5 w-3.5 mr-1 text-blue-500" />
+                <p className="text-xs text-center text-muted-foreground/60">
+                  <Shield className="inline-block h-3.5 w-3.5 mr-1 text-primary" />
                   {product.warranty ? `${product.warranty} included.` : '2-Year Manufacturer Warranty included.'}
                 </p>
               </div>
             </div>
           </section>
 
-          <section className="mt-16 border border-zinc-850/80 bg-[#0F172A]/10 rounded-3xl backdrop-blur-sm">
+          <section className="mt-16 border border-border/80 bg-muted/10 rounded-3xl backdrop-blur-sm">
             <div className="px-6 py-10 sm:px-8">
-              <div className="flex gap-8 border-b border-zinc-800/80 mb-8 overflow-x-auto no-scrollbar">
+              <div className="flex gap-8 border-b border-border/80 mb-8 overflow-x-auto no-scrollbar">
                 <button
                   type="button"
                   onClick={() => setActiveTab('specs')}
                   className={`px-4 py-3 text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all duration-300 cursor-pointer ${
                     activeTab === 'specs'
-                      ? 'border-blue-500 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]'
-                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                      ? 'border-primary text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.3)]'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Specifications
@@ -603,8 +603,8 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                   onClick={() => setActiveTab('description')}
                   className={`px-4 py-3 text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all duration-300 cursor-pointer ${
                     activeTab === 'description'
-                      ? 'border-blue-500 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]'
-                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                      ? 'border-primary text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.3)]'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Description
@@ -614,8 +614,8 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                   onClick={() => setActiveTab('warranty')}
                   className={`px-4 py-3 text-sm font-bold uppercase tracking-wider border-b-2 whitespace-nowrap transition-all duration-300 cursor-pointer ${
                     activeTab === 'warranty'
-                      ? 'border-blue-500 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]'
-                      : 'border-transparent text-zinc-500 hover:text-zinc-300'
+                      ? 'border-primary text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.3)]'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Warranty Info
@@ -626,36 +626,36 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-4 text-sm font-mono">
                   {product.specifications && Object.keys(product.specifications).length > 0 ? (
                     Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key} className="flex justify-between py-4 border-b border-zinc-850">
-                        <span className="text-zinc-500 uppercase text-xs">{key}</span>
-                        <span className="text-zinc-200 text-right font-medium">{value}</span>
+                      <div key={key} className="flex justify-between py-4 border-b border-border/60">
+                        <span className="text-muted-foreground/80 uppercase text-xs">{key}</span>
+                        <span className="text-foreground/90 text-right font-medium">{value}</span>
                       </div>
                     ))
                   ) : (
-                    <div className="text-zinc-500 italic">Specifications will be updated soon.</div>
+                    <div className="text-muted-foreground/80 italic">Specifications will be updated soon.</div>
                   )}
                 </div>
               )}
 
               {activeTab === 'description' && (
-                <div className="prose prose-invert max-w-none text-zinc-300 leading-relaxed">
+                <div className="prose prose-invert max-w-none text-muted-foreground leading-relaxed">
                   <div dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
                 </div>
               )}
 
               {activeTab === 'warranty' && (
-                <div className="rounded-2xl border border-zinc-850 bg-zinc-900/10 p-6 text-sm text-zinc-300 space-y-4 max-w-2xl backdrop-blur-sm">
+                <div className="rounded-2xl border border-border bg-muted/10 p-6 text-sm text-muted-foreground space-y-4 max-w-2xl backdrop-blur-sm">
                   <p className="leading-relaxed">
                     {product.warranty
                       ? `${product.warranty} coverage provided by manufacturer.`
                       : '2-Year Manufacturer Warranty included with standard purchase.'}
                   </p>
-                  <div className="flex items-center gap-3 text-zinc-400">
-                    <RefreshCw className="h-4 w-4 text-blue-500 animate-spin-slow" />
+                  <div className="flex items-center gap-3 text-muted-foreground/80">
+                    <RefreshCw className="h-4 w-4 text-primary animate-spin-slow" />
                     <span>Hassle-free replacement for eligible defects.</span>
                   </div>
-                  <div className="flex items-center gap-3 text-zinc-400">
-                    <Shield className="h-4 w-4 text-blue-500" />
+                  <div className="flex items-center gap-3 text-muted-foreground/80">
+                    <Shield className="h-4 w-4 text-primary" />
                     <span>Support available via Tecbunny SLA desk.</span>
                   </div>
                 </div>

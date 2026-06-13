@@ -545,35 +545,35 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
   const resolvedResultsLabel = loading ? 'Loading...' : `${filteredProducts.length} items`;
 
   return (
-    <section className="relative overflow-hidden bg-[#09090B] text-zinc-200 selection:bg-blue-500/20 selection:text-white min-h-screen font-sans antialiased">
+    <section className="relative overflow-hidden bg-background text-foreground selection:bg-primary/20 selection:text-white min-h-screen font-sans antialiased">
       {/* Background Noise and Grid (homepage style) */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30" />
-        <div className="absolute -left-40 top-0 h-[42rem] w-[42rem] rounded-full bg-blue-500/5 blur-[160px]" />
-        <div className="absolute -right-40 top-1/3 h-[46rem] w-[46rem] rounded-full bg-zinc-800/5 blur-[180px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(9,9,11,0.6),_rgba(9,9,11,0.95))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20" />
+        <div className="absolute -left-40 top-0 h-[42rem] w-[42rem] rounded-full bg-primary/5 blur-[160px]" />
+        <div className="absolute -right-40 top-1/3 h-[46rem] w-[46rem] rounded-full bg-muted/5 blur-[180px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(var(--background),0.6),_rgba(var(--background),0.95))]" />
       </div>
       
       {/* Ambient Blobs */}
-      <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-blue-500/10 blur-[120px] animate-pulse" aria-hidden="true" />
-      <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-blue-600/10 blur-[120px]" aria-hidden="true" />
+      <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-primary/10 blur-[120px] animate-pulse" aria-hidden="true" />
+      <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-primary/10 blur-[120px]" aria-hidden="true" />
 
       <div className="relative mx-auto max-w-7xl px-6 pb-24 pt-24 sm:px-8 sm:pt-32">
         <div className="flex flex-col gap-12">
           {/* Hero Header */}
           <div className="reveal-section flex flex-col items-center text-center gap-6" data-reveal-id="products-hero">
             <div className={cn('reveal-item flex flex-col items-center gap-4', revealDelayClass(0))}>
-              <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/5 px-3 py-1 text-xs font-semibold text-blue-500">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
                 <Sparkles size={14} className="animate-pulse" />
                 Product Catalog
               </div>
-              <h1 className="text-5xl font-extrabold leading-[1.05] text-white sm:text-7xl md:text-8xl font-tech tracking-tight">
+              <h1 className="text-5xl font-extrabold leading-[1.05] text-foreground sm:text-7xl md:text-8xl font-tech tracking-tight">
                 <span className="glitch-text block pb-3" data-text="Professional">Professional</span>
-                <span className="block bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-foreground via-foreground/90 to-foreground/60 bg-clip-text text-transparent">
                   Hardware & Gear
                 </span>
               </h1>
-              <p className="max-w-xl text-lg leading-relaxed text-zinc-400 font-light">
+              <p className="max-w-xl text-lg leading-relaxed text-muted-foreground font-light">
                 {searchQuery 
                   ? `Found results matching "${searchQuery}"` 
                   : 'Enterprise-grade equipment and components curated for professional security and IT infrastructure.'
@@ -584,26 +584,26 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
             {/* Command-bar style search */}
             <form onSubmit={handleSearch} className={cn('reveal-item w-full max-w-lg mt-4', revealDelayClass(90))}>
               <div className="relative group shadow-2xl rounded-xl">
-                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-blue-400" />
+                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                 <input
                   type="text"
                   placeholder="Search catalog... (e.g. CCTV, RAM, Router)"
                   value={localSearchQuery}
                   onChange={(e) => setLocalSearchQuery(e.target.value)}
-                  className="h-12 w-full rounded-xl border border-zinc-800 bg-zinc-900/50 pl-11 pr-12 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all duration-300 font-mono"
+                  className="h-12 w-full rounded-xl border border-border bg-muted/30 pl-11 pr-12 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all duration-300 font-mono"
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-950 text-[9px] font-mono text-zinc-500 pointer-events-none">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-background text-[9px] font-mono text-muted-foreground/50 pointer-events-none">
                   <span>⏎</span>
                 </div>
               </div>
-              <p className="mt-2.5 text-[10px] font-mono text-zinc-500 tracking-wider uppercase">{resolvedResultsLabel}</p>
+              <p className="mt-2.5 text-[10px] font-mono text-muted-foreground/60 tracking-wider uppercase">{resolvedResultsLabel}</p>
             </form>
           </div>
 
           {/* Control Bar (Category Filter + Sort Options) */}
           {categories.length > 0 && (
             <div 
-              className="reveal-section sticky top-[80px] z-20 flex flex-col sm:flex-row items-center justify-between gap-4 border-y border-zinc-800/80 bg-[#09090B]/85 backdrop-blur-md py-4 px-4 rounded-xl"
+              className="reveal-section sticky top-[80px] z-20 flex flex-col sm:flex-row items-center justify-between gap-4 border-y border-border bg-background/85 backdrop-blur-md py-4 px-4 rounded-xl"
               data-reveal-id="products-filters"
             >
               {/* Categories scrollable list */}
@@ -614,8 +614,8 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                   className={cn(
                     'reveal-item rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all duration-300 border whitespace-nowrap',
                     !categoryFilter
-                      ? 'bg-blue-500/15 text-blue-400 border-blue-500/40 shadow-[0_0_15px_rgba(59,130,246,0.15)]'
-                      : 'bg-zinc-900/50 text-zinc-400 border-zinc-800/85 hover:text-white hover:bg-zinc-800/50 hover:border-zinc-700',
+                      ? 'bg-primary/15 text-primary border-primary/40 shadow-[0_0_15px_rgba(59,130,246,0.15)]'
+                      : 'bg-muted/50 text-muted-foreground border-border hover:text-foreground hover:bg-muted/80 hover:border-border/80',
                     revealDelayClass(0)
                   )}
                 >
@@ -629,8 +629,8 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                     className={cn(
                       'reveal-item rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all duration-300 border whitespace-nowrap',
                       categoryFilter === category
-                        ? 'bg-blue-500/15 text-blue-400 border-blue-500/40 shadow-[0_0_15px_rgba(59,130,246,0.15)]'
-                        : 'bg-zinc-900/50 text-zinc-400 border-zinc-800/85 hover:text-white hover:bg-zinc-800/50 hover:border-zinc-700',
+                        ? 'bg-primary/15 text-primary border-primary/40 shadow-[0_0_15px_rgba(59,130,246,0.15)]'
+                        : 'bg-muted/50 text-muted-foreground border-border hover:text-foreground hover:bg-muted/80 hover:border-border/80',
                       revealDelayClass(50 + idx * 20)
                     )}
                   >
@@ -642,7 +642,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                     type="button"
                     onClick={clearFilters}
                     className={cn(
-                      'reveal-item rounded-lg border border-red-950 bg-red-950/20 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-red-400 transition-all duration-300 hover:bg-red-950/40 hover:text-red-350',
+                      'reveal-item rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-destructive transition-all duration-300 hover:bg-destructive/20 hover:text-destructive-foreground',
                       revealDelayClass(120)
                     )}
                   >
@@ -653,11 +653,11 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
 
               {/* Sort Dropdown */}
               <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Sort by</span>
+                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Sort by</span>
                 <select
                   value={sortOption}
                   onChange={(e) => updateUrlParams({ sort: e.target.value })}
-                  className="bg-[#09090B] text-zinc-300 border border-zinc-800 rounded-lg px-3 py-1.5 focus:outline-none focus:border-zinc-700 hover:bg-zinc-900 transition-all duration-300 font-mono cursor-pointer text-xs"
+                  className="bg-background text-foreground border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary/50 hover:bg-muted transition-all duration-300 font-mono cursor-pointer text-xs"
                 >
                   <option value="popularity">Popularity</option>
                   <option value="newest">New Arrivals</option>
@@ -676,14 +676,14 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
           {loading ? (
             <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(250px,1fr))] min-h-[400px]">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="flex h-full flex-col rounded-2xl border border-zinc-800 bg-[#0F172A]/20 p-6">
-                  <Skeleton className="mb-6 aspect-square w-full rounded-xl bg-zinc-900/60 animate-pulse" />
+                <div key={i} className="flex h-full flex-col rounded-2xl border border-border bg-card/20 p-6">
+                  <Skeleton className="mb-6 aspect-square w-full rounded-xl bg-muted/60 animate-pulse" />
                   <div className="space-y-2">
-                    <Skeleton className="h-3 w-1/4 bg-zinc-900/60 rounded animate-pulse" />
-                    <Skeleton className="h-5 w-3/4 bg-zinc-900/60 rounded animate-pulse" />
-                    <Skeleton className="h-4 w-5/6 bg-zinc-900/60 rounded animate-pulse" />
+                    <Skeleton className="h-3 w-1/4 bg-muted/60 rounded animate-pulse" />
+                    <Skeleton className="h-5 w-3/4 bg-muted/60 rounded animate-pulse" />
+                    <Skeleton className="h-4 w-5/6 bg-muted/60 rounded animate-pulse" />
                   </div>
-                  <div className="mt-8 flex items-center justify-between pt-4 border-t border-zinc-800">
+                  <div className="mt-8 flex items-center justify-between pt-4 border-t border-border">
                     <div className="flex flex-col gap-1 w-20">
                       <Skeleton className="h-6 w-full bg-muted/60 rounded animate-pulse" />
                     </div>
@@ -719,11 +719,11 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                 return (
                   <ProductTileErrorBoundary key={product.id || index} productId={product.id}>
                     <div
-                      className="relative flex h-full flex-col justify-between p-6 rounded-2xl border border-zinc-800/80 bg-[#0F172A]/40 backdrop-blur-sm shadow-[0_4px_20px_-1px_rgba(0,0,0,0.3)] transition-all duration-500 hover:-translate-y-1.5 hover:border-zinc-700 hover:shadow-[0_0_30px_-5px_rgba(59,130,246,0.15)] group"
+                      className="relative flex h-full flex-col justify-between p-6 rounded-2xl border border-border/80 bg-card/40 backdrop-blur-sm shadow-[0_4px_20px_-1px_rgba(0,0,0,0.3)] transition-all duration-500 hover:-translate-y-1.5 hover:border-primary/50 hover:shadow-[0_0_30px_-5px_rgba(var(--primary),0.15)] group"
                     >
                       <Link href={`/products/${product.id}`} className="block flex-grow">
                         {/* Image Frame */}
-                        <div className="relative mb-6 aspect-square overflow-hidden rounded-xl bg-zinc-950/60 border border-zinc-850/50 group-hover:border-zinc-700/85 transition-colors">
+                        <div className="relative mb-6 aspect-square overflow-hidden rounded-xl bg-background/80 border border-border/50 group-hover:border-primary/30 transition-colors">
                           <ProductGridImage
                             src={imageUrl}
                             alt={displayName}
@@ -731,7 +731,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                           />
                           {/* Discount Badge */}
                           {product.discount_percentage && product.discount_percentage > 0 ? (
-                            <div className="absolute left-3 top-3 rounded-full bg-blue-500/15 border border-blue-500/30 px-2.5 py-0.5 text-[9px] font-mono font-bold text-blue-400 tracking-wider uppercase shadow-sm animate-fade-in">
+                            <div className="absolute left-3 top-3 rounded-full bg-primary/15 border border-primary/30 px-2.5 py-0.5 text-[9px] font-mono font-bold text-primary tracking-wider uppercase shadow-sm animate-fade-in">
                               -{product.discount_percentage}% OFF
                             </div>
                           ) : null}
@@ -740,35 +740,35 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                         {/* Text Content */}
                         <div className="space-y-2">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-500">
+                            <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/80">
                               {product.brand || product.category || 'Hardware'}
                             </span>
                             {product.rating > 0 && (
-                              <div className="flex items-center gap-0.5 text-[10px] font-mono text-zinc-400">
+                              <div className="flex items-center gap-0.5 text-[10px] font-mono text-muted-foreground">
                                 <span className="text-amber-500">★</span>
                                 <span>{product.rating.toFixed(1)}</span>
                               </div>
                             )}
                           </div>
                           
-                          <h3 className="text-lg font-bold tracking-tight text-white transition-colors group-hover:text-blue-400 font-tech">
+                          <h3 className="text-lg font-bold tracking-tight text-foreground transition-colors group-hover:text-primary font-tech">
                             {displayName}
                           </h3>
                           
-                          <p className="text-xs font-light text-zinc-400 line-clamp-2 leading-relaxed">
+                          <p className="text-xs font-light text-muted-foreground line-clamp-2 leading-relaxed">
                             {simpleDesc}
                           </p>
                         </div>
                       </Link>
 
                       {/* Footer Actions */}
-                      <div className="mt-6 flex items-center justify-between pt-4 border-t border-zinc-800/60">
+                      <div className="mt-6 flex items-center justify-between pt-4 border-t border-border/60">
                         <div className="flex flex-col">
-                          <span className="text-xl font-black tracking-tight text-white font-tech">
+                          <span className="text-xl font-black tracking-tight text-foreground font-tech">
                             ₹{(offerPrice ?? basePrice).toLocaleString('en-IN')}
                           </span>
                           {offerPrice && (
-                            <span className="text-xs text-zinc-500 line-through font-light mt-0.5">
+                            <span className="text-xs text-muted-foreground line-through font-light mt-0.5">
                               ₹{basePrice.toLocaleString('en-IN')}
                             </span>
                           )}
@@ -780,7 +780,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                             event.stopPropagation();
                             addToCart(product);
                           }}
-                          className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/30 text-white transition-all duration-300 hover:border-blue-500/50 hover:bg-blue-600 hover:text-white hover:scale-110 shadow-sm cursor-pointer"
+                          className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-muted/30 text-foreground transition-all duration-300 hover:border-primary/50 hover:bg-primary hover:text-primary-foreground hover:scale-110 shadow-sm cursor-pointer"
                           aria-label={`Add ${displayName} to cart`}
                         >
                           <span className="text-lg font-bold">+</span>
@@ -792,7 +792,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
               })}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-zinc-850 bg-zinc-900/20 p-16 text-center text-zinc-400 font-light text-base backdrop-blur-sm">
+            <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-16 text-center text-muted-foreground font-light text-base backdrop-blur-sm">
               {fetchWarning || 'No products matched your search.'}
             </div>
           )}

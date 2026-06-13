@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     const [productsResult, servicesResult, companyInfo] = await Promise.all([
       supabase.from('products').select('*').eq('status', 'active'),
-      supabase.from('services').select('*').eq('status', 'active'),
+      supabase.from('services').select('*').eq('is_active', true),
       loadCompanyInfo(),
     ]);
 

@@ -78,6 +78,7 @@ export default function CatalogueManagementPage() {
           }));
 
         const loadedServs: CatalogueItem[] = (servData.services || [])
+          .filter((s: any) => s.is_active !== false)
           .map((s: any) => ({
             id: s.id,
             name: s.name || s.title || 'Unnamed Service',

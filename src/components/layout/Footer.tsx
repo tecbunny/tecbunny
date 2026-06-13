@@ -189,35 +189,36 @@ export function Footer() {
   const activeSocialPlatforms = socialPlatforms.filter(({ key }) => Boolean(socialLinks[key]));
 
   return (
-    <footer className="relative bg-white dark:bg-[#09090B] text-zinc-500 dark:text-zinc-400 border-t border-zinc-200 dark:border-zinc-800 py-12 sm:py-16 font-sans">
-      <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+    <footer className="relative bg-background text-muted-foreground border-t border-border py-16 sm:py-24 font-sans tech-main-content">
+      <div className="absolute top-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
+      <div className="relative z-10 max-w-screen-2xl mx-auto px-6 sm:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           {/* Column 1: Services */}
           <div>
-            <h4 className="text-zinc-900 dark:text-zinc-300 text-xs font-mono font-semibold uppercase tracking-widest mb-4">Services</h4>
-            <ul className="space-y-2.5 text-xs">
+            <h4 className="text-foreground text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Services</h4>
+            <ul className="space-y-3.5 text-sm font-medium">
               <li>
-                <Link href="/services" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">
+                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">
                   CCTV Installation
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">
+                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">
                   Biometric Access
                 </Link>
               </li>
               <li>
-                <Link href="/webdev" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">
+                <Link href="/webdev" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">
                   Web Development
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">
+                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">
                   Intruder Alarms
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">
+                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">
                   Video Door Phones
                 </Link>
               </li>
@@ -226,24 +227,24 @@ export function Footer() {
 
           {/* Column 2: Company */}
           <div>
-            <h4 className="text-zinc-900 dark:text-zinc-300 text-xs font-mono font-semibold uppercase tracking-widest mb-4">Company</h4>
-            <ul className="space-y-2.5 text-xs">
-              <li><Link href="/about" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">About Us</Link></li>
-              <li><Link href="/products" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">Products</Link></li>
-              <li><Link href="/info/policies/privacy" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">Privacy Policy</Link></li>
-              <li><Link href="/info/policies/terms" className="hover:text-zinc-950 dark:hover:text-white transition-colors opacity-80 hover:opacity-100">Terms of Service</Link></li>
+            <h4 className="text-foreground text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Company</h4>
+            <ul className="space-y-3.5 text-sm font-medium">
+              <li><Link href="/about" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">About Us</Link></li>
+              <li><Link href="/products" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">Products</Link></li>
+              <li><Link href="/info/policies/privacy" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">Privacy Policy</Link></li>
+              <li><Link href="/info/policies/terms" className="hover:text-primary transition-all hover:translate-x-1 inline-block opacity-80 hover:opacity-100">Terms of Service</Link></li>
             </ul>
           </div>
 
           {/* Column 3: Contact Details */}
-          <div className="text-xs">
-            <h4 className="text-zinc-900 dark:text-zinc-300 text-xs font-mono font-semibold uppercase tracking-widest mb-4">Contact</h4>
+          <div className="text-sm font-medium">
+            <h4 className="text-foreground text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Contact</h4>
             <address className="leading-relaxed opacity-85 not-italic">{address}</address>
-            <div className="mt-3 space-y-1">
-              <p className="text-blue-600 dark:text-blue-500 hover:underline font-tech">
+            <div className="mt-4 space-y-2">
+              <p className="text-blue-500 hover:text-blue-400 transition-colors font-tech font-bold">
                 <a href={`tel:${supportPhone.replace(/\s+/g,'')}`}>{supportPhone}</a>
               </p>
-              <p className="text-blue-600 dark:text-blue-500 hover:underline font-tech">
+              <p className="text-blue-500 hover:text-blue-400 transition-colors font-tech font-bold">
                 <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
               </p>
             </div>
@@ -251,8 +252,8 @@ export function Footer() {
 
           {/* Column 4: Updates Form */}
           <div>
-            <h4 className="text-zinc-900 dark:text-zinc-300 text-xs font-mono font-semibold uppercase tracking-widest mb-4">Updates</h4>
-            <p className="text-xs opacity-80 mb-3 leading-relaxed">Subscribe to security advisories and tech updates.</p>
+            <h4 className="text-foreground text-sm font-tech font-black uppercase tracking-[0.2em] mb-6">Updates</h4>
+            <p className="text-sm opacity-80 mb-4 leading-relaxed font-medium">Subscribe to security advisories and tech updates.</p>
             <form className="flex gap-2 max-w-sm" onSubmit={handleSubscribe}>
               <input
                 type="email"
@@ -265,18 +266,18 @@ export function Footer() {
                     setSubscribeMessage(null);
                   }
                 }}
-                className="bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500 w-full placeholder-zinc-400 transition-all"
+                className="bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary w-full placeholder-muted-foreground transition-all shadow-inner"
               />
               <button
                 type="submit"
                 disabled={subscribeStatus === 'loading'}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-40"
+                className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold rounded-xl transition-all hover:scale-105 hover:shadow-[0_0_15px_rgba(37,99,235,0.4)] disabled:opacity-40"
               >
                 {subscribeStatus === 'loading' ? '...' : 'Subscribe'}
               </button>
             </form>
             {subscribeMessage && (
-              <p className={`mt-2 text-[10px] ${subscribeStatus === 'success' ? 'text-emerald-500' : 'text-rose-500'}`} role="status">
+              <p className={`mt-3 text-xs font-bold tracking-wide ${subscribeStatus === 'success' ? 'text-emerald-500' : 'text-rose-500'}`} role="status">
                 {subscribeMessage}
               </p>
             )}
@@ -284,28 +285,28 @@ export function Footer() {
         </div>
 
         {/* Footer Bottom (Copyright, CIN, GSTIN, and Socials) */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-zinc-200/50 dark:border-zinc-900/60 text-[10px] tracking-wide text-zinc-400 dark:text-zinc-500">
-          <div className="flex flex-col items-center gap-1.5 md:flex-row md:items-center md:gap-4 text-center md:text-left">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-10 border-t border-border/50 text-xs sm:text-sm tracking-wide text-muted-foreground font-medium">
+          <div className="flex flex-col items-center gap-2 md:flex-row md:items-center md:gap-6 text-center md:text-left">
             <p>© 2026 TecBunny solutions. All rights reserved.</p>
-            <div className="flex items-center gap-2 font-mono">
+            <div className="flex items-center gap-3 font-mono opacity-80">
               <span>CIN: U80200GA2025PTC017488</span>
-              <span>|</span>
+              <span className="hidden md:inline">|</span>
               <span>GSTIN: {companyInfo.gstin || '30AAMCT1608G1ZO'}</span>
             </div>
           </div>
 
           {activeSocialPlatforms.length > 0 && (
-            <div className="flex gap-4">
+            <div className="flex gap-5">
               {activeSocialPlatforms.map(({ key, icon: Icon, label }) => (
                 <a
                   key={key}
                   href={socialLinks[key]}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-zinc-900 dark:hover:text-white transition-colors"
+                  className="p-2 rounded-lg bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:scale-110 transition-all shadow-sm hover:shadow-[0_0_15px_rgba(37,99,235,0.4)]"
                   onClick={() => handleSocialClick(label)}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-5 w-5" />
                   <span className="sr-only">{label}</span>
                 </a>
               ))}

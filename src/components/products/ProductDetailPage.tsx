@@ -341,7 +341,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
 
   if (loading) {
     return (
-      <div className="bg-background text-foreground">
+      <div className="tech-main-content bg-background text-foreground">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="animate-pulse">
             <div className="h-6 w-40 rounded bg-white/10 mb-8"></div>
@@ -362,11 +362,11 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
 
   if (!product) {
     return (
-      <div className="bg-background text-foreground">
+      <div className="tech-main-content bg-background text-foreground">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-white mb-4">Product Not Found</h2>
-            <p className="text-slate-400 mb-8">
+            <p className="text-muted-foreground mb-8">
               The product you're looking for doesn't exist or has been removed.
             </p>
             <Button type="button" onClick={() => router.push('/products')}>
@@ -380,13 +380,13 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
   }
 
   return (
-    <div className="bg-background text-foreground">
+    <div className="tech-main-content bg-background text-foreground">
       
 
       <div className="relative">
         <div className="absolute inset-0 bg-noise opacity-5 pointer-events-none"></div>
         <div className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 lg:px-8 relative z-10">
-          <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+          <nav className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <button
               type="button"
               onClick={() => router.push('/products')}
@@ -424,19 +424,19 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
 
                 <div className="absolute top-4 left-4 z-20">
                   {product.stock_status === 'out_of_stock' ? (
-                    <span className="bg-rose-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg shadow-rose-500/40">
+                    <span className="bg-card text-muted-foreground border border-border text-xs font-bold px-2.5 py-1 rounded shadow-lg">
                       OUT OF STOCK
                     </span>
                   ) : product.stock_status === 'low_stock' ? (
-                    <span className="bg-amber-400 text-slate-900 text-xs font-bold px-2 py-1 rounded shadow-lg shadow-amber-400/40">
+                    <span className="bg-muted text-muted-foreground border border-border text-xs font-bold px-2.5 py-1 rounded shadow-lg">
                       LOW STOCK
                     </span>
                   ) : product.stock_status === 'backorder' ? (
-                    <span className="bg-slate-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg shadow-slate-500/40">
+                    <span className="bg-muted text-muted-foreground border border-border text-xs font-bold px-2.5 py-1 rounded shadow-lg">
                       BACKORDER
                     </span>
                   ) : (
-                    <span className="bg-primary text-white text-xs font-bold px-2 py-1 rounded shadow-lg shadow-primary/40">
+                    <span className="bg-primary text-white text-xs font-bold px-2.5 py-1 rounded shadow-lg shadow-primary/20">
                       IN STOCK
                     </span>
                   )}
@@ -474,12 +474,12 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 {displayName}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-4 mb-6 text-sm text-slate-400">
+              <div className="flex flex-wrap items-center gap-4 mb-6 text-sm text-muted-foreground">
                 {product.model_number && (
-                  <span>Model: <span className="text-slate-200">{product.model_number}</span></span>
+                  <span>Model: <span className="text-foreground">{product.model_number}</span></span>
                 )}
                 {skuValue && (
-                  <span>SKU: <span className="text-slate-200">{skuValue}</span></span>
+                  <span>SKU: <span className="text-foreground">{skuValue}</span></span>
                 )}
                 {Number(product.reviewCount) > 0 && Number(product.rating) > 0 && (
                   <div className="flex items-center gap-2">
@@ -497,7 +497,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                       <>
                         <span className="text-lg text-muted-foreground line-through">₹{pricing.mrp.toLocaleString('en-IN')}</span>
                         {pricing.percentageOff > 0 && (
-                          <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">
+                          <span className="text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">
                             {pricing.percentageOff}% OFF
                           </span>
                         )}
@@ -505,10 +505,10 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                     )}
                   </div>
                 )}
-                <p className="text-sm text-slate-400">Price inclusive of all taxes. Installation charges separate.</p>
+                <p className="text-sm text-muted-foreground">Price inclusive of all taxes. Installation charges separate.</p>
               </div>
 
-              <div className="prose prose-invert prose-sm mb-8 text-slate-300">
+              <div className="prose prose-invert prose-sm mb-8 text-muted-foreground">
                 <div dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
                 {highlightSpecs.length > 0 && (
                   <ul className="list-none pl-0 space-y-2 mt-4">
@@ -564,7 +564,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                   </Button>
                 </div>
 
-                <p className="text-xs text-center text-slate-500">
+                <p className="text-xs text-center text-muted-foreground">
                   <Shield className="inline-block h-3.5 w-3.5 mr-1" />
                   {product.warranty ? `${product.warranty} included.` : '2-Year Manufacturer Warranty included.'}
                 </p>
@@ -658,14 +658,14 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
       {/* 2. BEHAVIORAL CRO ASSISTANCE BANNER */}
       {showAssistance && (
         <div className="fixed bottom-6 right-6 z-50 max-w-md animate-in slide-in-from-bottom-10 fade-in duration-500">
-          <div className="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-slate-900/95 p-6 shadow-2xl backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-muted/95 p-6 shadow-2xl backdrop-blur-xl">
             <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <RefreshCw className="h-5 w-5 animate-spin-slow" />
               </div>
               <div className="flex-1">
                 <h4 className="text-sm font-bold text-white">Need a custom surveillance blueprint?</h4>
-                <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   {triggerContext === 'pricing' 
                     ? "Our experts can help optimize this configuration for your specific space and budget requirements."
                     : "Architecture can be complex. Let's schedule a 10-minute discovery call to finalize your setup."}
@@ -673,7 +673,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                 <div className="mt-4 flex gap-3">
                   <Button 
                     size="sm" 
-                    className="h-8 bg-indigo-600 hover:bg-indigo-500 text-[10px]"
+                    className="h-8 bg-primary hover:bg-primary/90 text-white text-[10px]"
                     onClick={() => router.push('/contact?ref=behavioral_assistance')}
                   >
                     Speak to Specialist
@@ -681,7 +681,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-8 text-[10px] text-slate-500 hover:text-slate-300"
+                    className="h-8 text-[10px] text-muted-foreground hover:text-muted-foreground"
                     onClick={dismissAssistance}
                   >
                     Maybe later
@@ -690,7 +690,7 @@ export function ProductDetailPage({ productId, initialProduct, sourceContext }: 
               </div>
             </div>
             {/* Ambient Background Glow */}
-            <div className="absolute -bottom-10 -left-10 h-32 w-32 bg-indigo-500/10 blur-[80px]" />
+            <div className="absolute -bottom-10 -left-10 h-32 w-32 bg-primary/5 blur-[80px]" />
           </div>
         </div>
       )}

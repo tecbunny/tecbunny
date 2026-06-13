@@ -182,30 +182,30 @@ export function BlitzAuditBanner() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-50 border-t-4 border-red-800 bg-red-600 text-white shadow-[0_-10px_40px_rgba(220,38,38,0.4)] animate-slide-up pb-[env(safe-area-inset-bottom,0px)]"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-800 bg-zinc-950/95 text-zinc-100 backdrop-blur-md shadow-[0_-10px_40px_rgba(37,99,235,0.12)] animate-slide-up pb-[env(safe-area-inset-bottom,0px)] font-sans"
       role="region"
       aria-label="Free installation offer"
     >
       <div className={`px-3 py-2.5 lg:hidden ${expanded ? "hidden" : "block"}`}>
         <div className="mx-auto flex max-w-7xl items-center gap-2">
           <p className="min-w-0 flex-1 text-xs font-bold leading-snug sm:text-sm">
-            <span className="mr-1">⚡</span>
+            <span className="mr-1 text-primary">⚡</span>
             Free Installation —{" "}
             <span className="whitespace-nowrap">
-              <span className="rounded bg-white px-1.5 py-0.5 font-black text-red-600">{slotsDisplay}</span> slots left
+              <span className="rounded bg-primary/10 border border-primary/20 px-1.5 py-0.5 font-black text-primary">{slotsDisplay}</span> slots left
             </span>
           </p>
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className="shrink-0 rounded-md bg-black px-3 py-2 text-xs font-extrabold sm:text-sm"
+            className="shrink-0 rounded-md bg-primary hover:bg-primary/95 text-white px-3 py-2 text-xs font-extrabold sm:text-sm transition-colors"
           >
             Claim
           </button>
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-white/20 bg-black/30"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
             aria-label="Expand offer details"
           >
             <ChevronUp className="h-4 w-4" />
@@ -213,7 +213,7 @@ export function BlitzAuditBanner() {
           <button
             type="button"
             onClick={handleDismiss}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-white/20 bg-black/30"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
             aria-label="Dismiss offer"
           >
             <X className="h-4 w-4" />
@@ -225,10 +225,12 @@ export function BlitzAuditBanner() {
         <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start justify-between gap-3 lg:block">
             <div className="min-w-0">
-              <h3 className="text-base font-extrabold sm:text-xl">⚡ MONTHLY FREE INSTALLATION OFFER</h3>
-              <p className="mt-1 text-xs font-medium sm:text-sm">
+              <h3 className="text-base font-extrabold sm:text-xl flex items-center gap-1.5">
+                <span className="text-primary">⚡</span> MONTHLY FREE INSTALLATION OFFER
+              </h3>
+              <p className="mt-1 text-xs font-medium sm:text-sm text-zinc-400">
                 First 10 confirmed orders get 100% Free Installation. Only{" "}
-                <span className="rounded bg-white px-2 py-0.5 font-black text-lg text-red-600">{slotsDisplay}</span> slots
+                <span className="rounded bg-primary/10 border border-primary/20 px-2 py-0.5 font-black text-lg text-primary">{slotsDisplay}</span> slots
                 remaining this month!
               </p>
             </div>
@@ -236,7 +238,7 @@ export function BlitzAuditBanner() {
               <button
                 type="button"
                 onClick={() => setExpanded(false)}
-                className="flex h-11 w-11 items-center justify-center rounded-md border border-white/20 bg-black/30"
+                className="flex h-11 w-11 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
                 aria-label="Collapse offer"
               >
                 <ChevronDown className="h-4 w-4" />
@@ -244,7 +246,7 @@ export function BlitzAuditBanner() {
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="flex h-11 w-11 items-center justify-center rounded-md border border-white/20 bg-black/30"
+                className="flex h-11 w-11 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
                 aria-label="Dismiss offer"
               >
                 <X className="h-4 w-4" />
@@ -260,7 +262,7 @@ export function BlitzAuditBanner() {
                   inputMode="tel"
                   autoComplete="tel"
                   placeholder="Enter Mobile for OTP"
-                  className="w-full rounded-md px-4 py-3 font-bold text-black outline-none focus:ring-4 focus:ring-red-400 sm:py-2 lg:w-64"
+                  className="w-full rounded-md bg-zinc-900 border border-zinc-800 px-4 py-3 font-bold text-zinc-100 placeholder-zinc-500 outline-none focus:border-primary transition-all sm:py-2 lg:w-64"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
@@ -268,7 +270,7 @@ export function BlitzAuditBanner() {
                   type="button"
                   onClick={handleRequestOtp}
                   disabled={submitting}
-                  className="whitespace-nowrap rounded-md bg-black px-6 py-3 font-extrabold shadow-lg transition-colors hover:bg-gray-900 disabled:opacity-60 sm:py-2"
+                  className="whitespace-nowrap rounded-md bg-primary hover:bg-primary/95 text-white px-6 py-3 font-extrabold shadow-lg transition-colors disabled:opacity-60 sm:py-2"
                 >
                   {submitting ? "SENDING..." : "CLAIM SLOT NOW"}
                 </button>
@@ -279,7 +281,7 @@ export function BlitzAuditBanner() {
                   type="text"
                   inputMode="numeric"
                   placeholder="Enter OTP"
-                  className="w-full rounded-md px-4 py-3 text-center font-bold tracking-widest text-black outline-none focus:ring-4 focus:ring-red-400 sm:py-2 lg:w-48"
+                  className="w-full rounded-md bg-zinc-900 border border-zinc-800 px-4 py-3 text-center font-bold tracking-widest text-zinc-100 placeholder-zinc-500 outline-none focus:border-primary transition-all sm:py-2 lg:w-48"
                   value={otp}
                   maxLength={6}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
@@ -288,7 +290,7 @@ export function BlitzAuditBanner() {
                   type="button"
                   onClick={handleVerifyAndClaim}
                   disabled={submitting}
-                  className="whitespace-nowrap rounded-md bg-black px-6 py-3 font-extrabold shadow-lg transition-colors hover:bg-gray-900 disabled:opacity-60 sm:py-2"
+                  className="whitespace-nowrap rounded-md bg-primary hover:bg-primary/95 text-white px-6 py-3 font-extrabold shadow-lg transition-colors disabled:opacity-60 sm:py-2"
                 >
                   {submitting ? "VERIFYING..." : "VERIFY & DISPATCH"}
                 </button>
@@ -297,7 +299,7 @@ export function BlitzAuditBanner() {
             <button
               type="button"
               onClick={handleDismiss}
-              className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md border border-white/20 bg-black/30 lg:flex"
+              className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 lg:flex"
               aria-label="Dismiss offer"
             >
               <X className="h-4 w-4" />

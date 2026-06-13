@@ -201,19 +201,19 @@ function ProductGridImage({
 
   if (!src || hasImageError) {
     return (
-      <div className="flex h-full w-full items-center justify-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/50 text-center text-zinc-600 transition-colors duration-300 group-hover:border-zinc-700">
+      <div className="flex h-full w-full items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 text-center text-muted-foreground transition-colors duration-300 group-hover:border-border">
         <div className="px-4">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-500">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted border border-border text-sm font-semibold text-muted-foreground">
             {initial}
           </div>
-          <p className="text-[10px] uppercase tracking-wider font-medium text-zinc-500">No Image</p>
+          <p className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">No Image</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full w-full items-center justify-center rounded-xl border border-zinc-900 bg-zinc-950/40 p-1.5 transition-all duration-300 group-hover:border-zinc-800">
+    <div className="flex h-full w-full items-center justify-center rounded-xl border border-border bg-card/40 p-1.5 transition-all duration-300 group-hover:border-border">
       <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-white p-3 shadow-inner">
         <img
           src={src}
@@ -544,26 +544,26 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
   const resolvedResultsLabel = loading ? 'Loading...' : `${filteredProducts.length} items`;
 
   return (
-    <section className="relative min-h-screen bg-black text-zinc-100 font-sans antialiased selection:bg-zinc-800 selection:text-white">
+    <section className="tech-main-content relative min-h-screen font-sans antialiased">
       {/* Subtle Grid Background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f0f11_1px,transparent_1px),linear-gradient(to_bottom,#0f0f11_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
       
       {/* Subtle Glows */}
-      <div className="pointer-events-none absolute left-1/2 top-0 h-[350px] w-[600px] -translate-x-1/2 bg-zinc-500/5 blur-[120px]" />
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[350px] w-[600px] -translate-x-1/2 bg-primary/5 blur-[120px]" />
 
       <div className="relative mx-auto max-w-7xl px-6 pb-24 pt-24 sm:px-8 sm:pt-32">
         <div className="flex flex-col gap-12">
           {/* Hero Header */}
           <div className="reveal-section flex flex-col items-center text-center gap-6" data-reveal-id="products-hero">
             <div className={cn('reveal-item flex flex-col items-center gap-4', revealDelayClass(0))}>
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-950 px-3.5 py-1 text-[10px] font-mono uppercase tracking-widest text-zinc-400">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card text-muted-foreground">
                 Product Catalog
               </div>
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl leading-[1.1] text-balance">
+              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl leading-[1.1] text-balance">
                 Professional Hardware. <br className="hidden sm:inline" />
-                <span className="text-zinc-500">Built to endure.</span>
+                <span className="text-muted-foreground">Built to endure.</span>
               </h1>
-              <p className="max-w-md text-sm text-zinc-400/90 leading-relaxed font-light">
+              <p className="max-w-md text-sm text-muted-foreground/90 leading-relaxed font-light">
                 {searchQuery 
                   ? `Showing results for "${searchQuery}"` 
                   : 'Enterprise-grade equipment and components curated for professional installations and IT infrastructure.'
@@ -574,26 +574,26 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
             {/* Command-bar style search */}
             <form onSubmit={handleSearch} className={cn('reveal-item w-full max-w-lg mt-4', revealDelayClass(90))}>
               <div className="relative group shadow-2xl rounded-xl">
-                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-zinc-300" />
+                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Search catalog... (e.g. CCTV, RAM, Router)"
                   value={localSearchQuery}
                   onChange={(e) => setLocalSearchQuery(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-zinc-800 bg-zinc-950/80 pl-10 pr-16 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700 focus:bg-zinc-950 transition-all duration-300 font-mono"
+                  className="h-11 w-full rounded-xl border border-border bg-card/80 text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background transition-all duration-300 font-mono"
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded border border-zinc-800 bg-zinc-900/50 text-[9px] font-mono text-zinc-500 pointer-events-none">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-muted/50 text-[9px] font-mono text-muted-foreground pointer-events-none">
                   <span>⏎</span>
                 </div>
               </div>
-              <p className="mt-2.5 text-[10px] font-mono text-zinc-500 tracking-wider uppercase">{resolvedResultsLabel}</p>
+              <p className="mt-2.5 text-[10px] font-mono text-muted-foreground tracking-wider uppercase">{resolvedResultsLabel}</p>
             </form>
           </div>
 
           {/* Control Bar (Category Filter + Sort Options) */}
           {categories.length > 0 && (
             <div 
-              className="reveal-section sticky top-[64px] z-20 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-b border-zinc-900 bg-black/80 backdrop-blur-md py-4 px-2"
+              className="reveal-section sticky top-[64px] z-20 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-b border-border bg-background/80 backdrop-blur-md py-4 px-2"
               data-reveal-id="products-filters"
             >
               {/* Categories scrollable list */}
@@ -605,7 +605,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                     'reveal-item rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 border whitespace-nowrap',
                     !categoryFilter
                       ? 'bg-primary/10 text-primary border-primary/30'
-                      : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-zinc-900/40',
+                      : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/40',
                     revealDelayClass(0)
                   )}
                 >
@@ -620,7 +620,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                       'reveal-item rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 border whitespace-nowrap',
                       categoryFilter === category
                         ? 'bg-primary/10 text-primary border-primary/30'
-                        : 'bg-transparent text-zinc-400 border-transparent hover:text-zinc-200 hover:bg-zinc-900/40',
+                        : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/40',
                       revealDelayClass(50 + idx * 20)
                     )}
                   >
@@ -643,11 +643,11 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
 
               {/* Sort Dropdown */}
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Sort by</span>
+                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Sort by</span>
                 <select
                   value={sortOption}
                   onChange={(e) => updateUrlParams({ sort: e.target.value })}
-                  className="bg-zinc-950 text-xs text-zinc-300 border border-zinc-800 rounded-lg px-3 py-1.5 focus:outline-none focus:border-zinc-700 hover:bg-zinc-900 transition-colors font-mono cursor-pointer"
+                  className="bg-card text-muted-foreground border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-border hover:bg-muted transition-colors font-mono cursor-pointer"
                 >
                   <option value="popularity">Popularity</option>
                   <option value="newest">New Arrivals</option>
@@ -666,18 +666,18 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
           {loading ? (
             <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(250px,1fr))] min-h-[400px]">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="flex h-full flex-col rounded-2xl border border-zinc-900 bg-zinc-950/40 p-6">
-                  <Skeleton className="mb-6 aspect-square w-full rounded-xl bg-zinc-900/60 animate-pulse" />
+                <div key={i} className="flex h-full flex-col rounded-2xl border border-border bg-card/40 p-6">
+                  <Skeleton className="mb-6 aspect-square w-full rounded-xl bg-muted/60 animate-pulse" />
                   <div className="space-y-2">
-                    <Skeleton className="h-3 w-1/4 bg-zinc-900/60 rounded animate-pulse" />
-                    <Skeleton className="h-5 w-3/4 bg-zinc-900/60 rounded animate-pulse" />
-                    <Skeleton className="h-4 w-5/6 bg-zinc-900/60 rounded animate-pulse" />
+                    <Skeleton className="h-3 w-1/4 bg-muted/60 rounded animate-pulse" />
+                    <Skeleton className="h-5 w-3/4 bg-muted/60 rounded animate-pulse" />
+                    <Skeleton className="h-4 w-5/6 bg-muted/60 rounded animate-pulse" />
                   </div>
-                  <div className="mt-8 flex items-center justify-between pt-4 border-t border-zinc-900">
+                  <div className="mt-8 flex items-center justify-between pt-4 border-t border-border">
                     <div className="flex flex-col gap-1 w-20">
-                      <Skeleton className="h-6 w-full bg-zinc-900/60 rounded animate-pulse" />
+                      <Skeleton className="h-6 w-full bg-muted/60 rounded animate-pulse" />
                     </div>
-                    <Skeleton className="h-9 w-9 rounded-lg bg-zinc-900/60 rounded animate-pulse" />
+                    <Skeleton className="h-9 w-9 rounded-lg bg-muted/60 rounded animate-pulse" />
                   </div>
                 </div>
               ))}
@@ -709,11 +709,11 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                 return (
                   <ProductTileErrorBoundary key={product.id || index} productId={product.id}>
                     <div
-                      className="group relative flex h-full flex-col justify-between rounded-2xl border border-zinc-900 bg-zinc-950/40 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-zinc-800 hover:bg-zinc-950/60 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]"
+                      className="bento-card group relative flex h-full flex-col justify-between p-6"
                     >
                       <Link href={`/products/${product.id}`} className="block flex-grow">
                         {/* Image Frame */}
-                        <div className="relative mb-6 aspect-square overflow-hidden rounded-xl bg-zinc-950 border border-zinc-900/50">
+                        <div className="relative mb-6 aspect-square overflow-hidden rounded-xl bg-card border border-border/50">
                           <ProductGridImage
                             src={imageUrl}
                             alt={displayName}
@@ -730,35 +730,35 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                         {/* Text Content */}
                         <div className="space-y-2">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-500">
+                            <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
                               {product.brand || product.category || 'Hardware'}
                             </span>
                             {product.rating > 0 && (
-                              <div className="flex items-center gap-0.5 text-[10px] font-mono text-zinc-400">
+                              <div className="flex items-center gap-0.5 text-[10px] font-mono text-muted-foreground">
                                 <span>★</span>
                                 <span>{product.rating.toFixed(1)}</span>
                               </div>
                             )}
                           </div>
                           
-                          <h3 className="text-base font-semibold tracking-tight text-white transition-colors group-hover:text-zinc-200">
+                          <h3 className="text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary">
                             {displayName}
                           </h3>
                           
-                          <p className="text-xs font-light text-zinc-400 line-clamp-2 leading-relaxed">
+                          <p className="text-xs font-light text-muted-foreground line-clamp-2 leading-relaxed">
                             {simpleDesc}
                           </p>
                         </div>
                       </Link>
 
                       {/* Footer Actions */}
-                      <div className="mt-6 flex items-center justify-between pt-4 border-t border-zinc-900">
+                      <div className="mt-6 flex items-center justify-between pt-4 border-t border-border">
                         <div className="flex flex-col">
-                          <span className="text-lg font-bold tracking-tight text-white">
+                          <span className="text-lg font-bold tracking-tight text-foreground">
                             ₹{(offerPrice ?? basePrice).toLocaleString('en-IN')}
                           </span>
                           {offerPrice && (
-                            <span className="text-xs text-zinc-600 line-through font-light">
+                            <span className="text-xs text-muted-foreground line-through font-light">
                               ₹{basePrice.toLocaleString('en-IN')}
                             </span>
                           )}
@@ -770,7 +770,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                             event.stopPropagation();
                             addToCart(product);
                           }}
-                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-850 bg-zinc-900/40 text-zinc-300 transition-all duration-200 hover:border-primary/30 hover:bg-primary hover:text-white hover:scale-105"
+                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary hover:text-primary-foreground hover:scale-105"
                           aria-label={`Add ${displayName} to cart`}
                         >
                           <span className="text-base font-light">+</span>
@@ -782,7 +782,7 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
               })}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-zinc-850 bg-zinc-950/20 p-12 text-center text-zinc-500 font-light text-sm">
+            <div className="rounded-2xl border border-dashed border-border bg-muted p-12 text-center text-muted-foreground font-light text-sm">
               {fetchWarning || 'No products matched your search.'}
             </div>
           )}

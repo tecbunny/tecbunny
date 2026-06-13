@@ -29,6 +29,7 @@ export default async function SuperadminLayout({ children }: { children: React.R
         { href: '/superadmin/mgmt/users', label: 'User Management', icon: Users },
         { href: '/superadmin/mgmt/products', label: 'Product Catalog', icon: Wrench },
         { href: '/superadmin/mgmt/custom-setups', label: 'Custom Setups', icon: Settings },
+        { href: '/superadmin/mgmt/services', label: 'Services Manager', icon: Settings },
         { href: '/superadmin/mgmt/catalogue', label: 'PDF Catalogue', icon: FileText },
       ]
     },

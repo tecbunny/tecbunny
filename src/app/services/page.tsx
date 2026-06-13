@@ -39,6 +39,7 @@ type ServiceRow = {
   display_order?: number | null;
   created_at?: string | null;
   updated_at?: string | null;
+  terms_and_conditions?: string | null;
 };
 
 function parseFeatures(rawFeatures: unknown): string[] {
@@ -92,6 +93,7 @@ function normalizeService(row: ServiceRow): Service {
     display_order: typeof row.display_order === 'number' ? row.display_order : 0,
     created_at: row.created_at || new Date(0).toISOString(),
     updated_at: row.updated_at || new Date(0).toISOString(),
+    terms_and_conditions: row.terms_and_conditions || undefined,
   };
 }
 

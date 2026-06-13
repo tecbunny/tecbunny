@@ -150,6 +150,15 @@ export default function CheckoutPage() {
     return cartItems.every(item => item.product_type === 'service' || item.id.startsWith('service-'));
   }, [cartItems]);
 
+  const hasServiceItem = React.useMemo(() => {
+    if (!cartItems.length) return false;
+    return cartItems.some(item => 
+      item.product_type === 'service' || 
+      item.id?.startsWith('service-') || 
+      item.id?.startsWith('pricing-')
+    );
+  }, [cartItems]);
+
   useEffect(() => {
     void refreshPricing();
   }, [refreshPricing]);
@@ -202,10 +211,10 @@ export default function CheckoutPage() {
   }, [orderType, selectedPickupStore]);
 
   useEffect(() => {
-    if (serviceOnlyCart && orderType !== 'Delivery') {
+    if (hasServiceItem && orderType !== 'Delivery') {
       setOrderType('Delivery');
     }
-  }, [serviceOnlyCart, orderType]);
+  }, [hasServiceItem, orderType]);
 
   const validateField = (field: string, value: string) => {
     let error = '';
@@ -421,7 +430,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      if (serviceOnlyCart && orderType === 'Pickup') {
+      if (hasServiceItem && orderType === 'Pickup') {
         setOrderError('Service requests cannot be scheduled for store pickup. Please choose delivery.');
         setOrderType('Delivery');
         return;
@@ -476,11 +485,11 @@ export default function CheckoutPage() {
         customer_name: customerInfo.name,
         customer_email: customerInfo.email,
         customer_phone: customerInfo.phone,
-        type: serviceOnlyCart ? 'Delivery' : orderType,
+        type: hasServiceItem ? 'Delivery' : orderType,
         delivery_address: orderType === 'Delivery' ? 
           `${customerInfo.address}, ${customerInfo.city}, ${customerInfo.state} - ${customerInfo.pincode}` : 
           pickupAddress || undefined,
-        pickup_store: orderType === 'Pickup' && !serviceOnlyCart ? pickupAddress : undefined,
+        pickup_store: orderType === 'Pickup' && !hasServiceItem ? pickupAddress : undefined,
         customer_state: destinationState?.name || customerInfo.state,
         customer_state_code: destinationState?.code,
         place_of_supply: formatPlaceOfSupply(destinationState, customerInfo.state),
@@ -696,12 +705,14 @@ export default function CheckoutPage() {
               <div className="bento-card p-8 space-y-6">
                 <div className="flex items-center gap-3 pb-2 border-b border-border">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider font-sans tech-heading">{!!quote ? 'Delivery & Installation' : 'Delivery Address'}</h2>
+                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider font-sans tech-heading">
+                    {hasServiceItem ? 'Installation / Service Address' : (!!quote ? 'Delivery & Installation' : 'Delivery Address')}
+                  </h2>
                 </div>
                 <div className="space-y-6">
                   <div className="flex flex-col gap-1.5">
                     <label htmlFor="address" className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      {!!quote ? 'Installation Address (Goa)' : 'Complete Delivery Address'}
+                      {hasServiceItem ? 'Installation / Service Address' : (!!quote ? 'Installation Address (Goa)' : 'Complete Delivery Address')}
                     </label>
                     <textarea
                       id="address"

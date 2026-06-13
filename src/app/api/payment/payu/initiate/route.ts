@@ -233,6 +233,26 @@ export async function POST(request: NextRequest) {
     const siteUrl = resolveSiteUrl(request.headers.get('host') || undefined);
     const callbackUrl = `${siteUrl}/api/payment/payu/callback`;
 
+    const cartItemsList = Array.isArray(extras.cart_items) ? extras.cart_items : [];
+    const hasService = cartItemsList.some((item: any) =>
+      String(item.productId || item.id).startsWith('service-') ||
+      String(item.productId || item.id).startsWith('pricing-')
+    );
+
+    let udf2 = '';
+    let udf3 = '';
+    let udf4 = '';
+    let udf5 = '';
+    let udf6 = '';
+
+    if (hasService) {
+      udf2 = String(extras.delivery_address || '').slice(0, 255);
+      udf3 = String(extras.city || extras.delivery_address?.split(',')?.[1]?.trim() || '').slice(0, 100);
+      udf4 = String(extras.customer_state || '').slice(0, 100);
+      udf5 = String(extras.pincode || extras.delivery_address?.split('-')?.pop()?.trim() || '').slice(0, 20);
+      udf6 = String(extras.customer_phone || '').slice(0, 50);
+    }
+
     const payuPayload: PayuRequestPayload = {
       txnId,
       amount,
@@ -241,6 +261,7 @@ export async function POST(request: NextRequest) {
       email,
       phone,
       udf1: orderId,
+      ...(hasService ? { udf2, udf3, udf4, udf5, udf6 } : {}),
     };
 
     const hash = generatePayuHash(
@@ -264,6 +285,7 @@ export async function POST(request: NextRequest) {
       furl: callbackUrl,
       hash,
       udf1: orderId,
+      ...(hasService ? { udf2, udf3, udf4, udf5, udf6 } : {}),
       service_provider: 'payu_paisa',
     } as const;
 

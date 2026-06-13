@@ -29,7 +29,6 @@ import { useRevealSections } from '../hooks/use-reveal-sections';
 import type { Product, Service } from '@/lib/types';
 import { BRAND_LOGO_URL } from '@/components/ui/logo';
 
-
 const iconMap: Record<string, ComponentType<LucideProps>> = {
   Wrench,
   Shield,
@@ -242,81 +241,6 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
   const canManageServices = atLeast('admin');
   useRevealSections();
 
-  const fallbackServicesList: Service[] = [
-    {
-      id: 'fallback-cctv',
-      title: 'CCTV Camera Installation',
-      description: 'Professional high-definition IP camera installations, secure local NVR/Cloud storage solutions, and remote mobile app viewing.',
-      icon: 'Cctv',
-      features: ['1080p/4K HDR video feed', 'Night vision & intelligent motion alerts', 'Secure local/cloud storage options', 'Remote access on iOS/Android'],
-      badge: 'Popular',
-      is_active: true,
-      price: 9999,
-      category: 'CCTV',
-      display_order: 1,
-      created_at: new Date(0).toISOString(),
-      updated_at: new Date(0).toISOString(),
-    },
-    {
-      id: 'fallback-amc',
-      title: 'Annual Maintenance Contract (AMC)',
-      description: 'Keep your IT systems and security cameras operational 24/7 with our comprehensive support plans.',
-      icon: 'Shield',
-      features: ['Quarterly preventive health checks', 'Unlimited emergency breakdown calls', 'Free labor on parts replacement', 'Guaranteed response times'],
-      badge: 'Recommended',
-      is_active: true,
-      price: 4999,
-      category: 'Support',
-      display_order: 2,
-      created_at: new Date(0).toISOString(),
-      updated_at: new Date(0).toISOString(),
-    },
-    {
-      id: 'fallback-smarthome',
-      title: 'Smart Home Automation',
-      description: 'Centralized and smartphone control for your lights, security, climate, and appliances with zero wire-cutting.',
-      icon: 'Cpu',
-      features: ['App and voice assistant controls', 'Automated energy saving workflows', 'Retrofit design for existing layouts', 'Multi-device integration'],
-      badge: 'Featured',
-      is_active: true,
-      price: 14999,
-      category: 'Installation',
-      display_order: 3,
-      created_at: new Date(0).toISOString(),
-      updated_at: new Date(0).toISOString(),
-    },
-    {
-      id: 'fallback-rfid',
-      title: 'RFID & Access Control Systems',
-      description: 'Biometric and smartcard access solutions for modern offices, warehouses, hotel resorts, and retail sites.',
-      icon: 'Award',
-      features: ['Card and fingerprint authentication', 'Employee attendance integration', 'Electronic door lock integration', 'Visitor log tracking'],
-      badge: 'New',
-      is_active: true,
-      price: 8999,
-      category: 'Protection',
-      display_order: 4,
-      created_at: new Date(0).toISOString(),
-      updated_at: new Date(0).toISOString(),
-    },
-    {
-      id: 'fallback-computer-repair',
-      title: 'Computer Repair & Tune-up',
-      description: 'Hardware diagnostics, RAM/SSD performance upgrades, OS clean installation, and malware/virus removal.',
-      icon: 'Wrench',
-      features: ['High-speed SSD upgrades', 'Professional OS configuration', 'Full internal dust cleaning', 'Certified parts replacement'],
-      badge: null,
-      is_active: true,
-      price: 999,
-      category: 'Computer',
-      display_order: 5,
-      created_at: new Date(0).toISOString(),
-      updated_at: new Date(0).toISOString(),
-    }
-  ];
-
-  const activeServices = services && services.length > 0 ? services : fallbackServicesList;
-
   const getContactHref = (service: Service) => {
     const title = (service.title || '').toLowerCase();
     const category = (service.category || '').toLowerCase();
@@ -331,7 +255,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
       return '/contact?subject=web_development&service=web_development&intent=project_quote&message=I%20need%20a%20web%20development%20quote.%20Please%20contact%20me%20about%20my%20project.';
     }
     if (title.includes('repair')) {
-      return '/contact?subject=support&service=repair_service&intent=service_request&message=I%20need%20help%20with%20a%20repair%20request.%20Please%20let%20me%20know%20the%20next%20steps.';
+      return '/contact?subject=support&service=repair_service&intent=service_request&message=I%20need%20help%20with%20a%20repair%20request.%20Please%20let%2520me%20know%20the%2520next%20steps.';
     }
     if (category.includes('computer')) {
       return '/contact?subject=sales&service=computer_setup&intent=project_quote&message=I%20need%20a%20computer%20setup%20or%20upgrade%20quote.%20Please%20contact%20me.';
@@ -339,19 +263,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
     return '/contact?subject=sales&service=general_service&intent=quote_request&message=I%20need%20a%20service%20quote.%20Please%20contact%20me%20with%20the%20next%20steps.';
   };
 
-  const getServiceCtaLabel = (service: Service) => {
-    const title = (service.title || '').toLowerCase();
-
-    if (title.includes('amc')) return 'Request AMC Quote';
-    if (title.includes('cctv') && (title.includes('installation') || title.includes('new'))) return 'Request CCTV Site Survey';
-    if (title.includes('web')) return 'Request Web Project Quote';
-    if (title.includes('repair')) return 'Request Repair Callback';
-    if (title.includes('upgrade')) return 'Request Upgrade Quote';
-    if (title.includes('custom')) return 'Request Build Quote';
-    return 'Request Service Quote';
-  };
-
-  const serviceSections = activeServices.reduce<Array<{ key: string; items: Service[] }>>((acc, service) => {
+  const serviceSections = services.reduce<Array<{ key: string; items: Service[] }>>((acc, service) => {
     const key = service.category || 'Services';
     const existing = acc.find(section => section.key === key);
     if (existing) {
@@ -363,7 +275,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
   }, []);
 
   const buildServiceProduct = (service: Service): Product => {
-    const title = service.title || 'TecBunny Service';
+    const title = service.title || service.name || 'TecBunny Service';
     const parsedPrice = typeof service.price === 'number'
       ? service.price
       : Number(service.price ?? 0);
@@ -399,42 +311,19 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
   const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
-  const handleRaiseRequest = (service: Service) => {
+  const handleAddToCart = (service: Service) => {
     if (busyServiceId === service.id) return;
     setBusyServiceId(service.id);
 
-    const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-    const findDefaultAmount = (): number => {
-      const normTitle = normalize(service.title || '');
-      for (const category of servicePricing) {
-        const categoryMatches = category.category.toLowerCase().includes(service.category?.toLowerCase() || '');
-        for (const plan of category.plans) {
-          const normPlan = normalize(plan.name);
-          if (normTitle.includes(normPlan) || normPlan.includes(normTitle) || categoryMatches) {
-            const tier = plan.tiers.find(t => typeof t.amount === 'number' && t.amount > 0);
-            if (tier && typeof tier.amount === 'number') return tier.amount;
-          }
-        }
-      }
-      const firstTier = servicePricing
-        .flatMap(c => c.plans.flatMap(p => p.tiers))
-        .find(t => typeof t.amount === 'number' && t.amount > 0);
-      return typeof firstTier?.amount === 'number' ? firstTier.amount : 0;
-    };
-
-    const fallbackAmount = findDefaultAmount();
-    const coercedPrice = typeof service.price === 'number' && service.price > 0
-      ? service.price
-      : fallbackAmount;
-
-    const product = buildServiceProduct({ ...service, price: coercedPrice });
+    const coercedPrice = typeof service.price === 'number' && service.price > 0 ? service.price : 0;
+    const product = buildServiceProduct(service);
     product.price = coercedPrice;
     product.offer_price = coercedPrice;
     product.gstRate = coercedPrice > 0 ? 18 : 0;
     product.gst_rate = product.gstRate;
 
     addToCart(product);
-    router.push('/checkout?source=services');
+    setBusyServiceId(null);
   };
 
   const handlePricingTierAdd = (category: string, plan: ServicePricingPlan, tier: ServicePricingTier) => {
@@ -468,224 +357,188 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
     product.gst_rate = product.gstRate;
 
     addToCart(product);
-    router.push('/checkout?source=services');
     setBusyServiceId(null);
   };
 
   return (
-    <div className="relative overflow-hidden bg-[#09090B] text-zinc-200">
-      <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
-      <div className="pointer-events-none absolute left-1/2 top-32 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-blue-500/5 blur-[140px]" />
-
-      <div className="relative mx-auto flex max-w-7xl flex-col gap-16 px-4 pb-20 pt-16 sm:px-6 lg:px-8 sm:pt-24">
+    <div className="tech-main-content bg-slate-50 text-slate-800">
+      <div className="mx-auto flex max-w-7xl flex-col gap-12">
+        
+        {/* Page Hero */}
         <section className="reveal-section text-center" data-reveal-id="services-hero">
-          <div className={cn('reveal-item inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-blue-500', revealDelayClass(0))}>
-            End-to-end Solutions
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/50 px-3.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#2563EB]">
+            Platform Services
           </div>
-          <h1 className={cn('reveal-item mt-6 text-4xl font-semibold text-white sm:text-5xl lg:text-6xl', revealDelayClass(70))}>
-            Engineering{' '}
-            <span className="bg-gradient-to-r from-white via-zinc-200 to-blue-500 bg-clip-text text-transparent">
-              Sanctuary
+          <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl font-sans">
+            Expert Tech{' '}
+            <span className="bg-gradient-to-r from-[#2563EB] to-blue-600 bg-clip-text text-transparent">
+              Deployment
             </span>
           </h1>
-          <p className={cn('reveal-item mx-auto mt-4 max-w-2xl text-zinc-400 sm:text-lg', revealDelayClass(140))}>
-            From secure perimeters to smart automation, we deliver professional installation, maintenance, and service care across Goa.
+          <p className="mx-auto mt-4 max-w-2xl text-slate-600 sm:text-lg">
+            From smart security perimeters to comprehensive AMC support, customize your service package dynamically or purchase transparent installation credits directly.
           </p>
           {canManageServices && (
-            <div className={cn('reveal-item mt-6 flex justify-center', revealDelayClass(210))}>
+            <div className="mt-6 flex justify-center">
               <Link
-                href="/mgmt/admin/services"
-                className="inline-flex items-center justify-center rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-blue-400 transition-colors hover:border-blue-500/40 hover:bg-blue-600 hover:text-white"
+                href="/superadmin/mgmt/services"
+                className="inline-flex items-center justify-center rounded-lg border border-blue-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-[#2563EB] hover:bg-slate-100 transition-colors shadow-sm"
               >
-                Manage Services
+                Services Core Desk
               </Link>
             </div>
           )}
         </section>
 
-        <section className="reveal-section grid gap-4 md:grid-cols-2" data-reveal-id="services-quick-cta">
-          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-[#09090B] p-6 shadow-md', revealDelayClass(0))}>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                <Wrench className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white">Custom Solutions</h3>
-                <p className="text-sm text-zinc-400">Tailored technology solutions designed for your specific needs.</p>
-              </div>
+        {/* Dynamic Services Catalog */}
+        <section className="space-y-12">
+          {(!services || services.length === 0) && !hasServiceLoadError && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+              <Wrench className="h-10 w-10 text-slate-400 mx-auto mb-4" />
+              <h2 className="text-lg font-bold text-slate-900">Services catalog updating</h2>
+              <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+                Our database listings are undergoing synchronization. Please connect with our support desk for direct reservations.
+              </p>
+              <Link
+                href="/contact?subject=sales&intent=service_quote"
+                className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#2563EB] text-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                Connect Support
+              </Link>
             </div>
-            <Button
-              variant="outline"
-              className="justify-center border-blue-500/20 text-blue-400 hover:border-blue-500 hover:bg-blue-500/10"
-              onClick={() => {
-                void trackEvent('services_cta_click', { cta: 'custom_setup', destination: '/customised-setups' });
-                router.push('/customised-setups');
-              }}
-            >
-              Explore Custom Setups
-            </Button>
-          </div>
- 
-          <div className={cn('reveal-item flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-[#09090B] p-6 shadow-md', revealDelayClass(80))}>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                <Shield className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white">Professional Support</h3>
-                <p className="text-sm text-zinc-400">Reliable technology services and ongoing technical support.</p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              className="justify-center border-blue-500/20 text-blue-400 hover:border-blue-500 hover:bg-blue-500/10"
-              onClick={() => {
-                void trackEvent('services_cta_click', { cta: 'get_support', destination: '/contact' });
-                router.push('/contact');
-              }}
-            >
-              Get Support
-            </Button>
-          </div>
-        </section>
+          )}
 
-        <section>
-          <div className="space-y-8">
-            {!serviceSections.length && !hasServiceLoadError && (
-              <div className="reveal-section rounded-2xl border border-zinc-800 bg-[#09090B] p-8 text-center is-revealed" data-reveal-id="services-empty">
-                <h2 className="text-xl font-semibold text-white">Service catalog updating</h2>
-                <p className="mx-auto mt-3 max-w-2xl text-sm text-zinc-550">
-                  Our listed services are being refreshed. Use the quote request flow and we will recommend the right installation, support, or automation plan.
-                </p>
-                <Link
-                  href="/contact?subject=sales&intent=service_quote&message=I%20need%20a%20service%20quote.%20Please%20contact%20me%20about%20the%20right%20next%20step."
-                  className="mt-6 inline-flex items-center justify-center rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-600 hover:text-white"
-                >
-                  Request Service Quote
-                </Link>
-              </div>
-            )}
-
-            {serviceSections.map((section) => (
-              <div key={section.key} className="reveal-section space-y-6" data-reveal-id={`services-group-${slugify(section.key)}`}>
-                <div className={cn('reveal-item flex items-center gap-3', revealDelayClass(0))}>
-                  <div className="h-8 w-1 rounded-full bg-blue-500" />
-                  <div>
-                    <h2 className="text-2xl font-semibold text-white">{section.key}</h2>
-                    <p className="text-sm text-zinc-400">Explore curated services under {section.key.toLowerCase()}.</p>
-                  </div>
+          {serviceSections.map((section) => (
+            <div key={section.key} className="reveal-section space-y-6" data-reveal-id={`services-group-${slugify(section.key)}`}>
+              <div className="flex items-center gap-3">
+                <div className="h-6 w-1 rounded-full bg-[#2563EB]" />
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">{section.key}</h2>
+                  <p className="text-xs text-slate-500">Professional services configured under {section.key.toLowerCase()}.</p>
                 </div>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {section.items.map((service, index) => {
-                    const Icon = iconMap[service.icon] || Wrench;
-                    return (
-                      <div
-                        key={service.id}
-                        className={cn(
-                          'reveal-item group flex h-full flex-col rounded-2xl border border-zinc-800 bg-[#09090B] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30',
-                          revealDelayClass(80 + index * 80)
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 transition-transform duration-300 group-hover:scale-110">
-                            <Icon className="h-6 w-6" />
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {section.items.map((service) => {
+                  const Icon = iconMap[service.icon] || Wrench;
+                  return (
+                    <div
+                      key={service.id}
+                      className="bento-card bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between h-full hover:-translate-y-1 hover:border-blue-400 hover:shadow-md transition-all duration-300"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-[#2563EB]">
+                            <Icon className="h-5.5 w-5.5" />
                           </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-white">{service.title}</h3>
-                            {service.badge && (
-                              <p className="text-xs uppercase tracking-widest text-blue-500">{service.badge}</p>
-                            )}
-                          </div>
+                          {service.badge && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-[#2563EB] border border-blue-100 rounded-full px-2.5 py-0.5">
+                              {service.badge}
+                            </span>
+                          )}
                         </div>
-                        <p className="mt-4 text-sm text-zinc-400">{service.description}</p>
-                        <ul className="mt-5 space-y-2 text-sm text-zinc-500">
-                          {service.features.map((feature, idx) => (
-                            <li key={idx} className="flex items-start gap-2">
-                              <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500" />
-                              <span>{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
+
+                        <h3 className="mt-4 text-base font-bold text-slate-900">{service.title || service.name}</h3>
+                        <p className="mt-2 text-xs text-slate-600 line-clamp-3 leading-relaxed">{service.description}</p>
+                        
+                        {service.features && service.features.length > 0 && (
+                          <ul className="mt-4 space-y-2 text-xs text-slate-500">
+                            {service.features.map((feature, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#2563EB]" />
+                                <span className="line-clamp-2">{feature}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col gap-3">
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rate Credit</span>
+                          <span className="text-base font-bold text-slate-900 font-mono">
+                            {service.price ? `₹${Number(service.price).toLocaleString('en-IN')}` : 'Quotation Basis'}
+                          </span>
+                        </div>
+
                         <button
                           type="button"
-                          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-blue-500/30 hover:bg-blue-500/10"
+                          onClick={() => handleAddToCart(service)}
+                          className="w-full py-3 bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                        >
+                          <ShoppingCart className="h-3.5 w-3.5" />
+                          Add Service to Cart
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() => {
                             const href = getContactHref(service);
-                            void trackEvent('service_card_quote_click', {
-                              serviceId: service.id,
-                              serviceTitle: service.title,
-                              destination: href,
-                            });
                             router.push(href);
                           }}
+                          className="w-full py-2 border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-semibold rounded-lg transition-colors text-center"
                         >
-                          <ShoppingCart className="h-4 w-4" />
-                          {getServiceCtaLabel(service)}
+                          Consult Engineering Team
                         </button>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </section>
 
-        <section className="reveal-section rounded-3xl border border-zinc-800 bg-[#09090B]/60 p-6 sm:p-10" data-reveal-id="services-pricing">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className={cn('reveal-item', revealDelayClass(0))}>
-              <h2 className="text-3xl font-semibold text-white">Service Rates & AMC Plans</h2>
-              <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-                Transparent pricing tiers across CCTV and computer services. Final quotations include on-site assessment, travel, and consumables.
+        {/* Static Rates Matrix Section */}
+        <section className="reveal-section rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm" data-reveal-id="services-pricing">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Direct Purchase Rates & Plans</h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Indicator credit rates for structured automation and maintenance services across Goa.
               </p>
             </div>
             <Link
-              href="/contact?subject=sales&intent=service_quote&message=I%20need%20a%20service%20quote.%20Please%20contact%20me%20about%20the%20right%20next%20step."
-              className={cn('reveal-item inline-flex items-center justify-center rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-400 transition-colors hover:border-blue-500/40 hover:bg-blue-600 hover:text-white', revealDelayClass(90))}
+              href="/contact?subject=sales&intent=service_quote"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
             >
-              Request Service Quote
+              Request Custom Quote
             </Link>
           </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
-            {servicePricing.map((category, categoryIndex) => (
-              <div key={category.category} className={cn('reveal-item rounded-2xl border border-zinc-800 bg-[#09090B] p-6', revealDelayClass(120 + categoryIndex * 90))}>
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-1 rounded-full bg-blue-500" />
-                  <div>
-                    <h3 className="text-xl font-semibold text-white">{category.category}</h3>
-                    <p className="text-sm text-zinc-400">{category.blurb}</p>
-                  </div>
+            {servicePricing.map((category) => (
+              <div key={category.category} className="rounded-xl border border-slate-100 bg-slate-50/50 p-6 space-y-4">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">{category.category}</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">{category.blurb}</p>
                 </div>
-                <div className="mt-6 space-y-4">
-                  {category.plans.map((plan, planIndex) => (
-                    <div key={plan.name} className={cn('reveal-item rounded-xl border border-zinc-800 bg-zinc-950/40 p-4', revealDelayClass(160 + planIndex * 70))}>
-                      <div className="flex flex-col gap-1">
-                        <p className="text-sm font-semibold text-white">{plan.name}</p>
-                        <p className="text-xs text-zinc-550">{plan.summary}</p>
+                <div className="space-y-4">
+                  {category.plans.map((plan) => (
+                    <div key={plan.name} className="bg-white rounded-lg border border-slate-150 p-4 space-y-3 shadow-xs">
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">{plan.name}</p>
+                        <p className="text-[10px] text-slate-500">{plan.summary}</p>
                       </div>
-                      <div className="mt-4 grid gap-3">
-                        {plan.tiers.map((tier, tierIndex) => {
-                          const tierId = `pricing-${slugify(category.category)}-${slugify(plan.name)}-${slugify(tier.label)}`;
+                      <div className="grid gap-2">
+                        {plan.tiers.map((tier) => {
                           const hasPrice = Boolean(tier.amount);
                           return (
-                            <div
-                              key={tier.label}
-                               className={cn('reveal-item flex flex-col gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 p-4', revealDelayClass(200 + tierIndex * 60))}
-                            >
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-semibold uppercase tracking-widest text-blue-500">{tier.label}</p>
-                                <p className="text-lg font-semibold text-blue-400">{tier.price}</p>
+                            <div key={tier.label} className="border border-slate-100 rounded-md p-3 flex flex-col gap-2 bg-slate-50/30">
+                              <div className="flex justify-between items-baseline">
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-[#2563EB]">{tier.label}</span>
+                                <span className="text-xs font-bold text-slate-900 font-mono">{tier.price}</span>
                               </div>
-                              <p className="text-xs text-zinc-550">{tier.detail}</p>
-                              <button
-                                type="button"
-                                className="mt-2 inline-flex w-full items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2 text-xs font-semibold text-white transition-colors hover:border-blue-500/30 hover:bg-blue-500/10"
-                                disabled={!hasPrice || busyServiceId === tierId}
-                                onClick={() => handlePricingTierAdd(category.category, plan, tier)}
-                              >
-                                {hasPrice ? 'Add to Cart' : 'Request Quote'}
-                              </button>
+                              <p className="text-[10px] text-slate-500 leading-normal">{tier.detail}</p>
+                              {hasPrice && (
+                                <button
+                                  type="button"
+                                  onClick={() => handlePricingTierAdd(category.category, plan, tier)}
+                                  className="w-full mt-1 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-[#2563EB] text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded transition-colors text-center border border-slate-200"
+                                >
+                                  Add to Cart
+                                </button>
+                              )}
                             </div>
                           );
                         })}
@@ -696,71 +549,54 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
               </div>
             ))}
           </div>
-          <p className="mt-6 text-center text-xs text-slate-500">
-            *All prices are indicative. Taxes, hardware, and travel charges (if applicable) are shared on the final quotation.
-          </p>
         </section>
 
-        <section className="reveal-section rounded-3xl border border-zinc-800 bg-[#09090B]/40 p-6 sm:p-10" data-reveal-id="services-amc">
-          <div className={cn('reveal-item flex items-center gap-3', revealDelayClass(0))}>
-            <div className="h-8 w-1 rounded-full bg-blue-500" />
+        {/* AMC Core Terms Section */}
+        <section className="reveal-section rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm space-y-6" data-reveal-id="services-amc">
+          <div className="flex items-center gap-3">
+            <div className="h-6 w-1 rounded-full bg-[#2563EB]" />
             <div>
-              <h2 className="text-2xl font-semibold text-white">Annual Maintenance Contract (AMC) Terms</h2>
-              <p className="text-sm text-zinc-400">General terms and conditions for CCTV and PC AMC plans.</p>
+              <h2 className="text-xl font-bold text-slate-900">Annual Maintenance Contract (AMC) Terms</h2>
+              <p className="text-xs text-slate-500">Legal inclusions, response bounds, and service rules.</p>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 text-sm text-zinc-350">
-            <div className={cn('reveal-item', revealDelayClass(70))}>
-              <p className="text-xs uppercase tracking-widest text-zinc-500">Company</p>
-              <p className="font-semibold text-white">{companyInfo.name}</p>
+          <div className="grid gap-4 sm:grid-cols-2 text-xs text-slate-600">
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Company Entity</span>
+              <span className="font-bold text-slate-800">{companyInfo.name}</span>
             </div>
-            <div className={cn('reveal-item', revealDelayClass(110))}>
-              <p className="text-xs uppercase tracking-widest text-zinc-500">CIN</p>
-              <p>{companyInfo.cin}</p>
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">CIN Identifier</span>
+              <span className="font-mono">{companyInfo.cin}</span>
             </div>
-            <div className={cn('reveal-item', revealDelayClass(150))}>
-              <p className="text-xs uppercase tracking-widest text-zinc-500">Udyam</p>
-              <p>{companyInfo.udyam}</p>
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Udyam Registration</span>
+              <span className="font-mono">{companyInfo.udyam}</span>
             </div>
-            <div className={cn('reveal-item', revealDelayClass(190))}>
-              <p className="text-xs uppercase tracking-widest text-zinc-500">GSTIN</p>
-              <p>{companyInfo.gstin}</p>
-            </div>
-            <div className={cn('reveal-item', revealDelayClass(230))}>
-              <p className="text-xs uppercase tracking-widest text-zinc-500">CEO</p>
-              <p>{companyInfo.ceo}</p>
-            </div>
-            <div className={cn('reveal-item', revealDelayClass(270))}>
-              <p className="text-xs uppercase tracking-widest text-zinc-500">Website</p>
-              <a href={companyInfo.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400">
-                {companyInfo.website.replace('https://', '')}
-              </a>
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">GST Registration</span>
+              <span className="font-mono">{companyInfo.gstin}</span>
             </div>
           </div>
 
-          <div className="mt-8 grid gap-4">
-            {amcTerms.map((term, index) => (
-              <div key={term.title} className={cn('reveal-item rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5', revealDelayClass(120 + index * 70))}>
-                <h3 className="text-lg font-semibold text-white">{term.title}</h3>
-                {term.description && <p className="mt-1 text-sm text-slate-400">{term.description}</p>}
+          <div className="space-y-4">
+            {amcTerms.map((term) => (
+              <div key={term.title} className="border border-slate-100 rounded-xl p-5 space-y-2.5 bg-slate-50/20">
+                <h3 className="text-sm font-bold text-slate-900">{term.title}</h3>
+                {term.description && <p className="text-xs text-slate-600">{term.description}</p>}
                 {term.bullets && (
-                  <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-400">
-                    {term.bullets.map((bullet, index) => (
-                      <li key={index}>{bullet}</li>
-                    ))}
+                  <ul className="list-disc pl-5 space-y-1 text-xs text-slate-600">
+                    {term.bullets.map((b, i) => <li key={i}>{b}</li>)}
                   </ul>
                 )}
                 {term.sections && (
-                  <div className="mt-4 space-y-4">
-                    {term.sections.map((section) => (
-                      <div key={section.title}>
-                        <p className="text-sm font-semibold text-white">{section.title}</p>
-                        {section.description && <p className="text-sm text-slate-400">{section.description}</p>}
-                        <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-400">
-                          {section.bullets.map((bullet, index) => (
-                            <li key={index}>{bullet}</li>
-                          ))}
+                  <div className="space-y-3 pt-2">
+                    {term.sections.map((sec) => (
+                      <div key={sec.title} className="space-y-1">
+                        <p className="text-xs font-bold text-slate-800">{sec.title}</p>
+                        <ul className="list-disc pl-5 space-y-1 text-[11px] text-slate-500">
+                          {sec.bullets.map((b, i) => <li key={i}>{b}</li>)}
                         </ul>
                       </div>
                     ))}
@@ -769,19 +605,6 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
               </div>
             ))}
           </div>
-        </section>
-
-        <section className="reveal-section rounded-3xl border border-zinc-800 bg-[#09090B] p-8 text-center" data-reveal-id="services-closing-cta">
-          <h2 className={cn('reveal-item text-2xl font-semibold text-white', revealDelayClass(0))}>Need Custom Solutions?</h2>
-          <p className={cn('reveal-item mx-auto mt-3 max-w-md text-sm text-zinc-400', revealDelayClass(70))}>
-            Share your requirements and our team will craft a tailored setup for your space.
-          </p>
-          <Link
-            href="/contact?subject=sales&intent=custom_solution&message=I%20need%20a%20custom%20solution%20quote.%20Please%20help%20me%20plan%20the%20right%20setup."
-            className={cn('reveal-item mt-6 inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 text-sm font-semibold transition-colors', revealDelayClass(140))}
-          >
-            Request Custom Solution Quote
-          </Link>
         </section>
       </div>
     </div>

@@ -321,6 +321,7 @@ export interface Service {
     id: string;
     icon: string;
     title: string;
+    name?: string;
     description: string;
     features: string[];
     badge?: 'Popular' | 'Recommended' | 'New' | 'Featured' | null;
@@ -331,6 +332,7 @@ export interface Service {
     display_order: number;
     created_at: string;
     updated_at: string;
+    terms_and_conditions?: string;
 }
 
 export interface InnovationModeItem {

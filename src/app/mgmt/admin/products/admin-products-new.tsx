@@ -124,7 +124,7 @@ export default function AdminProductsPage() {
     ];
 
     const rows = products.map((p: any) => [
-      p.handle_id || p.id,
+      p.handle_id || p.id || '',
       p.entry_type || 'product',
       p.title || p.name || '',
       p.brand || '',
@@ -153,6 +153,70 @@ export default function AdminProductsPage() {
     const link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute('download', 'products_export.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadSampleCSV = () => {
+    const headers = [
+      'Handle ID',
+      'Type',
+      'Title',
+      'Brand',
+      'Description',
+      'Product Detail',
+      'Image Link',
+      'Warranty Details',
+      'Stock Status',
+      'Status'
+    ];
+
+    const sampleRows = [
+      [
+        'TB-CCTV-001',
+        'Product',
+        'Hikvision 4MP IP Camera',
+        'Hikvision',
+        'High definition security camera with night vision',
+        '4MP resolution; POE; Outdoor rated',
+        'https://images.unsplash.com/photo-1557597774-9d273605dfa9',
+        '2 Years Warranty',
+        'In Stock',
+        'Active'
+      ],
+      [
+        'TB-CCTV-001',
+        'Variant',
+        'Hikvision 4MP IP Camera - Dome',
+        'Hikvision',
+        'Dome shape variant',
+        'Ceiling mount; indoor use',
+        'https://images.unsplash.com/photo-1557597774-9d273605dfa9',
+        '2 Years Warranty',
+        'In Stock',
+        'Active'
+      ]
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...sampleRows.map((row) =>
+        row
+          .map((val) => {
+            const clean = String(val).replace(/"/g, '""');
+            return `"${clean}"`;
+          })
+          .join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'products_sample.csv');
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -294,6 +358,13 @@ export default function AdminProductsPage() {
                 onChange={handleCSVImport}
                 className="hidden"
               />
+              <Button
+                variant="outline"
+                onClick={downloadSampleCSV}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download Sample
+              </Button>
               <Button
                 variant="outline"
                 disabled={importing}

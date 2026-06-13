@@ -66,6 +66,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    const hasProductId = headers.includes('Product ID');
+
     // Parse data rows
     const productGroups: { [key: string]: { main: any | null; variants: any[] } } = {};
 
@@ -147,12 +149,12 @@ export async function POST(request: NextRequest) {
 
         // Process variants
         for (const variant of group.variants) {
-          
+          const variantIndex = group.variants.indexOf(variant) + 1;
           const { error: variantError } = await supabase
             .from('products')
             .upsert({
-              handle_id: `${handleId}-variant-${group.variants.indexOf(variant) + 1}`,
-              handle: `${handleId.toLowerCase()}-variant-${group.variants.indexOf(variant) + 1}`,
+              handle_id: `${handleId}-variant-${variantIndex}`,
+              handle: `${handleId.toLowerCase()}-variant-${variantIndex}`,
               title: variant.title,
               description: variant.description,
               brand: variant.brand,

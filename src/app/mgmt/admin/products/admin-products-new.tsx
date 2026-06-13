@@ -1,11 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { Pencil, Plus, Trash2, MoreHorizontal, Loader2 } from 'lucide-react';
+import { Pencil, Plus, Trash2, MoreHorizontal, Loader2, Upload, Download } from 'lucide-react';
 import { useToast } from '../../../../hooks/use-toast';
 import { logger } from '@/lib/logger';
 import type { Product } from '@/lib/types';
 import { getProductDisplayImage } from '@/lib/image-utils';
+import { usePathname } from 'next/navigation';
 
 import {
   Card,
@@ -47,8 +48,13 @@ import { CreateProductDialog } from '@/components/admin/CreateProductDialog';
 import { EditProductDialog } from '@/components/admin/EditProductDialog';
 
 export default function AdminProductsPage() {
+  const pathname = usePathname();
+  const isSuperadmin = pathname?.startsWith('/superadmin');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
   const [products, setProducts] = React.useState<Product[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [importing, setImporting] = React.useState(false);
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -57,6 +63,101 @@ export default function AdminProductsPage() {
   const [savingProductId, setSavingProductId] = React.useState<string | null>(null);
 
   const { toast } = useToast();
+
+  const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/api/products/simple-import', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to import CSV');
+      }
+
+      toast({
+        title: 'Success',
+        description: data.message || 'CSV imported successfully',
+      });
+      fetchProducts();
+    } catch (error: any) {
+      logger.error('Failed to import CSV', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to import CSV',
+        variant: 'destructive',
+      });
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const exportToCSV = () => {
+    if (products.length === 0) {
+      toast({
+        title: 'Info',
+        description: 'No products to export',
+      });
+      return;
+    }
+
+    const headers = [
+      'Handle ID',
+      'Type',
+      'Title',
+      'Brand',
+      'Description',
+      'Product Detail',
+      'Image Link',
+      'Warranty Details',
+      'Stock Status',
+      'Status'
+    ];
+
+    const rows = products.map((p: any) => [
+      p.handle_id || p.id,
+      p.entry_type || 'product',
+      p.title || p.name || '',
+      p.brand || '',
+      p.description || '',
+      p.product_detail || '',
+      p.image_url || p.image || '',
+      p.warranty_details || '',
+      p.in_stock !== false ? 'In Stock' : 'Out of Stock',
+      p.status || 'active'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) =>
+        row
+          .map((val) => {
+            const clean = String(val).replace(/"/g, '""');
+            return `"${clean}"`;
+          })
+          .join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'products_export.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const fetchProducts = React.useCallback(async () => {
     setLoading(true);
@@ -183,10 +284,43 @@ export default function AdminProductsPage() {
             Manage your product inventory, pricing, and details.
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Product
-        </Button>
+        <div className="flex items-center gap-2">
+          {isSuperadmin && (
+            <>
+              <input
+                type="file"
+                accept=".csv"
+                ref={fileInputRef}
+                onChange={handleCSVImport}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                disabled={importing}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {importing ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                Import CSV
+              </Button>
+              <Button
+                variant="outline"
+                onClick={exportToCSV}
+                disabled={products.length === 0}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Export CSV
+              </Button>
+            </>
+          )}
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       <Card>

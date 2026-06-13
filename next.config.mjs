@@ -26,7 +26,7 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
   },
-  serverExternalPackages: [],
+  serverExternalPackages: ['pdfkit'],
   poweredByHeader: false,
   images: {
     unoptimized: isStaticExport,

@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
       name: resolvedName,
       title: resolvedTitle,
       description,
-      details: description, // for backwards compatibility
       price: price !== undefined ? Number(price) : null,
       terms_and_conditions,
       icon: icon || 'Wrench',

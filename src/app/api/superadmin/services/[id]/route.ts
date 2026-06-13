@@ -53,7 +53,6 @@ export async function PUT(
     }
     if (description !== undefined) {
       updateData.description = description;
-      updateData.details = description;
     }
     if (price !== undefined) {
       updateData.price = price === null ? null : Number(price);

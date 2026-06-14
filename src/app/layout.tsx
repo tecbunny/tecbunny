@@ -14,6 +14,7 @@ import {ThemeProvider} from '@/components/providers/ThemeProvider';
 import {DeferredFloatingAIAssistant} from '@/components/layout/DeferredFloatingAIAssistant';
 import {DeferredRuntimeServices} from '@/components/layout/DeferredRuntimeServices';
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/react";
 import { BlitzAuditBanner } from '@/components/ui/BlitzAuditBanner';
 
 const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION;
@@ -314,6 +315,7 @@ export default function RootLayout({
               <BlitzAuditBanner />
               <DeferredRuntimeServices gaId={gaId} metaPixelId={metaPixelId} />
               <SpeedInsights />
+              <Analytics />
             </OrderProvider>
           </AppProvider>
         </ThemeProvider>

@@ -1,3 +1,4 @@
+import 'server-only';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 

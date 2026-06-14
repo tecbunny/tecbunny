@@ -52,7 +52,7 @@ const navLinks = [
 ];
 
 export function Header() {
-  useAnalytics();
+  useAnalytics({ autoTrackPageView: true });
   const { user, loading, logout } = useAuth();
   const { cartCount, isHydrated } = useCart();
   const pathname = usePathname();

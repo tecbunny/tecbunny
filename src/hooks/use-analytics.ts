@@ -43,16 +43,22 @@ export const useAnalytics = ({ autoTrackPageView = false }: UseAnalyticsOptions 
   const sessionId = useRef<string>('');
 
   const sendToGtag = useCallback((eventType: string, data?: Record<string, unknown>) => {
-    if (typeof window === 'undefined' || typeof window.gtag !== 'function') {
+    if (typeof window === 'undefined') {
       return;
     }
 
-    window.gtag('event', eventType, {
-      page_location: typeof window !== 'undefined' ? window.location.href : undefined,
-      page_path: pathname,
-      page_title: typeof document !== 'undefined' ? document.title : undefined,
-      ...data,
-    });
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventType, {
+        page_location: window.location.href,
+        page_path: pathname,
+        page_title: typeof document !== 'undefined' ? document.title : undefined,
+        ...data,
+      });
+    }
+
+    if (eventType === 'page_view' && typeof (window as any).fbq === 'function') {
+      (window as any).fbq('track', 'PageView');
+    }
   }, [pathname]);
 
   useEffect(() => {

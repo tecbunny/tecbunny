@@ -726,10 +726,13 @@ export default function HomePage() {
             {partnerBrands.map((brand) => (
               <span key={brand.name} className="flex items-center justify-center transition-all hover:scale-105 duration-200">
                 {brand.logoUrl ? (
-                  <img
+                  <OptimizedImage
                     src={brand.logoUrl}
                     alt={brand.name}
-                    className="h-8 md:h-10 w-auto object-contain max-w-[120px] filter brightness-75 contrast-125 hover:brightness-100 transition-all duration-200"
+                    width={120}
+                    height={40}
+                    className="h-8 md:h-10 w-auto object-contain filter brightness-75 contrast-125 hover:brightness-100 transition-all duration-200"
+                    transformation={{ quality: 80 }}
                   />
                 ) : (
                   <span className="text-sm font-bold tracking-widest text-zinc-400 font-tech hover:text-blue-500 transition-colors">

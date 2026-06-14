@@ -423,7 +423,7 @@ export function Header() {
 
       <div
         id="mobile-menu"
-        className={`absolute left-0 top-full w-full border-t border-zinc-200 bg-white/95 backdrop-blur-md lg:hidden transition-all duration-300
+        className={`absolute left-0 top-full w-full border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-md lg:hidden transition-all duration-300
           ${mobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
         `}
       >
@@ -437,14 +437,14 @@ export function Header() {
                     onClick={() => setMobileSubmenuOpen((current) => (current === item.name ? null : item.name))}
                     className={`flex min-h-[36px] w-full items-center justify-between rounded-lg px-3 py-1.5 text-xs transition-colors ${
                       mobileSubmenuOpen === item.name
-                        ? 'text-zinc-950 font-bold bg-zinc-100'
-                        : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-955'
+                        ? 'text-white font-bold bg-zinc-900'
+                        : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'
                     }`}
                   >
                     {item.name}
                     <ChevronRight
                       size={14}
-                      className={`text-zinc-400 transition-transform ${mobileSubmenuOpen === item.name ? 'rotate-90' : ''}`}
+                      className={`text-zinc-500 transition-transform ${mobileSubmenuOpen === item.name ? 'rotate-90' : ''}`}
                     />
                   </button>
                   <div
@@ -458,10 +458,10 @@ export function Header() {
                       <Link
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-900"
+                        className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-white"
                       >
                         All {item.name}
-                        <ChevronRight size={12} className="text-zinc-300" />
+                        <ChevronRight size={12} className="text-zinc-600" />
                       </Link>
                     )}
                     {item.children.map((child) => (
@@ -469,10 +469,10 @@ export function Header() {
                         key={child.name}
                         href={child.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-900"
+                        className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-white"
                       >
                         {child.name}
-                        <ChevronRight size={12} className="text-zinc-300" />
+                        <ChevronRight size={12} className="text-zinc-600" />
                       </Link>
                     ))}
                   </div>
@@ -483,12 +483,12 @@ export function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs transition-colors ${
                     isActive(item.href)
-                      ? 'text-zinc-955 font-bold bg-zinc-100'
-                      : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-955'
+                      ? 'text-white font-bold bg-zinc-900'
+                      : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'
                   }`}
                 >
                   {item.name}
-                  <ChevronRight size={14} className="text-zinc-400" />
+                  <ChevronRight size={14} className="text-zinc-500" />
                 </Link>
               )}
             </div>
@@ -497,42 +497,42 @@ export function Header() {
             <Link
               href={dashboardHref}
               onClick={() => setMobileMenuOpen(false)}
-              className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-600 hover:bg-zinc-50 hover:text-zinc-955 transition-colors"
+              className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors"
             >
               Dashboard
-              <ChevronRight size={14} className="text-zinc-400" />
+              <ChevronRight size={14} className="text-zinc-500" />
             </Link>
           )}
           <Link
             href="/cart"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-600 hover:bg-zinc-50 hover:text-zinc-955 transition-colors"
+            className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors"
           >
             Cart
-            <ChevronRight size={14} className="text-zinc-400" />
+            <ChevronRight size={14} className="text-zinc-500" />
           </Link>
           {loading ? (
             <div className="space-y-1.5 animate-pulse pt-2">
-              <div className="h-8 w-full rounded-lg bg-zinc-100" />
-              <div className="h-8 w-full rounded-lg bg-zinc-100" />
+              <div className="h-8 w-full rounded-lg bg-zinc-900" />
+              <div className="h-8 w-full rounded-lg bg-zinc-900" />
             </div>
           ) : !user ? (
             <div className="space-y-1.5 pt-2">
               <Link
                 href="/auth/signin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex min-h-[36px] items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 transition-colors"
+                className="flex min-h-[36px] items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-350 hover:bg-zinc-850 hover:text-white transition-colors"
               >
                 Login
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight size={14} className="text-zinc-500" />
               </Link>
               <Link
                 href="/auth/signup"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex min-h-[36px] items-center justify-between rounded-lg border border-blue-500/20 bg-blue-500/5 px-3 py-1.5 text-xs text-blue-700 hover:bg-blue-500/10 transition-colors"
+                className="flex min-h-[36px] items-center justify-between rounded-lg border border-blue-500/20 bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-550 transition-colors"
               >
                 Signup
-                <ChevronRight size={14} className="text-blue-600" />
+                <ChevronRight size={14} className="text-white" />
               </Link>
             </div>
           ) : (
@@ -540,27 +540,27 @@ export function Header() {
               <Link
                 href="/profile"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-600 hover:bg-zinc-50 hover:text-zinc-950 transition-colors"
+                className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors"
               >
                 Profile
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight size={14} className="text-zinc-500" />
               </Link>
               <Link
                 href={accountHref}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-600 hover:bg-zinc-50 hover:text-zinc-950 transition-colors"
+                className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors"
               >
                 Account
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight size={14} className="text-zinc-500" />
               </Link>
               {showAdminOption && (
                 <Link
                   href="/mgmt/admin"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-600 hover:bg-zinc-50 hover:text-zinc-950 transition-colors"
+                  className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors"
                 >
                   Admin Panel
-                  <ChevronRight size={14} className="text-zinc-400" />
+                  <ChevronRight size={14} className="text-zinc-500" />
                 </Link>
               )}
               <button
@@ -569,14 +569,14 @@ export function Header() {
                   setMobileMenuOpen(false);
                   await handleLogout();
                 }}
-                className="flex w-full items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs text-zinc-700 hover:bg-zinc-50 transition-colors"
+                className="flex w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-350 hover:bg-zinc-850 hover:text-white transition-colors"
               >
                 Logout
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight size={14} className="text-zinc-500" />
               </button>
             </div>
           )}
-          <div className="pt-3 border-t border-zinc-100">
+          <div className="pt-3 border-t border-zinc-800">
             <Link
               href="/customised-setups"
               onClick={() => setMobileMenuOpen(false)}

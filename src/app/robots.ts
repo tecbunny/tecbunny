@@ -6,6 +6,26 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
+        userAgent: ['Googlebot', 'Bingbot'],
+        allow: '/',
+        disallow: [
+          '/api/',
+          '/mgmt/',
+          '/auth/',
+          '/checkout/',
+          '/cart/',
+          '/profile/',
+          '/admin/',
+          '/superadmin/',
+          '/staff/',
+          '/dashboard/',
+        ],
+      },
+      {
+        userAgent: ['GPTBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-Web', 'CCBot', 'Google-Extended', 'Anthropic-AI', 'Omgilibot', 'FacebookBot'],
+        disallow: '/',
+      },
+      {
         userAgent: '*',
         allow: '/',
         disallow: [
@@ -18,6 +38,7 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/superadmin/',
           '/staff/',
+          '/dashboard/',
         ],
       },
     ],

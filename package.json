@@ -133,7 +133,7 @@
     "@types/handlebars": false,
     "node-domexception": false,
     "@smithy/config-resolver": "^4.4.0",
-    "esbuild": "^0.25.9",
+    "esbuild": "0.28.1",
     "glob": "^11.0.0",
     "got": "11.8.6",
     "js-yaml": "^4.1.1",

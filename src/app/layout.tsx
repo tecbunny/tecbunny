@@ -30,11 +30,11 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   metadataBase: new URL('https://www.tecbunny.com'),
   title: {
-    default: 'TecBunny Solutions | CCTV, IT Services, Home Automation & AMC in Goa & Maharashtra',
+    default: 'TecBunny | CCTV, IT Services & Home Automation in Goa',
     template: '%s | TecBunny',
   },
   description:
-    'TecBunny Solutions provides CCTV installation, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.',
+    'TecBunny Solutions provides CCTV installation, IT services, AMC support, and home automation in Goa and Maharashtra. Secure your space with tech experts.',
   applicationName: 'TecBunny Solutions',
   keywords: [
     'CCTV installation Goa',
@@ -50,14 +50,14 @@ export const metadata: Metadata = {
   authors: [{ name: 'TecBunny Solutions' }],
   publisher: 'TecBunny Solutions',
   alternates: {
-    canonical: '/',
+    canonical: 'https://www.tecbunny.com',
   },
   openGraph: {
     type: 'website',
     url: 'https://www.tecbunny.com',
-    title: 'TecBunny Solutions | CCTV, IT Services, Home Automation & AMC in Goa & Maharashtra',
+    title: 'TecBunny | CCTV, IT Services & Home Automation in Goa',
     description:
-      'CCTV installation, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.',
+      'TecBunny Solutions provides CCTV installation, IT services, AMC support, and home automation in Goa and Maharashtra. Secure your space with tech experts.',
     siteName: 'TecBunny Solutions',
     images: [
       {
@@ -70,9 +70,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'TecBunny Solutions | CCTV, IT Services, Home Automation & AMC in Goa & Maharashtra',
+    title: 'TecBunny | CCTV, IT Services & Home Automation in Goa',
     description:
-      'CCTV installation, IT services, AMC support, home automation, RFID lock systems, and custom tech setups across Goa and Maharashtra.',
+      'TecBunny Solutions provides CCTV installation, IT services, AMC support, and home automation in Goa and Maharashtra. Secure your space with tech experts.',
     images: [BRAND_LOGO_URL],
     site: xHandle,
     creator: xHandle,

@@ -269,12 +269,21 @@ export default function SuperadminSettingsPage() {
     setActiveGroup(group?.id ?? 'core');
 
     if (requestedSection) {
-      setTimeout(() => {
+      const scrollToElement = (retries = 5) => {
         const el = document.getElementById(`section-${requestedSection}`);
         if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const rect = el.getBoundingClientRect();
+          if (rect.height === 0 && retries > 0) {
+            setTimeout(() => scrollToElement(retries - 1), 100);
+            return;
+          }
+          const y = rect.top + window.scrollY - 100;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        } else if (retries > 0) {
+          setTimeout(() => scrollToElement(retries - 1), 100);
         }
-      }, 350);
+      };
+      setTimeout(() => scrollToElement(), 100);
     }
   }, [router, searchParams]);
 

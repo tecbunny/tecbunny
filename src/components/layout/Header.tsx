@@ -253,7 +253,7 @@ export function Header() {
                       )}
                     </Link>
                     <div
-                      className="absolute left-1/2 top-full z-50 mt-2.5 w-48 -translate-x-1/2 rounded-xl border border-zinc-800 bg-zinc-950 p-1.5 shadow-lg backdrop-blur-md transition-all duration-200 before:absolute before:-top-3 before:left-0 before:h-3 before:w-full invisible opacity-0 -translate-y-1 pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:translate-y-0"
+                      className="absolute left-1/2 top-full z-50 mt-2.5 w-48 -translate-x-1/2 rounded-xl border border-zinc-800 bg-zinc-950 p-1.5 shadow-lg backdrop-blur-md transition-all duration-200 before:content-[''] before:absolute before:-top-3 before:left-0 before:h-3 before:w-full invisible opacity-0 -translate-y-1 pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto"
                     >
                       {item.children.map((child) => (
                         <Link

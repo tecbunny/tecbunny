@@ -144,14 +144,17 @@ export default function SmartInfrastructurePage() {
   ];
 
   return (
-    <div className="relative min-h-screen bg-[#09090B] text-zinc-200 selection:bg-blue-500/20 selection:text-white overflow-hidden">
-      {/* Background blobs */}
+    <div className="relative min-h-screen bg-[#09090B] text-zinc-200 selection:bg-blue-500/20 selection:text-white overflow-hidden py-16 sm:py-24">
+      {/* Background Noise and Grid (unified style) */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -left-40 top-0 h-[40rem] w-[40rem] rounded-full bg-blue-600/5 blur-[160px]" />
-        <div className="absolute -right-40 top-1/3 h-[45rem] w-[45rem] rounded-full bg-indigo-600/5 blur-[180px]" />
-        <div className="absolute left-1/3 top-2/3 h-[35rem] w-[35rem] rounded-full bg-purple-600/5 blur-[160px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(9,9,11,0.7),_rgba(9,9,11,0.98))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+        <div className="absolute -left-40 top-0 h-[42rem] w-[42rem] rounded-full bg-blue-500/5 blur-[160px]" />
+        <div className="absolute -right-40 top-1/3 h-[46rem] w-[46rem] rounded-full bg-indigo-500/5 blur-[180px]" />
       </div>
+
+      {/* Ambient Blobs */}
+      <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-blue-500/10 blur-[120px] animate-pulse" aria-hidden="true" />
+      <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-indigo-500/10 blur-[120px]" aria-hidden="true" />
 
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 border-b border-zinc-900">

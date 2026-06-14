@@ -362,8 +362,19 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
   };
 
   return (
-    <div className="tech-main-content">
-      <div className="mx-auto flex max-w-7xl flex-col gap-16">
+    <div className="relative min-h-screen bg-[#09090B] text-zinc-200 selection:bg-blue-500/20 selection:text-white overflow-hidden py-16 sm:py-24">
+      {/* Background Noise and Grid (unified style) */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+        <div className="absolute -left-40 top-0 h-[42rem] w-[42rem] rounded-full bg-blue-500/5 blur-[160px]" />
+        <div className="absolute -right-40 top-1/3 h-[46rem] w-[46rem] rounded-full bg-indigo-500/5 blur-[180px]" />
+      </div>
+
+      {/* Ambient Blobs */}
+      <div className="ambient-blob pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-blue-500/10 blur-[120px] animate-pulse" aria-hidden="true" />
+      <div className="ambient-blob ambient-blob--delayed pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-indigo-500/10 blur-[120px]" aria-hidden="true" />
+
+      <div className="mx-auto flex max-w-7xl flex-col gap-16 px-6 sm:px-8">
         
         {/* Page Hero */}
         <section className="reveal-section text-center space-y-6 max-w-3xl mx-auto" data-reveal-id="services-hero">
@@ -595,61 +606,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
           </div>
         </section>
 
-        {/* AMC Core Terms Section */}
-        <section className="reveal-section rounded-2xl border border-zinc-850 p-6 sm:p-8 shadow-sm space-y-6 bento-card" data-reveal-id="services-amc">
-          <div className="flex items-center gap-3">
-            <div className="h-6 w-1 rounded-full bg-blue-500" />
-            <div>
-              <h2 className="text-xl font-bold font-tech tech-heading">Annual Maintenance Contract (AMC) Terms</h2>
-              <p className="text-xs font-light tech-body">Legal inclusions, response bounds, and service rules.</p>
-            </div>
-          </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 text-xs">
-            <div className="p-3 bg-zinc-900/40 border border-zinc-850 rounded-lg">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-550 block mb-0.5">Company Entity</span>
-              <span className="font-bold tech-heading">{companyInfo.name}</span>
-            </div>
-            <div className="p-3 bg-zinc-900/40 border border-zinc-850 rounded-lg">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-555 block mb-0.5">CIN Identifier</span>
-              <span className="font-mono tech-body">{companyInfo.cin}</span>
-            </div>
-            <div className="p-3 bg-zinc-900/40 border border-zinc-850 rounded-lg">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-555 block mb-0.5">Udyam Registration</span>
-              <span className="font-mono tech-body">{companyInfo.udyam}</span>
-            </div>
-            <div className="p-3 bg-zinc-900/40 border border-zinc-850 rounded-lg">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-555 block mb-0.5">GST Registration</span>
-              <span className="font-mono tech-body">{companyInfo.gstin}</span>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {amcTerms.map((term) => (
-              <div key={term.title} className="border border-zinc-850 bg-zinc-900/20 rounded-xl p-5 space-y-2.5">
-                <h3 className="text-sm font-bold font-tech tech-heading">{term.title}</h3>
-                {term.description && <p className="text-xs font-light tech-body">{term.description}</p>}
-                {term.bullets && (
-                  <ul className="list-disc pl-5 space-y-1 text-xs font-light tech-body">
-                    {term.bullets.map((b, i) => <li key={i}>{b}</li>)}
-                  </ul>
-                )}
-                {term.sections && (
-                  <div className="space-y-3 pt-2">
-                    {term.sections.map((sec) => (
-                      <div key={sec.title} className="space-y-1">
-                        <p className="text-xs font-bold tech-heading">{sec.title}</p>
-                        <ul className="list-disc pl-5 space-y-1 text-[11px] font-light tech-body">
-                          {sec.bullets.map((b, i) => <li key={i}>{b}</li>)}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   );

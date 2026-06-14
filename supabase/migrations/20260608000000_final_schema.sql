@@ -346,6 +346,7 @@ CREATE TABLE IF NOT EXISTS public.services (
   is_featured   BOOLEAN       NOT NULL DEFAULT FALSE,
   metadata      JSONB         NOT NULL DEFAULT '{}'::JSONB,
   created_by    UUID          REFERENCES auth.users(id) ON DELETE SET NULL,
+  terms_and_conditions TEXT,
   created_at    TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );

@@ -198,8 +198,8 @@ export function Footer() {
             <h4 className="text-white text-base font-tech font-black uppercase tracking-[0.2em] mb-6">Services</h4>
             <ul className="space-y-3.5 text-base font-medium">
               <li>
-                <Link href="/services" className="hover:text-primary transition-all hover:translate-x-1 inline-block text-slate-300">
-                  CCTV Installation
+                <Link href="/services/smart-infrastructure" className="hover:text-primary transition-all hover:translate-x-1 inline-block text-slate-300">
+                  Smart Infrastructure
                 </Link>
               </li>
               <li>

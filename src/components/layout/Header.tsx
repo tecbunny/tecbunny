@@ -35,6 +35,7 @@ const navLinks = [
     children: [
       { name: 'All Services', href: '/services' },
       { name: 'Web Development', href: '/webdev' },
+      { name: 'Smart Infrastructure', href: '/services/smart-infrastructure' },
     ]
   },
   { name: 'About Us', href: '/about' },

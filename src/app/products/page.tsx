@@ -11,8 +11,8 @@ import { filterPubliclyVisibleProducts } from '@/lib/product-visibility';
 export const revalidate = 300;
 
 export const metadata: Metadata = createPageMetadata({
-  title: 'Shop Products - TecBunny Store',
-  description: 'Browse CCTV systems, computers, accessories, and AMC-ready hardware curated by TecBunny.',
+  title: 'Buy CCTV, IT Hardware & Security Systems | TecBunny',
+  description: 'Shop premium CCTV systems, surveillance cameras, computer hardware, and accessories curated by TecBunny. Best pricing in Goa.',
   keywords: ['shop', 'products', 'CCTV', 'computers', 'accessories', 'TecBunny'],
   path: '/products',
   image: '/brand.png',

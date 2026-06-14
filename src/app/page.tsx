@@ -10,9 +10,9 @@ import { createPageMetadata } from '@/lib/metadata';
 
 // Homepage metadata for SEO
 export const metadata: Metadata = createPageMetadata({
-  title: 'TecBunny Solutions | Technology Services & Custom Tech Setups',
+  title: 'TecBunny | Tech Services, CCTV & AMC Solutions',
   description:
-    'TecBunny Solutions provides custom technology services, hardware solutions, and technical support for businesses and homes.',
+    'TecBunny Solutions engineered premium IT services, CCTV installation, AMC support, home automation, and custom hardware setups in Goa and Maharashtra.',
   keywords: [
     'tech services',
     'custom setup',

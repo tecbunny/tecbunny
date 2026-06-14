@@ -11,16 +11,14 @@ import CustomSetupFlow from '@/components/customised-setups/ClientCustomSetupFlo
 import { DEFAULT_CUSTOM_SETUP_TEMPLATE_SLUG } from '@/lib/custom-setup.constants';
 import { getCustomSetupBlueprintSummary } from '@/lib/custom-setup-service';
 
-export const metadata: Metadata = {
-  title: 'Customised Setups - TecBunny Store',
-  description:
-    'Build a CCTV deployment tailored to your site. Select DVR/NVR paths, camera counts, storage, and services to preview TecBunny pricing instantly.',
-  openGraph: {
-    title: 'Customised Setups | TecBunny',
-    description: 'Configure TecBunny surveillance bundles with transparent MRP vs sale pricing.',
-    type: 'website',
-  },
-};
+import { createPageMetadata } from '@/lib/metadata';
+
+export const metadata: Metadata = createPageMetadata({
+  title: 'Custom Surveillance Setups & Estimator | TecBunny',
+  description: 'Design and estimate custom CCTV deployment, smart home automation, and networking bundles tailored for your premises in Goa.',
+  path: '/customised-setups',
+  keywords: ['surveillance setups', 'CCTV estimator', 'home security configurations', 'Goa security systems'],
+});
 
 // export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Force no caching

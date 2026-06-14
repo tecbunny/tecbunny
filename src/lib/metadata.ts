@@ -17,7 +17,7 @@ interface PageMetaInput {
 }
 
 export function cleanMetadataTitle(value: string | null | undefined, fallback = 'TecBunny Solutions'): string {
-  const title = stripHtmlToPlainText(value, 70);
+  const title = stripHtmlToPlainText(value, 59);
   if (!title || title.toLowerCase() === 'null' || title.toLowerCase() === 'undefined') {
     return fallback;
   }
@@ -28,7 +28,7 @@ export function cleanMetadataDescription(
   value: string | null | undefined,
   fallback = defaultDescription,
 ): string {
-  const description = stripHtmlToPlainText(value, 160);
+  const description = stripHtmlToPlainText(value, 154);
   if (!description || description.toLowerCase() === 'null' || description.toLowerCase() === 'undefined') {
     return fallback;
   }

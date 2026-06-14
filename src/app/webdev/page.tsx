@@ -71,7 +71,7 @@ export default function WebDevPage() {
             <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-white bg-clip-text text-transparent">Web Development</span>
           </h1>
           <p className="text-lg font-light leading-relaxed tech-body">
-            Build your digital presence with our expert website building services. Custom solutions designed to scale for modern businesses.
+            Architect your digital presence with our expert web engineering services. Custom solutions designed to scale for modern businesses.
           </p>
           <div className="flex flex-wrap gap-4 pt-4 justify-center">
             <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-550 text-white font-bold rounded-xl px-8 shadow-[0_0_20px_-5px_rgba(59,130,246,0.35)] transition-all">
@@ -89,7 +89,7 @@ export default function WebDevPage() {
             <div className="lg:col-span-7 space-y-6">
               <span className="text-xs uppercase tracking-[0.45em] text-blue-500 font-bold">Capabilities</span>
               <h2 className="text-3xl sm:text-4xl font-bold text-white font-tech leading-tight">
-                Website Building Services
+                Web Engineering Services
               </h2>
               <p className="text-zinc-400 text-sm font-light leading-relaxed">
                 We create robust, scalable, and secure websites that drive growth. From landing pages to complex web applications, we handle it all. In fact, this web platform you are viewing right now is engineered by us—a live example of our capabilities.
@@ -148,7 +148,7 @@ export default function WebDevPage() {
             
             <div className="relative z-10 space-y-6 max-w-2xl mx-auto">
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight font-tech">
-                Ready to Build Your Website?
+                Ready to Ship Your Website?
               </h2>
               <p className="text-zinc-200 text-base md:text-lg font-light leading-relaxed">
                 Contact us today to discuss your project requirements and get a custom proposal.

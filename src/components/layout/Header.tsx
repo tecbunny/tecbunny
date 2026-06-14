@@ -203,7 +203,7 @@ export function Header() {
   const accountHref = showDashboard ? dashboardHref : '/orders';
 
   return (
-    <nav
+    <header
       id="navbar"
       className={`sticky top-0 z-50 w-full transition-all duration-300 ease-in-out border-b tech-header
         ${isScrolled
@@ -577,6 +577,6 @@ export function Header() {
           </div>
         </div>
       </div>
-    </nav>
+    </header>
   );
 }

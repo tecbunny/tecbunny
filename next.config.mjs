@@ -56,10 +56,6 @@ const nextConfig = {
         source: '/:path*',
         headers: [
           {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://challenges.cloudflare.com https://www.googletagmanager.com https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://fbcsagupcxheyiusjfak.supabase.co https://*.supabase.co https://placehold.co https://www.facebook.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://fbcsagupcxheyiusjfak.supabase.co https://*.supabase.co https://vitals.vercel-insights.com https://www.google-analytics.com; frame-src 'self' https://challenges.cloudflare.com; object-src 'none';",
-          },
-          {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },

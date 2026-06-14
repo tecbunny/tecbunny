@@ -73,10 +73,11 @@ export function createPageMetadata({
   const resolvedImage = activeImage.startsWith('http') ? activeImage : `${siteUrl}${activeImage}`;
   const rawCanonical = path.startsWith('http') ? path : `${siteUrl}${path}`;
   const urlObj = new URL(rawCanonical);
-  let canonical = urlObj.origin + urlObj.pathname;
-  if (canonical.endsWith('/') && canonical !== `${siteUrl}/`) {
-    canonical = canonical.slice(0, -1);
+  let canonicalPath = urlObj.pathname.toLowerCase().replace(/\/+/g, '/');
+  if (canonicalPath.endsWith('/') && canonicalPath !== '/') {
+    canonicalPath = canonicalPath.slice(0, -1);
   }
+  const canonical = `${siteUrl}${canonicalPath}`;
 
   const safeTitle = cleanMetadataTitle(title);
   const safeDescription = cleanMetadataDescription(description);

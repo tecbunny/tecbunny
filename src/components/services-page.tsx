@@ -18,6 +18,7 @@ import {
   ShoppingCart,
   Truck,
   Wrench,
+  Sparkles
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -361,28 +362,26 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
   };
 
   return (
-    <div className="tech-main-content bg-slate-50 text-slate-800">
-      <div className="mx-auto flex max-w-7xl flex-col gap-12">
+    <div className="tech-main-content">
+      <div className="mx-auto flex max-w-7xl flex-col gap-16">
         
         {/* Page Hero */}
-        <section className="reveal-section text-center" data-reveal-id="services-hero">
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/50 px-3.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#2563EB]">
-            Platform Services
+        <section className="reveal-section text-center space-y-6 max-w-3xl mx-auto" data-reveal-id="services-hero">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/5 px-4.5 py-1.5 text-xs font-semibold text-blue-400">
+            <Sparkles size={14} className="animate-pulse" />
+            <span>Platform Services</span>
           </div>
-          <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl font-sans">
-            Expert Tech{' '}
-            <span className="bg-gradient-to-r from-[#2563EB] to-blue-600 bg-clip-text text-transparent">
-              Deployment
-            </span>
+          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl font-tech leading-tight tech-heading">
+            Expert Tech <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-white bg-clip-text text-transparent">Deployment</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-slate-600 sm:text-lg">
+          <p className="text-lg font-light leading-relaxed tech-body">
             From smart security perimeters to comprehensive AMC support, customize your service package dynamically or purchase transparent installation credits directly.
           </p>
           {canManageServices && (
             <div className="mt-6 flex justify-center">
               <Link
                 href="/superadmin/mgmt/services"
-                className="inline-flex items-center justify-center rounded-lg border border-blue-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-[#2563EB] hover:bg-slate-100 transition-colors shadow-sm"
+                className="inline-flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/40 text-blue-400 hover:bg-zinc-800/80 px-5 py-2.5 text-xs font-semibold uppercase tracking-widest transition-colors shadow-sm"
               >
                 Services Core Desk
               </Link>
@@ -390,18 +389,63 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
           )}
         </section>
 
+        {/* Premium Enterprise Solutions Banners */}
+        <section className="reveal-section grid gap-8 lg:grid-cols-2" data-reveal-id="premium-enterprise-services">
+          {/* Card 1: Smart Infrastructure */}
+          <div className="bento-card p-8 flex flex-col justify-between group transition-all duration-300">
+            <div className="space-y-4">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full px-2.5 py-0.5">
+                Hospitality & Construction
+              </span>
+              <h3 className="text-xl font-bold font-tech tech-heading">Next-Gen Smart Infrastructure</h3>
+              <p className="text-xs leading-relaxed max-w-sm tech-body">
+                Enterprise technology integration for luxury resorts, hotels, and modern builders. CCTV projects, RFID locks, and complete automation.
+              </p>
+            </div>
+            <div className="mt-8">
+              <Link
+                href="/services/smart-infrastructure"
+                className="inline-flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-550 text-white px-6 py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-lg shadow-blue-500/10"
+              >
+                Explore Enterprise Projects
+              </Link>
+            </div>
+          </div>
+
+          {/* Card 2: Web Dev */}
+          <div className="bento-card p-8 flex flex-col justify-between group transition-all duration-300">
+            <div className="space-y-4">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full px-2.5 py-0.5">
+                Web Development
+              </span>
+              <h3 className="text-xl font-bold font-tech tech-heading">Bespoke Web Solutions</h3>
+              <p className="text-xs leading-relaxed max-w-sm tech-body">
+                Custom e-commerce platforms, custom admin panels, landing pages, and WhatsApp integration systems.
+              </p>
+            </div>
+            <div className="mt-8">
+              <Link
+                href="/webdev"
+                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-550 text-white px-6 py-3 text-xs font-bold uppercase tracking-wider transition-colors shadow-lg shadow-indigo-500/10"
+              >
+                View Web Services
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Dynamic Services Catalog */}
-        <section className="space-y-12">
+        <section className="space-y-16">
           {(!services || services.length === 0) && !hasServiceLoadError && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-              <Wrench className="h-10 w-10 text-slate-400 mx-auto mb-4" />
-              <h2 className="text-lg font-bold text-slate-900">Services catalog updating</h2>
-              <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+            <div className="bento-card p-12 text-center shadow-sm">
+              <Wrench className="h-10 w-10 text-zinc-500 mx-auto mb-4" />
+              <h2 className="text-lg font-bold font-tech tech-heading">Services catalog updating</h2>
+              <p className="mx-auto mt-2 max-w-md text-sm font-light tech-body">
                 Our database listings are undergoing synchronization. Please connect with our support desk for direct reservations.
               </p>
               <Link
                 href="/contact?subject=sales&intent=service_quote"
-                className="mt-6 inline-flex items-center justify-center rounded-lg bg-[#2563EB] text-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-blue-700 transition-colors shadow-sm"
+                className="mt-6 inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm"
               >
                 Connect Support
               </Link>
@@ -411,10 +455,10 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
           {serviceSections.map((section) => (
             <div key={section.key} className="reveal-section space-y-6" data-reveal-id={`services-group-${slugify(section.key)}`}>
               <div className="flex items-center gap-3">
-                <div className="h-6 w-1 rounded-full bg-[#2563EB]" />
+                <div className="h-6 w-1 rounded-full bg-blue-500" />
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">{section.key}</h2>
-                  <p className="text-xs text-slate-500">Professional services configured under {section.key.toLowerCase()}.</p>
+                  <h2 className="text-xl font-bold font-tech tech-heading">{section.key}</h2>
+                  <p className="text-xs text-zinc-500">Professional services configured under {section.key.toLowerCase()}.</p>
                 </div>
               </div>
 
@@ -424,39 +468,39 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
                   return (
                     <div
                       key={service.id}
-                      className="bento-card bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between h-full hover:-translate-y-1 hover:border-blue-400 hover:shadow-md transition-all duration-300"
+                      className="bento-card p-6 flex flex-col justify-between h-full transition-all duration-300"
                     >
                       <div>
                         <div className="flex items-center justify-between">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-[#2563EB]">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
                             <Icon className="h-5.5 w-5.5" />
                           </div>
                           {service.badge && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-[#2563EB] border border-blue-100 rounded-full px-2.5 py-0.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full px-2.5 py-0.5">
                               {service.badge}
                             </span>
                           )}
                         </div>
 
-                        <h3 className="mt-4 text-base font-bold text-slate-900">{service.title || service.name}</h3>
-                        <p className="mt-2 text-xs text-slate-600 line-clamp-3 leading-relaxed">{service.description}</p>
+                        <h3 className="mt-4 text-base font-bold font-tech tech-heading">{service.title || service.name}</h3>
+                        <p className="mt-2 text-xs line-clamp-3 leading-relaxed font-light tech-body">{service.description}</p>
                         
                         {service.features && service.features.length > 0 && (
-                          <ul className="mt-4 space-y-2 text-xs text-slate-500">
+                          <ul className="mt-4 space-y-2 text-xs text-zinc-500">
                             {service.features.map((feature, idx) => (
                               <li key={idx} className="flex items-start gap-2">
-                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#2563EB]" />
-                                <span className="line-clamp-2">{feature}</span>
+                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-50" />
+                                <span className="line-clamp-2 font-light tech-body">{feature}</span>
                               </li>
                             ))}
                           </ul>
                         )}
                       </div>
 
-                      <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col gap-3">
+                      <div className="mt-6 pt-4 border-t border-zinc-800 flex flex-col gap-3">
                         <div className="flex items-baseline justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rate Credit</span>
-                          <span className="text-base font-bold text-slate-900 font-mono">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-550">Rate Credit</span>
+                          <span className="text-base font-bold font-mono tech-heading">
                             {service.price ? `₹${Number(service.price).toLocaleString('en-IN')}` : 'Quotation Basis'}
                           </span>
                         </div>
@@ -464,7 +508,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
                         <button
                           type="button"
                           onClick={() => handleAddToCart(service)}
-                          className="w-full py-3 bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                          className="w-full py-3 bg-blue-600 hover:bg-blue-555 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_-3px_rgba(59,130,246,0.3)] disabled:opacity-50"
                         >
                           <ShoppingCart className="h-3.5 w-3.5" />
                           Add Service to Cart
@@ -476,7 +520,7 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
                             const href = getContactHref(service);
                             router.push(href);
                           }}
-                          className="w-full py-2 border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs font-semibold rounded-lg transition-colors text-center"
+                          className="w-full py-2 border border-zinc-800 text-zinc-450 hover:bg-zinc-800/30 text-xs font-semibold rounded-lg transition-colors text-center"
                         >
                           Consult Engineering Team
                         </button>
@@ -490,17 +534,17 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
         </section>
 
         {/* Static Rates Matrix Section */}
-        <section className="reveal-section rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm" data-reveal-id="services-pricing">
+        <section className="reveal-section rounded-2xl border border-zinc-850 p-6 sm:p-8 shadow-sm bento-card" data-reveal-id="services-pricing">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Direct Purchase Rates & Plans</h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <h2 className="text-xl font-bold font-tech tech-heading">Direct Purchase Rates & Plans</h2>
+              <p className="text-xs mt-1 font-light tech-body">
                 Indicator credit rates for structured automation and maintenance services across Goa.
               </p>
             </div>
             <Link
               href="/contact?subject=sales&intent=service_quote"
-              className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              className="inline-flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900/30 hover:bg-white/10 hover:border-zinc-700 px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors shadow-sm"
             >
               Request Custom Quote
             </Link>
@@ -508,33 +552,33 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
 
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
             {servicePricing.map((category) => (
-              <div key={category.category} className="rounded-xl border border-slate-100 bg-slate-50/50 p-6 space-y-4">
+              <div key={category.category} className="rounded-xl border border-zinc-850 bg-zinc-950/20 p-6 space-y-4">
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">{category.category}</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">{category.blurb}</p>
+                  <h3 className="font-bold text-sm font-tech tech-heading">{category.category}</h3>
+                  <p className="text-xs mt-0.5 font-light tech-body">{category.blurb}</p>
                 </div>
                 <div className="space-y-4">
                   {category.plans.map((plan) => (
-                    <div key={plan.name} className="bg-white rounded-lg border border-slate-150 p-4 space-y-3 shadow-xs">
+                    <div key={plan.name} className="bento-card p-4 space-y-3 shadow-xs">
                       <div>
-                        <p className="text-xs font-bold text-slate-800">{plan.name}</p>
-                        <p className="text-[10px] text-slate-500">{plan.summary}</p>
+                        <p className="text-xs font-bold tech-heading">{plan.name}</p>
+                        <p className="text-[10px] font-light tech-body">{plan.summary}</p>
                       </div>
                       <div className="grid gap-2">
                         {plan.tiers.map((tier) => {
                           const hasPrice = Boolean(tier.amount);
                           return (
-                            <div key={tier.label} className="border border-slate-100 rounded-md p-3 flex flex-col gap-2 bg-slate-50/30">
+                            <div key={tier.label} className="border border-zinc-900 bg-zinc-900/20 rounded-md p-3 flex flex-col gap-2">
                               <div className="flex justify-between items-baseline">
-                                <span className="text-[9px] font-bold uppercase tracking-widest text-[#2563EB]">{tier.label}</span>
-                                <span className="text-xs font-bold text-slate-900 font-mono">{tier.price}</span>
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-blue-400">{tier.label}</span>
+                                <span className="text-xs font-bold font-mono tech-heading">{tier.price}</span>
                               </div>
-                              <p className="text-[10px] text-slate-500 leading-normal">{tier.detail}</p>
+                              <p className="text-[10px] leading-normal font-light tech-body">{tier.detail}</p>
                               {hasPrice && (
                                 <button
                                   type="button"
                                   onClick={() => handlePricingTierAdd(category.category, plan, tier)}
-                                  className="w-full mt-1 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-[#2563EB] text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded transition-colors text-center border border-slate-200"
+                                  className="w-full mt-1 py-1.5 bg-zinc-900 hover:bg-blue-600 hover:text-white text-zinc-300 border border-zinc-800 text-[10px] font-bold uppercase tracking-wider rounded transition-colors text-center"
                                 >
                                   Add to Cart
                                 </button>
@@ -552,41 +596,41 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
         </section>
 
         {/* AMC Core Terms Section */}
-        <section className="reveal-section rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm space-y-6" data-reveal-id="services-amc">
+        <section className="reveal-section rounded-2xl border border-zinc-850 p-6 sm:p-8 shadow-sm space-y-6 bento-card" data-reveal-id="services-amc">
           <div className="flex items-center gap-3">
-            <div className="h-6 w-1 rounded-full bg-[#2563EB]" />
+            <div className="h-6 w-1 rounded-full bg-blue-500" />
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Annual Maintenance Contract (AMC) Terms</h2>
-              <p className="text-xs text-slate-500">Legal inclusions, response bounds, and service rules.</p>
+              <h2 className="text-xl font-bold font-tech tech-heading">Annual Maintenance Contract (AMC) Terms</h2>
+              <p className="text-xs font-light tech-body">Legal inclusions, response bounds, and service rules.</p>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 text-xs text-slate-600">
-            <div className="p-3 bg-slate-50 rounded-lg">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Company Entity</span>
-              <span className="font-bold text-slate-800">{companyInfo.name}</span>
+          <div className="grid gap-4 sm:grid-cols-2 text-xs">
+            <div className="p-3 bg-zinc-900/40 border border-zinc-850 rounded-lg">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-550 block mb-0.5">Company Entity</span>
+              <span className="font-bold tech-heading">{companyInfo.name}</span>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">CIN Identifier</span>
-              <span className="font-mono">{companyInfo.cin}</span>
+            <div className="p-3 bg-zinc-900/40 border border-zinc-850 rounded-lg">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-555 block mb-0.5">CIN Identifier</span>
+              <span className="font-mono tech-body">{companyInfo.cin}</span>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Udyam Registration</span>
-              <span className="font-mono">{companyInfo.udyam}</span>
+            <div className="p-3 bg-zinc-900/40 border border-zinc-850 rounded-lg">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-555 block mb-0.5">Udyam Registration</span>
+              <span className="font-mono tech-body">{companyInfo.udyam}</span>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">GST Registration</span>
-              <span className="font-mono">{companyInfo.gstin}</span>
+            <div className="p-3 bg-zinc-900/40 border border-zinc-850 rounded-lg">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-555 block mb-0.5">GST Registration</span>
+              <span className="font-mono tech-body">{companyInfo.gstin}</span>
             </div>
           </div>
 
           <div className="space-y-4">
             {amcTerms.map((term) => (
-              <div key={term.title} className="border border-slate-100 rounded-xl p-5 space-y-2.5 bg-slate-50/20">
-                <h3 className="text-sm font-bold text-slate-900">{term.title}</h3>
-                {term.description && <p className="text-xs text-slate-600">{term.description}</p>}
+              <div key={term.title} className="border border-zinc-850 bg-zinc-900/20 rounded-xl p-5 space-y-2.5">
+                <h3 className="text-sm font-bold font-tech tech-heading">{term.title}</h3>
+                {term.description && <p className="text-xs font-light tech-body">{term.description}</p>}
                 {term.bullets && (
-                  <ul className="list-disc pl-5 space-y-1 text-xs text-slate-600">
+                  <ul className="list-disc pl-5 space-y-1 text-xs font-light tech-body">
                     {term.bullets.map((b, i) => <li key={i}>{b}</li>)}
                   </ul>
                 )}
@@ -594,8 +638,8 @@ export default function ServicesPage({ services, hasServiceLoadError = false }: 
                   <div className="space-y-3 pt-2">
                     {term.sections.map((sec) => (
                       <div key={sec.title} className="space-y-1">
-                        <p className="text-xs font-bold text-slate-800">{sec.title}</p>
-                        <ul className="list-disc pl-5 space-y-1 text-[11px] text-slate-500">
+                        <p className="text-xs font-bold tech-heading">{sec.title}</p>
+                        <ul className="list-disc pl-5 space-y-1 text-[11px] font-light tech-body">
                           {sec.bullets.map((b, i) => <li key={i}>{b}</li>)}
                         </ul>
                       </div>

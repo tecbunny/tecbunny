@@ -231,21 +231,12 @@ export function Header() {
           </Link>
 
           <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
-            <nav className="flex items-center gap-1 overflow-hidden rounded-full border border-zinc-800 bg-zinc-900/50 p-1">
+            <nav className="flex items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900/50 p-1">
               {navLinks.map((item) => (
                 item.children ? (
                   <div
                     key={item.name}
                     className="relative group"
-                    onMouseEnter={() => setDesktopSubmenuOpen(item.name)}
-                    onMouseLeave={() => setDesktopSubmenuOpen((current) => (current === item.name ? null : current))}
-                    onFocusCapture={() => setDesktopSubmenuOpen(item.name)}
-                    onBlurCapture={(event) => {
-                      const nextTarget = event.relatedTarget as Node | null;
-                      if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
-                        setDesktopSubmenuOpen((current) => (current === item.name ? null : current));
-                      }
-                    }}
                   >
                     <Link
                       href={item.href}
@@ -262,14 +253,12 @@ export function Header() {
                       )}
                     </Link>
                     <div
-                      className={`absolute left-1/2 top-full z-50 mt-2.5 w-48 -translate-x-1/2 rounded-xl border border-zinc-800 bg-zinc-950 p-1.5 shadow-lg backdrop-blur-md transition-all duration-200 before:absolute before:-top-3 before:left-0 before:h-3 before:w-full ${desktopSubmenuOpen === item.name ? 'visible opacity-100 translate-y-0' : 'invisible opacity-0 -translate-y-1 pointer-events-none'}`}
-                      aria-hidden={desktopSubmenuOpen === item.name ? 'false' : 'true'}
+                      className="absolute left-1/2 top-full z-50 mt-2.5 w-48 -translate-x-1/2 rounded-xl border border-zinc-800 bg-zinc-950 p-1.5 shadow-lg backdrop-blur-md transition-all duration-200 before:absolute before:-top-3 before:left-0 before:h-3 before:w-full invisible opacity-0 -translate-y-1 pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:translate-y-0"
                     >
                       {item.children.map((child) => (
                         <Link
                           key={child.name}
                           href={child.href}
-                          tabIndex={desktopSubmenuOpen === item.name ? 0 : -1}
                           className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-white"
                         >
                           {child.name}

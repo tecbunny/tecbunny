@@ -224,7 +224,7 @@ export default function ContactPage() {
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="pointer-events-none absolute left-20 top-20 h-96 w-96 rounded-full bg-primary/5 blur-[120px]" />
 
-      <div className="mx-auto max-w-7xl px-4 pb-20 pt-0 sm:px-6 lg:px-8 sm:pt-0">
+      <div className="mx-auto max-w-7xl px-4 pb-20 pt-20 sm:px-6 lg:px-8 sm:pt-28">
         <div className="text-center">
           <h1 className="text-4xl font-semibold sm:text-5xl lg:text-6xl tech-heading">
             {content?.content?.hero?.title || 'Contact TecBunny'}{' '}

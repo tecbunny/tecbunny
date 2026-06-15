@@ -99,7 +99,7 @@ export default function PoliciesPage() {
                return (
                 <Link key={policy.href} href={policy.href} className="group relative">
                   {/* Neon Glow Hover Effect */}
-                  <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary to-primary/80 opacity-0 blur-md transition duration-500 group-hover:opacity-10" />
+                  <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary to-blue-500 opacity-0 blur-md transition duration-500 group-hover:opacity-10" />
                   
                   <div className="relative h-full rounded-2xl border border-border bg-card p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-card/85 shadow-sm">
                     <div className="flex items-center gap-3">

@@ -60,7 +60,7 @@ export default async function CustomisedSetupsPage({
             <ShieldCheck className="h-4 w-4" /> Custom Setup Configurator
           </span>
           <h1 className="mt-6 text-4xl md:text-5xl font-bold text-foreground">
-            Design Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/80">Ecosystem</span>
+            Design Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Ecosystem</span>
           </h1>
           <p className="mt-4 text-muted-foreground max-w-3xl mx-auto font-tech">
             Build a bespoke security and IT solution tailored to your exact floor plan. Select your premises, define your needs, and let our system draft a blueprint for you.

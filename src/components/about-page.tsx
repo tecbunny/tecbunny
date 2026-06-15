@@ -8,14 +8,14 @@ export default function AboutPage() {
       <div className="pointer-events-none absolute inset-0 bg-noise opacity-20" />
       <div className="pointer-events-none absolute top-20 right-20 h-96 w-96 rounded-full bg-primary/10 blur-[110px]" />
 
-      <section className="relative pb-20 pt-0 sm:pt-0">
+      <section className="relative pb-20 pt-20 sm:pt-28">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-primary">
             Est. 2025 • Goa
           </div>
           <h1 className="mt-6 text-4xl font-semibold sm:text-5xl lg:text-6xl tech-heading">
             Architects of{' '}
-            <span className="bg-gradient-to-r from-primary to-primary/65 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
               Safety.
             </span>
           </h1>

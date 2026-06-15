@@ -23,10 +23,10 @@ async function fetchFaqs() {
 
 export default async function FaqsPage() {
   return (
-    <div className="container mx-auto px-4 py-16 max-w-4xl min-h-screen">
+    <div className="container mx-auto px-4 pt-24 pb-16 max-w-4xl min-h-screen">
       {/* Header section with explicit bounding height to prevent CLS */}
       <div className="text-center mb-12 min-h-[120px] flex flex-col justify-center">
-        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-3 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
+        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-3 bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400">
           Frequently Asked Questions
         </h1>
         <p className="text-lg text-muted-foreground max-w-xl mx-auto">

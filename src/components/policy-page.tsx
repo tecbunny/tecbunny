@@ -181,7 +181,7 @@ export default function PolicyPage({ pageKey, defaultTitle = 'Policy', initialCo
             {!enhancedHtml && policyData.sections &&
               policyData.sections.map((section: any, index: number) => (
                 <div key={index} id={sectionIds[index]} className="space-y-4 border-t border-border pt-8 mt-8 first:mt-0 first:border-0 first:pt-0">
-                  <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/80 sm:text-2xl">
+                  <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground sm:text-2xl">
                     {section.title}
                   </h2>
                   {section.content &&

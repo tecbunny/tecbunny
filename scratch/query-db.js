@@ -12,14 +12,15 @@ const key = getEnvVal('SUPABASE_SERVICE_ROLE_KEY');
 const supabase = createClient(url, key);
 
 async function main() {
+  console.log('Querying orders...');
   const { data, error } = await supabase
-    .from('information_schema.columns')
-    .select('table_name')
-    .eq('table_schema', 'public');
+    .from('orders')
+    .select('*')
+    .limit(1);
   if (error) {
-    console.error(error);
+    console.error('Query error:', error);
   } else {
-    console.log('Tables:', data);
+    console.log('Query success:', data);
   }
 }
 main();

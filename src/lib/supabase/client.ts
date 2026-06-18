@@ -1,10 +1,11 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { requireSupabasePublicEnv } from './env'
 
-const createSupabaseBrowserClient = () =>
-  createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
-  )
+const createSupabaseBrowserClient = () => {
+  const { url, publicKey } = requireSupabasePublicEnv()
+
+  return createBrowserClient(url, publicKey)
+}
 
 type BrowserSupabaseClient = ReturnType<typeof createSupabaseBrowserClient>
 

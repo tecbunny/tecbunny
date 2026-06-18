@@ -10,13 +10,13 @@ import {
 } from './env';
 
 export async function createClient() {
-  const { url, anonKey } = requireSupabasePublicEnv();
+  const { url, publicKey } = requireSupabasePublicEnv();
 
   const cookieStore = await cookies();
 
   return createServerClient(
     url,
-    anonKey,
+    publicKey,
     {
       cookies: {
         getAll() {

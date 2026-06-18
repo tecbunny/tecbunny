@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       logger.error('auth.session.get.missing_supabase_config');
       return NextResponse.json(
         {
-          error: 'Supabase configuration missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+          error: 'Supabase configuration missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in production, or NEXT_PUBLIC_SUPABASE_ANON_KEY for local development.'
         },
         { status: 503 }
       );
@@ -105,7 +105,7 @@ export async function POST(_request: NextRequest) {
       logger.error('auth.session.post.missing_supabase_config');
       return NextResponse.json(
         {
-          error: 'Supabase configuration missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+          error: 'Supabase configuration missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in production, or NEXT_PUBLIC_SUPABASE_ANON_KEY for local development.'
         },
         { status: 503 }
       );
@@ -138,7 +138,7 @@ export async function DELETE(_request: NextRequest) {
       logger.error('auth.session.delete.missing_supabase_config');
       return NextResponse.json(
         {
-          error: 'Supabase configuration missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+          error: 'Supabase configuration missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in production, or NEXT_PUBLIC_SUPABASE_ANON_KEY for local development.'
         },
         { status: 503 }
       );

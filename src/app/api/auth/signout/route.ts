@@ -2,14 +2,16 @@ import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { logger } from '@/lib/logger'
+import { requireSupabasePublicEnv } from '@/lib/supabase/env'
 
 export async function POST(request: NextRequest) {
   try {
     const response = NextResponse.json({ success: true })
+    const { url, publicKey } = requireSupabasePublicEnv()
     
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      url,
+      publicKey,
       {
         cookies: {
           get(name: string) {

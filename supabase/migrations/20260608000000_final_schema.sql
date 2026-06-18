@@ -2,6 +2,10 @@
 -- Generated on 2026-06-08.
 -- This file contains the complete database schema, functions, and policies.
 -- It merges all previous migrations into a single source of truth.
+-- Production safety: this is a rebuild/bootstrap schema. Do not run it directly
+-- against a live database because it intentionally drops and recreates objects.
+-- For live deployments, split changes into additive migrations, concurrent
+-- indexes, NOT VALID constraints, batched backfills, and delayed cleanup.
 
 BEGIN;
 
@@ -22,11 +26,20 @@ SET search_path = public, pg_temp;
 -- Cleanup function for expired tokens
 CREATE OR REPLACE FUNCTION public.cleanup_expired_superadmin_tokens()
 RETURNS void
-LANGUAGE sql
+LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
-  DELETE FROM public.superadmin_token_blocklist WHERE expires_at < NOW();
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name = 'superadmin_token_blocklist'
+  ) THEN
+    DELETE FROM public.superadmin_token_blocklist WHERE expires_at < NOW();
+  END IF;
+END;
 $$;
 
 -- Prune old logs function
@@ -97,9 +110,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 DROP TABLE IF EXISTS public.products CASCADE;
 CREATE TABLE IF NOT EXISTS public.products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  handle TEXT UNIQUE,
-  name TEXT,
-  title TEXT,
+  handle TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  title TEXT NOT NULL,
   description TEXT,
   short_description TEXT,
   category TEXT,
@@ -109,14 +122,14 @@ CREATE TABLE IF NOT EXISTS public.products (
   model_number TEXT,
   sku TEXT,
   barcode TEXT,
-  price NUMERIC(12,2) DEFAULT 0,
+  price NUMERIC(12,2) NOT NULL DEFAULT 0,
   base_price NUMERIC(12,2),
   cost_price NUMERIC(12,2),
   mrp NUMERIC(12,2),
   offer_price NUMERIC(12,2),
   stock_quantity INTEGER NOT NULL DEFAULT 0,
   min_stock_level INTEGER NOT NULL DEFAULT 0,
-  stock_status TEXT DEFAULT 'in_stock',
+  stock_status TEXT NOT NULL DEFAULT 'in_stock',
   image TEXT,
   images TEXT[] DEFAULT '{}'::TEXT[],
   additional_images TEXT[] DEFAULT '{}'::TEXT[],
@@ -124,7 +137,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   specifications JSONB NOT NULL DEFAULT '{}'::JSONB,
   tags TEXT[] DEFAULT '{}'::TEXT[],
   status product_lifecycle_status NOT NULL DEFAULT 'draft',
-  product_type TEXT DEFAULT 'physical',
+  product_type TEXT NOT NULL DEFAULT 'physical',
   popularity INTEGER NOT NULL DEFAULT 0,
   rating NUMERIC(3,2) NOT NULL DEFAULT 0,
   review_count INTEGER NOT NULL DEFAULT 0,
@@ -162,7 +175,7 @@ CREATE TABLE IF NOT EXISTS public.products (
 DROP TABLE IF EXISTS public.product_archive_log CASCADE;
 CREATE TABLE IF NOT EXISTS public.product_archive_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
   product_snapshot JSONB NOT NULL,
   archived_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   archived_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -174,8 +187,9 @@ CREATE TABLE IF NOT EXISTS public.product_archive_log (
 DROP TABLE IF EXISTS public.orders CASCADE;
 CREATE TABLE IF NOT EXISTS public.orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id TEXT UNIQUE,
   order_number TEXT UNIQUE,
-  customer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  customer_id UUID,
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   agent_id UUID,
   customer_name TEXT,
@@ -193,6 +207,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   shipping NUMERIC(12,2) NOT NULL DEFAULT 0,
   shipping_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
   total NUMERIC(12,2) NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'INR',
   payment_method TEXT,
   payment_status TEXT DEFAULT 'Awaiting Payment',
   payment_reference TEXT,
@@ -215,6 +230,11 @@ CREATE TABLE IF NOT EXISTS public.orders (
   otp_verified BOOLEAN NOT NULL DEFAULT FALSE,
   used_free_installation BOOLEAN DEFAULT FALSE,
   metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  order_data JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  deleted_at TIMESTAMPTZ,
+  deleted_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -239,12 +259,16 @@ CREATE TABLE IF NOT EXISTS public.order_items (
 DROP TABLE IF EXISTS public.payment_transactions CASCADE;
 CREATE TABLE IF NOT EXISTS public.payment_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
+    order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
     transaction_id TEXT UNIQUE NOT NULL,
     payment_method TEXT,
     amount NUMERIC(12,2) NOT NULL,
     status TEXT NOT NULL,
     gateway_response JSONB,
+    created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    deleted_at TIMESTAMPTZ,
+    deleted_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -301,6 +325,9 @@ CREATE TABLE IF NOT EXISTS public.services (
   is_featured   BOOLEAN       NOT NULL DEFAULT FALSE,
   metadata      JSONB         NOT NULL DEFAULT '{}'::JSONB,
   created_by    UUID          REFERENCES auth.users(id) ON DELETE SET NULL,
+  updated_by    UUID          REFERENCES auth.users(id) ON DELETE SET NULL,
+  deleted_at    TIMESTAMPTZ,
+  deleted_by    UUID          REFERENCES auth.users(id) ON DELETE SET NULL,
   terms_and_conditions TEXT,
   created_at    TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ   NOT NULL DEFAULT NOW()
@@ -344,6 +371,22 @@ CREATE TABLE IF NOT EXISTS public.inventory (
   serial_numbers  TEXT[]        NOT NULL DEFAULT '{}'::TEXT[],
   created_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+-- Narrow current-inventory table used as the lock target for stock mutations.
+-- Keeping stock out of the wide products row reduces write amplification and
+-- narrows the row-level lock held during high-concurrency checkouts.
+DROP TABLE IF EXISTS public.inventory_current CASCADE;
+CREATE TABLE IF NOT EXISTS public.inventory_current (
+  product_id UUID PRIMARY KEY REFERENCES public.products(id) ON DELETE CASCADE,
+  stock_quantity INTEGER NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
+  reserved_quantity INTEGER NOT NULL DEFAULT 0 CHECK (reserved_quantity >= 0),
+  min_stock_level INTEGER NOT NULL DEFAULT 0 CHECK (min_stock_level >= 0),
+  stock_status TEXT NOT NULL DEFAULT 'in_stock',
+  updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT chk_inventory_current_status CHECK (stock_status IN ('in_stock', 'low_stock', 'out_of_stock', 'backordered', 'discontinued'))
 );
 
 -- Tax and Policy Tables
@@ -465,12 +508,81 @@ CREATE TABLE IF NOT EXISTS public.whatsapp_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID,
   phone TEXT,
+  phone_number TEXT,
   whatsapp_message_id TEXT,
   direction TEXT,
   message_type TEXT,
   body TEXT,
+  content TEXT,
   status TEXT,
+  message_status TEXT,
   payload JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+DROP TABLE IF EXISTS public.webhook_events CASCADE;
+CREATE TABLE IF NOT EXISTS public.webhook_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id TEXT,
+  source TEXT NOT NULL DEFAULT 'unknown',
+  event_type TEXT NOT NULL,
+  payload JSONB NOT NULL DEFAULT '{}'::JSONB,
+  processed BOOLEAN NOT NULL DEFAULT FALSE,
+  status TEXT NOT NULL DEFAULT 'pending',
+  error_message TEXT,
+  processed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+DROP TABLE IF EXISTS public.webhook_event_rollups_daily CASCADE;
+CREATE TABLE IF NOT EXISTS public.webhook_event_rollups_daily (
+  event_date DATE NOT NULL,
+  event_type TEXT NOT NULL,
+  status TEXT NOT NULL,
+  event_count BIGINT NOT NULL DEFAULT 0 CHECK (event_count >= 0),
+  processed_count BIGINT NOT NULL DEFAULT 0 CHECK (processed_count >= 0),
+  total_processing_seconds NUMERIC(18,3) NOT NULL DEFAULT 0 CHECK (total_processing_seconds >= 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (event_date, event_type, status)
+);
+
+DROP TABLE IF EXISTS public.customers CASCADE;
+CREATE TABLE IF NOT EXISTS public.customers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  name TEXT,
+  phone TEXT NOT NULL UNIQUE,
+  email TEXT,
+  status TEXT NOT NULL DEFAULT 'new_lead',
+  lead_source TEXT,
+  external_source TEXT,
+  tags TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
+  consent_whatsapp BOOLEAN NOT NULL DEFAULT FALSE,
+  first_contact_date TIMESTAMPTZ,
+  last_contact_date TIMESTAMPTZ,
+  custom_data JSONB NOT NULL DEFAULT '{}'::JSONB,
+  metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  deleted_at TIMESTAMPTZ,
+  deleted_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+DROP TABLE IF EXISTS public.customer_interactions CASCADE;
+CREATE TABLE IF NOT EXISTS public.customer_interactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id UUID NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,
+  order_id UUID REFERENCES public.orders(id) ON DELETE SET NULL,
+  interaction_type TEXT NOT NULL,
+  direction TEXT NOT NULL DEFAULT 'inbound',
+  channel TEXT,
+  interaction_data JSONB NOT NULL DEFAULT '{}'::JSONB,
+  notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -504,14 +616,15 @@ CREATE TABLE IF NOT EXISTS public.wishlist_items (
 DROP TABLE IF EXISTS public.payment_recovery_queue CASCADE;
 CREATE TABLE IF NOT EXISTS public.payment_recovery_queue (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id TEXT NOT NULL,
+    order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
     customer_email TEXT,
     customer_phone TEXT,
     failure_reason TEXT,
     recovery_status TEXT DEFAULT 'pending',
     attempts INT DEFAULT 0,
     last_attempt_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Advance Payment Requests Table
@@ -550,11 +663,41 @@ ADD COLUMN IF NOT EXISTS advance_payment_id UUID REFERENCES public.advance_payme
 -- Coupons Table
 DROP TABLE IF EXISTS public.coupons CASCADE;
 CREATE TABLE IF NOT EXISTS public.coupons (
-  code TEXT PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code TEXT NOT NULL UNIQUE,
+  title TEXT,
+  description TEXT,
   status TEXT NOT NULL DEFAULT 'active',
   type TEXT NOT NULL DEFAULT 'percentage',
   value NUMERIC(10,2) NOT NULL,
-  expiry_date TIMESTAMPTZ NOT NULL,
+  min_purchase NUMERIC(12,2),
+  usage_limit INTEGER,
+  usage_count INTEGER NOT NULL DEFAULT 0,
+  per_user_limit INTEGER,
+  applicable_category TEXT,
+  applicable_product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+  start_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expiry_date TIMESTAMPTZ,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  deleted_at TIMESTAMPTZ,
+  deleted_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+DROP TABLE IF EXISTS public.user_communication_preferences CASCADE;
+CREATE TABLE IF NOT EXISTS public.user_communication_preferences (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "userId" UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  "preferredOTPChannel" TEXT NOT NULL DEFAULT 'whatsapp',
+  "emailNotifications" BOOLEAN NOT NULL DEFAULT TRUE,
+  "whatsappNotifications" BOOLEAN NOT NULL DEFAULT TRUE,
+  "orderUpdates" BOOLEAN NOT NULL DEFAULT TRUE,
+  "serviceUpdates" BOOLEAN NOT NULL DEFAULT TRUE,
+  "securityAlerts" BOOLEAN NOT NULL DEFAULT TRUE,
+  phone TEXT,
+  email TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -600,10 +743,6 @@ ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS status quote_status NOT NULL 
 ALTER TABLE public.services ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
 ALTER TABLE public.coupons ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
 ALTER TABLE public.advance_payment_requests ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
-ALTER TABLE public.sales_agents ADD COLUMN IF NOT EXISTS status public.sales_agent_status NOT NULL DEFAULT 'pending';
-ALTER TABLE public.sales_agent_commissions ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
-ALTER TABLE public.agent_redemption_requests ADD COLUMN IF NOT EXISTS status public.redemption_status NOT NULL DEFAULT 'pending';
-ALTER TABLE public.service_tickets ADD COLUMN IF NOT EXISTS status public.service_ticket_status NOT NULL DEFAULT 'created';
 ALTER TABLE public.payment_transactions ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE public.whatsapp_messages ADD COLUMN IF NOT EXISTS status TEXT;
 
@@ -617,6 +756,10 @@ CREATE TABLE IF NOT EXISTS public.sales_agents (
   points_balance NUMERIC(10,2) NOT NULL DEFAULT 0.00,
   commission_rate NUMERIC(5,2) NOT NULL DEFAULT 5.00,
   status public.sales_agent_status NOT NULL DEFAULT 'pending',
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  deleted_at TIMESTAMPTZ,
+  deleted_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -632,6 +775,7 @@ CREATE TABLE IF NOT EXISTS public.sales_agent_commissions (
   gst_amount NUMERIC(12,2) DEFAULT 0,
   commission_rate NUMERIC(5,2) DEFAULT 0,
   commission_amount NUMERIC(12,2) DEFAULT 0,
+  amount NUMERIC(12,2) GENERATED ALWAYS AS (commission_amount) STORED,
   commission_rate_snapshot JSONB DEFAULT '{}'::JSONB,
   points_awarded NUMERIC(12,2) DEFAULT 0,
   commission_rule_id UUID,
@@ -655,6 +799,14 @@ CREATE TABLE IF NOT EXISTS public.agent_commission_rules (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.orders
+DROP CONSTRAINT IF EXISTS fk_orders_agent,
+ADD CONSTRAINT fk_orders_agent FOREIGN KEY (agent_id) REFERENCES public.sales_agents(id) ON DELETE SET NULL;
+
+ALTER TABLE public.sales_agent_commissions
+DROP CONSTRAINT IF EXISTS fk_sales_agent_commissions_rule,
+ADD CONSTRAINT fk_sales_agent_commissions_rule FOREIGN KEY (commission_rule_id) REFERENCES public.agent_commission_rules(id) ON DELETE SET NULL;
 
 -- Agent Redemption Requests Table
 DROP TABLE IF EXISTS public.agent_redemption_requests CASCADE;
@@ -716,6 +868,10 @@ CREATE TABLE IF NOT EXISTS public.service_tickets (
   customer_feedback TEXT,
   engineer_notes TEXT,
   photos TEXT[] DEFAULT '{}'::TEXT[],
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  deleted_at TIMESTAMPTZ,
+  deleted_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -734,6 +890,165 @@ CREATE TABLE IF NOT EXISTS public.service_parts (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.sales_agents ADD COLUMN IF NOT EXISTS status public.sales_agent_status NOT NULL DEFAULT 'pending';
+ALTER TABLE public.sales_agent_commissions ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+ALTER TABLE public.agent_redemption_requests ADD COLUMN IF NOT EXISTS status public.redemption_status NOT NULL DEFAULT 'pending';
+ALTER TABLE public.service_tickets ADD COLUMN IF NOT EXISTS status public.service_ticket_status NOT NULL DEFAULT 'created';
+
+ALTER TABLE public.products
+ADD CONSTRAINT chk_products_prices_non_negative CHECK (
+  price >= 0
+  AND COALESCE(base_price, 0) >= 0
+  AND COALESCE(cost_price, 0) >= 0
+  AND COALESCE(mrp, 0) >= 0
+  AND COALESCE(offer_price, 0) >= 0
+),
+ADD CONSTRAINT chk_products_stock_non_negative CHECK (stock_quantity >= 0 AND min_stock_level >= 0),
+ADD CONSTRAINT chk_products_rating_range CHECK (rating >= 0 AND rating <= 5 AND review_count >= 0 AND popularity >= 0),
+ADD CONSTRAINT chk_products_gst_rate_range CHECK (gst_rate IS NULL OR (gst_rate >= 0 AND gst_rate <= 100)),
+ADD CONSTRAINT chk_products_tax_ai_confidence_range CHECK (tax_ai_confidence IS NULL OR (tax_ai_confidence >= 0 AND tax_ai_confidence <= 1)),
+ADD CONSTRAINT chk_products_stock_status CHECK (stock_status IN ('in_stock', 'low_stock', 'out_of_stock', 'backordered', 'discontinued'));
+
+ALTER TABLE public.orders
+ADD CONSTRAINT chk_orders_amounts_non_negative CHECK (
+  subtotal >= 0
+  AND discount >= 0
+  AND discount_amount >= 0
+  AND tax >= 0
+  AND gst_amount >= 0
+  AND shipping >= 0
+  AND shipping_amount >= 0
+  AND total >= 0
+),
+ADD CONSTRAINT chk_orders_status CHECK (status IN ('Pending', 'Awaiting Payment', 'Payment Confirmed', 'Payment Failed', 'Confirmed', 'Processing', 'Approved', 'Ready to Ship', 'Shipped', 'Ready for Pickup', 'Delivered', 'Delivered/Picked Up', 'Visit Scheduled', 'Visit Completed', 'Completed', 'Cancelled', 'Rejected')),
+ADD CONSTRAINT chk_orders_payment_status CHECK (payment_status IS NULL OR payment_status IN ('Awaiting Payment', 'Payment Confirmation Pending', 'Payment Confirmed', 'Payment Cancelled', 'Payment Failed', 'Fully Paid', 'Pending', 'pending', 'Paid', 'paid', 'Failed', 'Refunded', 'Partially Refunded')),
+ADD CONSTRAINT chk_orders_date_sequence CHECK (
+  (approved_at IS NULL OR approved_at >= created_at)
+  AND (shipped_at IS NULL OR shipped_at >= COALESCE(approved_at, created_at))
+  AND (delivered_at IS NULL OR delivered_at >= COALESCE(shipped_at, approved_at, created_at))
+  AND (cancelled_at IS NULL OR cancelled_at >= created_at)
+);
+
+ALTER TABLE public.order_items
+ADD CONSTRAINT chk_order_items_amounts_non_negative CHECK (unit_price >= 0 AND total_price >= 0);
+
+ALTER TABLE public.payment_transactions
+ADD CONSTRAINT chk_payment_transactions_amount_non_negative CHECK (amount >= 0),
+ADD CONSTRAINT chk_payment_transactions_status CHECK (status IN ('initiated', 'pending', 'processing', 'success', 'paid', 'completed', 'failed', 'refunded', 'cancelled'));
+
+ALTER TABLE public.quotes
+ADD CONSTRAINT chk_quotes_amounts_non_negative CHECK (
+  (bidded_price IS NULL OR bidded_price >= 0)
+  AND (counter_price IS NULL OR counter_price >= 0)
+),
+ADD CONSTRAINT chk_quotes_expiry_after_created CHECK (expiry_at > created_at);
+
+ALTER TABLE public.services
+ADD CONSTRAINT chk_services_prices_non_negative CHECK (
+  (price IS NULL OR price >= 0)
+  AND (base_price IS NULL OR base_price >= 0)
+),
+ADD CONSTRAINT chk_services_duration_non_negative CHECK (
+  (duration_days IS NULL OR duration_days >= 0)
+  AND (duration_hours IS NULL OR duration_hours >= 0)
+),
+ADD CONSTRAINT chk_services_status CHECK (status IS NULL OR status IN ('active', 'inactive', 'draft', 'archived'));
+
+ALTER TABLE public.stock_movements
+ADD CONSTRAINT chk_stock_movements_type CHECK (movement_type IN ('purchase', 'purchase_receipt', 'return', 'manual_add', 'online_sale', 'walk_in_sale', 'adjustment', 'damage', 'transfer', 'reservation', 'release'));
+
+ALTER TABLE public.tax_rates
+ADD CONSTRAINT chk_tax_rates_rate_range CHECK (rate >= 0 AND rate <= 100);
+
+ALTER TABLE public.hsn_codes
+ADD CONSTRAINT chk_hsn_codes_gst_rate_range CHECK (gst_rate >= 0 AND gst_rate <= 100);
+
+ALTER TABLE public.marketing_broadcast_logs
+ADD CONSTRAINT chk_marketing_broadcast_counts_non_negative CHECK (recipient_count >= 0 AND success_count >= 0 AND fail_count >= 0);
+
+ALTER TABLE public.free_installation_slots
+ADD CONSTRAINT chk_free_installation_slots_counts CHECK (
+  total_slots >= 0
+  AND remaining_slots >= 0
+  AND confirmed_count >= 0
+  AND remaining_slots <= total_slots
+);
+
+ALTER TABLE public.customers
+ADD CONSTRAINT chk_customers_status CHECK (status IN ('new_lead', 'active', 'customer', 'inactive', 'blocked')),
+ADD CONSTRAINT chk_customers_contact_dates CHECK (
+  first_contact_date IS NULL
+  OR last_contact_date IS NULL
+  OR last_contact_date >= first_contact_date
+);
+
+ALTER TABLE public.customer_interactions
+ADD CONSTRAINT chk_customer_interactions_direction CHECK (direction IN ('inbound', 'outbound', 'internal'));
+
+ALTER TABLE public.webhook_events
+ADD CONSTRAINT chk_webhook_events_status CHECK (status IN ('unknown', 'pending', 'processed', 'processed_with_warnings', 'failed', 'ignored'));
+
+ALTER TABLE public.coupons
+ADD CONSTRAINT chk_coupons_status CHECK (status IN ('active', 'inactive', 'expired', 'archived')),
+ADD CONSTRAINT chk_coupons_type CHECK (type IN ('percentage', 'fixed', 'free_shipping')),
+ADD CONSTRAINT chk_coupons_value CHECK (
+  value >= 0
+  AND (type <> 'percentage' OR value <= 100)
+),
+ADD CONSTRAINT chk_coupons_limits CHECK (
+  (min_purchase IS NULL OR min_purchase >= 0)
+  AND (usage_limit IS NULL OR usage_limit >= 0)
+  AND usage_count >= 0
+  AND (per_user_limit IS NULL OR per_user_limit >= 0)
+  AND (usage_limit IS NULL OR usage_count <= usage_limit)
+),
+ADD CONSTRAINT chk_coupons_date_window CHECK (expiry_date IS NULL OR expiry_date > start_date);
+
+ALTER TABLE public.payment_recovery_queue
+ADD CONSTRAINT chk_payment_recovery_queue_attempts CHECK (attempts >= 0),
+ADD CONSTRAINT chk_payment_recovery_queue_status CHECK (recovery_status IS NULL OR recovery_status IN ('pending', 'urgent', 'contacted', 'recovered', 'failed', 'closed'));
+
+ALTER TABLE public.advance_payment_requests
+ADD CONSTRAINT chk_advance_payment_amounts CHECK (advance_amount >= 0 AND total_amount >= 0 AND advance_amount <= total_amount);
+
+ALTER TABLE public.sales_agents
+ADD CONSTRAINT chk_sales_agents_non_negative CHECK (points_balance >= 0 AND commission_rate >= 0 AND commission_rate <= 100);
+
+ALTER TABLE public.sales_agent_commissions
+ADD CONSTRAINT chk_sales_agent_commissions_amounts CHECK (
+  order_total >= 0
+  AND COALESCE(pre_tax_amount, 0) >= 0
+  AND COALESCE(gst_amount, 0) >= 0
+  AND COALESCE(commission_rate, 0) >= 0
+  AND COALESCE(commission_rate, 0) <= 100
+  AND COALESCE(commission_amount, 0) >= 0
+  AND COALESCE(points_awarded, 0) >= 0
+),
+ADD CONSTRAINT chk_sales_agent_commissions_status CHECK (status IS NULL OR status IN ('pending', 'approved', 'paid', 'rejected', 'cancelled'));
+
+ALTER TABLE public.agent_commission_rules
+ADD CONSTRAINT chk_agent_commission_rules_rate CHECK (commission_rate >= 0 AND commission_rate <= 100),
+ADD CONSTRAINT chk_agent_commission_rules_window CHECK (valid_to IS NULL OR valid_to > valid_from);
+
+ALTER TABLE public.service_engineers
+ADD CONSTRAINT chk_service_engineers_metrics CHECK (service_radius >= 0 AND rating >= 0 AND rating <= 5 AND total_services >= 0);
+
+ALTER TABLE public.service_tickets
+ADD CONSTRAINT chk_service_tickets_amounts CHECK (
+  (service_charge IS NULL OR service_charge >= 0)
+  AND (parts_cost IS NULL OR parts_cost >= 0)
+  AND (total_cost IS NULL OR total_cost >= 0)
+  AND (estimated_duration IS NULL OR estimated_duration >= 0)
+  AND (actual_duration IS NULL OR actual_duration >= 0)
+  AND (customer_rating IS NULL OR (customer_rating >= 1 AND customer_rating <= 5))
+);
+
+ALTER TABLE public.service_parts
+ADD CONSTRAINT chk_service_parts_amounts CHECK (unit_cost >= 0 AND warranty_days >= 0);
+
+ALTER TABLE public.user_communication_preferences
+ADD CONSTRAINT chk_user_comm_preferred_otp CHECK ("preferredOTPChannel" IN ('whatsapp', 'email'));
+
 -- ============================================================================
 -- 3. Optimization Indexes
 -- ============================================================================
@@ -741,6 +1056,7 @@ CREATE TABLE IF NOT EXISTS public.service_parts (
 CREATE INDEX IF NOT EXISTS quotes_user_idx ON public.quotes(user_id);
 CREATE INDEX IF NOT EXISTS quotes_expiry_idx ON public.quotes(expiry_at);
 CREATE INDEX IF NOT EXISTS idx_stock_movements_product ON public.stock_movements (product_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_stock_movements_created_at ON public.stock_movements (created_at DESC);
 
 -- Triggers for updated_at
 DROP TRIGGER IF EXISTS trg_sales_agents_updated_at ON public.sales_agents;
@@ -758,9 +1074,44 @@ CREATE TRIGGER trg_service_engineers_updated_at BEFORE UPDATE ON public.service_
 DROP TRIGGER IF EXISTS trg_service_tickets_updated_at ON public.service_tickets;
 CREATE TRIGGER trg_service_tickets_updated_at BEFORE UPDATE ON public.service_tickets FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DO $$
+DECLARE
+  target_table TEXT;
+BEGIN
+  FOREACH target_table IN ARRAY ARRAY[
+    'profiles',
+    'products',
+    'orders',
+    'payment_transactions',
+    'quotes',
+    'services',
+    'faqs',
+    'inventory',
+    'inventory_current',
+    'tax_rates',
+    'hsn_codes',
+    'policies',
+    'innovation_modes',
+    'innovation_devices',
+    'settings',
+    'security_settings',
+    'whatsapp_messages',
+    'webhook_events',
+    'webhook_event_rollups_daily',
+    'customers',
+    'payment_recovery_queue',
+    'advance_payment_requests',
+    'coupons',
+    'user_communication_preferences',
+    'marketing_broadcast_logs',
+    'free_installation_slots'
+  ] LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS trg_%I_updated_at ON public.%I;', target_table, target_table);
+    EXECUTE format('CREATE TRIGGER trg_%I_updated_at BEFORE UPDATE ON public.%I FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();', target_table, target_table);
+  END LOOP;
+END $$;
+
 -- Optimization indexes for new tables
-CREATE INDEX IF NOT EXISTS idx_sales_agents_user_id ON public.sales_agents(user_id);
-CREATE INDEX IF NOT EXISTS idx_sales_agents_referral ON public.sales_agents(referral_code);
 CREATE INDEX IF NOT EXISTS idx_sales_agent_commissions_agent ON public.sales_agent_commissions(agent_id);
 CREATE INDEX IF NOT EXISTS idx_sales_agent_commissions_order ON public.sales_agent_commissions(order_id);
 CREATE INDEX IF NOT EXISTS idx_agent_commission_rules_agent ON public.agent_commission_rules(agent_id);
@@ -769,28 +1120,156 @@ CREATE INDEX IF NOT EXISTS idx_service_engineers_user_id ON public.service_engin
 CREATE INDEX IF NOT EXISTS idx_service_tickets_customer ON public.service_tickets(customer_id);
 CREATE INDEX IF NOT EXISTS idx_service_tickets_engineer ON public.service_tickets(assigned_engineer_id);
 CREATE INDEX IF NOT EXISTS idx_service_parts_ticket ON public.service_parts(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON public.order_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_orders_agent_id ON public.orders(agent_id);
+CREATE INDEX IF NOT EXISTS idx_wishlist_items_product_id ON public.wishlist_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_agent_commission_rules_product_id ON public.agent_commission_rules(product_id);
+CREATE INDEX IF NOT EXISTS idx_sales_agent_commissions_rule_id ON public.sales_agent_commissions(commission_rule_id);
+CREATE INDEX IF NOT EXISTS idx_service_parts_product_id ON public.service_parts(product_id);
 
 -- New indexes for marketing logic and advance payments
 CREATE INDEX IF NOT EXISTS idx_payment_recovery_order ON public.payment_recovery_queue(order_id);
 CREATE INDEX IF NOT EXISTS idx_advance_payment_requests_quote_id ON public.advance_payment_requests(quote_id);
 CREATE INDEX IF NOT EXISTS idx_advance_payment_requests_status ON public.advance_payment_requests(status);
 CREATE INDEX IF NOT EXISTS idx_advance_payment_requests_admin_id ON public.advance_payment_requests(admin_id);
-CREATE INDEX IF NOT EXISTS idx_free_installation_slots_month ON public.free_installation_slots(month);
-CREATE INDEX IF NOT EXISTS idx_inventory_product_id ON public.inventory(product_id);
 CREATE INDEX IF NOT EXISTS idx_services_is_active ON public.services (is_active);
 CREATE INDEX IF NOT EXISTS faqs_published_category_order_idx ON public.faqs (is_published, category, display_order);
 CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON public.orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_user_id ON public.orders(user_id);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_customer_id ON public.whatsapp_messages(customer_id);
+CREATE INDEX IF NOT EXISTS idx_hsn_codes_tax_rate_id ON public.hsn_codes(tax_rate_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_broadcast_logs_created_by ON public.marketing_broadcast_logs(created_by);
+CREATE INDEX IF NOT EXISTS idx_security_audit_log_created_at ON public.security_audit_log(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_active_created ON public.orders (created_at DESC) WHERE status != 'Cancelled' AND status != 'Rejected';
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_products_active_catalog ON public.products (status, created_at DESC) WHERE is_deleted = FALSE;
 CREATE INDEX IF NOT EXISTS idx_products_archived ON public.products (archived_at DESC) WHERE is_deleted = TRUE;
-CREATE INDEX IF NOT EXISTS idx_products_handle ON public.products (handle) WHERE is_deleted = FALSE;
 CREATE INDEX IF NOT EXISTS idx_products_hsn_code ON public.products (hsn_code);
 CREATE INDEX IF NOT EXISTS idx_products_gst_rate ON public.products (gst_rate);
 CREATE INDEX IF NOT EXISTS idx_products_tax_ai_review ON public.products (tax_ai_reviewed, tax_ai_classified_at DESC);
+CREATE INDEX IF NOT EXISTS idx_products_catalog_filter ON public.products (is_deleted, status, category, brand, price);
+CREATE INDEX IF NOT EXISTS idx_inventory_current_status ON public.inventory_current(stock_status, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_order_id ON public.payment_transactions(order_id);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_created_at ON public.payment_transactions(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_superadmin_token_blocklist_expiry ON public.superadmin_token_blocklist(expires_at);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_whatsapp_messages_message_id ON public.whatsapp_messages (whatsapp_message_id) WHERE whatsapp_message_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_coupons_expiry ON public.coupons(expiry_date);
+CREATE INDEX IF NOT EXISTS idx_profiles_mobile ON public.profiles(mobile);
+CREATE INDEX IF NOT EXISTS idx_orders_order_id ON public.orders(order_id);
+CREATE INDEX IF NOT EXISTS idx_orders_type_created ON public.orders(type, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_status_created ON public.orders(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_processed_status_created ON public.orders(processed_by, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_order_otp_lookup ON public.order_otp_verifications(order_id, customer_phone, verified, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_service_tickets_engineer_status_created ON public.service_tickets(assigned_engineer_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sales_agent_commissions_agent_status_created ON public.sales_agent_commissions(agent_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_customers_phone ON public.customers(phone);
+CREATE INDEX IF NOT EXISTS idx_customers_status_last_contact ON public.customers(status, last_contact_date DESC);
+CREATE INDEX IF NOT EXISTS idx_customer_interactions_customer_created ON public.customer_interactions(customer_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_customer_interactions_created_at ON public.customer_interactions(created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_webhook_events_event_id_unique ON public.webhook_events(event_id) WHERE event_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_webhook_events_type_status_created ON public.webhook_events(event_type, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_webhook_events_created_at ON public.webhook_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_comm_preferences_user_id ON public.user_communication_preferences("userId");
+
+CREATE OR REPLACE FUNCTION public.adjust_webhook_event_rollup(
+  p_delta INTEGER,
+  p_event_type TEXT,
+  p_status TEXT,
+  p_created_at TIMESTAMPTZ,
+  p_processing_seconds NUMERIC
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  INSERT INTO public.webhook_event_rollups_daily (
+    event_date,
+    event_type,
+    status,
+    event_count,
+    processed_count,
+    total_processing_seconds
+  )
+  VALUES (
+    p_created_at::DATE,
+    p_event_type,
+    p_status,
+    GREATEST(p_delta, 0),
+    CASE WHEN p_processing_seconds IS NOT NULL AND p_delta > 0 THEN 1 ELSE 0 END,
+    CASE WHEN p_processing_seconds IS NOT NULL AND p_delta > 0 THEN p_processing_seconds ELSE 0 END
+  )
+  ON CONFLICT (event_date, event_type, status) DO UPDATE SET
+    event_count = GREATEST(0, public.webhook_event_rollups_daily.event_count + p_delta),
+    processed_count = GREATEST(
+      0,
+      public.webhook_event_rollups_daily.processed_count
+      + CASE WHEN p_processing_seconds IS NOT NULL THEN p_delta ELSE 0 END
+    ),
+    total_processing_seconds = GREATEST(
+      0,
+      public.webhook_event_rollups_daily.total_processing_seconds
+      + CASE WHEN p_processing_seconds IS NOT NULL THEN p_delta * p_processing_seconds ELSE 0 END
+    ),
+    updated_at = NOW();
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.sync_webhook_event_rollup()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_old_processing_seconds NUMERIC;
+  v_new_processing_seconds NUMERIC;
+BEGIN
+  IF TG_OP IN ('UPDATE', 'DELETE') THEN
+    v_old_processing_seconds := CASE
+      WHEN OLD.processed_at IS NOT NULL THEN EXTRACT(EPOCH FROM (OLD.processed_at - OLD.created_at))::NUMERIC
+      ELSE NULL
+    END;
+    PERFORM public.adjust_webhook_event_rollup(-1, OLD.event_type, OLD.status, OLD.created_at, v_old_processing_seconds);
+  END IF;
+
+  IF TG_OP IN ('INSERT', 'UPDATE') THEN
+    v_new_processing_seconds := CASE
+      WHEN NEW.processed_at IS NOT NULL THEN EXTRACT(EPOCH FROM (NEW.processed_at - NEW.created_at))::NUMERIC
+      ELSE NULL
+    END;
+    PERFORM public.adjust_webhook_event_rollup(1, NEW.event_type, NEW.status, NEW.created_at, v_new_processing_seconds);
+  END IF;
+
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_webhook_events_rollup ON public.webhook_events;
+CREATE TRIGGER trg_webhook_events_rollup
+AFTER INSERT OR UPDATE OR DELETE ON public.webhook_events
+FOR EACH ROW EXECUTE FUNCTION public.sync_webhook_event_rollup();
+
+CREATE OR REPLACE VIEW public.webhook_stats
+WITH (security_invoker = true) AS
+SELECT
+  event_type,
+  status,
+  event_count::BIGINT AS count,
+  CASE
+    WHEN processed_count > 0 THEN (total_processing_seconds / processed_count)::NUMERIC(12,3)
+    ELSE NULL
+  END AS avg_processing_time,
+  event_date AS date
+FROM public.webhook_event_rollups_daily
+WHERE event_count > 0;
+
+GRANT SELECT ON public.webhook_stats TO authenticated, service_role;
 
 -- ============================================================================
 -- 4. JWT & Role Helpers
@@ -935,6 +1414,7 @@ ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quotes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inventory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.inventory_current ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stock_movements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.faqs ENABLE ROW LEVEL SECURITY;
@@ -951,6 +1431,11 @@ ALTER TABLE public.payment_recovery_queue ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.advance_payment_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.marketing_broadcast_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.free_installation_slots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.webhook_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.webhook_event_rollups_daily ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.customer_interactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_communication_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sales_agents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sales_agent_commissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.agent_commission_rules ENABLE ROW LEVEL SECURITY;
@@ -994,6 +1479,9 @@ CREATE POLICY "Staff can view all order items" ON public.order_items FOR SELECT 
 -- Inventory Policies
 DROP POLICY IF EXISTS inventory_staff_all ON public.inventory;
 CREATE POLICY inventory_staff_all ON public.inventory FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
+
+DROP POLICY IF EXISTS inventory_current_staff_all ON public.inventory_current;
+CREATE POLICY inventory_current_staff_all ON public.inventory_current FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
 
 -- Stock Movements Policies
 DROP POLICY IF EXISTS "Staff can manage all stock movements" ON public.stock_movements;
@@ -1159,6 +1647,31 @@ CREATE POLICY "Admins can manage settings" ON public.settings FOR ALL TO authent
 DROP POLICY IF EXISTS "Staff can manage whatsapp messages" ON public.whatsapp_messages;
 CREATE POLICY "Staff can manage whatsapp messages" ON public.whatsapp_messages FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
 
+DROP POLICY IF EXISTS "Service role can manage webhook events" ON public.webhook_events;
+CREATE POLICY "Service role can manage webhook events" ON public.webhook_events FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Staff can view webhook events" ON public.webhook_events;
+CREATE POLICY "Staff can view webhook events" ON public.webhook_events FOR SELECT TO authenticated USING (public.is_staff_member());
+
+DROP POLICY IF EXISTS "Service role can manage webhook rollups" ON public.webhook_event_rollups_daily;
+CREATE POLICY "Service role can manage webhook rollups" ON public.webhook_event_rollups_daily FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Staff can view webhook rollups" ON public.webhook_event_rollups_daily;
+CREATE POLICY "Staff can view webhook rollups" ON public.webhook_event_rollups_daily FOR SELECT TO authenticated USING (public.is_staff_member());
+
+DROP POLICY IF EXISTS "Staff can manage customers" ON public.customers;
+CREATE POLICY "Staff can manage customers" ON public.customers FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
+DROP POLICY IF EXISTS "Service role can manage customers" ON public.customers;
+CREATE POLICY "Service role can manage customers" ON public.customers FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
+
+DROP POLICY IF EXISTS "Staff can manage customer interactions" ON public.customer_interactions;
+CREATE POLICY "Staff can manage customer interactions" ON public.customer_interactions FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
+DROP POLICY IF EXISTS "Service role can manage customer interactions" ON public.customer_interactions;
+CREATE POLICY "Service role can manage customer interactions" ON public.customer_interactions FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
+
+DROP POLICY IF EXISTS "Users can manage own communication preferences" ON public.user_communication_preferences;
+CREATE POLICY "Users can manage own communication preferences" ON public.user_communication_preferences FOR ALL TO authenticated USING ("userId" = auth.uid()) WITH CHECK ("userId" = auth.uid());
+DROP POLICY IF EXISTS "Staff can view communication preferences" ON public.user_communication_preferences;
+CREATE POLICY "Staff can view communication preferences" ON public.user_communication_preferences FOR SELECT TO authenticated USING (public.is_staff_member());
+
 -- Order OTP Verifications Policies
 DROP POLICY IF EXISTS "Staff can manage OTP verifications" ON public.order_otp_verifications;
 CREATE POLICY "Staff can manage OTP verifications" ON public.order_otp_verifications FOR ALL TO authenticated USING (public.is_staff_member()) WITH CHECK (public.is_staff_member());
@@ -1187,7 +1700,7 @@ CREATE POLICY "Staff can manage payment recovery queue" ON public.payment_recove
 
 -- Coupons Policies
 DROP POLICY IF EXISTS "Allow public read access to active coupons" ON public.coupons;
-CREATE POLICY "Allow public read access to active coupons" ON public.coupons FOR SELECT USING (status = 'active' AND expiry_date > NOW());
+CREATE POLICY "Allow public read access to active coupons" ON public.coupons FOR SELECT USING (status = 'active' AND (expiry_date IS NULL OR expiry_date > NOW()));
 DROP POLICY IF EXISTS "Admins can manage coupons" ON public.coupons;
 CREATE POLICY "Admins can manage coupons" ON public.coupons FOR ALL TO authenticated USING (public.is_manager_or_admin()) WITH CHECK (public.is_manager_or_admin());
 
@@ -1322,14 +1835,38 @@ DECLARE
   v_inbound      TEXT[] := ARRAY['purchase_receipt', 'return'];
   v_outbound     TEXT[] := ARRAY['walk_in_sale', 'online_sale'];
 BEGIN
-  SELECT COALESCE(stock_quantity, 0), COALESCE(min_stock_level, 5) INTO v_current_qty, v_min_stock FROM public.products WHERE id = p_product_id FOR UPDATE;
-  IF NOT FOUND THEN RAISE EXCEPTION 'Product % not found', p_product_id USING ERRCODE = 'P0002'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.products WHERE id = p_product_id) THEN
+    RAISE EXCEPTION 'Product % not found', p_product_id USING ERRCODE = 'P0002';
+  END IF;
+
+  INSERT INTO public.inventory_current (product_id, stock_quantity, min_stock_level, stock_status)
+  SELECT id, COALESCE(stock_quantity, 0), COALESCE(min_stock_level, 0), COALESCE(stock_status, 'in_stock')
+  FROM public.products
+  WHERE id = p_product_id
+  ON CONFLICT (product_id) DO NOTHING;
+
+  SELECT COALESCE(stock_quantity, 0), COALESCE(min_stock_level, 0)
+  INTO v_current_qty, v_min_stock
+  FROM public.inventory_current
+  WHERE product_id = p_product_id
+  FOR UPDATE;
+
   IF p_movement_type = ANY(v_inbound) THEN v_new_qty := v_current_qty + p_quantity;
   ELSIF p_movement_type = ANY(v_outbound) THEN v_new_qty := v_current_qty - p_quantity;
     IF v_new_qty < 0 AND NOT p_allow_negative THEN RAISE EXCEPTION 'Insufficient stock' USING ERRCODE = 'P0001'; END IF;
   ELSIF p_movement_type = 'adjustment' THEN v_new_qty := p_quantity;
   ELSE v_new_qty := v_current_qty; END IF;
   v_new_status := CASE WHEN v_new_qty <= 0 THEN 'out_of_stock' WHEN v_new_qty <= v_min_stock THEN 'low_stock' ELSE 'in_stock' END;
+
+  UPDATE public.inventory_current
+  SET stock_quantity = v_new_qty,
+      stock_status = v_new_status,
+      updated_by = COALESCE(p_created_by, auth.uid()),
+      updated_at = NOW()
+  WHERE product_id = p_product_id;
+
+  -- Maintain compatibility for existing readers while keeping the narrow
+  -- inventory_current row as the concurrency lock target.
   UPDATE public.products SET stock_quantity = v_new_qty, stock_status = v_new_status, updated_at = NOW() WHERE id = p_product_id;
   INSERT INTO public.stock_movements (product_id, movement_type, quantity_delta, quantity_before, quantity_after, reference_id, reference_type, notes, created_by)
   VALUES (p_product_id, p_movement_type, p_quantity, v_current_qty, v_new_qty, p_reference_id, p_reference_type, COALESCE(p_notes, p_movement_type || ' via system'), COALESCE(p_created_by, auth.uid()))
@@ -1638,7 +2175,7 @@ BEGIN
         FROM public.coupons 
         WHERE status = 'active' 
         AND type = 'percentage'
-        AND expiry_date > NOW()
+        AND (expiry_date IS NULL OR expiry_date > NOW())
         ORDER BY value DESC
         LIMIT 1;
 
@@ -1740,9 +2277,10 @@ RETURNS BOOLEAN AS $$
 DECLARE
   v_month DATE;
   v_customer_id UUID;
+  v_slot_id UUID;
 BEGIN
   -- Validate that order exists, is owned by caller or caller is staff, and hasn't had slot decremented
-  SELECT customer_id INTO v_customer_id FROM public.orders WHERE id = p_order_id;
+  SELECT customer_id INTO v_customer_id FROM public.orders WHERE id = p_order_id FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Order % not found', p_order_id;
   END IF;
@@ -1756,16 +2294,27 @@ BEGIN
   END IF;
 
   v_month := DATE_TRUNC('month', CURRENT_DATE)::DATE;
+
+  INSERT INTO public.free_installation_slots (month, total_slots, remaining_slots, confirmed_count)
+  VALUES (v_month, 10, 10, 0)
+  ON CONFLICT (month) DO NOTHING;
   
   UPDATE public.free_installation_slots 
-  SET remaining_slots = GREATEST(0, remaining_slots - 1),
+  SET remaining_slots = remaining_slots - 1,
       confirmed_count = confirmed_count + 1,
       updated_at = NOW()
-  WHERE month = v_month;
+  WHERE month = v_month
+    AND remaining_slots > 0
+  RETURNING id INTO v_slot_id;
+
+  IF v_slot_id IS NULL THEN
+    RETURN FALSE;
+  END IF;
   
   UPDATE public.orders 
   SET used_free_installation = TRUE,
-      metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{free_installation_slot_decremented}', 'true'::jsonb)
+      metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{free_installation_slot_decremented}', 'true'::jsonb),
+      updated_at = NOW()
   WHERE id = p_order_id;
   
   RETURN TRUE;
@@ -1780,6 +2329,285 @@ SET search_path = public, pg_temp;
 INSERT INTO public.tax_rates (name, rate, is_default, description)
 VALUES ('GST 5%', 5.00, false, '5% GST'), ('GST 12%', 12.00, false, '12% GST'), ('GST 18%', 18.00, true, '18% GST'), ('GST 28%', 28.00, false, '28% GST')
 ON CONFLICT (name) DO UPDATE SET rate = EXCLUDED.rate;
+
+INSERT INTO public.products (
+  handle,
+  name,
+  title,
+  description,
+  brand,
+  price,
+  mrp,
+  stock_status,
+  status,
+  warranty,
+  category,
+  image,
+  images,
+  created_at,
+  updated_at
+) VALUES
+(
+  'cp-plus-2-4-mp-4-camera-setup',
+  'CP PLUS 2.4 MP - 4 Camera Full Setup 2Dom and 2Bullet Analogue Dual Light cameras',
+  'CP PLUS 2.4 MP - 4 Camera Full Setup 2Dom and 2Bullet Analogue Dual Light cameras',
+  'CP PLUS 2.4 MP - 4 Camera Full Setup containing 2 Dome and 2 Bullet Analogue Dual Light cameras. Complete set without hard drive. Includes DVR 8CH, 10amps SMPS, 4 Cameras, and 100Mtr CCTV wire.',
+  'CP PLUS',
+  17999.00,
+  24999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '1 Year',
+  'CCTV Setup',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'cp-plus-2-4-mp-8-camera-setup',
+  'CP PLUS 2.4 MP - 8 Camera Full Setup 4Dom and 4Bullet Analogue Dual Light cameras',
+  'CP PLUS 2.4 MP - 8 Camera Full Setup 4Dom and 4Bullet Analogue Dual Light cameras',
+  'CP PLUS 2.4 MP - 8 Camera Full Setup containing 4 Dome and 4 Bullet Analogue Dual Light cameras. Complete set without hard drive. Includes DVR 8CH, 10amps SMPS, 8 Cameras, and 100Mtr CCTV wire.',
+  'CP PLUS',
+  25999.00,
+  33999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '1 Year',
+  'CCTV Setup',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'cp-plus-5-mp-4-camera-setup',
+  'CP PLUS 5 MP - 4 Camera Full Setup 2Dom and 2Bullet Analogue Dual Light cameras',
+  'CP PLUS 5 MP - 4 Camera Full Setup 2Dom and 2Bullet Analogue Dual Light cameras',
+  'CP PLUS 5 MP - 4 Camera Full Setup containing 2 Dome and 2 Bullet Analogue Dual Light cameras. Complete set without hard drive. Includes DVR 8CH, 10amps SMPS, 4 Cameras, and 100Mtr CCTV wire.',
+  'CP PLUS',
+  23999.00,
+  31999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '1 Year',
+  'CCTV Setup',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'cp-plus-5-mp-8-camera-setup',
+  'CP PLUS 5 MP - 8 Camera Full Setup 4Dom and 4Bullet Analogue Dual Light cameras',
+  'CP PLUS 5 MP - 8 Camera Full Setup 4Dom and 4Bullet Analogue Dual Light cameras',
+  'CP PLUS 5 MP - 8 Camera Full Setup containing 4 Dome and 4 Bullet Analogue Dual Light cameras. Complete set without hard drive. Includes DVR 8CH, 10amps SMPS, 8 Cameras, and 100Mtr CCTV wire.',
+  'CP PLUS',
+  33999.00,
+  37999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '1 Year',
+  'CCTV Setup',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'cp-plus-2mp-ip-16-camera-setup',
+  'CP PLUS 2MP IP 16 Camera Full Setup 4Dom and 12Bullet IP Dual Light cameras',
+  'CP PLUS 2MP IP 16 Camera Full Setup 4Dom and 12Bullet IP Dual Light cameras',
+  'CP PLUS 2MP IP 16 Camera Full Setup containing 4 Dome and 12 Bullet IP Dual Light cameras. Complete set without hard drive. Includes NVR 16CH, 2pcs POE 8CH, 16 Cameras, and 100Mtr Lan Cable.',
+  'CP PLUS',
+  81999.00,
+  129999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '1 Year',
+  'CCTV Setup',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'cp-plus-2mp-ip-8-camera-setup',
+  'CP PLUS 2MP IP 8 Camera Full Setup 4Dom and 4Bullet IP Dual Light cameras',
+  'CP PLUS 2MP IP 8 Camera Full Setup 4Dom and 4Bullet IP Dual Light cameras',
+  'CP PLUS 2MP IP 8 Camera Full Setup containing 4 Dome and 4 Bullet IP Dual Light cameras. Complete set without hard drive. Includes NVR 8CH, 1pc POE 8CH, 8 Cameras, and 100Mtr Lan Cable.',
+  'CP PLUS',
+  49999.00,
+  75999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '1 Year',
+  'CCTV Setup',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'cp-plus-2mp-ip-4-camera-setup',
+  'CP PLUS 2MP IP 4 Camera Full Setup 4Dom and 4Bullet IP Dual Light cameras',
+  'CP PLUS 2MP IP 4 Camera Full Setup 4Dom and 4Bullet IP Dual Light cameras',
+  'CP PLUS 2MP IP 4 Camera Full Setup containing 4 Dome and 4 Bullet IP Dual Light cameras. Complete set without hard drive. Includes NVR 8CH, 1pc POE 8CH, 4 Cameras, and 100Mtr Lan Cable.',
+  'CP PLUS',
+  29999.00,
+  47999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '1 Year',
+  'CCTV Setup',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'cp-plus-4mp-ip-16-camera-setup',
+  'CP PLUS 4MP IP 16 Camera Full Setup 4Dom and 12Bullet IP Dual Light cameras',
+  'CP PLUS 4MP IP 16 Camera Full Setup 4Dom and 12Bullet IP Dual Light cameras',
+  'CP PLUS 4MP IP 16 Camera Full Setup containing 4 Dome and 12 Bullet IP Dual Light cameras. Complete set without hard drive. Includes NVR 16CH, 2pcs POE 8CH, 16 Cameras, and 100Mtr CCTV wire.',
+  'CP PLUS',
+  99999.00,
+  145999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '1 Year',
+  'CCTV Setup',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'cp-plus-4mp-ip-8-camera-setup',
+  'CP PLUS 4MP IP 8 Camera Full Setup 4Dom and 4Bullet IP Dual Light cameras',
+  'CP PLUS 4MP IP 8 Camera Full Setup 4Dom and 4Bullet IP Dual Light cameras',
+  'CP PLUS 4MP IP 8 Camera Full Setup containing 4 Dome and 4 Bullet IP Dual Light cameras. Complete set without hard drive. Includes NVR 16CH, 1pc POE 8CH, 8 Cameras, and 100Mtr CCTV wire.',
+  'CP PLUS',
+  75999.00,
+  95999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '1 Year',
+  'CCTV Setup',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'cp-plus-4mp-ip-4-camera-setup',
+  'CP PLUS 4MP IP 4 Camera Full Setup 4Dom and 4Bullet IP Dual Light cameras',
+  'CP PLUS 4MP IP 4 Camera Full Setup 4Dom and 4Bullet IP Dual Light cameras',
+  'CP PLUS 4MP IP 4 Camera Full Setup containing 4 Dome and 4 Bullet IP Dual Light cameras. Complete set without hard drive. Includes NVR 16CH, 1pc POE 8CH, 4 Cameras, and 100Mtr CCTV wire.',
+  'CP PLUS',
+  39999.00,
+  145999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '1 Year',
+  'CCTV Setup',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-cctv.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'seagate-1-tb-hdd-surveillance',
+  'Seagate 1 TB HDD Surveillance',
+  'Seagate 1 TB HDD Surveillance',
+  'Seagate Surveillance HDD 1 TB storage drive built for 24/7 video capture systems. Offers high performance and reliability for multiple security camera feeds.',
+  'Seagate',
+  11999.00,
+  14999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '3 Years',
+  'Storage',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-storage.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-storage.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'seagate-2tb-hdd-surveillance',
+  'Seagate 2TB HDD Surveillance',
+  'Seagate 2TB HDD Surveillance',
+  'Seagate Surveillance HDD 2 TB storage drive built for 24/7 video capture systems. Provides expanded capacity for longer video archive retention.',
+  'Seagate',
+  13999.00,
+  17999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '3 Years',
+  'Storage',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-storage.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-storage.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'consistent-500gb-hdd',
+  'Consistant 500GB HDD',
+  'Consistant 500GB HDD',
+  'Consistant 500 GB Hard Disk Drive for surveillance and desktop computer storage. Reliable budget storage solution.',
+  'Consistent',
+  5999.00,
+  7999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '2 Years',
+  'Storage',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-storage.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-storage.webp'],
+  NOW(),
+  NOW()
+),
+(
+  'consistent-1tb-hdd',
+  'Consistant 1TB HDD',
+  'Consistant 1TB HDD',
+  'Consistant 1 TB Hard Disk Drive for surveillance and desktop computer storage. High performance budget storage drive.',
+  'Consistent',
+  8999.00,
+  11999.00,
+  'in_stock',
+  'active'::public.product_lifecycle_status,
+  '2 Years',
+  'Storage',
+  'https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-storage.webp',
+  ARRAY['https://fbcsagupcxheyiusjfak.supabase.co/storage/v1/object/public/images/products/placeholder-storage.webp'],
+  NOW(),
+  NOW()
+)
+ON CONFLICT (handle) DO UPDATE SET
+  name = EXCLUDED.name,
+  title = EXCLUDED.title,
+  description = EXCLUDED.description,
+  brand = EXCLUDED.brand,
+  price = EXCLUDED.price,
+  mrp = EXCLUDED.mrp,
+  stock_status = EXCLUDED.stock_status,
+  status = EXCLUDED.status,
+  warranty = EXCLUDED.warranty,
+  category = EXCLUDED.category,
+  image = EXCLUDED.image,
+  images = EXCLUDED.images,
+  updated_at = NOW();
+
+INSERT INTO public.inventory_current (product_id, stock_quantity, min_stock_level, stock_status)
+SELECT id, stock_quantity, min_stock_level, stock_status
+FROM public.products
+ON CONFLICT (product_id) DO UPDATE SET
+  stock_quantity = EXCLUDED.stock_quantity,
+  min_stock_level = EXCLUDED.min_stock_level,
+  stock_status = EXCLUDED.stock_status,
+  updated_at = NOW();
 
 -- ============================================================================
 -- 8. Permissions Lockdown
@@ -1807,7 +2635,8 @@ REVOKE ALL ON FUNCTION public.match_wishlist_coupons() FROM PUBLIC, anon, authen
 REVOKE ALL ON FUNCTION public.track_advance_payment_status_change() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.get_or_create_monthly_slot() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.decrement_free_installation_slot(uuid) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.assign_serial_number(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.adjust_webhook_event_rollup(integer, text, text, timestamptz, numeric) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.sync_webhook_event_rollup() FROM PUBLIC, anon, authenticated;
 
 -- Explicitly grant execute to authorized roles
 GRANT EXECUTE ON FUNCTION public.is_superadmin_user() TO authenticated;
@@ -1816,7 +2645,6 @@ GRANT EXECUTE ON FUNCTION public.is_manager_or_admin() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_staff_member() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.verify_order_otp_atomic(UUID, TEXT, TEXT, INTEGER) TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION public.allocate_order_inventory_atomic(TEXT, UUID, TEXT, TEXT, TEXT, TEXT, TEXT, NUMERIC, NUMERIC, NUMERIC, NUMERIC, NUMERIC, TEXT, TEXT, JSONB, UUID) TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION public.assign_serial_number(UUID) TO authenticated, anon;
 GRANT EXECUTE ON FUNCTION public.update_order_status_v1(uuid, text, text, jsonb, text, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.complete_service_ticket_v1(uuid, text, numeric, integer, text[], jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.match_wishlist_coupons() TO authenticated;
@@ -1825,6 +2653,8 @@ GRANT EXECUTE ON FUNCTION public.get_or_create_monthly_slot() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.decrement_free_installation_slot(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.restore_product(uuid, uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.increment_agent_points(uuid, numeric) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.adjust_webhook_event_rollup(integer, text, text, timestamptz, numeric) TO service_role;
+GRANT EXECUTE ON FUNCTION public.sync_webhook_event_rollup() TO service_role;
 
 -- Sequence generation for human-readable quote numbers (format: YYYYMMXXXXX) - concurrent-safe via database sequence
 CREATE SEQUENCE IF NOT EXISTS public.quotes_quote_number_seq START 1;
@@ -1856,6 +2686,10 @@ CREATE SEQUENCE IF NOT EXISTS public.orders_order_number_seq START 1;
 CREATE OR REPLACE FUNCTION public.generate_order_number()
 RETURNS TRIGGER AS $$
 BEGIN
+  IF NEW.order_id IS NULL THEN
+    NEW.order_id := NEW.id::TEXT;
+  END IF;
+
   IF NEW.order_number IS NULL THEN
     NEW.order_number := 'ORD-' || to_char(NOW(), 'YYYYMM') || lpad(nextval('public.orders_order_number_seq')::text, 5, '0');
   END IF;
@@ -1920,6 +2754,13 @@ CREATE TABLE IF NOT EXISTS public.inventory_serials (
 
 -- Ensure the status column exists just in case the table existed without it
 ALTER TABLE public.inventory_serials ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'available';
+ALTER TABLE public.inventory_serials
+ADD CONSTRAINT chk_inventory_serials_status CHECK (status IN ('available', 'reserved', 'sold', 'damaged', 'returned'));
+
+DROP TRIGGER IF EXISTS trg_inventory_serials_updated_at ON public.inventory_serials;
+CREATE TRIGGER trg_inventory_serials_updated_at BEFORE UPDATE ON public.inventory_serials FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE INDEX IF NOT EXISTS idx_inventory_serials_product_status ON public.inventory_serials(product_id, status, created_at, id);
 
 -- Enable Row Level Security and add policies
 ALTER TABLE public.inventory_serials ENABLE ROW LEVEL SECURITY;
@@ -1936,6 +2777,7 @@ BEGIN
   SELECT serial_number INTO assigned_serial
   FROM public.inventory_serials
   WHERE product_id = target_product_id AND status = 'available'
+  ORDER BY created_at, id
   LIMIT 1
   FOR UPDATE SKIP LOCKED; -- Locks the row, ignores already-locked rows
 
@@ -1950,8 +2792,12 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public, pg_temp;
 
+REVOKE ALL ON FUNCTION public.assign_serial_number(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.assign_serial_number(uuid) TO authenticated, anon;
+
 -- Create database view to safely expose product columns to PostgREST
-CREATE OR REPLACE VIEW public.products_columns_view AS
+CREATE OR REPLACE VIEW public.products_columns_view
+WITH (security_invoker = true) AS
 SELECT column_name::text
 FROM information_schema.columns
 WHERE table_name = 'products' AND table_schema = 'public';

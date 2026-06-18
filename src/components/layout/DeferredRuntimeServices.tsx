@@ -105,41 +105,59 @@ export function DeferredRuntimeServices({ gaId, metaPixelId }: DeferredRuntimeSe
     }
   }, []);
 
+  // Update GA consent when user makes a choice
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || !window.gtag) return;
+    if (analyticsConsent === 'accepted') {
+      window.gtag('consent', 'update', {
+        analytics_storage: 'granted',
+        ad_storage: 'granted',
+        ad_user_data: 'granted',
+        ad_personalization: 'granted',
+      });
+    } else if (analyticsConsent === 'rejected') {
+      window.gtag('consent', 'update', {
+        analytics_storage: 'denied',
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+      });
+    }
+  }, [analyticsConsent]);
+
   return (
     <RuntimeServicesBoundary>
-      <CookieConsentBanner onConsentChange={setAnalyticsConsent} />
-      {shouldRender ? <Toaster /> : null}
-      {shouldRender && gaId && analyticsConsent === 'accepted' ? (
+      {/* Google Consent Mode v2 — must load before gtag.js so Google detects the tag */}
+      {gaId ? (
         <AnalyticsBoundary>
-          <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-            strategy="lazyOnload"
-            onError={(e) => {
-              console.warn('GA failed to load', e);
-            }}
-          />
-          <Script
-            id="ga-init"
-            strategy="lazyOnload"
-            onError={(e) => {
-              console.warn('GA Init failed to load', e);
-            }}
-          >
+          <Script id="ga-consent-defaults" strategy="afterInteractive">
             {`window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);} 
+function gtag(){dataLayer.push(arguments);}
+gtag('consent', 'default', {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 2000
+});
 gtag('js', new Date());
 gtag('config', '${gaId}', { anonymize_ip: true, send_page_view: false });`}
           </Script>
+          <Script
+            src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+            strategy="afterInteractive"
+            onError={(e) => { console.warn('GA failed to load', e); }}
+          />
         </AnalyticsBoundary>
       ) : null}
+      <CookieConsentBanner onConsentChange={setAnalyticsConsent} />
+      {shouldRender ? <Toaster /> : null}
       {shouldRender && metaPixelId && analyticsConsent === 'accepted' ? (
         <AnalyticsBoundary>
-          <Script 
-            id="meta-pixel-init" 
+          <Script
+            id="meta-pixel-init"
             strategy="lazyOnload"
-            onError={(e) => {
-              console.warn('Meta Pixel failed to load', e);
-            }}
+            onError={(e) => { console.warn('Meta Pixel failed to load', e); }}
           >
             {`!function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?

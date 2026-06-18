@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { verifySuperadminSessionToken } from '@/lib/auth/superadmin-session'
+import { requireSupabasePublicEnv } from '@/lib/supabase/env'
 
 const SHARED_CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -256,11 +257,19 @@ export async function middleware(request: NextRequest) {
     let user = null;
     let userRole: string | null = null;
 
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    let supabasePublicEnv: ReturnType<typeof requireSupabasePublicEnv> | null = null;
+
+    try {
+      supabasePublicEnv = requireSupabasePublicEnv();
+    } catch (envError) {
+      console.error('Middleware Supabase configuration error:', envError);
+    }
+
+    if (supabasePublicEnv) {
       try {
         const supabase = createServerClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          supabasePublicEnv.url,
+          supabasePublicEnv.publicKey,
           {
             cookies: {
               getAll() {

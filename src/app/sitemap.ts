@@ -11,8 +11,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   if (isSupabasePublicConfigured) {
     try {
-      const { url, anonKey } = requireSupabasePublicEnv();
-      const supabase = createSupabaseClient(url, anonKey, {
+      const { url, publicKey } = requireSupabasePublicEnv();
+      const supabase = createSupabaseClient(url, publicKey, {
         auth: {
           persistSession: false,
           autoRefreshToken: false,

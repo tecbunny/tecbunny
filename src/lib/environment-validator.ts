@@ -1,11 +1,13 @@
 // Environment variable validation and configuration
 import { logger } from './logger';
+import { requireSupabasePublicEnv, requireSupabaseServiceEnv } from './supabase/env';
 
 export interface EnvironmentConfig {
   supabase: {
     url: string;
     anonKey: string;
     serviceRoleKey: string;
+    publicKeySource: 'publishable' | 'anon';
   };
   smtp: {
     host: string;
@@ -39,11 +41,24 @@ class EnvironmentValidator {
 
   private validateEnvironment() {
     // Supabase Configuration
-    this.config.supabase = {
-      url: this.requireEnv('NEXT_PUBLIC_SUPABASE_URL', 'Supabase URL'),
-      anonKey: this.requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'Supabase Anon Key'),
-      serviceRoleKey: this.requireEnv('SUPABASE_SERVICE_ROLE_KEY', 'Supabase Service Role Key')
-    };
+    try {
+      const publicEnv = requireSupabasePublicEnv();
+      const serviceEnv = requireSupabaseServiceEnv();
+      this.config.supabase = {
+        url: publicEnv.url,
+        anonKey: publicEnv.publicKey,
+        serviceRoleKey: serviceEnv.serviceKey,
+        publicKeySource: publicEnv.keySource
+      };
+    } catch (error) {
+      this.errors.push(error instanceof Error ? error.message : 'Invalid Supabase configuration');
+      this.config.supabase = {
+        url: '',
+        anonKey: '',
+        serviceRoleKey: '',
+        publicKeySource: 'anon'
+      };
+    }
 
     // SMTP Configuration
     this.config.smtp = {

@@ -567,13 +567,13 @@ export function ShopPageContent({ initialRawProducts, initialRawAutoOffers }: Sh
                 <Sparkles size={14} className="animate-pulse" />
                 Product Catalog
               </div>
-              <h1 className="text-5xl font-extrabold leading-[1.05] text-foreground sm:text-7xl md:text-8xl font-tech tracking-tight">
-                <span className="glitch-text block pb-3" data-text="Professional">Professional</span>
-                <span className="block bg-gradient-to-r from-foreground via-foreground/90 to-foreground/60 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl md:text-7xl uppercase leading-none">
+                Professional <br className="sm:hidden" />
+                <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
                   Hardware & Gear
                 </span>
               </h1>
-              <p className="max-w-xl text-lg leading-relaxed text-muted-foreground font-light">
+              <p className="max-w-xl text-sm sm:text-base leading-relaxed text-zinc-400 font-light mt-2">
                 {searchQuery 
                   ? `Found results matching "${searchQuery}"` 
                   : 'Enterprise-grade equipment and components curated for professional security and IT infrastructure.'

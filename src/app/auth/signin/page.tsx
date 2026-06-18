@@ -250,8 +250,31 @@ function SignInForm() {
       } else {
         const digits = normalized.replace(/\D/g, '');
         const phone = digits.length === 10 ? `91${digits}` : digits;
+
+        // Resolve phone number to email using API
+        const resolveRes = await fetch('/api/auth/resolve-phone', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: phone }),
+        });
+
+        if (!resolveRes.ok) {
+          setError('Failed to resolve phone account.');
+          setIsLoading(false);
+          return;
+        }
+
+        const resolveData = await resolveRes.json();
+        const resolvedEmail = resolveData?.email;
+
+        if (!resolvedEmail) {
+          setError('No account found for this mobile number.');
+          setIsLoading(false);
+          return;
+        }
+
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          phone,
+          email: resolvedEmail,
           password,
         });
         if (signInError) { handleSignInError(signInError, false); return; }

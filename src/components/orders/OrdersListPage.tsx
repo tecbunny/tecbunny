@@ -8,6 +8,8 @@ import { formatOrderNumber } from '@/lib/order-utils';
 
 import { ORDER_STATUS_FLOW, SERVICE_ORDER_STATUS_FLOW } from '@/lib/data';
 
+import { useAuth } from '@/lib/hooks';
+import { useRouter } from 'next/navigation';
 import { useOrder } from '../../context/OrderProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { Order, OrderStatus } from '@/lib/types';
 
 export default function OrdersListPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const { orders, getOrders, cancelOrder } = useOrder();
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,14 +29,20 @@ export default function OrdersListPage() {
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.replace('/auth/signin?redirect=/orders');
+      return;
+    }
+
     const fetchOrders = async () => {
       setLoading(true);
-      await getOrders(); // Fetch all orders for now, in production you'd filter by customer
+      await getOrders(user.id);
       setLoading(false);
     };
 
     fetchOrders();
-  }, [getOrders]);
+  }, [authLoading, user, getOrders, router]);
 
   useEffect(() => {
     let filtered = orders;

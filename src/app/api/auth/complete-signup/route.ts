@@ -169,21 +169,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user account NOW (after OTP verification)
+    const loginEmail = email || `${normalizedMobile}@tecbunny.phone`;
     const userPayload: Record<string, any> = {
       password,
       phone: `+${normalizedMobile}`,
       phone_confirm: true,
+      email: loginEmail,
+      email_confirm: true,
       user_metadata: {
         name,
         role: 'customer',
         mobile: normalizedMobile
       }
     };
-
-    if (email) {
-      userPayload.email = email;
-      userPayload.email_confirm = true;
-    }
 
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser(userPayload);
 
@@ -261,10 +259,13 @@ export async function POST(request: NextRequest) {
     if (email) {
       signInPayload.email = email;
     } else {
-      signInPayload.phone = `+${normalizedMobile}`;
+      signInPayload.email = `${normalizedMobile}@tecbunny.phone`;
     }
 
-    const { data: signInData, error: signInError } = await regularSupabase.auth.signInWithPassword(signInPayload as any);
+    const { data: signInData, error: signInError } = await regularSupabase.auth.signInWithPassword({
+      email: signInPayload.email,
+      password,
+    });
 
     if (signInError) {
       logger.error('complete_signup.signin_failed', { error: signInError, userId: userData.user.id });

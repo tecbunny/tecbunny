@@ -503,13 +503,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const normalized = identifier.trim();
       const isEmail = normalized.includes('@');
-      let phone = normalized.replace(/\D/g, '');
-      if (!isEmail && phone.length === 10) {
-        phone = `91${phone}`;
+      let resolvedEmail = normalized;
+
+      if (!isEmail) {
+        let phone = normalized.replace(/\D/g, '');
+        if (phone.length === 10) {
+          phone = `91${phone}`;
+        }
+        
+        // Resolve phone number to email using API
+        const resolveRes = await fetch('/api/auth/resolve-phone', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: phone }),
+        });
+
+        if (!resolveRes.ok) {
+          return {
+            success: false,
+            message: 'Failed to resolve mobile number account.',
+            error: 'Failed to resolve mobile number'
+          };
+        }
+
+        const resolveData = await resolveRes.json();
+        if (!resolveData?.email) {
+          return {
+            success: false,
+            message: 'No account found for this mobile number.',
+            error: 'Account not found'
+          };
+        }
+        resolvedEmail = resolveData.email;
       }
-      const { data, error } = isEmail
-        ? await supabase.auth.signInWithPassword({ email: normalized, password })
-        : await supabase.auth.signInWithPassword({ phone, password });
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: resolvedEmail,
+        password
+      });
       
       if (error) {
         logger.error('Supabase login error', { error, identifier: normalized });

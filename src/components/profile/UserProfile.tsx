@@ -169,10 +169,10 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+    <div className="flex min-h-[calc(100vh-73px)] bg-background text-foreground">
       
 
-      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card shadow-sm">
+      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card shadow-sm sticky top-[73px] h-[calc(100vh-73px)]">
         <div className="h-16 flex items-center px-6 border-b border-border bg-card/95 backdrop-blur">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 flex items-center justify-center bg-primary/10 rounded-lg border border-primary/20">
@@ -224,8 +224,8 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        <header className="h-16 bg-background/80 backdrop-blur border-b border-border flex items-center justify-between px-6">
+      <main className="flex-1 flex flex-col relative">
+        <header className="h-16 bg-background/85 backdrop-blur border-b border-border flex items-center justify-between px-6 sticky top-[73px] z-30">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
             System Status: <span className="text-foreground font-bold">SECURE</span>
@@ -246,7 +246,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6 lg:p-8 relative bg-background">
+        <div className="flex-1 p-6 lg:p-8 relative bg-background">
           <div className="fixed inset-0 bg-noise opacity-5 pointer-events-none"></div>
 
           <div className="max-w-6xl mx-auto space-y-8 relative z-10">

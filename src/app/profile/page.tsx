@@ -91,10 +91,33 @@ export default function ProfilePage() {
 
     loadProfile();
 
+    const timer = setTimeout(() => {
+      if (!cancelled) {
+        setLoading(false);
+        const supaUser = user || supabase.auth.getUser().then(({ data }) => data.user).catch(() => null);
+        if (supaUser && !profile) {
+          // Promise resolution or immediate fallback
+          Promise.resolve(supaUser).then((resolvedUser) => {
+            if (resolvedUser && !profile && !cancelled) {
+              setUser(resolvedUser);
+              setProfile({
+                id: resolvedUser.id,
+                name: resolvedUser.user_metadata?.name ?? resolvedUser.email?.split('@')[0] ?? 'User',
+                email: resolvedUser.email,
+                mobile: resolvedUser.user_metadata?.mobile ?? '',
+                role: (resolvedUser.app_metadata?.role as string) ?? 'customer'
+              });
+            }
+          });
+        }
+      }
+    }, 5000);
+
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
-  }, [authLoading, supabase, router]);
+  }, [authLoading, supabase, router, user, profile]);
 
   if (loading || !user || !profile) {
     return (

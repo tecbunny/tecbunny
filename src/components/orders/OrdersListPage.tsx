@@ -35,13 +35,33 @@ export default function OrdersListPage() {
       return;
     }
 
+    let active = true;
     const fetchOrders = async () => {
       setLoading(true);
-      await getOrders(user.id);
-      setLoading(false);
+      try {
+        await getOrders(user.id);
+      } catch (err) {
+        console.error('Failed to fetch orders:', err);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
     };
 
     fetchOrders();
+
+    // Failsafe timeout to prevent permanent loading spinner
+    const timer = setTimeout(() => {
+      if (active) {
+        setLoading(false);
+      }
+    }, 5000);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [authLoading, user, getOrders, router]);
 
   useEffect(() => {

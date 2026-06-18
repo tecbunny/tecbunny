@@ -502,18 +502,6 @@ export async function GET(request: NextRequest) {
         if (!productColumns || productColumns.has('price')) {
           query = query.gt('price', 0);
         }
-        if (!productColumns || productColumns.has('mrp')) {
-          query = query.gt('mrp', 0);
-        }
-        if (!productColumns || productColumns.has('stock_quantity')) {
-          query = query.gt('stock_quantity', 0);
-        }
-        if (!productColumns || productColumns.has('image')) {
-          query = query.not('image', 'is', null).neq('image', '');
-        }
-        if (!productColumns || productColumns.has('description')) {
-          query = query.not('description', 'is', null).neq('description', '');
-        }
       } else {
         const status = searchParams.get('status');
         if (status) {

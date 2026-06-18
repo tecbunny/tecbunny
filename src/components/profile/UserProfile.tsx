@@ -197,7 +197,7 @@ export default function UserProfile({ user, profile, salesAgentData, orders, ser
           <Link href="/services" className="w-full text-left nav-item flex items-center gap-3 px-6 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
             <Users className="h-4 w-4" /> Billing & AMC
           </Link>
-          <Link href="/account" className="w-full text-left nav-item flex items-center gap-3 px-6 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
+          <Link href="/profile" className="w-full text-left nav-item flex items-center gap-3 px-6 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
             <Edit className="h-4 w-4" /> Profile Settings
           </Link>
         </nav>

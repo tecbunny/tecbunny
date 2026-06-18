@@ -200,7 +200,7 @@ export function Header() {
     }
   }, [user?.role]);
 
-  const accountHref = showDashboard ? dashboardHref : '/orders';
+  const accountHref = showDashboard ? dashboardHref : '/profile';
 
   return (
     <header
@@ -328,9 +328,11 @@ export function Header() {
                     <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-50 focus:text-zinc-900 text-xs py-1.5">
                       <Link href="/orders">My Orders</Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-50 focus:text-zinc-900 text-xs py-1.5">
-                      <Link href={accountHref}>Account</Link>
-                    </DropdownMenuItem>
+                    {showDashboard && (
+                      <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-50 focus:text-zinc-900 text-xs py-1.5">
+                        <Link href={accountHref}>Account</Link>
+                      </DropdownMenuItem>
+                    )}
                     {showAdminOption && (
                       <DropdownMenuItem asChild className="cursor-pointer focus:bg-zinc-50 focus:text-zinc-900 text-xs py-1.5">
                         <Link href="/mgmt/admin">Admin Panel</Link>
@@ -535,14 +537,16 @@ export function Header() {
                 Profile
                 <ChevronRight size={14} className="text-zinc-500" />
               </Link>
-              <Link
-                href={accountHref}
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors"
-              >
-                Account
-                <ChevronRight size={14} className="text-zinc-500" />
-              </Link>
+              {showDashboard && (
+                <Link
+                  href={accountHref}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex min-h-[36px] items-center justify-between rounded-lg px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors"
+                >
+                  Account
+                  <ChevronRight size={14} className="text-zinc-500" />
+                </Link>
+              )}
               {showAdminOption && (
                 <Link
                   href="/mgmt/admin"

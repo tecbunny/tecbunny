@@ -30,12 +30,9 @@ export function isPubliclyVisibleProduct(product: Record<string, unknown> | null
   const status = typeof product.status === 'string' ? product.status.trim().toLowerCase() : '';
   const isActive = !status || status === 'active' || status === 'published';
   const isNotDeleted = product.is_deleted !== true && product.deleted_at == null;
-  const hasPhoto = Boolean(getProductDisplayImage(product));
-  const hasRegularPrice = firstPositive(product, ['mrp', 'maximum_retail_price', 'list_price']) !== null;
   const hasSalePrice = firstPositive(product, ['price', 'selling_price', 'sale_price', 'offer_price', 'discount_price', 'unit_price']) !== null;
-  const hasQuantity = firstPositive(product, ['stock_quantity', 'quantity', 'inventory_quantity', 'stock']) !== null;
 
-  return isActive && isNotDeleted && hasPhoto && hasRegularPrice && hasSalePrice && hasPublicDescription(product) && hasQuantity;
+  return isActive && isNotDeleted && hasSalePrice;
 }
 
 export function filterPubliclyVisibleProducts<T extends Record<string, unknown>>(products: T[]) {

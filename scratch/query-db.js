@@ -12,15 +12,24 @@ const key = getEnvVal('SUPABASE_SERVICE_ROLE_KEY');
 const supabase = createClient(url, key);
 
 async function main() {
-  console.log('Querying orders...');
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .limit(1);
-  if (error) {
-    console.error('Query error:', error);
+  console.log('Testing Supabase Admin Auth...');
+  const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
+  if (usersError) {
+    console.error('listUsers error:', usersError);
   } else {
-    console.log('Query success:', data);
+    console.log('listUsers success, users count:', usersData.users.length);
+  }
+
+  console.log('Testing DB connection (profiles)...');
+  const { data: profilesData, error: profilesError } = await supabase
+    .from('profiles')
+    .select('*')
+    .limit(5);
+  
+  if (profilesError) {
+    console.error('profiles query error:', profilesError);
+  } else {
+    console.log('profiles query success, row count:', profilesData.length);
   }
 }
 main();

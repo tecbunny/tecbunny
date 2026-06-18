@@ -49,68 +49,23 @@ $$;
 -- 1. Custom Enums & Types
 -- ============================================================================
 
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'quote_status') THEN
-    CREATE TYPE quote_status AS ENUM ('created', 'sent', 'downloaded', 'expired', 'bidded', 'accepted', 'countered', 'rejected', 'declined');
-  END IF;
-  
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_lifecycle_status') THEN
-    CREATE TYPE product_lifecycle_status AS ENUM ('active', 'draft', 'archived', 'discontinued');
-  END IF;
+DROP TYPE IF EXISTS public.quote_status CASCADE;
+DROP TYPE IF EXISTS public.product_lifecycle_status CASCADE;
+DROP TYPE IF EXISTS public.sales_agent_status CASCADE;
+DROP TYPE IF EXISTS public.redemption_status CASCADE;
+DROP TYPE IF EXISTS public.advance_payment_status CASCADE;
+DROP TYPE IF EXISTS public.service_engineer_skill_level CASCADE;
+DROP TYPE IF EXISTS public.service_ticket_priority CASCADE;
+DROP TYPE IF EXISTS public.service_ticket_status CASCADE;
 
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'sales_agent_status') THEN
-    CREATE TYPE sales_agent_status AS ENUM ('pending', 'approved', 'rejected');
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'redemption_status') THEN
-    CREATE TYPE redemption_status AS ENUM ('pending', 'approved', 'rejected', 'processed');
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'advance_payment_status') THEN
-    CREATE TYPE advance_payment_status AS ENUM ('pending', 'confirmed', 'payment_initiated', 'paid', 'completed');
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'service_engineer_skill_level') THEN
-    CREATE TYPE service_engineer_skill_level AS ENUM ('junior', 'senior', 'expert');
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'service_ticket_priority') THEN
-    CREATE TYPE service_ticket_priority AS ENUM ('low', 'medium', 'high', 'urgent');
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'service_ticket_status') THEN
-    CREATE TYPE service_ticket_status AS ENUM ('created', 'accepted', 'rejected', 'under_process', 'hold_for_product_payment', 'rejected_by_customer', 'completed');
-  END IF;
-END;
-$$;
-
--- Ensure existing database enum has the new negotiation status values (Transaction-safe block insertion)
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'quote_status') THEN
-    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'bidded') THEN
-      EXECUTE 'ALTER TYPE public.quote_status ADD VALUE ''bidded''';
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'accepted') THEN
-      EXECUTE 'ALTER TYPE public.quote_status ADD VALUE ''accepted''';
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'countered') THEN
-      EXECUTE 'ALTER TYPE public.quote_status ADD VALUE ''countered''';
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'rejected') THEN
-      EXECUTE 'ALTER TYPE public.quote_status ADD VALUE ''rejected''';
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'public.quote_status'::regtype AND enumlabel = 'declined') THEN
-      EXECUTE 'ALTER TYPE public.quote_status ADD VALUE ''declined''';
-    END IF;
-  END IF;
-END;
-$$;
+CREATE TYPE public.quote_status AS ENUM ('created', 'sent', 'downloaded', 'expired', 'bidded', 'accepted', 'countered', 'rejected', 'declined');
+CREATE TYPE public.product_lifecycle_status AS ENUM ('active', 'draft', 'archived', 'discontinued');
+CREATE TYPE public.sales_agent_status AS ENUM ('pending', 'approved', 'rejected');
+CREATE TYPE public.redemption_status AS ENUM ('pending', 'approved', 'rejected', 'processed');
+CREATE TYPE public.advance_payment_status AS ENUM ('pending', 'confirmed', 'payment_initiated', 'paid', 'completed');
+CREATE TYPE public.service_engineer_skill_level AS ENUM ('junior', 'senior', 'expert');
+CREATE TYPE public.service_ticket_priority AS ENUM ('low', 'medium', 'high', 'urgent');
+CREATE TYPE public.service_ticket_status AS ENUM ('created', 'accepted', 'rejected', 'under_process', 'hold_for_product_payment', 'rejected_by_customer', 'completed');
 
 -- ============================================================================
 -- 2. Core Table Creation

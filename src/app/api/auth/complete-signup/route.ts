@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
     // Create user account NOW (after OTP verification)
     const userPayload: Record<string, any> = {
       password,
-      phone: normalizedMobile,
+      phone: `+${normalizedMobile}`,
       phone_confirm: true,
       user_metadata: {
         name,
@@ -192,7 +192,8 @@ export async function POST(request: NextRequest) {
       
       // Handle specific error cases
       if (createError.message.includes('already been registered') || 
-          createError.message.includes('User already registered')) {
+          createError.message.includes('User already registered') ||
+          createError.message.includes('already exists')) {
         return NextResponse.json(
           { error: 'An account with this email or mobile already exists' },
           { status: 409 }
@@ -200,7 +201,7 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { error: 'Failed to create account. Please try again.' },
+        { error: `Failed to create account: ${createError.message}` },
         { status: 500 }
       );
     }
@@ -260,7 +261,7 @@ export async function POST(request: NextRequest) {
     if (email) {
       signInPayload.email = email;
     } else {
-      signInPayload.phone = normalizedMobile;
+      signInPayload.phone = `+${normalizedMobile}`;
     }
 
     const { data: signInData, error: signInError } = await regularSupabase.auth.signInWithPassword(signInPayload as any);
@@ -311,7 +312,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error('complete_signup.unhandled_error', { error });
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: `Internal server error: ${error instanceof Error ? error.message : String(error)}` },
       { status: 500 }
     );
   }

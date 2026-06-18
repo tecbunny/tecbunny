@@ -111,6 +111,7 @@ export async function middleware(request: NextRequest) {
       { path: '/api/health' },
       { path: '/api/superadmin/login' },
       { path: '/api/settings', methods: ['GET'] },
+      { path: '/api/metadata', methods: ['GET'] },
       { path: '/api/page-content', methods: ['GET'] },
       { path: '/api/auto-offers', methods: ['GET'] },
       { path: '/api/offers', methods: ['GET'] },
